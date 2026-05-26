@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Create your premium matrimonial profile on Life Partner Connects and explore highly compatible matches across noble lineages.">
+  <title>Noble Registration - Life Partner Connects</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="auth-body">
+
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo" id="registerLogoLink">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M2 4l3 5 7-6 7 6 3-5v14c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V4zm2 7.74V18h16v-6.26l-1.97-1.69-2.52 4.41L12 9.21l-3.51 5.25-2.52-4.41L4 11.74z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="logo-text">Life Partner</span>
+          <span class="logo-subtext">Connects</span>
+        </div>
+      </a>
+      
+      <div class="nav-auth-buttons">
+        <a href="login.html" class="btn btn-minimal" id="loginNavBtn">Login</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="auth-card" style="max-width: 600px;" id="registerCard">
+    <div class="auth-header">
+      <h2>Create Noble Profile</h2>
+      <p>Initiate your journey towards a sacred lifelong alignment</p>
+    </div>
+
+    <!-- Step Progress Indicator -->
+    <div class="register-progress" id="registerProgressBar">
+      <div class="progress-step active" data-step="1">1</div>
+      <div class="progress-step" data-step="2">2</div>
+      <div class="progress-step" data-step="3">3</div>
+      <div class="progress-step" data-step="4">4</div>
+    </div>
+
+    <form id="registerForm">
+      
+      <!-- STEP 1: Core Credentials -->
+      <div class="register-step-panel active" id="stepPanel1">
+        <div class="form-group">
+          <label for="regName">Full Noble Name</label>
+          <input type="text" id="regName" placeholder="e.g. Kunwar Vikram Singh" required>
+        </div>
+
+        <div class="form-group">
+          <label for="regGender">Gender</label>
+          <select id="regGender" required>
+            <option value="" disabled selected>Select Gender</option>
+            <option value="Groom">Groom (Banna)</option>
+            <option value="Bride">Bride (Ladi)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="regEmail">Authentic Email Address</label>
+          <input type="email" id="regEmail" placeholder="e.g. vikram.singh@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="regPassword">Secure Password</label>
+          <input type="password" id="regPassword" placeholder="Minimum 6 characters" required>
+        </div>
+
+        <div class="form-navigation">
+          <div></div> <!-- Spacer -->
+          <button type="button" class="btn btn-royal btn-next" id="btnNext1">Continue to Lineage</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Lineage & Astro Heritage -->
+      <div class="register-step-panel" id="stepPanel2">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="regCaste">Hindu Caste</label>
+            <select id="regCaste" required>
+              <option value="" disabled selected>Select Caste</option>
+              <option value="Rajput">Rajput</option>
+              <option value="Brahmin">Brahmin</option>
+              <option value="Maheshwari">Maheshwari</option>
+              <option value="Oswal">Oswal</option>
+              <option value="Baniya">Baniya</option>
+              <option value="Kayastha">Kayastha</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="regAge">Age (Years)</label>
+            <input type="number" id="regAge" min="18" max="60" placeholder="e.g. 27" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="regGotra">Father's Gotra</label>
+            <input type="text" id="regGotra" placeholder="e.g. Rathore" required>
+          </div>
+
+          <div class="form-group">
+            <label for="regMotherGotra">Mother's Gotra</label>
+            <input type="text" id="regMotherGotra" placeholder="e.g. Chauhan" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="regRashi">Zodiac / Rashi</label>
+            <select id="regRashi">
+              <option value="Not Specified">Select Rashi</option>
+              <option value="Aries (Mesha)">Aries (Mesha)</option>
+              <option value="Taurus (Vrishabha)">Taurus (Vrishabha)</option>
+              <option value="Gemini (Mithuna)">Gemini (Mithuna)</option>
+              <option value="Cancer (Karka)">Cancer (Karka)</option>
+              <option value="Leo (Simha)">Leo (Simha)</option>
+              <option value="Virgo (Kanya)">Virgo (Kanya)</option>
+              <option value="Libra (Tula)">Libra (Tula)</option>
+              <option value="Scorpio (Vrishchika)">Scorpio (Vrishchika)</option>
+              <option value="Sagittarius (Dhanu)">Sagittarius (Dhanu)</option>
+              <option value="Capricorn (Makara)">Capricorn (Makara)</option>
+              <option value="Aquarius (Kumbha)">Aquarius (Kumbha)</option>
+              <option value="Pisces (Meena)">Pisces (Meena)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="regManglik">Manglik Status</label>
+            <select id="regManglik">
+              <option value="Non-Manglik">Non-Manglik</option>
+              <option value="Manglik">Manglik</option>
+              <option value="Manglik (Anshik)">Anshik Manglik</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="display: none;">
+          <input type="text" id="regHeight" value="5'7\"">
+        </div>
+
+        <div class="form-navigation">
+          <button type="button" class="btn btn-minimal btn-prev" id="btnPrev2">Back</button>
+          <button type="button" class="btn btn-royal btn-next" id="btnNext2">Continue to Career</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Career & Family Portfolio -->
+      <div class="register-step-panel" id="stepPanel3">
+        <div class="form-group">
+          <label for="regEducation">Highest Education Degree</label>
+          <input type="text" id="regEducation" placeholder="e.g. MBA - IIM Ahmedabad" required>
+        </div>
+
+        <div class="form-group">
+          <label for="regOccupation">Current Occupation / Profession</label>
+          <input type="text" id="regOccupation" placeholder="e.g. Senior Software Engineer" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="regIncome">Annual Income (₹ Lakhs PA)</label>
+            <input type="number" id="regIncome" min="1" max="500" placeholder="e.g. 24" required>
+          </div>
+
+          <div class="form-group">
+            <label for="regLocation">Current Location (City)</label>
+            <input type="text" id="regLocation" placeholder="e.g. Jaipur, Rajasthan" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="regFamilyType">Family Background Values</label>
+            <select id="regFamilyType">
+              <option value="Traditional">Traditional Values</option>
+              <option value="Royal Heritage">Royal Heritage Lineage</option>
+              <option value="Modern">Modern Outlook</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="regNative">Ancestral Native Place</label>
+            <input type="text" id="regNative" placeholder="e.g. Jodhpur, Rajasthan">
+          </div>
+        </div>
+
+        <div class="form-navigation">
+          <button type="button" class="btn btn-minimal btn-prev" id="btnPrev3">Back</button>
+          <button type="button" class="btn btn-royal btn-next" id="btnNext3">Continue to Profile</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: Persona Descriptions -->
+      <div class="register-step-panel" id="stepPanel4">
+        <div class="form-group">
+          <label for="regAbout">About Yourself</label>
+          <textarea id="regAbout" rows="3" placeholder="Share a few words about your lifestyle, core traditional values, and aspirations..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="regExpectations">Partner Expectations</label>
+          <textarea id="regExpectations" rows="3" placeholder="What are the essential values, educational background, or attributes you seek in your prospective partner..."></textarea>
+        </div>
+
+        <div class="form-navigation">
+          <button type="button" class="btn btn-minimal btn-prev" id="btnPrev4">Back</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitRegister">Publish Royal Profile</button>
+        </div>
+      </div>
+
+    </form>
+
+    <div class="auth-footer">
+      <p>Already have an account? <a href="login.html" id="loginRedirectLink">Log In here</a></p>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

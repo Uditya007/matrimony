@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Explore Regal Membership plans and premium alignment services on Life Partner Connects. Starter, Silver, Gold, and Premium Elite tiers available.">
+  <title>Regal Plans & Services - Life Partner Connects</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo" id="pricingLogoLink">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M2 4l3 5 7-6 7 6 3-5v14c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V4zm2 7.74V18h16v-6.26l-1.97-1.69-2.52 4.41L12 9.21l-3.51 5.25-2.52-4.41L4 11.74z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="logo-text">Life Partner</span>
+          <span class="logo-subtext">Connects</span>
+        </div>
+      </a>
+      
+      <nav class="nav-links" id="pricingNavbarLinks">
+        <a href="index.html" id="navHome">Home</a>
+        <a href="membership.html" class="active" id="navMembership">Regal Plans</a>
+      </nav>
+      
+      <div class="nav-auth-buttons" id="navAuthButtons">
+        <!-- Injected via JavaScript -->
+        <a href="login.html" class="btn btn-minimal">Login</a>
+        <a href="register.html" class="btn btn-royal">Sign Up</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Pricing Plans Section -->
+  <section class="pricing-section" style="padding-top: 140px;" id="pricingPlansSection">
+    <span class="section-subtitle">Regal Access</span>
+    <h2 class="section-title">Membership Plans Tailored for Noble Alignments</h2>
+    <p style="color: var(--text-muted); max-width: 650px; margin: 0 auto;">
+      Invest in trust, lineage security, and reduced search efforts. Choose the level of personal assistance your family desires.
+    </p>
+
+    <!-- Pricing Toggle Tabs (Dynamic Price adjustment!) -->
+    <div class="pricing-tabs" id="billingPeriodTabs">
+      <button class="pricing-tab-btn active" data-period="monthly">1 Month</button>
+      <button class="pricing-tab-btn" data-period="quarterly">3 Months (Save 20%)</button>
+      <button class="pricing-tab-btn" data-period="halfyearly">6 Months (Save 30%)</button>
+    </div>
+
+    <!-- Pricing Grid -->
+    <div class="pricing-grid" id="pricingGrid">
+      
+      <!-- Plan 1: Starter -->
+      <div class="pricing-card" id="planStarter">
+        <span class="plan-name">Starter Plan</span>
+        <span class="plan-desc">For volume, basic screening, and entry into our ecosystem.</span>
+        
+        <div class="plan-price" id="priceStarter">
+          ₹499<span>/month</span>
+        </div>
+        <div class="plan-billing-options" id="subStarter">Basic volume builder</div>
+        
+        <ul class="plan-features">
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>Verifiable profile creation</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>Limited daily profile views (10/day)</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>3 to 5 royal interests per day</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>Basic Caste & Age filters</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>Mobile verification badge</span>
+          </li>
+        </ul>
+        
+        <button onclick="handleSubscribe('Starter')" class="btn btn-minimal" style="width: 100%;">Select Starter</button>
+      </div>
+
+      <!-- Plan 2: Silver -->
+      <div class="pricing-card popular" id="planSilver">
+        <span class="plan-name">Silver Plan</span>
+        <span class="plan-desc">For serious seekers aiming for direct connectivity.</span>
+        
+        <div class="plan-price" id="priceSilver">
+          ₹1,999<span>/month</span>
+        </div>
+        <div class="plan-billing-options" id="subSilver">Profiles get 4x more responses</div>
+        
+        <ul class="plan-features">
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span><strong>Unlimited</strong> profile views</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span><strong>Unlimited</strong> interests & chats</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>Direct Contact number access</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span><strong>Advanced filters:</strong> Caste, Gotra, Profession, Rashi, City, Salary</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>"Recently active" high-visibility badge</span>
+          </li>
+        </ul>
+        
+        <button onclick="handleSubscribe('Silver')" class="btn btn-royal" style="width: 100%;">Choose Silver</button>
+      </div>
+
+      <!-- Plan 3: Gold -->
+      <div class="pricing-card" id="planGold">
+        <span class="plan-name">Gold Plan</span>
+        <span class="plan-desc">Accelerate results with priority listings and matching support.</span>
+        
+        <div class="plan-price" id="priceGold">
+          ₹5,999<span>/month</span>
+        </div>
+        <div class="plan-billing-options" id="subGold">Maximum trust and family convenience</div>
+        
+        <ul class="plan-features">
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span><strong>Everything in Silver</strong></span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span><strong>Priority Listing</strong> in member search results</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>Dedicated Rajputana Matchmaker manager</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>Handpicked curated weekly matches</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>Background Verification Badge</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>Family profile assistance & professional photo guidelines</span>
+          </li>
+        </ul>
+        
+        <button onclick="handleSubscribe('Gold')" class="btn btn-primary" style="width: 100%;">Acquire Gold</button>
+      </div>
+
+      <!-- Plan 4: Premium Elite -->
+      <div class="pricing-card elite" id="planElite">
+        <span class="plan-name">Premium Elite</span>
+        <span class="plan-desc">For HNIs, Doctors, Founders, and Elite Rajput/Brahmin Ancestries.</span>
+        
+        <div class="plan-price" id="priceElite">
+          ₹35,000<span>/month</span>
+        </div>
+        <div class="plan-billing-options" id="subElite">Fully managed high-ticket relationship services</div>
+        
+        <ul class="plan-features">
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>Private relationship matchmaking consultant</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>Offline Introductions & family compatibility checks</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>Complete Profile confidentiality & interview screening</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>Astrology matches + lifestyle compatibility checks</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>WhatsApp concierge support & Royal Wedding vendor deals</span>
+          </li>
+        </ul>
+        
+        <button onclick="handleSubscribe('Elite')" class="btn btn-primary" style="width: 100%; border-color: var(--primary-color);">Inquire for Elite</button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Add-On Revenue Streams Section -->
+  <section class="addons-section" id="addOnServicesSection">
+    <div style="text-align: center; margin-bottom: 50px;">
+      <span class="section-subtitle">Regal Upgrades</span>
+      <h2 class="section-title">Exclusive Add-On Ancestral Services</h2>
+      <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">
+        Unlock specialized segments of trust, astrology, and celebration planning through our vetted network.
+      </p>
+    </div>
+
+    <div class="addons-grid" id="addonsGrid">
+      
+      <!-- 1. Verification Packages -->
+      <div class="addon-card">
+        <h3>1. Royal Verification Packages</h3>
+        <p>Establish complete trust in the matrimonial community. Our independent desk audits and verifies critical elements.</p>
+        <ul style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8;">
+          <li>✓ Aadhaar Identity Audit</li>
+          <li>✓ Professional & Annual Income validation</li>
+          <li>✓ Educational degree credentials screening</li>
+        </ul>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="addon-price">₹1,499 (One-time)</span>
+          <button onclick="purchaseAddon('Verification')" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.75rem;">Apply Audit</button>
+        </div>
+      </div>
+
+      <!-- 2. Astrology Upsell -->
+      <div class="addon-card">
+        <h3>2. Astrology & Kundali Harmony</h3>
+        <p>Astrology compatibility is paramount in Indian weddings. Secure certified astrological reports from royal pandits.</p>
+        <ul style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8;">
+          <li>✓ Detailed Kundali matching analysis</li>
+          <li>✓ Personal call consultation with veteran Astrologers</li>
+          <li>✓ Auspicious marriage timing (Muhurtha) reports</li>
+        </ul>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="addon-price">₹1,999 (Per consultation)</span>
+          <button onclick="purchaseAddon('Astrology')" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.75rem;">Consult Pandit</button>
+        </div>
+      </div>
+
+      <!-- 3. AI Assisted Matchmaking -->
+      <div class="addon-card">
+        <h3>3. AI Matchmaking & Compatibility</h3>
+        <p>Intelligent filtering using state-of-the-art behavioral science. Obtain premium scores before initiating requests.</p>
+        <ul style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8;">
+          <li>✓ "Marriage Readiness" compatibility quotient</li>
+          <li>✓ Deep personality affinity score</li>
+          <li>✓ Specialized AI recommendation algorithms</li>
+        </ul>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="addon-price">₹999 (Permanent)</span>
+          <button onclick="purchaseAddon('AI Matchmaking')" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.75rem;">Activate AI</button>
+        </div>
+      </div>
+
+      <!-- 4. Royal Wedding Ecosystem -->
+      <div class="addon-card">
+        <h3>4. Vetted Palace Wedding Ecosystem</h3>
+        <p>From matchmaking success straight to the palace arches. Access vetted luxury wedding curators in Rajasthan.</p>
+        <ul style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8;">
+          <li>✓ Exclusive bookings at heritage palace venues</li>
+          <li>✓ Celebrated bridal makeup & traditional jewelry designers</li>
+          <li>✓ Royal photography and caterers selection</li>
+        </ul>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="addon-price">Success-Based Quotations</span>
+          <button onclick="purchaseAddon('Wedding Ecosystem')" class="btn btn-primary" style="padding: 6px 14px; font-size: 0.75rem;">Connect curators</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer Section -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-col footer-about">
+        <h4 style="font-family: var(--font-royal); letter-spacing: 1px; color: var(--gold-bright);">Life Partner Connects</h4>
+        <p>Securing traditional unions and legacy preservation across the royal lineage. Built with absolute class and modern security parameters.</p>
+      </div>
+      
+      <div class="footer-col">
+        <h4>Linage Castes</h4>
+        <ul>
+          <li><a href="login.html">Rajput Matches</a></li>
+          <li><a href="login.html">Brahmin Matches</a></li>
+          <li><a href="login.html">Maheshwari Matches</a></li>
+          <li><a href="login.html">Oswal Matches</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="register.html">Register Profile</a></li>
+          <li><a href="login.html">Member Log In</a></li>
+          <li><a href="membership.html">Regal Membership</a></li>
+          <li><a href="index.html#featuredProfilesSlider">Noble Featured</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Regal Support</h4>
+        <p style="font-size: 0.9rem; margin-bottom: 10px;">Contact our personal royal matchmaker desk:</p>
+        <p style="color: var(--gold-bright); font-weight: 600; font-size: 0.95rem;">support@lifepartnerconnects.com</p>
+        <p style="font-size: 0.85rem; margin-top: 5px;">Call Desk: +91 141 4987 654 (Jaipur Office)</p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 Life Partner Connects. All Rights Reserved. Devoted to preserving heritage and elite matchmaking standards.</p>
+      <p>Made with ❤️ in Rajasthan, India</p>
+    </div>
+  </footer>
+
+  <!-- Scripts & Price switcher logic -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // Price switching logic based on billing period tab click
+    const tabs = document.querySelectorAll('#billingPeriodTabs button');
+    
+    // Package multiplier values
+    const prices = {
+      monthly: { Starter: '₹499', Silver: '₹1,999', Gold: '₹5,999', Elite: '₹35,000', span: '/month' },
+      quarterly: { Starter: '₹1,199', Silver: '₹4,799', Gold: '₹14,399', Elite: '₹84,000', span: '/3 months' },
+      halfyearly: { Starter: '₹2,099', Silver: '₹8,399', Gold: '₹25,199', Elite: '₹147,000', span: '/6 months' }
+    };
+
+    const subtitles = {
+      monthly: { Starter: 'Basic volume builder', Silver: 'Profiles get 4x more responses', Gold: 'Maximum trust & convenience', Elite: 'Fully managed relationship services' },
+      quarterly: { Starter: 'Popular entry builder (Save 20%)', Silver: 'Proven quarterly connection success', Gold: 'Premium priority matched', Elite: 'High-class NRI support package' },
+      halfyearly: { Starter: 'Extended profile search (Save 30%)', Silver: 'Highly recommended value tier', Gold: 'Success-based matching protocol', Elite: 'Ultimate elite wedding coverage' }
+    };
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Toggle active button
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const period = tab.dataset.period;
+        const periodData = prices[period];
+        const subData = subtitles[period];
+
+        // Apply dynamic values
+        document.getElementById('priceStarter').innerHTML = `${periodData.Starter}<span>${periodData.span}</span>`;
+        document.getElementById('priceSilver').innerHTML = `${periodData.Silver}<span>${periodData.span}</span>`;
+        document.getElementById('priceGold').innerHTML = `${periodData.Gold}<span>${periodData.span}</span>`;
+        document.getElementById('priceElite').innerHTML = `${periodData.Elite}<span>${periodData.span}</span>`;
+
+        document.getElementById('subStarter').textContent = subData.Starter;
+        document.getElementById('subSilver').textContent = subData.Silver;
+        document.getElementById('subGold').textContent = subData.Gold;
+        document.getElementById('subElite').textContent = subData.Elite;
+      });
+    });
+
+    // Handle plan subscription selection
+    function handleSubscribe(planName) {
+      const activeTab = document.querySelector('#billingPeriodTabs button.active');
+      const periodLabel = activeTab ? activeTab.textContent.split(' (')[0] : '1 Month';
+      
+      const currentUser = localStorage.getItem('currentUser');
+      if (!currentUser) {
+        alert('Please register or log in first to purchase membership plans!');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const user = JSON.parse(currentUser);
+      user.tier = planName; // Upgrade user tier in storage
+      localStorage.setItem('currentUser', JSON.stringify(user));
+
+      // Sync registered users list
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const updatedUsers = users.map(u => u.email.toLowerCase() === user.email.toLowerCase() ? { ...u, tier: planName } : u);
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
+
+      // Notify user
+      alert(`Khammaghani! You have successfully upgraded to the Life Partner Connects ${planName} Plan (${periodLabel}). Enjoy premium matchmaking standards!`);
+      window.location.href = 'dashboard.html';
+    }
+
+    // Purchase addon handler
+    function purchaseAddon(addonName) {
+      const currentUser = localStorage.getItem('currentUser');
+      if (!currentUser) {
+        alert('Please log in first to unlock add-on services!');
+        window.location.href = 'login.html';
+        return;
+      }
+      alert(`Your request for the "${addonName}" upgrade package has been logged. Our royal concierge desk will contact you within 24 hours. Khammaghani!`);
+    }
+  </script>
+</body>
+</html>

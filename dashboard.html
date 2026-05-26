@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dashboard matches for Life Partner Connects. Filter, search, and connect with elite brides and grooms.">
+  <title>Regal Matchmaking Dashboard - Life Partner Connects</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="dashboard-layout">
+
+  <!-- Main Navigation Header -->
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo" id="dashboardLogoLink">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M2 4l3 5 7-6 7 6 3-5v14c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V4zm2 7.74V18h16v-6.26l-1.97-1.69-2.52 4.41L12 9.21l-3.51 5.25-2.52-4.41L4 11.74z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="logo-text">Life Partner</span>
+          <span class="logo-subtext">Connects</span>
+        </div>
+      </a>
+      
+      <!-- User profile menu with logout option -->
+      <div class="nav-auth-buttons" id="navAuthButtons">
+        <!-- Injected dynamically via app.js -->
+      </div>
+    </div>
+  </header>
+
+  <!-- Dashboard Container -->
+  <div class="dashboard-wrapper" id="dashboardMainArea">
+    
+    <!-- Sidebar: Real-time Filters -->
+    <aside class="dashboard-sidebar" id="dashboardSidebarFilters">
+      <h3 class="sidebar-title">
+        <span>Lineage Filters</span>
+        <button type="button" class="filter-clear-btn" id="clearFiltersBtn">Reset</button>
+      </h3>
+
+      <div class="form-group">
+        <label for="filterSearch">Search Profile</label>
+        <input type="text" id="filterSearch" placeholder="Search by name, gotra, city..." style="font-size: 0.85rem; padding: 10px 14px;">
+      </div>
+
+      <div class="form-group">
+        <label for="filterGender">Looking For</label>
+        <select id="filterGender">
+          <option value="All">All Grooms & Brides</option>
+          <option value="Groom">Grooms (Banna)</option>
+          <option value="Bride">Brides (Ladi)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="filterCaste">Lineage Caste</label>
+        <select id="filterCaste">
+          <option value="All">All Hindu Castes</option>
+          <option value="Rajput">Rajput</option>
+          <option value="Brahmin">Brahmin</option>
+          <option value="Maheshwari">Maheshwari</option>
+          <option value="Oswal">Oswal</option>
+          <option value="Baniya">Baniya</option>
+          <option value="Kayastha">Kayastha</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="filterAge">Age Criteria</label>
+        <select id="filterAge">
+          <option value="All">Any Age Range</option>
+          <option value="20-25">20 - 25 Years</option>
+          <option value="25-30">25 - 30 Years</option>
+          <option value="30-35">30 - 35 Years</option>
+        </select>
+      </div>
+
+      <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 10px;">
+        <button type="button" class="btn btn-minimal" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;" id="shortlistToggleBtn">
+          View Shortlisted
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main matches section -->
+    <main class="dashboard-main" id="dashboardMainMatches">
+      
+      <!-- Royal Greeting Card -->
+      <div class="dashboard-hero-greeting" id="dashboardGreetingBanner">
+        <div class="greeting-text">
+          <h2 id="dashboardGreetingHeader">Khammaghani!</h2>
+          <p>Here are noble, handpicked suggestions matching your traditional parameters.</p>
+        </div>
+
+        <div class="dashboard-stats" id="dashboardStatsWidget">
+          <div class="stat-pill" title="Matches Shortlisted by You">
+            <span>❤️ Shortlisted:</span>
+            <strong id="statShortlistedCount">0</strong>
+          </div>
+          <div class="stat-pill" title="Interests sent by You">
+            <span>✨ Sent Interests:</span>
+            <strong id="statInterestsCount">0</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sorting and Results Count Bar -->
+      <div class="search-results-bar" id="searchResultsCountBar">
+        <div class="results-count">
+          Showing <span id="resultsCountSpan">0</span> Noble Matches matching your lineage criteria
+        </div>
+        <div class="results-sort" style="display: none;">
+          <select id="sortMatches">
+            <option value="compatibility">Heritage Compatibility</option>
+            <option value="age">Age: Youngest First</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Matches Grid -->
+      <div class="matches-grid" id="matchesGrid">
+        <!-- Rendered Dynamically via app.js -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Detailed Profile Modal Overlay -->
+  <div class="profile-modal" id="profileDetailModal">
+    <div class="modal-content" id="modalCard">
+      <button class="modal-close-btn" aria-label="Close detailed profile">&times;</button>
+      
+      <!-- Hero Header inside Modal -->
+      <div class="modal-hero">
+        <div class="modal-photo-area" id="modalInitials">
+          <!-- Populated Dynamically -->
+        </div>
+        
+        <div class="modal-header-info">
+          <div class="modal-headline">
+            <h2 id="modalName">Name Placeholder</h2>
+            <span class="modal-caste-badge" id="modalCaste">Caste</span>
+          </div>
+          <p class="modal-subline" id="modalSubline">Age • Height • Location</p>
+          
+          <div class="modal-quick-stats" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="modal-stat-box">
+              <label>Income Index</label>
+              <span id="statIncome">Income</span>
+            </div>
+            <div class="modal-stat-box">
+              <label>Zodiac / Rashi</label>
+              <span id="statRashi">Rashi</span>
+            </div>
+            <div class="modal-stat-box">
+              <label>Horoscope Check</label>
+              <span id="statManglik">Manglik</span>
+            </div>
+            <div class="modal-stat-box" style="background: rgba(92, 6, 18, 0.04); border-color: rgba(92, 6, 18, 0.3);">
+              <label style="color: var(--primary-color); font-weight: bold;">AI Harmony</label>
+              <span id="statAiMatch" style="color: var(--primary-color); font-weight: bold;">96%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Body Details -->
+      <div class="modal-body">
+        
+        <!-- About Section -->
+        <div>
+          <h3 class="modal-section-title">Royal Persona</h3>
+          <p class="modal-bio" id="modalBio">Biography details will be shown here...</p>
+        </div>
+
+        <!-- Ancestral Lineage & Cultural Details -->
+        <div>
+          <h3 class="modal-section-title">Heritage & Lineage Info</h3>
+          <div class="details-grid">
+            <div class="detail-item">
+              <label>Father's Gotra</label>
+              <span id="detailGotra">Gotra</span>
+            </div>
+            <div class="detail-item">
+              <label>Ancestral Native</label>
+              <span id="detailNative">Native</span>
+            </div>
+            <div class="detail-item">
+              <label>Professional Degree</label>
+              <span id="detailEducation">Education</span>
+            </div>
+            <div class="detail-item">
+              <label>Current Profession</label>
+              <span id="detailOccupation">Occupation</span>
+            </div>
+            <div class="detail-item">
+              <label>Astro Nakshatra</label>
+              <span id="detailNakshatra">Nakshatra</span>
+            </div>
+            <div class="detail-item">
+              <label>Ancestral Values</label>
+              <span id="detailFamilyType">Family Background</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Family Background Summary -->
+        <div>
+          <h3 class="modal-section-title">Family & Lineage Background</h3>
+          <p class="modal-bio" id="modalFamily">Family descriptions...</p>
+        </div>
+
+        <!-- Expectations -->
+        <div>
+          <h3 class="modal-section-title">Alignment Expectations</h3>
+          <p class="modal-bio" id="modalExpectations">Lineage preferences and expectations...</p>
+        </div>
+
+        <!-- Dynamic Unlock Contact Details Section -->
+        <div>
+          <h3 class="modal-section-title">Regal Connection Desk</h3>
+          
+          <div class="unlock-box" id="modalUnlockBox">
+            <h4>Heritage Lock Active</h4>
+            <p>For the privacy and protection of noble lineages, contact details are hidden until request approval.</p>
+            <button type="button" class="btn btn-royal" id="unlockContactBtn">Verify & Unlock Lineage Details</button>
+          </div>
+
+          <div class="unlocked-details" id="modalUnlockedDetails">
+            <div class="details-grid" style="background-color: rgba(170, 124, 17, 0.05); padding: 25px; border-radius: var(--border-radius); border: 1.5px solid var(--gold-antique);">
+              <div class="detail-item">
+                <label>Direct Phone Line</label>
+                <span id="unlockedPhone" style="color: var(--primary-color); font-weight: 700;">+91 90000 00000</span>
+              </div>
+              <div class="detail-item">
+                <label>Regal Email Desk</label>
+                <span id="unlockedEmail" style="color: var(--primary-color); font-weight: 700;">email@rajgharana.com</span>
+              </div>
+              <div class="detail-item" style="grid-column: span 2; border-bottom: none; padding-top: 10px;">
+                <label>Ancestral Residence</label>
+                <span id="unlockedAddress" style="font-weight: 700;">Jaipur, Rajasthan, India</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Regal Paywall / Upgrade Modal Overlay -->
+  <div class="profile-modal" id="paywallModal">
+    <div class="modal-content" style="max-width: 500px;" id="paywallModalCard">
+      <button class="modal-close-btn" id="paywallCloseBtn" aria-label="Close Upgrade Overlay">&times;</button>
+      <div class="paywall-modal">
+        <div class="paywall-crown">
+          <svg viewBox="0 0 24 24">
+            <path d="M2 4l3 5 7-6 7 6 3-5v14c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V4zm2 7.74V18h16v-6.26l-1.97-1.69-2.52 4.41L12 9.21l-3.51 5.25-2.52-4.41L4 11.74z"/>
+          </svg>
+        </div>
+        <h2 style="font-size: 1.8rem; margin-bottom: 8px;">Upgrade Required</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 400px; margin: 0 auto 20px;">
+          The Starter plan does not include contact number access or advanced filters. Upgrade your membership to view complete lineage details!
+        </p>
+
+        <div class="paywall-plans-grid">
+          <div class="paywall-plan-option" onclick="location.href='membership.html'">
+            <strong style="color: var(--primary-color); font-size: 0.95rem; display: block; margin-bottom: 5px;">Silver Plan</strong>
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; line-height: 1.4;">Direct phone numbers & unlimited chats.</span>
+            <span style="font-size: 0.9rem; font-weight: bold; color: var(--gold-antique); display: block; margin-top: 10px;">₹1,999/mo</span>
+          </div>
+
+          <div class="paywall-plan-option selected" onclick="location.href='membership.html'">
+            <strong style="color: var(--primary-color); font-size: 0.95rem; display: block; margin-bottom: 5px;">Gold Plan</strong>
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; line-height: 1.4;">Personal matchmaker & background audit.</span>
+            <span style="font-size: 0.9rem; font-weight: bold; color: var(--gold-antique); display: block; margin-top: 10px;">₹5,999/mo</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 25px;">
+          <a href="membership.html" class="btn btn-royal" style="width: 100%; display: block; text-align: center;">View Membership Plans</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
