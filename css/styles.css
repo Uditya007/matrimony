@@ -1599,6 +1599,37 @@ footer {
   .paywall-plans-grid {
     grid-template-columns: 1fr !important;
   }
+  .nav-container {
+    padding: 12px 15px !important;
+  }
+  .logo-text {
+    font-size: 1.12rem !important;
+    letter-spacing: 0.5px !important;
+  }
+  .logo-icon {
+    width: 32px !important;
+    height: 32px !important;
+    margin-right: -2px !important;
+  }
+  .logo-icon svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  .nav-auth-buttons {
+    gap: 6px !important;
+  }
+  .nav-auth-buttons .btn {
+    padding: 5px 10px !important;
+    font-size: 0.72rem !important;
+    border-radius: 8px !important;
+  }
+  .nav-auth-buttons span {
+    font-size: 0.72rem !important;
+  }
+  .nav-auth-buttons span span {
+    font-size: 0.62rem !important;
+    padding: 1px 6px !important;
+  }
 }
 
 /* Business Plans & Premium Feature Styles */
