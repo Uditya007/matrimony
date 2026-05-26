@@ -48,9 +48,10 @@ function updateNavigationState() {
   
   if (!authContainer) return;
 
+  let html = '';
   if (currentUser) {
     const tier = currentUser.tier || 'Starter';
-    authContainer.innerHTML = `
+    html = `
       <span style="font-size: 0.9rem; font-weight: 500; font-family: var(--font-royal); color: var(--primary-color); display: flex; align-items: center; gap: 8px;">
         Khammaghani, <strong style="color: var(--gold-antique);">${currentUser.name.split(' ')[0]}</strong>
         <span style="font-size: 0.7rem; font-family: var(--font-body); padding: 2px 10px; background-color: var(--gold-light); border: 1px solid var(--gold-antique); border-radius: 12px; color: var(--primary-color); font-weight: bold;">
@@ -61,10 +62,18 @@ function updateNavigationState() {
       <button onclick="handleLogout()" class="btn btn-primary">Logout</button>
     `;
   } else {
-    authContainer.innerHTML = `
+    html = `
       <a href="login.html" class="btn btn-minimal" id="navLoginBtn">Login</a>
       <a href="register.html" class="btn btn-royal" id="navSignUpBtn">Sign Up</a>
     `;
+  }
+
+  authContainer.innerHTML = html;
+
+  // Also sync state with mobile drawer container if present
+  const mobileAuth = document.getElementById('mobileNavAuth');
+  if (mobileAuth) {
+    mobileAuth.innerHTML = html;
   }
 }
 
@@ -83,18 +92,24 @@ function initMobileMenu() {
   burger.setAttribute('aria-label', 'Toggle Navigation Menu');
   burger.innerHTML = `<span></span><span></span><span></span>`;
 
-  // Insert burger button before navigation buttons
-  const authContainer = document.getElementById('navAuthButtons');
-  if (authContainer) {
-    container.insertBefore(burger, authContainer);
-  } else {
-    container.appendChild(burger);
+  // Always append hamburger button at the far right of the navbar container
+  container.appendChild(burger);
+
+  // Append a mobile-specific auth container inside the .nav-links drawer if not already present
+  const navLinks = document.querySelector('.nav-links');
+  if (navLinks && !document.getElementById('mobileNavAuth')) {
+    const mobileAuth = document.createElement('div');
+    mobileAuth.className = 'mobile-nav-auth';
+    mobileAuth.id = 'mobileNavAuth';
+    navLinks.appendChild(mobileAuth);
+    
+    // Sync state immediately
+    updateNavigationState();
   }
 
   // Toggle drawer and burger animations on click
   burger.addEventListener('click', () => {
     burger.classList.toggle('active');
-    const navLinks = document.querySelector('.nav-links');
     if (navLinks) {
       navLinks.classList.toggle('active');
     }
@@ -105,7 +120,6 @@ function initMobileMenu() {
   links.forEach(link => {
     link.addEventListener('click', () => {
       burger.classList.remove('active');
-      const navLinks = document.querySelector('.nav-links');
       if (navLinks) {
         navLinks.classList.remove('active');
       }
