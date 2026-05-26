@@ -615,6 +615,23 @@ function renderMatchesGrid() {
   container.innerHTML = filtered.map(profile => createProfileCardHtml(profile, true)).join('');
 }
 
+function getAvatarGradient(caste) {
+  switch (caste) {
+    case 'Rajput':
+      return 'linear-gradient(135deg, #3A0209 0%, #5C0612 40%, #E05A12 100%)';
+    case 'Brahmin':
+      return 'linear-gradient(135deg, #3A0209 0%, #5C0612 40%, #E5A800 100%)';
+    case 'Maheshwari':
+      return 'linear-gradient(135deg, #3A0209 0%, #5C0612 40%, #0F4C81 100%)';
+    case 'Oswal':
+      return 'linear-gradient(135deg, #3A0209 0%, #5C0612 40%, #C41E3A 100%)';
+    case 'Baniya':
+      return 'linear-gradient(135deg, #3A0209 0%, #5C0612 40%, #0D6646 100%)';
+    default:
+      return 'linear-gradient(135deg, #3A0209 0%, #5C0612 100%)';
+  }
+}
+
 // Generate Profile Card Markup
 function createProfileCardHtml(profile, isDashboard = true) {
   const shortlists = JSON.parse(localStorage.getItem('shortlisted')) || [];
@@ -629,7 +646,7 @@ function createProfileCardHtml(profile, isDashboard = true) {
 
   return `
     <div class="profile-card" data-id="${profile.id}">
-      <div class="profile-card-image">
+      <div class="profile-card-image" style="background: ${getAvatarGradient(profile.caste)};">
         ${profile.img ? `<img src="${profile.img}" class="profile-card-img" alt="${profile.name}" />` : `<div class="profile-avatar-placeholder">${profile.initials}</div>`}
         <span class="profile-gender-badge ${profile.gender === 'Groom' ? 'badge-groom' : 'badge-bride'}">${profile.gender}</span>
         ${aiScoreBadge}
@@ -741,7 +758,7 @@ window.openProfileDetailModal = function(id) {
   if (!profile) return;
 
   // Build dynamic content for detailed modal view
-  document.getElementById('modalInitials').innerHTML = profile.img ? `<img src="${profile.img}" alt="${profile.name}" style="width: 100%; height: 100%; object-fit: cover;" />` : `<div class="profile-avatar-placeholder" style="font-size: 7rem; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: var(--primary-color);">${profile.initials}</div>`;
+  document.getElementById('modalInitials').innerHTML = profile.img ? `<img src="${profile.img}" alt="${profile.name}" style="width: 100%; height: 100%; object-fit: cover;" />` : `<div class="profile-avatar-placeholder" style="font-size: 7rem; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: ${getAvatarGradient(profile.caste)};">${profile.initials}</div>`;
   document.getElementById('modalName').textContent = profile.name;
   document.getElementById('modalCaste').textContent = `${profile.caste} Caste`;
   document.getElementById('modalSubline').textContent = `${profile.age} Yrs • ${profile.height} • ${profile.location.split(',')[0]}`;

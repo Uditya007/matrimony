@@ -228,6 +228,7 @@ const SEED_PROFILES = [
     about: "A proud son of the desert, dedicated to clean energy and community welfare. I balance my time between solar plants and ancestral agricultural lands. I love desert safaris, local folk music, and reading historical memoirs.",
     expectations: "A mature, graceful, and family-oriented bride who is comfortable with a combination of city and heritage town life, and respects our royal lineage and traditions.",
     initials: "VB",
+    img: "images/groom_vikramaditya.png",
     isRecentlyActive: false,
     isVerified: true,
     aiScore: 89
