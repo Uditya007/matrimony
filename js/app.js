@@ -224,8 +224,8 @@ function initHomepage() {
   const featuredContainer = document.getElementById('featuredProfilesSlider');
   if (featuredContainer) {
     const allProfiles = getAllProfiles();
-    // Grab 3 noble profiles (different castes, high-standard)
-    const featured = allProfiles.filter(p => ['P1', 'P2', 'P5'].includes(p.id)).slice(0, 3);
+    // Grab 8 noble profiles with real visual portrait imagery
+    const featured = allProfiles.filter(p => ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'].includes(p.id));
     
     featuredContainer.innerHTML = featured.map(profile => createProfileCardHtml(profile, false)).join('');
   }

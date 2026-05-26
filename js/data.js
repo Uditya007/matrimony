@@ -124,6 +124,7 @@ const SEED_PROFILES = [
     about: "Ambitious and business-minded yet down-to-earth and family-centric. I love exploring new financial markets, playing squash, and hosting family gatherings. I believe in building a strong foundation of trust and shared growth.",
     expectations: "A pleasant-natured, qualified lady (CA, MBA, Doctor, or Engineer) from a respectable Maheshwari/Vaishnav family who values relationships and is career-oriented.",
     initials: "AM",
+    img: "images/groom_aditya.png",
     isRecentlyActive: true,
     isVerified: true,
     aiScore: 92
@@ -149,6 +150,7 @@ const SEED_PROFILES = [
     about: "A vibrant and energetic individual who loves modern marketing strategy as much as traditional Rajasthani festivals. I am organized, deeply empathetic, and enjoy reading self-growth books and learning folk arts.",
     expectations: "An ambitious, supportive, and loving partner, preferably in Mumbai or open to it, who is a well-placed corporate professional or entrepreneur.",
     initials: "DT",
+    img: "images/bride_divya.png",
     isRecentlyActive: false,
     isVerified: true,
     aiScore: 93
@@ -174,6 +176,7 @@ const SEED_PROFILES = [
     about: "Global citizen with a Marwari soul. I enjoy golf, fine dining, and visiting art galleries, but nothing beats hot dal-baati-churma. I maintain a healthy work-life balance and value traditional Jain/Oswal ethics.",
     expectations: "An elegant, independent, and intellectually curious lady who is open to living abroad and values culture and mutual respect.",
     initials: "SO",
+    img: "images/groom_siddharth.png",
     isRecentlyActive: true,
     isVerified: false,
     aiScore: 90
@@ -199,6 +202,7 @@ const SEED_PROFILES = [
     about: "Spirited, artistic, and deeply passionate about ethnic Rajasthani block prints. I run a design boutique in Jaipur. I love traveling, exploring rural artisan clusters, and practicing yoga. I cherish our family ethics and traditional values.",
     expectations: "A compassionate, supportive, and modern-thinking partner, preferably from a Jain/Oswal family, who appreciates creativity and respects independent careers.",
     initials: "RK",
+    img: "images/bride_riya.png",
     isRecentlyActive: true,
     isVerified: true,
     aiScore: 91
