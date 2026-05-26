@@ -20,6 +20,7 @@ const SEED_PROFILES = [
     about: "Believer in blending our rich Rajputana traditions with a progressive, modern worldview. Passionate about heritage preservation, equestrian sports, and expanding our sustainable tourism venture. Looking for an elegant partner who shares a deep respect for values and culture.",
     expectations: "An educated, warm, and graceful lady who values family ties, culture, and possesses a progressive outlook. Mutual respect and understanding are paramount.",
     initials: "RS",
+    img: "images/groom_ranveer.png",
     isRecentlyActive: true,
     isVerified: true,
     aiScore: 98
@@ -45,6 +46,7 @@ const SEED_PROFILES = [
     about: "Cultured, soft-spoken, and creative, I spend my days restoring heritage murals and forts in Rajasthan. I am deeply rooted in Mewar heritage but equally appreciative of modern art, literature, and travel. I love horse riding and classical music.",
     expectations: "A noble gentleman from a respectable family, preferably Rajput, who is well-educated, progressive, and respects my professional passion for art and heritage.",
     initials: "AS",
+    img: "images/bride_aishwarya.png",
     isRecentlyActive: true,
     isVerified: true,
     aiScore: 96
@@ -70,6 +72,7 @@ const SEED_PROFILES = [
     about: "Simple, highly intellectual, yet deeply connected to my spiritual roots. I perform daily sandhyavandanam but live at the cutting edge of tech. I enjoy reading Vedic literature, hiking, and playing the sitar.",
     expectations: "A well-educated, intellectually compatible, and culturally-rooted lady who is willing to relocate or is already in the US. A background in science/arts is highly appreciated.",
     initials: "DS",
+    img: "images/groom_devendra.png",
     isRecentlyActive: false,
     isVerified: true,
     aiScore: 94
@@ -95,6 +98,7 @@ const SEED_PROFILES = [
     about: "Compassionate, bubbly, and dedicated to children's healthcare. I believe in mutual growth and keeping the family together with love. I enjoy classical Kathak and cooking traditional Rajasthani dishes.",
     expectations: "An understanding and compassionate groom, preferably a Doctor or a well-placed professional, who values ethical living, humor, and respect.",
     initials: "PC",
+    img: "images/bride_priyanka.png",
     isRecentlyActive: true,
     isVerified: true,
     aiScore: 95

@@ -415,7 +415,7 @@ header {
   width: 100%;
   height: 100%;
   border-radius: 200px 200px 10px 10px;
-  background-image: url('../images/royal_palace_hero.png');
+  background-image: url('../images/royal_couple.png');
   background-size: cover;
   background-position: center;
   position: relative;
@@ -1960,4 +1960,232 @@ footer {
   transform: translateY(-5px);
   box-shadow: var(--shadow-royal);
   border-color: var(--gold-antique);
+}
+
+/* ==========================================================================
+   COLORFUL VISUAL ENHANCEMENTS & REVIEWS
+   ========================================================================== */
+
+/* Colorized Caste Cards */
+.caste-card.caste-rajput::before {
+  background: linear-gradient(90deg, #E05A12, #FF8A00) !important;
+  transform: scaleX(1) !important;
+  opacity: 0.8;
+}
+.caste-card.caste-rajput:hover {
+  border-color: #E05A12 !important;
+  box-shadow: 0 10px 25px rgba(224, 90, 18, 0.15) !important;
+}
+.caste-card.caste-rajput .caste-icon {
+  background-color: rgba(224, 90, 18, 0.1) !important;
+}
+.caste-card.caste-rajput .caste-icon svg {
+  fill: #E05A12 !important;
+}
+.caste-card.caste-rajput h3 {
+  color: #E05A12 !important;
+}
+
+.caste-card.caste-brahmin::before {
+  background: linear-gradient(90deg, #E5A800, #FFD43F) !important;
+  transform: scaleX(1) !important;
+  opacity: 0.8;
+}
+.caste-card.caste-brahmin:hover {
+  border-color: #E5A800 !important;
+  box-shadow: 0 10px 25px rgba(229, 168, 0, 0.15) !important;
+}
+.caste-card.caste-brahmin .caste-icon {
+  background-color: rgba(229, 168, 0, 0.1) !important;
+}
+.caste-card.caste-brahmin .caste-icon svg {
+  fill: #E5A800 !important;
+}
+.caste-card.caste-brahmin h3 {
+  color: #E5A800 !important;
+}
+
+.caste-card.caste-maheshwari::before {
+  background: linear-gradient(90deg, #0F4C81, #3A89C9) !important;
+  transform: scaleX(1) !important;
+  opacity: 0.8;
+}
+.caste-card.caste-maheshwari:hover {
+  border-color: #0F4C81 !important;
+  box-shadow: 0 10px 25px rgba(15, 76, 129, 0.15) !important;
+}
+.caste-card.caste-maheshwari .caste-icon {
+  background-color: rgba(15, 76, 129, 0.1) !important;
+}
+.caste-card.caste-maheshwari .caste-icon svg {
+  fill: #0F4C81 !important;
+}
+.caste-card.caste-maheshwari h3 {
+  color: #0F4C81 !important;
+}
+
+.caste-card.caste-oswal::before {
+  background: linear-gradient(90deg, #C41E3A, #FF4D6D) !important;
+  transform: scaleX(1) !important;
+  opacity: 0.8;
+}
+.caste-card.caste-oswal:hover {
+  border-color: #C41E3A !important;
+  box-shadow: 0 10px 25px rgba(196, 30, 58, 0.15) !important;
+}
+.caste-card.caste-oswal .caste-icon {
+  background-color: rgba(196, 30, 58, 0.1) !important;
+}
+.caste-card.caste-oswal .caste-icon svg {
+  fill: #C41E3A !important;
+}
+.caste-card.caste-oswal h3 {
+  color: #C41E3A !important;
+}
+
+.caste-card.caste-baniya::before {
+  background: linear-gradient(90deg, #0D6646, #2EC4B6) !important;
+  transform: scaleX(1) !important;
+  opacity: 0.8;
+}
+.caste-card.caste-baniya:hover {
+  border-color: #0D6646 !important;
+  box-shadow: 0 10px 25px rgba(13, 102, 70, 0.15) !important;
+}
+.caste-card.caste-baniya .caste-icon {
+  background-color: rgba(13, 102, 70, 0.1) !important;
+}
+.caste-card.caste-baniya .caste-icon svg {
+  fill: #0D6646 !important;
+}
+.caste-card.caste-baniya h3 {
+  color: #0D6646 !important;
+}
+
+/* Reviews & Success Stories Section */
+.reviews-section {
+  padding: 80px 5%;
+  background: radial-gradient(circle at 50% 50%, rgba(92, 6, 18, 0.04) 0%, rgba(252, 251, 247, 0.95) 80%);
+  position: relative;
+  border-top: 1px solid rgba(170, 124, 17, 0.15);
+  border-bottom: 1px solid rgba(170, 124, 17, 0.15);
+}
+
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.review-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(170, 124, 17, 0.2);
+  border-radius: var(--border-radius-lg);
+  padding: 40px 30px;
+  position: relative;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow);
+}
+
+.review-card::before {
+  content: "“";
+  position: absolute;
+  top: 15px;
+  left: 25px;
+  font-size: 8rem;
+  font-family: Georgia, serif;
+  color: rgba(170, 124, 17, 0.08);
+  line-height: 1;
+}
+
+.review-badge {
+  align-self: flex-start;
+  font-family: var(--font-royal);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 6px 16px;
+  border-radius: 30px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.review-stars {
+  color: var(--gold-bright);
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  letter-spacing: 2px;
+}
+
+.review-text {
+  font-style: italic;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 25px;
+  position: relative;
+  z-index: 2;
+}
+
+.review-author h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 4px;
+}
+
+.review-author span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Colorful Unions Theme Customization */
+.review-card.rajput-union {
+  border-left: 5px solid #E05A12;
+}
+.review-card.rajput-union .review-badge {
+  background-color: rgba(224, 90, 18, 0.1);
+  color: #E05A12;
+  border: 1px solid rgba(224, 90, 18, 0.2);
+}
+.review-card.rajput-union:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(224, 90, 18, 0.12);
+  border-color: #E05A12;
+}
+
+.review-card.brahmin-union {
+  border-left: 5px solid #E5A800;
+}
+.review-card.brahmin-union .review-badge {
+  background-color: rgba(229, 168, 0, 0.1);
+  color: #E5A800;
+  border: 1px solid rgba(229, 168, 0, 0.2);
+}
+.review-card.brahmin-union:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(229, 168, 0, 0.12);
+  border-color: #E5A800;
+}
+
+.review-card.maheshwari-union {
+  border-left: 5px solid #0F4C81;
+}
+.review-card.maheshwari-union .review-badge {
+  background-color: rgba(15, 76, 129, 0.1);
+  color: #0F4C81;
+  border: 1px solid rgba(15, 76, 129, 0.2);
+}
+.review-card.maheshwari-union:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(15, 76, 129, 0.12);
+  border-color: #0F4C81;
 }

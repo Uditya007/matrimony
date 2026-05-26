@@ -630,7 +630,7 @@ function createProfileCardHtml(profile, isDashboard = true) {
   return `
     <div class="profile-card" data-id="${profile.id}">
       <div class="profile-card-image">
-        <div class="profile-avatar-placeholder">${profile.initials}</div>
+        ${profile.img ? `<img src="${profile.img}" class="profile-card-img" alt="${profile.name}" />` : `<div class="profile-avatar-placeholder">${profile.initials}</div>`}
         <span class="profile-gender-badge ${profile.gender === 'Groom' ? 'badge-groom' : 'badge-bride'}">${profile.gender}</span>
         ${aiScoreBadge}
         <div class="profile-details-preview">
@@ -741,7 +741,7 @@ window.openProfileDetailModal = function(id) {
   if (!profile) return;
 
   // Build dynamic content for detailed modal view
-  document.getElementById('modalInitials').innerHTML = `<div class="profile-avatar-placeholder" style="font-size: 7rem; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: var(--primary-color);">${profile.initials}</div>`;
+  document.getElementById('modalInitials').innerHTML = profile.img ? `<img src="${profile.img}" alt="${profile.name}" style="width: 100%; height: 100%; object-fit: cover;" />` : `<div class="profile-avatar-placeholder" style="font-size: 7rem; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: var(--primary-color);">${profile.initials}</div>`;
   document.getElementById('modalName').textContent = profile.name;
   document.getElementById('modalCaste').textContent = `${profile.caste} Caste`;
   document.getElementById('modalSubline').textContent = `${profile.age} Yrs • ${profile.height} • ${profile.location.split(',')[0]}`;
