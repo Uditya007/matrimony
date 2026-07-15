@@ -177,7 +177,7 @@ fun PlansView(
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
-                title = { Text(text = "Sagai Sambaandh", fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold) },
+                title = { Text(text = "Shree Rajput Sagai Sambandh", fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold) },
                 text = { Text(text = dialogMessage) },
                 confirmButton = {
                     TextButton(onClick = { showDialog = false }) {

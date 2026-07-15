@@ -281,7 +281,7 @@ fun HomeView(
                 .padding(20.dp)
         ) {
             Text(
-                text = "The Sagai Sambaandh Promise",
+                text = "The Shree Rajput Sagai Sambandh Promise",
                 color = RoyalMaroon,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
