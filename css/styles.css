@@ -2727,3 +2727,37 @@ footer {
   color: var(--text-dark) !important; /* Glows sandstone ivory/white */
   transform: scale(1.15) translateY(-2px);
 }
+
+/* Floating WhatsApp Chat Button styling */
+.whatsapp-float {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 54px;
+  height: 54px;
+  background-color: #25D366;
+  color: #FFFFFF !important;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  z-index: 99999;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s;
+  animation: waBounce 2s infinite;
+}
+
+.whatsapp-float:hover {
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+  animation-play-state: paused; /* stop bouncing on hover */
+  transform: scale(1.1) rotate(5deg);
+}
+
+@keyframes waBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
