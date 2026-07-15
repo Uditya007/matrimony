@@ -66,7 +66,7 @@ struct RegisterView: View {
     }
     
     // STEP 1 Layout: Personal Info
-    private var stepOneView: View {
+    private var stepOneView: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Noble Registration")
@@ -144,7 +144,7 @@ struct RegisterView: View {
     }
     
     // STEP 2 Layout: Lineage Details
-    private var stepTwoView: View {
+    private var stepTwoView: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Noble Lineage & Gotra")
@@ -226,7 +226,7 @@ struct RegisterView: View {
     }
     
     // STEP 3 Layout: Professional Info
-    private var stepThreeView: View {
+    private var stepThreeView: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Professional Details")

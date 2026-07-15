@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ProfileDetailView: View {
     let profile: Profile
-    @EnvironmentObject var session: SessionManager
+    @EnvironmentObject var session: SagaiSessionManager
     @Environment(\.presentationMode) var presentationMode
     
     @State private var isUnlocked: Bool = false

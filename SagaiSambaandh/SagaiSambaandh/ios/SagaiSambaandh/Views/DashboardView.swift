@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @EnvironmentObject var session: SessionManager
+    @EnvironmentObject var session: SagaiSessionManager
     @State private var selectedClanFilter: String = "All"
     @State private var selectedProfileForDetail: Profile? = nil
     @State private var showingLogoutAlert = false

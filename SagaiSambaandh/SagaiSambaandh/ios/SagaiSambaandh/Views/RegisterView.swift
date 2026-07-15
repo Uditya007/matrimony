@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct RegisterView: View {
-    @EnvironmentObject var session: SessionManager
+    @EnvironmentObject var session: SagaiSessionManager
     @Binding var showingRegister: Bool
     
     @State private var step: Int = 1
