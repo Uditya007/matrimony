@@ -86,9 +86,9 @@ header {
   left: 0;
   width: 100%;
   z-index: 1000;
-  background-color: rgba(91, 115, 71, 0.96); /* Rajput Olive Green matching logo border */
-  border-bottom: 2px solid var(--gold-antique); /* Gold border */
-  box-shadow: 0 1.5px 0 var(--primary-color), 0 6px 30px rgba(50, 65, 38, 0.25); /* Nested Maroon line + shadow */
+  background-color: rgba(29, 43, 83, 0.96); /* Jodhpur Indigo Blue matching logo */
+  border-bottom: 1.5px solid rgba(201, 162, 39, 0.35); /* Elegant gold accent border */
+  box-shadow: 0 4px 30px rgba(10, 15, 30, 0.2);
   backdrop-filter: blur(12px);
 }
 
@@ -1578,9 +1578,9 @@ footer {
     right: -100%;
     width: 280px;
     height: 100vh;
-    background-color: rgba(91, 115, 71, 0.99); /* Rajput Olive Green matching logo border */
+    background-color: rgba(29, 43, 83, 0.99); /* Matching dark Jodhpur Indigo theme */
     border-left: 2px solid var(--gold-antique);
-    box-shadow: -15px 0 45px rgba(50, 65, 38, 0.45);
+    box-shadow: -15px 0 45px rgba(10, 15, 30, 0.4);
     padding: 100px 40px 40px;
     gap: 25px;
     transition: var(--transition);
