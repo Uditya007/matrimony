@@ -151,11 +151,27 @@ function initMobileMenu() {
 
 // User Logout handler
 window.handleLogout = function() {
-  localStorage.removeItem('currentUser');
-  showToast('Logged out successfully', 'gold');
-  setTimeout(() => {
-    window.location.href = 'index.html';
-  }, 1000);
+  if (window.firebaseActive) {
+    firebaseAuth.signOut()
+      .then(() => {
+        localStorage.removeItem('currentUser');
+        showToast('Logged out successfully', 'gold');
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1000);
+      })
+      .catch(err => {
+        console.error("Logout failed:", err);
+        localStorage.removeItem('currentUser');
+        window.location.href = 'index.html';
+      });
+  } else {
+    localStorage.removeItem('currentUser');
+    showToast('Logged out successfully', 'gold');
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 1000);
+  }
 };
 
 // Toast notification trigger
@@ -182,12 +198,19 @@ function showToast(message, type = 'normal') {
 // Get combined profiles (Pre-seeded + registered users)
 function getAllProfiles() {
   const seeds = window.SEED_PROFILES || [];
-  const localUsers = JSON.parse(localStorage.getItem('users')) || [];
+  
+  // Fetch from Firestore database cache if firebase is active, otherwise fall back to LocalStorage
+  let localUsers = [];
+  if (window.firebaseActive && window.firestoreUsers) {
+    localUsers = window.firestoreUsers;
+  } else {
+    localUsers = JSON.parse(localStorage.getItem('users')) || [];
+  }
   
   const formattedLocals = localUsers.map(user => ({
     id: user.id || `U_${user.email}`,
-    name: user.name,
-    gender: user.gender,
+    name: user.name || "Noble Member",
+    gender: user.gender || "Groom",
     age: parseInt(user.age) || 25,
     dob: user.dob || "1998-06-15",
     religion: user.religion || "Hindu",
@@ -201,7 +224,7 @@ function getAllProfiles() {
     manglik: user.manglik || 'Non-Manglik',
     education: user.education || 'Graduate',
     occupation: user.occupation || 'Professional',
-    income: user.income ? `₹${user.income} Lakhs PA` : '₹12 Lakhs PA',
+    income: user.income ? (user.income.includes('Lakhs') ? user.income : `₹${user.income} Lakhs PA`) : '₹12 Lakhs PA',
     location: user.location || 'Jaipur, Rajasthan',
     familyType: user.familyType || 'Traditional',
     familyDetails: user.familyDetails || 'Respectable family based in Rajasthan.',
@@ -211,7 +234,7 @@ function getAllProfiles() {
     prefMaxAge: user.prefMaxAge || 29,
     prefCaste: user.prefCaste || 'Any',
     prefLocation: user.prefLocation || 'Any',
-    initials: user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
+    initials: user.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'NM',
     isRegisteredUser: true,
     email: user.email,
     isRecentlyActive: true,
@@ -278,6 +301,65 @@ function initHomepage() {
 // ==========================================
 function initLoginPage() {
   const loginForm = document.getElementById('loginForm');
+  const btnGoogle = document.getElementById('btnGoogleAuth');
+
+  if (btnGoogle) {
+    btnGoogle.addEventListener('click', () => {
+      if (!window.firebaseActive) {
+        showToast('Google login is active in mock fallback mode. Please configure keys in firebase-config.js!', 'normal');
+        // Fallback mock login for local testing
+        const demoUser = {
+          name: 'Kunwar Shivraj Singh',
+          gender: 'Groom',
+          email: 'royal@sagaisambaandh.com',
+          caste: 'Rajput',
+          clan: 'Rathore',
+          age: 28,
+          tier: 'Starter'
+        };
+        localStorage.setItem('currentUser', JSON.stringify(demoUser));
+        showToast('Mock Google Login Success!', 'gold');
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1200);
+        return;
+      }
+
+      firebaseAuth.signInWithPopup(window.googleProvider)
+        .then((result) => {
+          const user = result.user;
+          // Check if user profile already exists in Firestore database
+          firebaseDb.collection('users').doc(user.uid).get()
+            .then((doc) => {
+              if (doc.exists) {
+                const profileData = doc.data();
+                localStorage.setItem('currentUser', JSON.stringify(profileData));
+                showToast(`Khammaghani, Welcome back ${profileData.name.split(' ')[0]}`, 'gold');
+                setTimeout(() => {
+                  window.location.href = 'dashboard.html';
+                }, 1200);
+              } else {
+                // User is authenticated but has no profile details yet, redirect to registration
+                const tempGoogleUser = {
+                  uid: user.uid,
+                  name: user.displayName || '',
+                  email: user.email || ''
+                };
+                localStorage.setItem('tempGoogleUser', JSON.stringify(tempGoogleUser));
+                showToast('Welcome! Please complete your lineage details to finish registration.', 'gold');
+                setTimeout(() => {
+                  window.location.href = 'register.html';
+                }, 1200);
+              }
+            });
+        })
+        .catch((error) => {
+          console.error("Google Auth error:", error);
+          showToast('Google connection failed: ' + error.message, 'normal');
+        });
+    });
+  }
+
   if (!loginForm) return;
 
   loginForm.addEventListener('submit', (e) => {
@@ -290,7 +372,44 @@ function initLoginPage() {
       return;
     }
 
-    // Standard static credentials for seed testing
+    // Firebase Auth login flow
+    if (window.firebaseActive) {
+      firebaseAuth.signInWithEmailAndPassword(email, password)
+        .then((result) => {
+          const user = result.user;
+          return firebaseDb.collection('users').doc(user.uid).get();
+        })
+        .then((doc) => {
+          if (doc.exists) {
+            const profileData = doc.data();
+            localStorage.setItem('currentUser', JSON.stringify(profileData));
+            showToast(`Khammaghani, Welcome ${profileData.name.split(' ')[0]}`, 'gold');
+            setTimeout(() => {
+              window.location.href = 'dashboard.html';
+            }, 1200);
+          } else {
+            // Profile document missing, create fallback session
+            const fallbackUser = {
+              name: 'Noble Member',
+              gender: 'Groom',
+              email: email,
+              tier: 'Starter'
+            };
+            localStorage.setItem('currentUser', JSON.stringify(fallbackUser));
+            showToast('Welcome to Shree Rajput Sagai Sambandh', 'gold');
+            setTimeout(() => {
+              window.location.href = 'dashboard.html';
+            }, 1200);
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          showToast('Login failed: ' + err.message, 'normal');
+        });
+      return;
+    }
+
+    // Standard static credentials for seed testing (Fallback mode)
     if ((email === 'royal@sagaisambaandh.com' || email === 'royal@lifepartnerconnects.com') && password === 'royal123') {
       const demoUser = {
         name: 'Kunwar Shivraj Singh',
@@ -323,16 +442,72 @@ function initLoginPage() {
     } else {
       showToast('Invalid credentials. Try royal@sagaisambaandh.com / royal123', 'normal');
     }
-  });
-}
-
-function initRegisterPage() {
+  }function initRegisterPage() {
   const steps = document.querySelectorAll('.register-step-panel');
   const indicators = document.querySelectorAll('.progress-step');
   const nextBtns = document.querySelectorAll('.btn-next');
   const prevBtns = document.querySelectorAll('.btn-prev');
   const registerForm = document.getElementById('registerForm');
+  const btnGoogle = document.getElementById('btnGoogleAuth');
   let currentStep = 0;
+
+  // Google Login redirect prefill check
+  const tempGoogleUser = JSON.parse(localStorage.getItem('tempGoogleUser'));
+  if (tempGoogleUser) {
+    document.getElementById('regName').value = tempGoogleUser.name || '';
+    document.getElementById('regEmail').value = tempGoogleUser.email || '';
+    document.getElementById('regPassword').value = 'GoogleAuthenticated';
+    const pwdGroup = document.getElementById('regPassword').closest('.form-group');
+    if (pwdGroup) pwdGroup.style.display = 'none';
+    window.googleUserUid = tempGoogleUser.uid;
+    localStorage.removeItem('tempGoogleUser'); // Consume
+    showToast('Google account linked! Please complete your lineage details.', 'gold');
+  }
+
+  // Google Auth Button trigger
+  if (btnGoogle) {
+    btnGoogle.addEventListener('click', () => {
+      if (!window.firebaseActive) {
+        showToast('Google auth is active in mock fallback mode. Prefilled details!', 'gold');
+        document.getElementById('regName').value = 'Kunwar Vikram Singh';
+        document.getElementById('regEmail').value = 'vikram.singh@gmail.com';
+        document.getElementById('regPassword').value = 'GoogleAuthenticated';
+        const pwdGroup = document.getElementById('regPassword').closest('.form-group');
+        if (pwdGroup) pwdGroup.style.display = 'none';
+        window.googleUserUid = 'mock_google_uid_' + Date.now();
+        return;
+      }
+
+      firebaseAuth.signInWithPopup(window.googleProvider)
+        .then((result) => {
+          const user = result.user;
+          // Check if profile document already exists
+          firebaseDb.collection('users').doc(user.uid).get()
+            .then((doc) => {
+              if (doc.exists) {
+                const profileData = doc.data();
+                localStorage.setItem('currentUser', JSON.stringify(profileData));
+                showToast(`Khammaghani, Welcome back ${profileData.name.split(' ')[0]}`, 'gold');
+                setTimeout(() => {
+                  window.location.href = 'dashboard.html';
+                }, 1200);
+              } else {
+                document.getElementById('regName').value = user.displayName || '';
+                document.getElementById('regEmail').value = user.email || '';
+                document.getElementById('regPassword').value = 'GoogleAuthenticated';
+                const pwdGroup = document.getElementById('regPassword').closest('.form-group');
+                if (pwdGroup) pwdGroup.style.display = 'none';
+                window.googleUserUid = user.uid;
+                showToast('Google account linked! Please complete your lineage details.', 'gold');
+              }
+            });
+        })
+        .catch((error) => {
+          console.error("Google Register Auth error:", error);
+          showToast('Google connection failed: ' + error.message, 'normal');
+        });
+    });
+  }
 
   if (!registerForm) return;
 
@@ -358,7 +533,7 @@ function initRegisterPage() {
 
     const email = document.getElementById('regEmail').value.trim();
     
-    // Check if user already exists
+    // Check if user already exists locally
     const existingUsers = JSON.parse(localStorage.getItem('users')) || [];
     if (existingUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
       showToast('This email is already registered. Please login.', 'gold');
@@ -395,7 +570,43 @@ function initRegisterPage() {
       tier: 'Starter' // Default to Starter Tier on registration
     };
 
-    // Save to LocalStorage
+    if (window.firebaseActive) {
+      const saveToFirestore = (uid) => {
+        newUser.id = uid;
+        // Don't save cleartext password to Firestore database
+        delete newUser.password;
+        
+        firebaseDb.collection('users').doc(uid).set(newUser)
+          .then(() => {
+            localStorage.setItem('currentUser', JSON.stringify(newUser));
+            showToast('Royal Profile Created successfully!', 'gold');
+            setTimeout(() => {
+              window.location.href = 'dashboard.html';
+            }, 1500);
+          })
+          .catch((err) => {
+            console.error(err);
+            showToast('Error saving profile: ' + err.message, 'normal');
+          });
+      };
+
+      // If already authenticated via Google
+      if (window.googleUserUid) {
+        saveToFirestore(window.googleUserUid);
+      } else {
+        firebaseAuth.createUserWithEmailAndPassword(newUser.email, newUser.password)
+          .then((result) => {
+            saveToFirestore(result.user.uid);
+          })
+          .catch((err) => {
+            console.error(err);
+            showToast('Registration failed: ' + err.message, 'normal');
+          });
+      }
+      return;
+    }
+
+    // Save to LocalStorage fallback mode
     existingUsers.push(newUser);
     localStorage.setItem('users', JSON.stringify(existingUsers));
     
@@ -489,6 +700,19 @@ let activeFilters = {
 function initDashboardPage() {
   const currentUser = checkAuth();
   if (!currentUser) return;
+
+  // Asynchronously load Firestore profiles if active
+  if (window.firebaseActive) {
+    firebaseDb.collection('users').get()
+      .then(snapshot => {
+        window.firestoreUsers = snapshot.docs.map(doc => doc.data());
+        renderMatchesGrid();
+        updateDashboardStats();
+      })
+      .catch(err => {
+        console.error("Error loading Firestore profiles:", err);
+      });
+  }
 
   const userTier = currentUser.tier || 'Starter';
 
