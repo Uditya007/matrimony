@@ -1882,7 +1882,7 @@ footer {
   font-size: 1.6rem;
   margin-bottom: 5px;
   font-family: var(--font-royal);
-  color: var(--primary-color);
+  color: #FFFFFF; /* High contrast White */
 }
 
 .plan-desc {
@@ -1894,7 +1894,7 @@ footer {
 .plan-price {
   font-size: 2.2rem;
   font-family: var(--font-royal);
-  color: var(--primary-color);
+  color: #FFFFFF; /* White price as requested */
   margin-bottom: 5px;
 }
 
@@ -1902,6 +1902,19 @@ footer {
   font-size: 1rem;
   font-family: var(--font-body);
   color: var(--text-muted);
+}
+
+/* Pricing Card specific minimal button styles for dark backgrounds */
+.pricing-card .btn-minimal {
+  color: var(--text-dark); /* Sandstone Ivory */
+  border: 1px solid rgba(245, 237, 224, 0.35);
+  background: transparent;
+}
+
+.pricing-card .btn-minimal:hover {
+  border-color: var(--gold-bright);
+  background-color: rgba(245, 237, 224, 0.08);
+  color: var(--gold-bright) !important;
 }
 
 .plan-billing-options {
