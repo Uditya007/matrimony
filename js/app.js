@@ -281,7 +281,7 @@ function initLoginPage() {
         tier: 'Starter' // Default Starter Tier
       };
       localStorage.setItem('currentUser', JSON.stringify(demoUser));
-      showToast('Khammaghani! Welcome to Sagai Sambaandh', 'gold');
+      showToast('Khammaghani! Welcome to Shree Rajput Sagai Sambandh', 'gold');
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 1200);

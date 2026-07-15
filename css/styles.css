@@ -7,21 +7,21 @@
   --gold-antique: #C9A227; /* Royal Gold */
   --gold-bright: #E8C766; /* Light Gold */
   --gold-light: #F4EAD4;
-  --gold-gradient: linear-gradient(135deg, #C9A227 0%, #E8C766 50%, #F5EDE0 100%);
-  --gold-gradient-hover: linear-gradient(135deg, #E8C766 0%, #F5EDE0 50%, #C9A227 100%);
-  --bg-warm: #F5EDE0; /* Ivory Sandstone */
-  --bg-card: #FAF6EE; /* Soft Cream Card */
+  --gold-gradient: linear-gradient(135deg, #C9A227 0%, #E8C766 50%, #4A0D18 100%);
+  --gold-gradient-hover: linear-gradient(135deg, #E8C766 0%, #4A0D18 50%, #C9A227 100%);
+  --bg-warm: #6B1220; /* Royal Maroon Background */
+  --bg-card: #4A0D18; /* Deep Maroon Card Background */
   --indigo-accent: #1D2B53; /* Jodhpur Indigo */
-  --text-dark: #2B1810; /* Ink Brown */
-  --text-muted: #5A473E;
-  --text-light: #8E7A71;
+  --text-dark: #F5EDE0; /* Warm Sandstone Ivory Text */
+  --text-muted: #E8C766; /* Light Gold Muted Text */
+  --text-light: #C9A227; /* Royal Gold Light Text */
   --text-white: #FFFFFF;
   --font-royal: 'Cormorant Garamond', serif;
   --font-eyebrow: 'Cinzel', serif;
   --font-body: 'Poppins', sans-serif;
   --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  --shadow: 0 10px 30px rgba(107, 18, 32, 0.05);
-  --shadow-royal: 0 15px 45px rgba(107, 18, 32, 0.12);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  --shadow-royal: 0 15px 45px rgba(0, 0, 0, 0.25);
   --shadow-gold: 0 0 20px rgba(201, 162, 39, 0.15);
   --border-radius: 12px;
   --border-radius-lg: 24px;
@@ -44,7 +44,7 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-royal);
-  color: var(--primary-color);
+  color: var(--gold-bright); /* Light Gold for high contrast on maroon */
   font-weight: 400;
   letter-spacing: 1px;
 }
@@ -170,7 +170,7 @@ header {
 .nav-links a {
   font-family: var(--font-royal);
   font-size: 0.95rem;
-  color: var(--text-dark); /* Ink brown text */
+  color: #2B1810; /* Keep it dark ink brown for white header background */
   font-weight: 500;
   position: relative;
   padding: 5px 0;

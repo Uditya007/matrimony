@@ -105,7 +105,7 @@ struct PlansView: View {
             get: { alertMessage != nil ? AlertItem(message: alertMessage!) : nil },
             set: { alertMessage = $0?.message }
         )) { alertItem in
-            Alert(title: Text("Sagai Sambaandh"), message: Text(alertItem.message), dismissButton: .default(Text("Khammaghani")))
+            Alert(title: Text("Shree Rajput Sagai Sambandh"), message: Text(alertItem.message), dismissButton: .default(Text("Khammaghani")))
         }
     }
     

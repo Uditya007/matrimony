@@ -190,7 +190,7 @@ struct HomeView: View {
                     
                     // Royal Promise / Trust block
                     VStack(alignment: .leading, spacing: 15) {
-                        Text("The Sagai Sambaandh Promise")
+                        Text("The Shree Rajput Sagai Sambandh Promise")
                             .font(BrandFonts.displayBold(size: 20))
                             .foregroundColor(.royalMaroon)
                             .padding(.horizontal, 20)
