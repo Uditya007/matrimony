@@ -1646,14 +1646,20 @@ footer {
 
 /* Mobile Menu Drawer Auth Container */
 .mobile-nav-auth {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-  margin-top: 30px;
-  border-top: 1px solid rgba(170, 124, 17, 0.15);
-  padding-top: 25px;
-  align-items: stretch;
+  display: none; /* Hide on desktop */
+}
+
+@media (max-width: 768px) {
+  .mobile-nav-auth {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin-top: 30px;
+    border-top: 1px solid rgba(170, 124, 17, 0.15);
+    padding-top: 25px;
+    align-items: stretch;
+  }
 }
 
 .mobile-nav-auth .btn {
