@@ -82,7 +82,10 @@ function updateNavigationState() {
       <button onclick="handleLogout()" class="btn btn-primary">Logout</button>
     `;
   } else {
-    html = '';
+    html = `
+      <a href="login.html" class="btn btn-minimal" style="margin-right: 12px; font-weight: 600;">Log In</a>
+      <a href="register.html" class="btn btn-royal" id="navSignUpBtn">Sign Up</a>
+    `;
   }
 
   authContainer.innerHTML = html;
