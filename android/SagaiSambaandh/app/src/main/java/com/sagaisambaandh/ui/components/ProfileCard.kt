@@ -7,7 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -246,7 +246,7 @@ fun WaxSealBadge() {
             .border(1.dp, LightGold.copy(alpha = 0.5f), CircleShape)
     ) {
         Icon(
-            imageVector = Icons.Default.Verified,
+            imageVector = Icons.Default.VerifiedUser,
             contentDescription = "Verified Lineage",
             tint = LightGold,
             modifier = Modifier.size(16.dp)

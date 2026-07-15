@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -106,7 +105,7 @@ fun DashboardView(
                             .background(Color.Red.copy(alpha = 0.2f), shape = CircleShape)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.PowerSettingsNew,
+                            imageVector = Icons.Default.ExitToApp,
                             contentDescription = "Log Out",
                             tint = Color.White,
                             modifier = Modifier.size(20.dp)

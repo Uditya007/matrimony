@@ -10,7 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -123,7 +123,7 @@ fun ProfileDetailView(
                 if (profile.isVerified) {
                     Spacer(modifier = Modifier.width(6.dp))
                     Icon(
-                        imageVector = Icons.Default.Verified,
+                        imageVector = Icons.Default.VerifiedUser,
                         contentDescription = null,
                         tint = RoyalGold,
                         modifier = Modifier.size(20.dp)
