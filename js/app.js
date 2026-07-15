@@ -1,14 +1,22 @@
 // Sagai Sambaandh - Central State Controller & Application Logic
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Web Onboarding Splash Screen Controller
+// Web Onboarding Splash Screen Controller (safeguarded against script load race condition)
+function handleWebSplash() {
   const webSplash = document.getElementById('webSplash');
   if (webSplash) {
     setTimeout(() => {
       webSplash.classList.add('fade-out');
-    }, 1800);
+    }, 1000); // 1.0 second snappier delay
   }
+}
 
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', handleWebSplash);
+} else {
+  handleWebSplash();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
   // Initialize dynamic user database in LocalStorage if not present
   if (!localStorage.getItem('users')) {
     localStorage.setItem('users', JSON.stringify([]));
