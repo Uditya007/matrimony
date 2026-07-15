@@ -339,7 +339,9 @@ header {
   font-size: 3.5rem;
   line-height: 1.2;
   margin-bottom: 20px;
-  color: var(--primary-color);
+  color: var(--text-dark); /* Sandstone Ivory for high contrast */
+  -webkit-text-stroke: 1.2px #000000; /* Bold black outline */
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8); /* Depth shadow */
 }
 
 .hero-title span {
@@ -351,9 +353,11 @@ header {
 
 .hero-description {
   font-size: 1.1rem;
-  color: var(--text-muted);
+  color: var(--text-dark); /* Sandstone Ivory */
   margin-bottom: 40px;
   max-width: 550px;
+  -webkit-text-stroke: 0.5px #000000; /* Clear thin black outline */
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9); /* Deep drop shadow */
 }
 
 /* Quick Search Widget */
