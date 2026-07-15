@@ -339,43 +339,15 @@ header {
   font-size: 3.5rem;
   line-height: 1.2;
   margin-bottom: 20px;
-  color: #FFFFFF; /* White base for glow pop */
+  color: #FFFFFF; /* High-contrast white */
   font-weight: 800;
-  text-shadow: 
-    0 1px 0 #ccc,
-    0 2px 0 #c5c5c5,
-    0 3px 0 #bbb,
-    0 4px 0 #b0b0b0,
-    0 5px 0 #aaa,
-    0 6px 1px rgba(0,0,0,.1),
-    0 0 5px rgba(0,0,0,.1),
-    0 1px 3px rgba(0,0,0,.3),
-    0 3px 5px rgba(0,0,0,.2),
-    0 5px 10px rgba(0,0,0,.25),
-    0 10px 10px rgba(0,0,0,.2),
-    0 20px 20px rgba(0,0,0,.15),
-    0 0 15px rgba(232, 199, 102, 0.6), /* Gold inner glow */
-    0 0 25px rgba(232, 199, 102, 0.4); /* Gold outer glow */
+  text-shadow: 1px 2px 4px rgba(0, 0, 0, 0.4); /* Standard flat text shadow */
 }
 
 .hero-title span {
   font-weight: 800;
-  color: var(--gold-bright); /* Light Gold base */
-  text-shadow: 
-    0 1px 0 #d9ac29,
-    0 2px 0 #c99f24,
-    0 3px 0 #b8911f,
-    0 4px 0 #a8831a,
-    0 5px 0 #967514,
-    0 6px 1px rgba(0,0,0,.1),
-    0 0 5px rgba(0,0,0,.1),
-    0 1px 3px rgba(0,0,0,.3),
-    0 3px 5px rgba(0,0,0,.2),
-    0 5px 10px rgba(0,0,0,.25),
-    0 10px 10px rgba(0,0,0,.2),
-    0 20px 20px rgba(0,0,0,.15),
-    0 0 20px rgba(232, 199, 102, 0.8), /* Strong gold glow */
-    0 0 35px rgba(232, 199, 102, 0.5); /* Strong wide gold glow */
+  color: var(--gold-bright); /* Golden highlight */
+  text-shadow: 1px 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .hero-description {
@@ -383,9 +355,7 @@ header {
   color: var(--text-dark); /* Sandstone Ivory */
   margin-bottom: 40px;
   max-width: 550px;
-  text-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.7),
-    0 0 10px rgba(232, 199, 102, 0.3); /* Subtle gold glow shadow */
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4); /* Clean legibility shadow */
 }
 
 /* Quick Search Widget */
