@@ -97,6 +97,43 @@
           </div>
         </div>
 
+        <!-- Religion & Caste -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="regReligion">Religion</label>
+            <select id="regReligion" required>
+              <option value="Hindu" selected>Hindu</option>
+              <option value="Jain">Jain</option>
+              <option value="Sikh">Sikh</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="regCasteType">Caste</label>
+            <select id="regCasteType" required>
+              <option value="Rajput" selected>Rajput</option>
+              <option value="Brahmin">Brahmin</option>
+              <option value="Maheshwari">Maheshwari</option>
+              <option value="Oswal">Oswal</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Date of Birth & Place of Birth -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="regDOB">Date of Birth</label>
+            <input type="date" id="regDOB" required>
+          </div>
+
+          <div class="form-group">
+            <label for="regPOB">Place of Birth</label>
+            <input type="text" id="regPOB" placeholder="e.g. Udaipur, Rajasthan" required>
+          </div>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label for="regGotra">Father's Gotra</label>
@@ -197,6 +234,33 @@
 
       <!-- STEP 4: Persona Descriptions -->
       <div class="register-step-panel" id="stepPanel4">
+        <!-- Partner Preferences Header -->
+        <h4 style="color: var(--gold-bright); font-family: var(--font-royal); margin-bottom: 15px; border-bottom: 1px solid rgba(170, 124, 17, 0.2); padding-bottom: 5px; font-size: 0.95rem;">Ideal Partner Preferences</h4>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="regPrefMinAge">Preferred Min Age</label>
+            <input type="number" id="regPrefMinAge" min="18" max="60" placeholder="e.g. 21" required>
+          </div>
+          <div class="form-group">
+            <label for="regPrefMaxAge">Preferred Max Age</label>
+            <input type="number" id="regPrefMaxAge" min="18" max="60" placeholder="e.g. 29" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="regPrefCaste">Preferred Caste/Clan</label>
+            <input type="text" id="regPrefCaste" placeholder="e.g. Rathore, Chauhan, any" required>
+          </div>
+
+          <div class="form-group">
+            <label for="regPrefLocation">Preferred Location (City/State)</label>
+            <input type="text" id="regPrefLocation" placeholder="e.g. Jaipur, Rajasthan, any" required>
+          </div>
+        </div>
+
+        <!-- Personal description fields -->
         <div class="form-group">
           <label for="regAbout">About Yourself</label>
           <textarea id="regAbout" rows="3" placeholder="Share a few words about your lifestyle, core traditional values, and aspirations..."></textarea>

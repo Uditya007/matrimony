@@ -184,17 +184,18 @@ function getAllProfiles() {
   const seeds = window.SEED_PROFILES || [];
   const localUsers = JSON.parse(localStorage.getItem('users')) || [];
   
-  // Format local users to match seed profiles schema
   const formattedLocals = localUsers.map(user => ({
     id: user.id || `U_${user.email}`,
     name: user.name,
     gender: user.gender,
     age: parseInt(user.age) || 25,
+    dob: user.dob || "1998-06-15",
+    religion: user.religion || "Hindu",
+    caste: user.caste || "Rajput",
     height: user.height || "5'6\"",
-    caste: "Rajput",
-    clan: user.clan || user.caste || "Rathore",
+    clan: user.clan || "Rathore",
     gotra: `${user.gotra || 'Not Specified'} (Father) / ${user.motherGotra || 'Not Specified'} (Mother)`,
-    native: user.native || 'Rajasthan',
+    native: user.pob || user.native || 'Rajasthan',
     rashi: user.rashi || 'Not Specified',
     nakshatra: user.nakshatra || 'Not Specified',
     manglik: user.manglik || 'Non-Manglik',
@@ -206,6 +207,10 @@ function getAllProfiles() {
     familyDetails: user.familyDetails || 'Respectable family based in Rajasthan.',
     about: user.about || 'A simple and career-oriented individual.',
     expectations: user.expectations || 'An understanding partner.',
+    prefMinAge: user.prefMinAge || 21,
+    prefMaxAge: user.prefMaxAge || 29,
+    prefCaste: user.prefCaste || 'Any',
+    prefLocation: user.prefLocation || 'Any',
     initials: user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
     isRegisteredUser: true,
     email: user.email,
@@ -367,9 +372,11 @@ function initRegisterPage() {
       email: email,
       password: document.getElementById('regPassword').value,
       age: document.getElementById('regAge').value,
-      height: "5'7\"",
-      caste: "Rajput",
+      dob: document.getElementById('regDOB').value,
+      religion: document.getElementById('regReligion').value,
+      caste: document.getElementById('regCasteType').value,
       clan: document.getElementById('regCaste').value,
+      pob: document.getElementById('regPOB').value.trim(),
       gotra: document.getElementById('regGotra').value.trim(),
       motherGotra: document.getElementById('regMotherGotra').value.trim(),
       rashi: document.getElementById('regRashi').value,
@@ -379,6 +386,10 @@ function initRegisterPage() {
       income: document.getElementById('regIncome').value.trim(),
       location: document.getElementById('regLocation').value.trim(),
       familyType: document.getElementById('regFamilyType').value,
+      prefMinAge: document.getElementById('regPrefMinAge').value,
+      prefMaxAge: document.getElementById('regPrefMaxAge').value,
+      prefCaste: document.getElementById('regPrefCaste').value.trim(),
+      prefLocation: document.getElementById('regPrefLocation').value.trim(),
       about: document.getElementById('regAbout').value.trim(),
       expectations: document.getElementById('regExpectations').value.trim(),
       tier: 'Starter' // Default to Starter Tier on registration
@@ -425,12 +436,16 @@ function initRegisterPage() {
       }
       return true;
     } else if (stepIdx === 1) {
-      const caste = document.getElementById('regCaste').value;
+      const clan = document.getElementById('regCaste').value;
       const gotra = document.getElementById('regGotra').value.trim();
       const age = document.getElementById('regAge').value;
+      const religion = document.getElementById('regReligion').value;
+      const casteType = document.getElementById('regCasteType').value;
+      const dob = document.getElementById('regDOB').value;
+      const pob = document.getElementById('regPOB').value.trim();
 
-      if (!caste || !gotra || !age) {
-        showToast('Please select Clan, Father\'s Gotra, and Age');
+      if (!clan || !gotra || !age || !religion || !casteType || !dob || !pob) {
+        showToast('Please fill all lineage, heritage and birth details');
         return false;
       }
       return true;
@@ -441,6 +456,17 @@ function initRegisterPage() {
 
       if (!education || !occupation || !location) {
         showToast('Please provide your professional credentials');
+        return false;
+      }
+      return true;
+    } else if (stepIdx === 3) {
+      const prefMinAge = document.getElementById('regPrefMinAge').value;
+      const prefMaxAge = document.getElementById('regPrefMaxAge').value;
+      const prefCaste = document.getElementById('regPrefCaste').value.trim();
+      const prefLocation = document.getElementById('regPrefLocation').value.trim();
+
+      if (!prefMinAge || !prefMaxAge || !prefCaste || !prefLocation) {
+        showToast('Please specify all partner preferences');
         return false;
       }
       return true;
@@ -870,12 +896,21 @@ window.openProfileDetailModal = function(id) {
   document.getElementById('statAiMatch').textContent = `${profile.aiScore || 92}% Match`;
 
   // Details
+  document.getElementById('detailReligion').textContent = profile.religion || 'Hindu';
+  document.getElementById('detailCaste').textContent = profile.caste || 'Rajput';
+  document.getElementById('detailDOB').textContent = profile.dob || '1998-06-15';
+  document.getElementById('detailPOB').textContent = profile.pob || profile.native || 'Udaipur, Rajasthan';
   document.getElementById('detailGotra').textContent = profile.gotra;
   document.getElementById('detailNative').textContent = profile.native;
   document.getElementById('detailEducation').textContent = profile.education;
   document.getElementById('detailOccupation').textContent = profile.occupation;
   document.getElementById('detailNakshatra').textContent = profile.nakshatra;
   document.getElementById('detailFamilyType').textContent = `${profile.familyType} Values`;
+  
+  // Preferences
+  document.getElementById('detailPrefAge').textContent = `${profile.prefMinAge || 21} - ${profile.prefMaxAge || 29} Years`;
+  document.getElementById('detailPrefCaste').textContent = profile.prefCaste || 'Any';
+  document.getElementById('detailPrefLocation').textContent = profile.prefLocation || 'Any';
   
   // Custom summaries
   document.getElementById('modalBio').textContent = profile.about;
