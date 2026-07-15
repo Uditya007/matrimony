@@ -56,9 +56,9 @@ function updateNavigationState() {
   if (currentUser) {
     const tier = currentUser.tier || 'Starter';
     html = `
-      <span style="font-size: 0.9rem; font-weight: 500; font-family: var(--font-royal); color: #F5EDE0; display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 0.9rem; font-weight: 500; font-family: var(--font-royal); color: var(--primary-color); display: flex; align-items: center; gap: 8px;">
         Khammaghani, <strong style="color: var(--gold-antique);">${currentUser.name.split(' ')[0]}</strong>
-        <span style="font-size: 0.7rem; font-family: var(--font-body); padding: 2px 10px; background-color: var(--gold-antique); border: 1px solid var(--gold-antique); border-radius: 12px; color: var(--primary-dark); font-weight: bold;">
+        <span style="font-size: 0.7rem; font-family: var(--font-body); padding: 2px 10px; background-color: var(--gold-light); border: 1px solid var(--gold-antique); border-radius: 12px; color: var(--primary-color); font-weight: bold;">
           ${tier} Plan
         </span>
       </span>

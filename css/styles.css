@@ -86,34 +86,10 @@ header {
   left: 0;
   width: 100%;
   z-index: 1000;
-  background-color: rgba(29, 43, 83, 0.96); /* Jodhpur Indigo Blue matching logo */
-  border-bottom: 1.5px solid rgba(201, 162, 39, 0.35); /* Elegant gold accent border */
-  box-shadow: 0 4px 30px rgba(10, 15, 30, 0.2);
-  backdrop-filter: blur(12px);
-}
-
-header .btn-minimal {
-  color: #F5EDE0;
-  border-color: rgba(245, 237, 224, 0.35);
-  background: transparent;
-}
-
-header .btn-minimal:hover {
-  border-color: var(--gold-bright);
-  color: var(--gold-bright);
-  background-color: rgba(255, 255, 255, 0.08);
-}
-
-header .btn-primary {
-  background-color: var(--primary-color);
-  color: var(--text-white);
-  border: 1.5px solid var(--gold-antique);
-}
-
-header .btn-primary:hover {
-  background-color: var(--primary-dark);
-  border-color: var(--gold-bright);
-  color: var(--gold-bright);
+  background-color: rgba(255, 255, 255, 0.95); /* Pure white background with high legibility */
+  border-bottom: 1.5px solid rgba(201, 162, 39, 0.25); /* Subtle gold divider line */
+  box-shadow: 0 4px 20px rgba(92, 6, 18, 0.04);
+  backdrop-filter: blur(10px);
 }
 
 .nav-container {
@@ -169,7 +145,7 @@ header .btn-primary:hover {
   font-family: var(--font-royal);
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--gold-light); /* Light Sandstone Gold matching logo */
+  color: var(--primary-color); /* Royal Maroon color for high contrast on white header */
   letter-spacing: 1px;
 }
 
@@ -194,10 +170,11 @@ header .btn-primary:hover {
 .nav-links a {
   font-family: var(--font-royal);
   font-size: 0.95rem;
-  color: #F5EDE0; /* Ivory Sandstone text for legibility against dark blue background */
+  color: var(--text-dark); /* Ink brown text */
   font-weight: 500;
   position: relative;
   padding: 5px 0;
+  white-space: nowrap; /* Prevent nav links text from wrapping */
 }
 
 .nav-links a::after {
@@ -217,7 +194,7 @@ header .btn-primary:hover {
 }
 
 .nav-links a:hover {
-  color: var(--gold-bright); /* Golden light hover state */
+  color: var(--primary-color); /* Royal maroon hover state */
 }
 
 .nav-auth-buttons {
@@ -1562,7 +1539,7 @@ footer {
 .mobile-menu-toggle span {
   width: 100%;
   height: 2px;
-  background-color: var(--gold-antique); /* Gold lines to pop on indigo background */
+  background-color: var(--primary-color); /* Reverted to maroon for contrast against white header */
   transition: var(--transition);
 }
 
@@ -1578,9 +1555,9 @@ footer {
     right: -100%;
     width: 280px;
     height: 100vh;
-    background-color: rgba(29, 43, 83, 0.99); /* Matching dark Jodhpur Indigo theme */
+    background-color: var(--bg-card); /* Reverted to Ivory background */
     border-left: 2px solid var(--gold-antique);
-    box-shadow: -15px 0 45px rgba(10, 15, 30, 0.4);
+    box-shadow: -15px 0 35px rgba(92, 6, 18, 0.12);
     padding: 100px 40px 40px;
     gap: 25px;
     transition: var(--transition);
@@ -1697,7 +1674,7 @@ footer {
   gap: 8px;
   font-size: 0.95rem !important;
   font-weight: 600 !important;
-  color: #F5EDE0 !important; /* Ivory text for dark drawer readability */
+  color: var(--primary-color) !important; /* Reverted to maroon for contrast against ivory drawer */
   text-align: center;
   margin-bottom: 10px;
 }
