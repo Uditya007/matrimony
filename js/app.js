@@ -151,8 +151,8 @@ function initMobileMenu() {
 
 // User Logout handler
 window.handleLogout = function() {
-  if (window.firebaseActive) {
-    firebaseAuth.signOut()
+  if (window.supabaseActive) {
+    window.supabaseClient.auth.signOut()
       .then(() => {
         localStorage.removeItem('currentUser');
         showToast('Logged out successfully', 'gold');
@@ -199,9 +199,9 @@ function showToast(message, type = 'normal') {
 function getAllProfiles() {
   const seeds = window.SEED_PROFILES || [];
   
-  // Fetch from Firestore database cache if firebase is active, otherwise fall back to LocalStorage
+  // Fetch from Supabase database cache if active, otherwise fall back to LocalStorage
   let localUsers = [];
-  if (window.firebaseActive && window.firestoreUsers) {
+  if (window.supabaseActive && window.firestoreUsers) {
     localUsers = window.firestoreUsers;
   } else {
     localUsers = JSON.parse(localStorage.getItem('users')) || [];
@@ -304,9 +304,9 @@ function initLoginPage() {
   const btnGoogle = document.getElementById('btnGoogleAuth');
 
   if (btnGoogle) {
-    btnGoogle.addEventListener('click', () => {
-      if (!window.firebaseActive) {
-        showToast('Google login is active in mock fallback mode. Please configure keys in firebase-config.js!', 'normal');
+    btnGoogle.addEventListener('click', async () => {
+      if (!window.supabaseActive) {
+        showToast('Google login is active in mock fallback mode. Please configure credentials in supabase-config.js!', 'normal');
         // Fallback mock login for local testing
         const demoUser = {
           name: 'Kunwar Shivraj Singh',
@@ -325,44 +325,24 @@ function initLoginPage() {
         return;
       }
 
-      firebaseAuth.signInWithPopup(window.googleProvider)
-        .then((result) => {
-          const user = result.user;
-          // Check if user profile already exists in Firestore database
-          firebaseDb.collection('users').doc(user.uid).get()
-            .then((doc) => {
-              if (doc.exists) {
-                const profileData = doc.data();
-                localStorage.setItem('currentUser', JSON.stringify(profileData));
-                showToast(`Khammaghani, Welcome back ${profileData.name.split(' ')[0]}`, 'gold');
-                setTimeout(() => {
-                  window.location.href = 'dashboard.html';
-                }, 1200);
-              } else {
-                // User is authenticated but has no profile details yet, redirect to registration
-                const tempGoogleUser = {
-                  uid: user.uid,
-                  name: user.displayName || '',
-                  email: user.email || ''
-                };
-                localStorage.setItem('tempGoogleUser', JSON.stringify(tempGoogleUser));
-                showToast('Welcome! Please complete your lineage details to finish registration.', 'gold');
-                setTimeout(() => {
-                  window.location.href = 'register.html';
-                }, 1200);
-              }
-            });
-        })
-        .catch((error) => {
-          console.error("Google Auth error:", error);
-          showToast('Google connection failed: ' + error.message, 'normal');
-        });
+      // Supabase Google Sign-In (Redirect flow)
+      const { error } = await window.supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/dashboard.html'
+        }
+      });
+
+      if (error) {
+        console.error("Google Auth error:", error);
+        showToast('Google connection failed: ' + error.message, 'normal');
+      }
     });
   }
 
   if (!loginForm) return;
 
-  loginForm.addEventListener('submit', (e) => {
+  loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
@@ -372,40 +352,44 @@ function initLoginPage() {
       return;
     }
 
-    // Firebase Auth login flow
-    if (window.firebaseActive) {
-      firebaseAuth.signInWithEmailAndPassword(email, password)
-        .then((result) => {
-          const user = result.user;
-          return firebaseDb.collection('users').doc(user.uid).get();
-        })
-        .then((doc) => {
-          if (doc.exists) {
-            const profileData = doc.data();
-            localStorage.setItem('currentUser', JSON.stringify(profileData));
-            showToast(`Khammaghani, Welcome ${profileData.name.split(' ')[0]}`, 'gold');
-            setTimeout(() => {
-              window.location.href = 'dashboard.html';
-            }, 1200);
-          } else {
-            // Profile document missing, create fallback session
-            const fallbackUser = {
-              name: 'Noble Member',
-              gender: 'Groom',
-              email: email,
-              tier: 'Starter'
-            };
-            localStorage.setItem('currentUser', JSON.stringify(fallbackUser));
-            showToast('Welcome to Shree Rajput Sagai Sambandh', 'gold');
-            setTimeout(() => {
-              window.location.href = 'dashboard.html';
-            }, 1200);
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-          showToast('Login failed: ' + err.message, 'normal');
-        });
+    // Supabase Auth login flow
+    if (window.supabaseActive) {
+      const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        showToast('Login failed: ' + error.message, 'normal');
+        return;
+      }
+
+      // Load user profile from profiles table
+      const { data: profile, error: dbError } = await window.supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      if (profile) {
+        localStorage.setItem('currentUser', JSON.stringify(profile));
+        showToast(`Khammaghani, Welcome ${profile.name.split(' ')[0]}`, 'gold');
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1200);
+      } else {
+        // Auth succeeded but profile records are missing, redirect to register onboarding
+        const tempGoogleUser = {
+          uid: data.user.id,
+          name: 'Noble Member',
+          email: email
+        };
+        localStorage.setItem('tempGoogleUser', JSON.stringify(tempGoogleUser));
+        showToast('Welcome! Please complete your lineage details to finish registration.', 'gold');
+        setTimeout(() => {
+          window.location.href = 'register.html';
+        }, 1200);
+      }
       return;
     }
 
@@ -442,7 +426,10 @@ function initLoginPage() {
     } else {
       showToast('Invalid credentials. Try royal@sagaisambaandh.com / royal123', 'normal');
     }
-  }function initRegisterPage() {
+  });
+}
+
+function initRegisterPage() {
   const steps = document.querySelectorAll('.register-step-panel');
   const indicators = document.querySelectorAll('.progress-step');
   const nextBtns = document.querySelectorAll('.btn-next');
@@ -466,8 +453,8 @@ function initLoginPage() {
 
   // Google Auth Button trigger
   if (btnGoogle) {
-    btnGoogle.addEventListener('click', () => {
-      if (!window.firebaseActive) {
+    btnGoogle.addEventListener('click', async () => {
+      if (!window.supabaseActive) {
         showToast('Google auth is active in mock fallback mode. Prefilled details!', 'gold');
         document.getElementById('regName').value = 'Kunwar Vikram Singh';
         document.getElementById('regEmail').value = 'vikram.singh@gmail.com';
@@ -478,34 +465,18 @@ function initLoginPage() {
         return;
       }
 
-      firebaseAuth.signInWithPopup(window.googleProvider)
-        .then((result) => {
-          const user = result.user;
-          // Check if profile document already exists
-          firebaseDb.collection('users').doc(user.uid).get()
-            .then((doc) => {
-              if (doc.exists) {
-                const profileData = doc.data();
-                localStorage.setItem('currentUser', JSON.stringify(profileData));
-                showToast(`Khammaghani, Welcome back ${profileData.name.split(' ')[0]}`, 'gold');
-                setTimeout(() => {
-                  window.location.href = 'dashboard.html';
-                }, 1200);
-              } else {
-                document.getElementById('regName').value = user.displayName || '';
-                document.getElementById('regEmail').value = user.email || '';
-                document.getElementById('regPassword').value = 'GoogleAuthenticated';
-                const pwdGroup = document.getElementById('regPassword').closest('.form-group');
-                if (pwdGroup) pwdGroup.style.display = 'none';
-                window.googleUserUid = user.uid;
-                showToast('Google account linked! Please complete your lineage details.', 'gold');
-              }
-            });
-        })
-        .catch((error) => {
-          console.error("Google Register Auth error:", error);
-          showToast('Google connection failed: ' + error.message, 'normal');
-        });
+      // Supabase Google Sign-In (Redirect flow)
+      const { error } = await window.supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/dashboard.html'
+        }
+      });
+
+      if (error) {
+        console.error("Google Register Auth error:", error);
+        showToast('Google connection failed: ' + error.message, 'normal');
+      }
     });
   }
 
@@ -527,7 +498,7 @@ function initLoginPage() {
     });
   });
 
-  registerForm.addEventListener('submit', (e) => {
+  registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!validateStep(3)) return;
 
@@ -546,7 +517,7 @@ function initLoginPage() {
       gender: document.getElementById('regGender').value,
       email: email,
       password: document.getElementById('regPassword').value,
-      age: document.getElementById('regAge').value,
+      age: parseInt(document.getElementById('regAge').value) || 25,
       dob: document.getElementById('regDOB').value,
       religion: document.getElementById('regReligion').value,
       caste: document.getElementById('regCasteType').value,
@@ -561,8 +532,8 @@ function initLoginPage() {
       income: document.getElementById('regIncome').value.trim(),
       location: document.getElementById('regLocation').value.trim(),
       familyType: document.getElementById('regFamilyType').value,
-      prefMinAge: document.getElementById('regPrefMinAge').value,
-      prefMaxAge: document.getElementById('regPrefMaxAge').value,
+      prefMinAge: parseInt(document.getElementById('regPrefMinAge').value) || 21,
+      prefMaxAge: parseInt(document.getElementById('regPrefMaxAge').value) || 29,
       prefCaste: document.getElementById('regPrefCaste').value.trim(),
       prefLocation: document.getElementById('regPrefLocation').value.trim(),
       about: document.getElementById('regAbout').value.trim(),
@@ -570,38 +541,43 @@ function initLoginPage() {
       tier: 'Starter' // Default to Starter Tier on registration
     };
 
-    if (window.firebaseActive) {
-      const saveToFirestore = (uid) => {
+    if (window.supabaseActive) {
+      const saveToSupabase = async (uid) => {
         newUser.id = uid;
-        // Don't save cleartext password to Firestore database
-        delete newUser.password;
+        delete newUser.password; // Don't save cleartext password to DB
         
-        firebaseDb.collection('users').doc(uid).set(newUser)
-          .then(() => {
-            localStorage.setItem('currentUser', JSON.stringify(newUser));
-            showToast('Royal Profile Created successfully!', 'gold');
-            setTimeout(() => {
-              window.location.href = 'dashboard.html';
-            }, 1500);
-          })
-          .catch((err) => {
-            console.error(err);
-            showToast('Error saving profile: ' + err.message, 'normal');
-          });
+        const { error: dbError } = await window.supabaseClient
+          .from('profiles')
+          .insert([newUser]);
+
+        if (dbError) {
+          console.error(dbError);
+          showToast('Error saving profile: ' + dbError.message, 'normal');
+          return;
+        }
+
+        localStorage.setItem('currentUser', JSON.stringify(newUser));
+        showToast('Royal Profile Created successfully!', 'gold');
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1500);
       };
 
       // If already authenticated via Google
       if (window.googleUserUid) {
-        saveToFirestore(window.googleUserUid);
+        await saveToSupabase(window.googleUserUid);
       } else {
-        firebaseAuth.createUserWithEmailAndPassword(newUser.email, newUser.password)
-          .then((result) => {
-            saveToFirestore(result.user.uid);
-          })
-          .catch((err) => {
-            console.error(err);
-            showToast('Registration failed: ' + err.message, 'normal');
-          });
+        const { data, error } = await window.supabaseClient.auth.signUp({
+          email: newUser.email,
+          password: newUser.password
+        });
+
+        if (error) {
+          showToast('Registration failed: ' + error.message, 'normal');
+          return;
+        }
+
+        await saveToSupabase(data.user.id);
       }
       return;
     }
@@ -701,16 +677,48 @@ function initDashboardPage() {
   const currentUser = checkAuth();
   if (!currentUser) return;
 
-  // Asynchronously load Firestore profiles if active
-  if (window.firebaseActive) {
-    firebaseDb.collection('users').get()
-      .then(snapshot => {
-        window.firestoreUsers = snapshot.docs.map(doc => doc.data());
-        renderMatchesGrid();
-        updateDashboardStats();
-      })
-      .catch(err => {
-        console.error("Error loading Firestore profiles:", err);
+  // Handle Supabase OAuth redirection & async user loading
+  if (window.supabaseActive) {
+    // 1. Fetch active session to check if just logged in via Google OAuth
+    window.supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        const cachedUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!cachedUser || cachedUser.email !== session.user.email) {
+          // New OAuth sign in session! Fetch user profile record
+          const { data: profile } = await window.supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          if (profile) {
+            localStorage.setItem('currentUser', JSON.stringify(profile));
+            // reload greeting and contents
+            window.location.reload();
+          } else {
+            // OAuth succeeded but no profile details created yet, redirect to onboarding wizard
+            const tempGoogleUser = {
+              uid: session.user.id,
+              name: session.user.user_metadata.full_name || 'Noble Member',
+              email: session.user.email
+            };
+            localStorage.setItem('tempGoogleUser', JSON.stringify(tempGoogleUser));
+            window.location.href = 'register.html';
+          }
+        }
+      }
+    });
+
+    // 2. Load all matching profiles from database
+    window.supabaseClient.from('profiles').select('*')
+      .then(({ data, error }) => {
+        if (!error && data) {
+          window.firestoreUsers = data; // cache in memory to sync matches grid
+          renderMatchesGrid();
+          updateDashboardStats();
+        } else if (error) {
+          console.error("Error loading Supabase profiles:", error);
+        }
       });
   }
 
