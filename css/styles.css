@@ -2096,18 +2096,23 @@ footer {
 .addon-card h3 {
   font-size: 1.2rem;
   margin-bottom: 10px;
+  color: var(--gold-bright); /* Golden titles */
 }
 
 .addon-card p {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--text-dark); /* Sandstone Ivory description text */
   margin-bottom: 20px;
+}
+
+.addon-card ul {
+  color: var(--text-dark) !important; /* Sandstone Ivory checklist */
 }
 
 .addon-price {
   font-size: 1.15rem;
   font-family: var(--font-royal);
-  color: var(--primary-color);
+  color: #FFFFFF; /* High contrast White price text */
   font-weight: bold;
 }
 

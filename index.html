@@ -417,6 +417,81 @@
     </div>
   </section>
 
+  <!-- Add-On Revenue Streams Section -->
+  <section class="addons-section" id="addOnServicesSection">
+    <div style="text-align: center; margin-bottom: 50px;">
+      <span class="section-subtitle">Regal Upgrades</span>
+      <h2 class="section-title">Exclusive Add-On Ancestral Services</h2>
+      <p style="color: var(--text-dark); max-width: 600px; margin: 0 auto; opacity: 0.8;">
+        Unlock specialized segments of trust, astrology, and celebration planning through our vetted network.
+      </p>
+    </div>
+
+    <div class="addons-grid" id="addonsGrid">
+      
+      <!-- 1. Verification Packages -->
+      <div class="addon-card">
+        <h3>1. Royal Verification Packages</h3>
+        <p>Establish complete trust in the matrimonial community. Our independent desk audits and verifies critical elements.</p>
+        <ul style="font-size: 0.8rem; color: var(--text-dark); margin-bottom: 20px; line-height: 1.8; list-style: none; padding: 0;">
+          <li>✓ Aadhaar Identity Audit</li>
+          <li>✓ Professional & Annual Income validation</li>
+          <li>✓ Educational degree credentials screening</li>
+        </ul>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="addon-price">₹1,499 (One-time)</span>
+          <button onclick="purchaseAddon('Verification')" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.75rem;">Apply Audit</button>
+        </div>
+      </div>
+
+      <!-- 2. Astrology Upsell -->
+      <div class="addon-card">
+        <h3>2. Astrology & Kundali Harmony</h3>
+        <p>Astrology compatibility is paramount in Indian weddings. Secure certified astrological reports from royal pandits.</p>
+        <ul style="font-size: 0.8rem; color: var(--text-dark); margin-bottom: 20px; line-height: 1.8; list-style: none; padding: 0;">
+          <li>✓ Detailed Kundali matching analysis</li>
+          <li>✓ Personal call consultation with veteran Astrologers</li>
+          <li>✓ Auspicious marriage timing (Muhurtha) reports</li>
+        </ul>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="addon-price">₹1,999 (Per consultation)</span>
+          <button onclick="purchaseAddon('Astrology')" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.75rem;">Consult Pandit</button>
+        </div>
+      </div>
+
+      <!-- 3. AI Assisted Matchmaking -->
+      <div class="addon-card">
+        <h3>3. AI Matchmaking & Compatibility</h3>
+        <p>Intelligent filtering using state-of-the-art behavioral science. Obtain premium scores before initiating requests.</p>
+        <ul style="font-size: 0.8rem; color: var(--text-dark); margin-bottom: 20px; line-height: 1.8; list-style: none; padding: 0;">
+          <li>✓ "Marriage Readiness" compatibility quotient</li>
+          <li>✓ Deep personality affinity score</li>
+          <li>✓ Specialized AI recommendation algorithms</li>
+        </ul>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="addon-price">₹999 (Permanent)</span>
+          <button onclick="purchaseAddon('AI Matchmaking')" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.75rem;">Activate AI</button>
+        </div>
+      </div>
+
+      <!-- 4. Royal Wedding Ecosystem -->
+      <div class="addon-card">
+        <h3>4. Vetted Palace Wedding Ecosystem</h3>
+        <p>From matchmaking success straight to the palace arches. Access vetted luxury wedding curators in Rajasthan.</p>
+        <ul style="font-size: 0.8rem; color: var(--text-dark); margin-bottom: 20px; line-height: 1.8; list-style: none; padding: 0;">
+          <li>✓ Exclusive bookings at heritage palace venues</li>
+          <li>✓ Celebrated bridal makeup & traditional jewelry designers</li>
+          <li>✓ Royal photography and caterers selection</li>
+        </ul>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="addon-price">Success-Based Quotations</span>
+          <button onclick="purchaseAddon('Wedding Ecosystem')" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.75rem;">Connect curators</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
   <!-- CTA Section -->
   <section class="cta-section" id="callToAction">
     <div class="cta-content">
@@ -511,6 +586,17 @@
         document.getElementById('homeSubGold').textContent = periodData.goldSub;
       });
     });
+
+    // Purchase addon handler
+    function purchaseAddon(addonName) {
+      const currentUser = localStorage.getItem('currentUser');
+      if (!currentUser) {
+        alert('Please log in first to unlock add-on services!');
+        window.location.href = 'login.html';
+        return;
+      }
+      alert(`Your request for the "${addonName}" upgrade package has been logged. Our royal concierge desk will contact you within 24 hours. Khammaghani!`);
+    }
   </script>
 </body>
 </html>
