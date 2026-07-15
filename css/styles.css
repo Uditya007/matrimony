@@ -1691,54 +1691,45 @@ footer {
     grid-template-columns: 1fr !important;
   }
   .nav-container {
-    padding: 10px 12px !important;
-  }
-  .logo-img {
-    width: 30px !important;
-    height: 30px !important;
-    border-width: 1px !important;
+    padding: 12px 15px !important;
   }
   .logo-text {
-    font-size: 0.8rem !important;
+    font-size: 1.25rem !important;
     font-weight: 700 !important;
-    letter-spacing: 0.5px !important;
+    letter-spacing: 1.2px !important;
     color: var(--primary-color) !important;
   }
   .logo-subtext {
     display: block !important;
-    font-size: 0.45rem !important;
-    letter-spacing: 1.5px !important;
+    font-size: 0.55rem !important;
+    letter-spacing: 2px !important;
     text-transform: uppercase !important;
     color: var(--gold-antique) !important;
-    margin-top: 1px !important;
+    margin-top: 2px !important;
     font-weight: 600 !important;
   }
   .logo-icon {
-    width: 28px !important;
-    height: 28px !important;
+    width: 36px !important;
+    height: 36px !important;
     margin-right: -4px !important;
   }
   .logo-icon svg {
-    width: 14px !important;
-    height: 14px !important;
+    width: 18px !important;
+    height: 18px !important;
   }
   .nav-auth-buttons {
-    display: flex !important;
-    gap: 5px !important;
-    align-items: center !important;
-    margin-left: auto !important;
-    margin-right: 8px !important;
+    display: none !important;
   }
-  .nav-auth-buttons .btn {
-    font-size: 0.68rem !important;
-    padding: 4px 8px !important;
-    border-radius: 4px !important;
-    font-weight: 700 !important;
+  
+  /* Make mobile menu drawer link fonts visible on maroon background */
+  .nav-links a {
+    color: var(--text-dark) !important; /* Sandstone Ivory */
+    font-size: 1.15rem !important;
+    padding: 8px 0 !important;
   }
-  .nav-auth-buttons .btn-minimal {
-    margin-right: 0 !important;
-    border: 1.2px solid rgba(92, 6, 18, 0.2) !important;
-    color: var(--primary-color) !important;
+  .nav-links a:hover,
+  .nav-links a.active {
+    color: var(--gold-bright) !important; /* Gold highlight */
   }
 }
 
@@ -2877,4 +2868,17 @@ footer {
   50% {
     transform: translateY(-8px);
   }
+}
+
+/* Mobile Drawer Log In Button High-Contrast Overrides */
+.mobile-nav-auth .btn-minimal {
+  color: var(--text-dark) !important; /* Sandstone Ivory */
+  border: 1px solid rgba(245, 237, 224, 0.3) !important;
+  background: transparent !important;
+}
+
+.mobile-nav-auth .btn-minimal:hover {
+  color: var(--gold-bright) !important;
+  border-color: var(--gold-bright) !important;
+  background-color: rgba(245, 237, 224, 0.08) !important;
 }
