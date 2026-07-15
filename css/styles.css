@@ -1691,34 +1691,54 @@ footer {
     grid-template-columns: 1fr !important;
   }
   .nav-container {
-    padding: 12px 15px !important;
+    padding: 10px 12px !important;
+  }
+  .logo-img {
+    width: 30px !important;
+    height: 30px !important;
+    border-width: 1px !important;
   }
   .logo-text {
-    font-size: 1.25rem !important;
+    font-size: 0.8rem !important;
     font-weight: 700 !important;
-    letter-spacing: 1.2px !important;
+    letter-spacing: 0.5px !important;
     color: var(--primary-color) !important;
   }
   .logo-subtext {
     display: block !important;
-    font-size: 0.55rem !important;
-    letter-spacing: 2px !important;
+    font-size: 0.45rem !important;
+    letter-spacing: 1.5px !important;
     text-transform: uppercase !important;
     color: var(--gold-antique) !important;
-    margin-top: 2px !important;
+    margin-top: 1px !important;
     font-weight: 600 !important;
   }
   .logo-icon {
-    width: 36px !important;
-    height: 36px !important;
+    width: 28px !important;
+    height: 28px !important;
     margin-right: -4px !important;
   }
   .logo-icon svg {
-    width: 18px !important;
-    height: 18px !important;
+    width: 14px !important;
+    height: 14px !important;
   }
   .nav-auth-buttons {
-    display: none !important;
+    display: flex !important;
+    gap: 5px !important;
+    align-items: center !important;
+    margin-left: auto !important;
+    margin-right: 8px !important;
+  }
+  .nav-auth-buttons .btn {
+    font-size: 0.68rem !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    font-weight: 700 !important;
+  }
+  .nav-auth-buttons .btn-minimal {
+    margin-right: 0 !important;
+    border: 1.2px solid rgba(92, 6, 18, 0.2) !important;
+    color: var(--primary-color) !important;
   }
 }
 
