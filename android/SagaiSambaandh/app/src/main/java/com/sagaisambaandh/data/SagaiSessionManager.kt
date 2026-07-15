@@ -2,9 +2,7 @@ package com.sagaisambaandh.data
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
-import androidx.lifecycle.ViewModel
-
-class SagaiSessionManager : ViewModel() {
+class SagaiSessionManager {
     private val _currentUser = mutableStateOf<User?>(null)
     val currentUser: State<User?> = _currentUser
 

@@ -3,7 +3,6 @@ package com.sagaisambaandh
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -23,7 +22,7 @@ import com.sagaisambaandh.ui.theme.RoyalMaroon
 import com.sagaisambaandh.ui.theme.SagaiSambaandhTheme
 
 class MainActivity : ComponentActivity() {
-    private val sessionManager: SagaiSessionManager by viewModels()
+    private val sessionManager = SagaiSessionManager()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
