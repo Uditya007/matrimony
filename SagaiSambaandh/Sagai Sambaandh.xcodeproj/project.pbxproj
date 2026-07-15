@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		5CB1311F300797E200553493 /* SagaiSambaandh.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SagaiSambaandh.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5CB1311F300797E200553493 /* Sagai Sambaandh.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Sagai Sambaandh.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -40,7 +40,7 @@
 		5CB13120300797E200553493 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5CB1311F300797E200553493 /* SagaiSambaandh.app */,
+				5CB1311F300797E200553493 /* Sagai Sambaandh.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		5CB1311E300797E200553493 /* SagaiSambaandh */ = {
+		5CB1311E300797E200553493 /* Sagai Sambaandh */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 5CB1312A300797E300553493 /* Build configuration list for PBXNativeTarget "SagaiSambaandh" */;
+			buildConfigurationList = 5CB1312A300797E300553493 /* Build configuration list for PBXNativeTarget "Sagai Sambaandh" */;
 			buildPhases = (
 				5CB1311B300797E200553493 /* Sources */,
 				5CB1311C300797E200553493 /* Frameworks */,
@@ -63,11 +63,11 @@
 			fileSystemSynchronizedGroups = (
 				5CB13121300797E200553493 /* SagaiSambaandh */,
 			);
-			name = SagaiSambaandh;
+			name = "Sagai Sambaandh";
 			packageProductDependencies = (
 			);
 			productName = SagaiSambaandh;
-			productReference = 5CB1311F300797E200553493 /* SagaiSambaandh.app */;
+			productReference = 5CB1311F300797E200553493 /* Sagai Sambaandh.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 5CB1311A300797E200553493 /* Build configuration list for PBXProject "SagaiSambaandh" */;
+			buildConfigurationList = 5CB1311A300797E200553493 /* Build configuration list for PBXProject "Sagai Sambaandh" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,7 +99,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				5CB1311E300797E200553493 /* SagaiSambaandh */,
+				5CB1311E300797E200553493 /* Sagai Sambaandh */,
 			);
 		};
 /* End PBXProject section */
@@ -309,7 +309,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		5CB1311A300797E200553493 /* Build configuration list for PBXProject "SagaiSambaandh" */ = {
+		5CB1311A300797E200553493 /* Build configuration list for PBXProject "Sagai Sambaandh" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5CB13128300797E300553493 /* Debug */,
@@ -318,7 +318,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5CB1312A300797E300553493 /* Build configuration list for PBXNativeTarget "SagaiSambaandh" */ = {
+		5CB1312A300797E300553493 /* Build configuration list for PBXNativeTarget "Sagai Sambaandh" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5CB1312B300797E300553493 /* Debug */,
