@@ -2553,3 +2553,106 @@ footer {
   margin-bottom: 15px;
   display: inline-block;
 }
+
+/* ==========================================
+   ADVANCED ROYAL ANIMATIONS & TRANSITIONS
+   ========================================== */
+
+/* Shimmer sweeping effect on all main CTA buttons */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transform: skewX(-25deg);
+}
+
+.btn:hover::before {
+  left: 150%;
+  transition: left 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Jharokha Dome Arch glow effect on card hover */
+.jharokha-border path {
+  transition: stroke 0.4s ease, stroke-width 0.4s ease, filter 0.4s ease;
+}
+
+.profile-card:hover .jharokha-border path {
+  stroke: var(--gold-bright) !important;
+  stroke-width: 2.5 !important;
+  filter: drop-shadow(0 0 5px rgba(232, 199, 102, 0.6));
+}
+
+/* Profile Card Image zoom fixes */
+.profile-card:hover .jharokha-frame img {
+  transform: scale(1.08);
+}
+
+/* Wax Seal stamping pop micro-animation */
+.wax-seal-badge {
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease !important;
+}
+
+.profile-card:hover .wax-seal-badge {
+  transform: scale(1.15) rotate(-8deg) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255,255,255,0.4),
+    inset 0 -2px 4px rgba(0,0,0,0.4),
+    0 8px 16px rgba(92, 6, 18, 0.35) !important;
+}
+
+/* Clans grid Card zoom banner scaling upgrade */
+.caste-card {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, box-shadow 0.4s ease !important;
+}
+
+.caste-card-banner {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease !important;
+}
+
+.caste-card:hover .caste-card-banner {
+  transform: scale(1.08) !important;
+  filter: brightness(1.15) !important;
+}
+
+/* Native Scroll Reveal keyframe classes */
+.reveal-hidden {
+  opacity: 0 !important;
+  transform: translateY(30px) !important;
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform, opacity;
+}
+
+.reveal-active {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Floating pulse animation for main verification badge elements */
+.pulse-gold {
+  box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.7);
+  animation: pulseGold 2s infinite;
+}
+
+@keyframes pulseGold {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(201, 162, 39, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(201, 162, 39, 0);
+  }
+}

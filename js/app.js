@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize mobile responsive menu drawer
   initMobileMenu();
 
+  // Initialize native scroll reveal observers for elegant page scroll entries
+  initScrollReveal();
+
   // Route-Specific Initializations
   const path = window.location.pathname;
   const pageRaw = path.split('/').pop() || 'index.html';
@@ -898,3 +901,36 @@ window.openProfileDetailModal = function(id) {
   // Open modal
   modal.classList.add('active');
 };
+
+// Dynamic Scroll Reveal observer
+function initScrollReveal() {
+  // Elements that we want to slide up when scrolled into view
+  const revealTargets = document.querySelectorAll(
+    '.clans-grid, .trust-grid, .success-stories-grid, .pricing-grid, .caste-card, .trust-card, .success-card, .pricing-card, .cta-content, .about-heritage-preview'
+  );
+  
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('reveal-active');
+          observer.unobserve(entry.target); // Trigger only once
+        }
+      });
+    }, {
+      threshold: 0.15,
+      rootMargin: '0px 0px -50px 0px'
+    });
+
+    revealTargets.forEach(target => {
+      target.classList.add('reveal-hidden');
+      observer.observe(target);
+    });
+  } else {
+    // Fallback if browser doesn't support IntersectionObserver
+    revealTargets.forEach(target => {
+      target.style.opacity = '1';
+      target.style.transform = 'none';
+    });
+  }
+}
