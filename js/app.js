@@ -118,7 +118,6 @@ function initMobileMenu() {
   container.appendChild(burger);
 
   // Append a mobile-specific auth container inside the .nav-links drawer if not already present
-  const navLinks = document.querySelector('.nav-links');
   if (navLinks && !document.getElementById('mobileNavAuth')) {
     const mobileAuth = document.createElement('div');
     mobileAuth.className = 'mobile-nav-auth';
