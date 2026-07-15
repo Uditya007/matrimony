@@ -3,6 +3,7 @@ import SwiftUI
 struct RegisterView: View {
     @EnvironmentObject var session: SagaiSessionManager
     @Binding var showingRegister: Bool
+    @Binding var isGuestBypassed: Bool
     
     @State private var step: Int = 1
     
@@ -27,14 +28,52 @@ struct RegisterView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header Logo banner
+            // Elegant Indigo Header with Logo Medallion
             ZStack(alignment: .bottom) {
                 LinearGradient(
                     colors: [.jodhpurIndigo, Color(hex: "#101830")],
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .frame(height: 120)
+                .frame(height: 180)
+                
+                VStack(spacing: 12) {
+                    // Centered Medallion Logo
+                    ZStack {
+                        Circle()
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.royalGold, .lightGold, .royalGold],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 2
+                            )
+                            .frame(width: 72, height: 72)
+                        
+                        Group {
+                            if let img = UIImage(named: "logo") {
+                                Image(uiImage: img)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                            } else if let appIcon = UIImage(named: "appicon") {
+                                Image(uiImage: appIcon)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                            } else {
+                                Image(systemName: "shield.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.lightGold)
+                            }
+                        }
+                        .frame(width: 64, height: 64)
+                        .clipShape(Circle())
+                    }
+                    .shadow(radius: 3)
+                    .padding(.top, 10)
+                    
+                    Spacer()
+                }
                 
                 PalaceDivider(fillColor: .sandstoneIvory)
             }
@@ -301,7 +340,10 @@ struct RegisterView: View {
             shortlistedIds: [],
             unlockedIds: []
         )
-        session.login(user: newUser)
+        withAnimation(.easeOut(duration: 0.4)) {
+            session.login(user: newUser)
+            isGuestBypassed = true
+        }
     }
 }
 

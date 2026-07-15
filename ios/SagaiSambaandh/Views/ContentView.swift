@@ -45,6 +45,7 @@ struct ContentView: View {
     @State private var selectedTab: Int = 0
     @State private var showingRegister: Bool = false
     @State private var isSplashActive: Bool = true
+    @State private var isGuestBypassed: Bool = false
     
     var body: some View {
         ZStack {
@@ -58,56 +59,67 @@ struct ContentView: View {
                         }
                     }
             } else {
-                TabView(selection: $selectedTab) {
-                    // Home View
-                    NavigationView {
-                        HomeView(selectedTab: $selectedTab, showingRegister: $showingRegister)
+                if session.currentUser == nil && !isGuestBypassed {
+                    if showingRegister {
+                        RegisterView(showingRegister: $showingRegister, isGuestBypassed: $isGuestBypassed)
                             .environmentObject(session)
-                    }
-                    .tabItem {
-                        Label("Home", systemImage: "house.fill")
-                    }
-                    .tag(0)
-                    
-                    // Clans directory View
-                    NavigationView {
-                        ClansView()
-                    }
-                    .tabItem {
-                        Label("Rajput Clans", systemImage: "shield.lefthalf.filled")
-                    }
-                    .tag(1)
-                    
-                    // Pricing plans view
-                    NavigationView {
-                        PlansView()
+                            .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+                    } else {
+                        LoginView(showingRegister: $showingRegister, isGuestBypassed: $isGuestBypassed)
                             .environmentObject(session)
+                            .transition(.asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                     }
-                    .tabItem {
-                        Label("Regal Plans", systemImage: "crown.fill")
-                    }
-                    .tag(2)
-                    
-                    // Profile Account View
-                    NavigationView {
-                        Group {
-                            if session.currentUser != nil {
-                                DashboardView()
-                                    .environmentObject(session)
-                            } else {
-                                if showingRegister {
-                                    RegisterView(showingRegister: $showingRegister)
+                } else {
+                    TabView(selection: $selectedTab) {
+                        // Home View
+                        NavigationView {
+                            HomeView(selectedTab: $selectedTab, showingRegister: $showingRegister)
+                                .environmentObject(session)
+                        }
+                        .tabItem {
+                            Label("Home", systemImage: "house.fill")
+                        }
+                        .tag(0)
+                        
+                        // Clans directory View
+                        NavigationView {
+                            ClansView()
+                        }
+                        .tabItem {
+                            Label("Rajput Clans", systemImage: "shield.lefthalf.filled")
+                        }
+                        .tag(1)
+                        
+                        // Pricing plans view
+                        NavigationView {
+                            PlansView()
+                                .environmentObject(session)
+                        }
+                        .tabItem {
+                            Label("Regal Plans", systemImage: "crown.fill")
+                        }
+                        .tag(2)
+                        
+                        // Profile Account View
+                        NavigationView {
+                            Group {
+                                if session.currentUser != nil {
+                                    DashboardView()
                                         .environmentObject(session)
                                 } else {
-                                    LoginView(showingRegister: $showingRegister)
-                                        .environmentObject(session)
+                                    if showingRegister {
+                                        RegisterView(showingRegister: $showingRegister, isGuestBypassed: $isGuestBypassed)
+                                            .environmentObject(session)
+                                    } else {
+                                        LoginView(showingRegister: $showingRegister, isGuestBypassed: $isGuestBypassed)
+                                            .environmentObject(session)
+                                    }
                                 }
                             }
                         }
-                    }
-                    .tabItem {
-                        Label("My Account", systemImage: "person.circle.fill")
-                    }
+                        .tabItem {
+                            Label("My Account", systemImage: "person.circle.fill")
+                        }
                     .tag(3)
                 }
                 .accentColor(.royalGold)
