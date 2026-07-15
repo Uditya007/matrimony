@@ -552,7 +552,11 @@ function initRegisterPage() {
 
         if (dbError) {
           console.error(dbError);
-          showToast('Error saving profile: ' + dbError.message, 'normal');
+          if (dbError.code === '23503') {
+            showToast('This email is already registered. Please log in!', 'gold');
+          } else {
+            showToast('Error saving profile: ' + dbError.message, 'normal');
+          }
           return;
         }
 
@@ -563,8 +567,8 @@ function initRegisterPage() {
         }, 1500);
       };
 
-      // If already authenticated via Google
-      if (window.googleUserUid) {
+      // If already authenticated via Google (exclude mock Google login strings)
+      if (window.googleUserUid && !window.googleUserUid.startsWith('mock_')) {
         await saveToSupabase(window.googleUserUid);
       } else {
         const { data, error } = await window.supabaseClient.auth.signUp({
@@ -577,7 +581,11 @@ function initRegisterPage() {
           return;
         }
 
-        await saveToSupabase(data.user.id);
+        if (data && data.user) {
+          await saveToSupabase(data.user.id);
+        } else {
+          showToast('This email is already registered. Please log in!', 'gold');
+        }
       }
       return;
     }
