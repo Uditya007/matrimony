@@ -3,24 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Dashboard matches for Life Partner Connects. Filter, search, and connect with elite brides and grooms.">
-  <title>Regal Matchmaking Dashboard - Life Partner Connects</title>
+  <meta name="description" content="Dashboard matches for Sagai Sambaandh. Filter, search, and connect with elite Rajput brides and grooms.">
+  <title>Regal Matchmaking Dashboard - Sagai Sambaandh</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="dashboard-layout">
+
+  <!-- Jharokha SVG Clip Path for CSS Masking -->
+  <svg width="0" height="0" style="position: absolute;">
+    <defs>
+      <clipPath id="jharokhaClip" clipPathUnits="objectBoundingBox">
+        <path d="M 0.5,0 C 0.65,0.12 0.85,0.15 0.9,0.3 C 0.95,0.45 1,0.55 1,1 L 0,1 L 0,0.55 C 0,0.45 0.05,0.45 0.1,0.3 C 0.15,0.15 0.35,0.12 0.5,0 Z" />
+      </clipPath>
+    </defs>
+  </svg>
 
   <!-- Main Navigation Header -->
   <header>
     <div class="nav-container">
       <a href="index.html" class="logo" id="dashboardLogoLink">
-        <div class="logo-icon">
-          <svg viewBox="0 0 24 24">
-            <path d="M2 4l3 5 7-6 7 6 3-5v14c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V4zm2 7.74V18h16v-6.26l-1.97-1.69-2.52 4.41L12 9.21l-3.51 5.25-2.52-4.41L4 11.74z"/>
-          </svg>
-        </div>
+        <img src="images/logo.jpg" class="logo-img" alt="Sagai Sambaandh Logo" />
         <div>
-          <span class="logo-text">Life Partner Connects</span>
-          <span class="logo-subtext">Royal Matrimony</span>
+          <span class="logo-text">Sagai Sambaandh</span>
+          <span class="logo-subtext">Rajput Matrimony</span>
         </div>
       </a>
       
@@ -56,15 +61,17 @@
       </div>
 
       <div class="form-group">
-        <label for="filterCaste">Lineage Caste</label>
+        <label for="filterCaste">Rajput Clan</label>
         <select id="filterCaste">
-          <option value="All">All Hindu Castes</option>
-          <option value="Rajput">Rajput</option>
-          <option value="Brahmin">Brahmin</option>
-          <option value="Maheshwari">Maheshwari</option>
-          <option value="Oswal">Oswal</option>
-          <option value="Baniya">Baniya</option>
-          <option value="Kayastha">Kayastha</option>
+          <option value="All">All Clans</option>
+          <option value="Rathore">Rathore</option>
+          <option value="Sisodia">Sisodia</option>
+          <option value="Chauhan">Chauhan</option>
+          <option value="Kachwaha">Kachwaha</option>
+          <option value="Bhati">Bhati</option>
+          <option value="Shekhawat">Shekhawat</option>
+          <option value="Panwar">Panwar</option>
+          <option value="Tanwar">Tanwar</option>
         </select>
       </div>
 
@@ -141,7 +148,7 @@
         <div class="modal-header-info">
           <div class="modal-headline">
             <h2 id="modalName">Name Placeholder</h2>
-            <span class="modal-caste-badge" id="modalCaste">Caste</span>
+            <span class="modal-caste-badge" id="modalCaste">Clan</span>
           </div>
           <p class="modal-subline" id="modalSubline">Age • Height • Location</p>
           

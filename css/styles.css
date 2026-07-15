@@ -1,26 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Marcellus&family=Montserrat:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Poppins:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary-color: #5C0612; /* Royal Maroon */
-  --primary-light: #8A1525;
-  --primary-dark: #3A0209;
-  --gold-antique: #AA7C11; /* Classic Gold */
-  --gold-bright: #D4AF37; /* Shining Gold */
+  --primary-color: #6B1220; /* Royal Maroon */
+  --primary-light: #8A1A2B;
+  --primary-dark: #4A0D18; /* Deep Maroon */
+  --gold-antique: #C9A227; /* Royal Gold */
+  --gold-bright: #E8C766; /* Light Gold */
   --gold-light: #F4EAD4;
-  --gold-gradient: linear-gradient(135deg, #AA7C11 0%, #D4AF37 50%, #F4EAD4 100%);
-  --gold-gradient-hover: linear-gradient(135deg, #D4AF37 0%, #F4EAD4 50%, #AA7C11 100%);
-  --bg-warm: #FCFBF7; /* Ivory Cream */
-  --bg-card: #F9F5EF; /* Soft Cream Card */
-  --text-dark: #2D2D2D;
-  --text-muted: #665D5E;
-  --text-light: #9B8E90;
+  --gold-gradient: linear-gradient(135deg, #C9A227 0%, #E8C766 50%, #F5EDE0 100%);
+  --gold-gradient-hover: linear-gradient(135deg, #E8C766 0%, #F5EDE0 50%, #C9A227 100%);
+  --bg-warm: #F5EDE0; /* Ivory Sandstone */
+  --bg-card: #FAF6EE; /* Soft Cream Card */
+  --indigo-accent: #1D2B53; /* Jodhpur Indigo */
+  --text-dark: #2B1810; /* Ink Brown */
+  --text-muted: #5A473E;
+  --text-light: #8E7A71;
   --text-white: #FFFFFF;
-  --font-royal: 'Marcellus', 'Cinzel', serif;
-  --font-body: 'Montserrat', sans-serif;
+  --font-royal: 'Cormorant Garamond', serif;
+  --font-eyebrow: 'Cinzel', serif;
+  --font-body: 'Poppins', sans-serif;
   --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  --shadow: 0 10px 30px rgba(92, 6, 18, 0.05);
-  --shadow-royal: 0 15px 45px rgba(92, 6, 18, 0.12);
-  --shadow-gold: 0 0 20px rgba(170, 124, 17, 0.15);
+  --shadow: 0 10px 30px rgba(107, 18, 32, 0.05);
+  --shadow-royal: 0 15px 45px rgba(107, 18, 32, 0.12);
+  --shadow-gold: 0 0 20px rgba(201, 162, 39, 0.15);
   --border-radius: 12px;
   --border-radius-lg: 24px;
 }
@@ -116,6 +118,22 @@ header {
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow-gold);
+}
+
+.logo-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--gold-antique);
+  box-shadow: var(--shadow-gold);
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.logo-img:hover {
+  transform: scale(1.05);
+  border-color: var(--gold-bright);
 }
 
 .logo-icon svg {
@@ -1242,17 +1260,12 @@ footer {
 
 .modal-photo-area {
   height: 350px;
-  background-color: var(--primary-color);
+  background-color: transparent;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.modal-photo-area img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  padding: 20px;
 }
 
 .modal-header-info {
@@ -2246,4 +2259,274 @@ footer {
 .caste-card:hover .caste-card-banner {
   filter: brightness(1.1);
   transform: scale(1.02);
+}
+
+/* ==========================================
+   RAJPUTANA SIGNATURE REDESIGN ELEMENTS
+   ========================================== */
+
+/* Jaali Screen Background Texture */
+.jaali-texture {
+  background-color: var(--bg-warm);
+  background-image: 
+    linear-gradient(45deg, rgba(201, 162, 39, 0.04) 25%, transparent 25%, transparent 75%, rgba(201, 162, 39, 0.04) 75%),
+    linear-gradient(-45deg, rgba(201, 162, 39, 0.04) 25%, transparent 25%, transparent 75%, rgba(201, 162, 39, 0.04) 75%);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+}
+
+/* Jharokha Window Image Frame */
+.jharokha-frame-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1.25;
+  overflow: hidden;
+}
+
+.jharokha-frame {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  clip-path: url(#jharokhaClip);
+  transition: var(--transition);
+}
+
+.jharokha-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Wax Seal Verification Badge */
+.wax-seal-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.wax-seal-badge {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  background: radial-gradient(circle at 35% 35%, #a61d31 0%, #6b1220 80%);
+  border-radius: 50%;
+  box-shadow: 
+    inset 0 1px 1px rgba(255,255,255,0.4),
+    inset 0 -2px 4px rgba(0,0,0,0.4),
+    0 3px 6px rgba(0,0,0,0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wax-seal-badge::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border: 1px dashed rgba(232, 199, 102, 0.4);
+  border-radius: 50%;
+}
+
+.wax-seal-badge svg {
+  width: 14px;
+  height: 14px;
+  fill: var(--gold-bright);
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5));
+}
+
+.wax-seal-ribbons {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 12px;
+  pointer-events: none;
+  z-index: -1;
+  display: flex;
+  justify-content: space-between;
+}
+
+.wax-seal-ribbons::before,
+.wax-seal-ribbons::after {
+  content: '';
+  width: 8px;
+  height: 14px;
+  background-color: #6b1220;
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 80%, 0% 100%);
+}
+
+.wax-seal-ribbons::before {
+  transform: rotate(-15deg);
+}
+
+.wax-seal-ribbons::after {
+  transform: rotate(15deg);
+}
+
+.wax-seal-label {
+  font-family: var(--font-eyebrow);
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  color: var(--primary-color);
+  font-weight: 700;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Privacy Photo Lock Styles */
+.photo-locked-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1.25;
+  overflow: hidden;
+  background-color: var(--primary-dark);
+}
+
+.photo-locked-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(18px) brightness(0.65);
+  transform: scale(1.05);
+}
+
+.photo-locked-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-white);
+  padding: 20px;
+  text-align: center;
+  z-index: 3;
+  background: rgba(74, 13, 24, 0.4);
+  clip-path: url(#jharokhaClip);
+}
+
+.photo-locked-icon {
+  width: 38px;
+  height: 38px;
+  background: rgba(232, 199, 102, 0.15);
+  border: 1px solid var(--gold-bright);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.photo-locked-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: var(--gold-bright);
+}
+
+.photo-locked-title {
+  font-family: var(--font-eyebrow);
+  font-size: 0.72rem;
+  letter-spacing: 1.5px;
+  color: var(--gold-bright);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.photo-locked-desc {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 150px;
+  line-height: 1.3;
+}
+
+/* Palace Skyline Silhouette Divider */
+.palace-divider {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.palace-divider svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Section headers styles override for Garamond display style */
+.section-title {
+  font-family: var(--font-royal);
+  font-size: 2.75rem;
+  color: var(--primary-color);
+  font-weight: 400;
+  margin-bottom: 12px;
+}
+
+.section-subtitle {
+  font-family: var(--font-eyebrow);
+  font-size: 0.8rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold-antique);
+  font-weight: 700;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+/* Review Alignment Tweaks for Rajput Domes */
+.review-card {
+  background-color: var(--bg-card);
+  border: 1px solid rgba(201, 162, 39, 0.15);
+  border-radius: var(--border-radius);
+  padding: 30px;
+  position: relative;
+  transition: var(--transition);
+  overflow: hidden;
+}
+
+.review-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--gold-gradient);
+}
+
+.review-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-royal);
+  border-color: var(--gold-antique);
+}
+
+.review-badge {
+  font-family: var(--font-eyebrow);
+  font-size: 0.7rem;
+  color: var(--gold-antique);
+  letter-spacing: 1px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 15px;
+  display: inline-block;
 }

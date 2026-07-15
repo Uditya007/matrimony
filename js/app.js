@@ -1,4 +1,4 @@
-// Life Partner Connects - Central State Controller & Application Logic
+// Sagai Sambaandh - Central State Controller & Application Logic
 
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize dynamic user database in LocalStorage if not present
@@ -24,15 +24,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Route-Specific Initializations
   const path = window.location.pathname;
-  const page = path.split('/').pop() || 'index.html';
+  const pageRaw = path.split('/').pop() || 'index.html';
+  const page = pageRaw.split('?')[0].split('#')[0];
 
-  if (page === 'index.html' || page === '') {
+  if (page === 'index.html' || page === '' || page === 'index') {
     initHomepage();
-  } else if (page === 'login.html') {
+  } else if (page === 'login.html' || page === 'login') {
     initLoginPage();
-  } else if (page === 'register.html') {
+  } else if (page === 'register.html' || page === 'register') {
     initRegisterPage();
-  } else if (page === 'dashboard.html') {
+  } else if (page === 'dashboard.html' || page === 'dashboard') {
     initDashboardPage();
   }
 });
@@ -169,7 +170,8 @@ function getAllProfiles() {
     gender: user.gender,
     age: parseInt(user.age) || 25,
     height: user.height || "5'6\"",
-    caste: user.caste,
+    caste: "Rajput",
+    clan: user.clan || user.caste || "Rathore",
     gotra: `${user.gotra || 'Not Specified'} (Father) / ${user.motherGotra || 'Not Specified'} (Mother)`,
     native: user.native || 'Rajasthan',
     rashi: user.rashi || 'Not Specified',
@@ -263,17 +265,18 @@ function initLoginPage() {
     }
 
     // Standard static credentials for seed testing
-    if (email === 'royal@lifepartnerconnects.com' && password === 'royal123') {
+    if ((email === 'royal@sagaisambaandh.com' || email === 'royal@lifepartnerconnects.com') && password === 'royal123') {
       const demoUser = {
         name: 'Kunwar Shivraj Singh',
         gender: 'Groom',
         email: email,
         caste: 'Rajput',
+        clan: 'Rathore',
         age: 28,
         tier: 'Starter' // Default Starter Tier
       };
       localStorage.setItem('currentUser', JSON.stringify(demoUser));
-      showToast('Khammaghani! Welcome to Life Partner Connects', 'gold');
+      showToast('Khammaghani! Welcome to Sagai Sambaandh', 'gold');
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 1200);
@@ -292,7 +295,7 @@ function initLoginPage() {
         window.location.href = 'dashboard.html';
       }, 1200);
     } else {
-      showToast('Invalid credentials. Try royal@rajgharana.com / royal123', 'normal');
+      showToast('Invalid credentials. Try royal@sagaisambaandh.com / royal123', 'normal');
     }
   });
 }
@@ -344,7 +347,8 @@ function initRegisterPage() {
       password: document.getElementById('regPassword').value,
       age: document.getElementById('regAge').value,
       height: "5'7\"",
-      caste: document.getElementById('regCaste').value,
+      caste: "Rajput",
+      clan: document.getElementById('regCaste').value,
       gotra: document.getElementById('regGotra').value.trim(),
       motherGotra: document.getElementById('regMotherGotra').value.trim(),
       rashi: document.getElementById('regRashi').value,
@@ -405,7 +409,7 @@ function initRegisterPage() {
       const age = document.getElementById('regAge').value;
 
       if (!caste || !gotra || !age) {
-        showToast('Please provide Caste, Father\'s Gotra, and Age');
+        showToast('Please select Clan, Father\'s Gotra, and Age');
         return false;
       }
       return true;
@@ -629,20 +633,22 @@ function renderMatchesGrid() {
   container.innerHTML = filtered.map(profile => createProfileCardHtml(profile, true)).join('');
 }
 
-function getAvatarGradient(caste) {
-  switch (caste) {
-    case 'Rajput':
-      return 'linear-gradient(135deg, #3A0209 0%, #5C0612 40%, #E05A12 100%)';
-    case 'Brahmin':
-      return 'linear-gradient(135deg, #3A0209 0%, #5C0612 40%, #E5A800 100%)';
-    case 'Maheshwari':
-      return 'linear-gradient(135deg, #3A0209 0%, #5C0612 40%, #0F4C81 100%)';
-    case 'Oswal':
-      return 'linear-gradient(135deg, #3A0209 0%, #5C0612 40%, #C41E3A 100%)';
-    case 'Baniya':
-      return 'linear-gradient(135deg, #3A0209 0%, #5C0612 40%, #0D6646 100%)';
+function getAvatarGradient(clan) {
+  switch (clan) {
+    case 'Rathore':
+      return 'linear-gradient(135deg, #4A0D18 0%, #6B1220 50%, #D45B12 100%)';
+    case 'Sisodia':
+      return 'linear-gradient(135deg, #4A0D18 0%, #6B1220 50%, #C41E3A 100%)';
+    case 'Chauhan':
+      return 'linear-gradient(135deg, #4A0D18 0%, #6B1220 50%, #C9A227 100%)';
+    case 'Kachwaha':
+      return 'linear-gradient(135deg, #4A0D18 0%, #6B1220 50%, #1D2B53 100%)';
+    case 'Bhati':
+      return 'linear-gradient(135deg, #4A0D18 0%, #6B1220 50%, #E8C766 100%)';
+    case 'Shekhawat':
+      return 'linear-gradient(135deg, #4A0D18 0%, #6B1220 50%, #0D6646 100%)';
     default:
-      return 'linear-gradient(135deg, #3A0209 0%, #5C0612 100%)';
+      return 'linear-gradient(135deg, #4A0D18 0%, #6B1220 100%)';
   }
 }
 
@@ -652,26 +658,71 @@ function createProfileCardHtml(profile, isDashboard = true) {
   const interests = JSON.parse(localStorage.getItem('interests')) || {};
   const isShortlisted = shortlists.includes(profile.id);
   const hasSentInterest = !!interests[profile.id];
+  const isLoggedIn = !!localStorage.getItem('currentUser');
 
   // Business badges: Recently Active, Verified Shield, and AI score overlay
-  const recentlyActiveBadge = profile.isRecentlyActive ? `<div class="badge-active"><span class="pulse-green"></span>Recently Active</div>` : '';
-  const verifiedBadge = profile.isVerified ? `<div class="badge-verified">✓ Verified</div>` : '';
+  const recentlyActiveBadge = profile.isRecentlyActive ? `<div class="badge-active" style="margin-top: 10px;"><span class="pulse-green"></span>Recently Active</div>` : '';
+  
+  // Rajput Circular Wax Seal Verification Badge
+  const verifiedBadge = profile.isVerified ? `
+    <div class="wax-seal-container" title="Lineage, Gotra & Family Verified">
+      <div class="wax-seal-badge">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2L2 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5L12 2zm-1 15l-3-3 1.4-1.4 1.6 1.6 4.6-4.6 1.4 1.4-6 6z"/>
+        </svg>
+        <div class="wax-seal-ribbons"></div>
+      </div>
+      <span class="wax-seal-label">Lineage Verified</span>
+    </div>
+  ` : '';
+
   const aiScoreBadge = `<div class="ai-score-badge">✨ ${profile.aiScore || 92}% Match</div>`;
+
+  // Privacy-first photo state (blurred/locked for non-logged-in homepage visitors)
+  const isPhotoLocked = !isLoggedIn && !isDashboard;
+
+  let imageAreaHtml = `
+    <div class="jharokha-frame-container">
+      <!-- Clipped frame block containing either profile image or locked blur, with velvet gradient background -->
+      <div class="jharokha-frame" style="background: ${getAvatarGradient(profile.clan)}; width: 100%; height: 100%;">
+        ${isPhotoLocked ? `
+          <div class="photo-locked-container" style="width: 100%; height: 100%; background: transparent;">
+            ${profile.img ? `<img src="${profile.img}" class="photo-locked-img" alt="Locked Match" />` : `<div class="profile-avatar-placeholder photo-locked-img" style="font-size: 3rem; display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-white);">${profile.initials}</div>`}
+            <div class="photo-locked-overlay" style="background: rgba(74, 13, 24, 0.4); clip-path: none;">
+              <div class="photo-locked-icon">
+                <svg viewBox="0 0 24 24">
+                  <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                </svg>
+              </div>
+              <div class="photo-locked-title">Photo Locked</div>
+              <div class="photo-locked-desc">Requires Mutual Connect</div>
+            </div>
+          </div>
+        ` : `
+          ${profile.img ? `<img src="${profile.img}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="${profile.name}" />` : `<div class="profile-avatar-placeholder" style="font-size: 3rem; display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-white);">${profile.initials}</div>`}
+        `}
+      </div>
+      
+      <!-- Jharokha absolute border outline SVG -->
+      <svg class="jharokha-border" viewBox="0 0 100 125" preserveAspectRatio="none">
+        <path d="M 50,2 C 65,14 85,17 90,32 C 95,47 98,57 98,98 L 2,98 C 2,57 5,47 10,32 C 15,17 35,14 50,2 Z" fill="none" stroke="var(--gold-antique)" stroke-width="2" />
+      </svg>
+
+      <span class="profile-gender-badge ${profile.gender === 'Groom' ? 'badge-groom' : 'badge-bride'}">${profile.gender}</span>
+      ${aiScoreBadge}
+      <div class="profile-details-preview">
+        <h4>${isPhotoLocked ? (profile.name.split(' ')[0] + ' ' + (profile.name.split(' ')[1] ? profile.name.split(' ')[1][0] + '.' : '')) : profile.name}</h4>
+        <span class="profile-caste-tag">${profile.clan} Clan • ${profile.age} Yrs</span>
+      </div>
+    </div>
+  `;
 
   return `
     <div class="profile-card" data-id="${profile.id}">
-      <div class="profile-card-image" style="background: ${getAvatarGradient(profile.caste)};">
-        ${profile.img ? `<img src="${profile.img}" class="profile-card-img" alt="${profile.name}" />` : `<div class="profile-avatar-placeholder">${profile.initials}</div>`}
-        <span class="profile-gender-badge ${profile.gender === 'Groom' ? 'badge-groom' : 'badge-bride'}">${profile.gender}</span>
-        ${aiScoreBadge}
-        <div class="profile-details-preview">
-          <h4>${profile.name}</h4>
-          <span class="profile-caste-tag">${profile.caste} Caste • ${profile.age} Yrs</span>
-        </div>
-      </div>
+      ${imageAreaHtml}
       
       <div class="profile-card-body" style="padding-bottom: 15px;">
-        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+        <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px;">
           ${recentlyActiveBadge}
           ${verifiedBadge}
         </div>
@@ -686,8 +737,8 @@ function createProfileCardHtml(profile, isDashboard = true) {
             <span>${profile.occupation.split(',')[0].substring(0, 15)}...</span>
           </div>
           <div class="profile-meta-item" style="grid-column: span 2;">
-            <strong style="color: var(--gold-antique); font-size: 0.75rem; text-transform: uppercase;">Gotra:</strong>
-            <span style="font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${profile.gotra.split(' (')[0]}</span>
+            <strong style="color: var(--primary-color); font-size: 0.75rem; text-transform: uppercase; font-family: var(--font-eyebrow);">Gotra:</strong>
+            <span style="font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${profile.gotra}</span>
           </div>
         </div>
       </div>
@@ -706,7 +757,7 @@ function createProfileCardHtml(profile, isDashboard = true) {
         </div>
       ` : `
         <div class="profile-card-footer">
-          <a href="login.html" class="btn btn-royal" style="width: 100%; font-size: 0.8rem;">Connect with ${profile.gender === 'Groom' ? 'Him' : 'Her'}</a>
+          <a href="login.html" class="btn btn-royal" style="width: 100%; font-size: 0.8rem;">Connect with ${profile.gender === 'Groom' ? 'Banna' : 'Ladi'}</a>
         </div>
       `}
     </div>
@@ -771,10 +822,22 @@ window.openProfileDetailModal = function(id) {
   const profile = profiles.find(p => p.id === id);
   if (!profile) return;
 
-  // Build dynamic content for detailed modal view
-  document.getElementById('modalInitials').innerHTML = profile.img ? `<img src="${profile.img}" alt="${profile.name}" style="width: 100%; height: 100%; object-fit: cover;" />` : `<div class="profile-avatar-placeholder" style="font-size: 7rem; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: ${getAvatarGradient(profile.caste)};">${profile.initials}</div>`;
+  // Build dynamic content for detailed modal view inside a gorgeous Jharokha window frame
+  document.getElementById('modalInitials').innerHTML = `
+    <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+      <!-- Clipped frame block containing either the img or initials -->
+      <div class="jharokha-frame" style="background: ${getAvatarGradient(profile.clan)}; width: 100%; height: 100%;">
+        ${profile.img ? `<img src="${profile.img}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="${profile.name}" />` : `<div class="profile-avatar-placeholder" style="font-size: 7rem; display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-white);">${profile.initials}</div>`}
+      </div>
+      
+      <!-- Jharokha absolute border outline SVG overlay -->
+      <svg class="jharokha-border" viewBox="0 0 100 125" preserveAspectRatio="none" style="z-index: 10; padding: 20px;">
+        <path d="M 50,2 C 65,14 85,17 90,32 C 95,47 98,57 98,98 L 2,98 C 2,57 5,47 10,32 C 15,17 35,14 50,2 Z" fill="none" stroke="var(--gold-antique)" stroke-width="2" />
+      </svg>
+    </div>
+  `;
   document.getElementById('modalName').textContent = profile.name;
-  document.getElementById('modalCaste').textContent = `${profile.caste} Caste`;
+  document.getElementById('modalCaste').textContent = `${profile.clan} Clan`;
   document.getElementById('modalSubline').textContent = `${profile.age} Yrs • ${profile.height} • ${profile.location.split(',')[0]}`;
   
   // Stat boxes
@@ -825,7 +888,7 @@ window.openProfileDetailModal = function(id) {
       
       // Simulate authentic details based on seed data
       document.getElementById('unlockedPhone').textContent = `+91 9116${Math.floor(100000 + Math.random() * 900000)}`;
-      document.getElementById('unlockedEmail').textContent = `${profile.name.toLowerCase().replace(/\s/g, '.')}@gharana-member.com`;
+      document.getElementById('unlockedEmail').textContent = `${profile.name.toLowerCase().replace(/\s/g, '.')}@sagaisambaandh-member.com`;
       document.getElementById('unlockedAddress').textContent = `${profile.location}, India`;
       
       showToast('Lineage details decrypted successfully!', 'gold');
