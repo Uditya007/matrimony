@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LoginView: View {
-    @EnvironmentObject var session: SagaiSessionManager
+    @EnvironmentObject var session: SessionManager
     @Binding var showingRegister: Bool
     
     @State private var emailInput: String = ""

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct HomeView: View {
-    @EnvironmentObject var session: SagaiSessionManager
+    @EnvironmentObject var session: SessionManager
     @Binding var selectedTab: Int
     @Binding var showingRegister: Bool
     

@@ -1,7 +1,6 @@
 import SwiftUI
-import Combine
 
-class SagaiSessionManager: ObservableObject {
+class SessionManager: ObservableObject {
     @Published var currentUser: User? = nil
     @Published var profiles: [Profile] = MockData.profiles
     @Published var shortlistedIds: Set<String> = []
@@ -41,7 +40,7 @@ class SagaiSessionManager: ObservableObject {
 }
 
 struct ContentView: View {
-    @StateObject private var session = SagaiSessionManager()
+    @StateObject private var session = SessionManager()
     @State private var selectedTab: Int = 0
     @State private var showingRegister: Bool = false
     

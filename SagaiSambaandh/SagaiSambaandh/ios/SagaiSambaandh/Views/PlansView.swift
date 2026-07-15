@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PlansView: View {
-    @EnvironmentObject var session: SagaiSessionManager
+    @EnvironmentObject var session: SessionManager
     @State private var billingCycle: Int = 0 // 0 = Monthly, 1 = Annual (20% off)
     @State private var alertMessage: String? = nil
     
