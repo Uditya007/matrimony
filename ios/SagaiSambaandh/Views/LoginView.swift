@@ -10,17 +10,11 @@ struct LoginView: View {
     @State private var errorMessage: String? = nil
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Elegant Indigo Header with Logo Medallion
-            ZStack(alignment: .bottom) {
-                LinearGradient(
-                    colors: [.jodhpurIndigo, Color(hex: "#101830")],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 200)
-                
-                VStack(spacing: 12) {
+        GeometryReader { geometry in
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    Spacer(minLength: geometry.size.height * 0.05)
+                    
                     // Centered Medallion Logo
                     ZStack {
                         Circle()
@@ -30,177 +24,182 @@ struct LoginView: View {
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ),
-                                lineWidth: 2
+                                lineWidth: 2.5
                             )
-                            .frame(width: 84, height: 84)
+                            .frame(width: 104, height: 104)
                         
                         Group {
                             if let img = UIImage(named: "logo") {
                                 Image(uiImage: img)
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
-                            } else if let appIcon = UIImage(named: "appicon") {
-                                Image(uiImage: appIcon)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
                             } else {
                                 Image(systemName: "shield.fill")
-                                    .font(.system(size: 28))
+                                    .font(.system(size: 32))
                                     .foregroundColor(.lightGold)
                             }
                         }
-                        .frame(width: 76, height: 76)
+                        .frame(width: 96, height: 96)
                         .clipShape(Circle())
                     }
-                    .shadow(radius: 4)
-                    .padding(.top, 20)
+                    .shadow(color: Color.black.opacity(0.08), radius: 5, x: 0, y: 3)
+                    .padding(.top, 10)
                     
-                    Spacer()
-                }
-                
-                PalaceDivider(fillColor: .sandstoneIvory)
-            }
-            
-            ScrollView {
-                VStack(spacing: 24) {
+                    Spacer().frame(height: 16)
+                    
                     // Title block
                     VStack(spacing: 6) {
-                        Text("Noble Login")
+                        Text("SHREE RAJPUT")
+                            .font(BrandFonts.label(size: 11))
+                            .foregroundColor(.royalGold)
+                            .tracking(3)
+                        
+                        Text("Sagai Sambaandh")
                             .font(BrandFonts.displayBold(size: 28))
                             .foregroundColor(.royalMaroon)
+                        
                         Text("Access Rajasthan's Royal Matrimony")
-                            .font(BrandFonts.body(size: 13))
-                            .foregroundColor(.gray)
-                    }
-                    .padding(.top, 5)
-                    
-                    // Demo credentials panel
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("NOBLE ACCESS DEMO:")
-                            .font(BrandFonts.label(size: 9))
-                            .foregroundColor(.royalMaroon)
-                            .fontWeight(.bold)
-                            .tracking(1)
-                        
-                        HStack {
-                            Text("Email:")
-                                .font(BrandFonts.body(size: 11, weight: .bold))
-                                .foregroundColor(.gray)
-                            Text("royal@sagaisambaandh.com")
-                                .font(BrandFonts.body(size: 11, weight: .bold))
-                                .foregroundColor(.inkBrown)
-                        }
-                        
-                        HStack {
-                            Text("Password:")
-                                .font(BrandFonts.body(size: 11, weight: .bold))
-                                .foregroundColor(.gray)
-                            Text("rajputana")
-                                .font(BrandFonts.body(size: 11, weight: .bold))
-                                .foregroundColor(.inkBrown)
-                        }
-                    }
-                    .padding(15)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.royalGold.opacity(0.06))
-                    .cornerRadius(10)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.royalGold.opacity(0.25), lineWidth: 1)
-                    )
-                    
-                    // Input forms
-                    VStack(spacing: 18) {
-                        // Email
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("ROYAL CREDENTIALS (EMAIL)")
-                                .font(BrandFonts.label(size: 8))
-                                .foregroundColor(.gray)
-                                .tracking(1)
-                            TextField("e.g. kunwar.rathore@gmail.com", text: $emailInput)
-                                .keyboardType(.emailAddress)
-                                .autocapitalization(.none)
-                                .font(BrandFonts.body(size: 14))
-                                .padding(12)
-                                .background(Color.cardBackground)
-                                .cornerRadius(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.royalGold.opacity(0.2), lineWidth: 1)
-                                )
-                        }
-                        
-                        // Password
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("PASSWORD")
-                                .font(BrandFonts.label(size: 8))
-                                .foregroundColor(.gray)
-                                .tracking(1)
-                            SecureField("••••••••", text: $passwordInput)
-                                .font(BrandFonts.body(size: 14))
-                                .padding(12)
-                                .background(Color.cardBackground)
-                                .cornerRadius(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.royalGold.opacity(0.2), lineWidth: 1)
-                                )
-                        }
-                    }
-                    
-                    if let error = errorMessage {
-                        Text(error)
                             .font(BrandFonts.body(size: 12))
-                            .foregroundColor(.red)
-                            .multilineTextAlignment(.center)
-                            .padding(.top, 4)
-                    }
-                    
-                    // Submit CTA
-                    Button(action: handleLogin) {
-                        Text("Enter Sanctuary")
-                            .font(BrandFonts.body(size: 14, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Color.royalMaroon)
-                            .cornerRadius(8)
-                            .shadow(color: Color.royalMaroon.opacity(0.3), radius: 4, x: 0, y: 3)
-                    }
-                    .padding(.top, 5)
-                    
-                    // Registration redirect link
-                    Button(action: { showingRegister = true }) {
-                        HStack {
-                            Text("Already have a lineage record?")
-                                .font(BrandFonts.body(size: 12))
-                                .foregroundColor(.gray)
-                            Text("Sign Up here")
-                                .font(BrandFonts.body(size: 12, weight: .bold))
-                                .foregroundColor(.royalMaroon)
-                        }
-                    }
-                    
-                    Divider()
-                        .background(Color.royalGold.opacity(0.2))
-                        .padding(.vertical, 5)
-                    
-                    // Guest Bypass Option
-                    Button(action: {
-                        withAnimation(.easeOut(duration: 0.4)) {
-                            isGuestBypassed = true
-                        }
-                    }) {
-                        Text("Browse as Guest")
-                            .font(BrandFonts.body(size: 13, weight: .bold))
                             .foregroundColor(.gray)
-                            .underline()
                     }
-                    .padding(.bottom, 20)
+                    .multilineTextAlignment(.center)
+                    
+                    Spacer().frame(height: 24)
+                    
+                    // Centered Login Card Window
+                    VStack(spacing: 20) {
+                        // Demo credentials panel
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("NOBLE ACCESS DEMO:")
+                                .font(BrandFonts.label(size: 9))
+                                .foregroundColor(.royalMaroon)
+                                .fontWeight(.bold)
+                                .tracking(1)
+                            
+                            Text("Email: royal@sagaisambaandh.com")
+                                .font(BrandFonts.body(size: 11, weight: .bold))
+                                .foregroundColor(.inkBrown)
+                            
+                            Text("Password: rajputana")
+                                .font(BrandFonts.body(size: 11, weight: .bold))
+                                .foregroundColor(.inkBrown)
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.royalGold.opacity(0.06))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.royalGold.opacity(0.25), lineWidth: 1)
+                        )
+                        
+                        // Input forms
+                        VStack(spacing: 16) {
+                            // Email
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("ROYAL CREDENTIALS (EMAIL)")
+                                    .font(BrandFonts.label(size: 9))
+                                    .foregroundColor(.royalMaroon) // Red label text for visibility
+                                    .fontWeight(.bold)
+                                    .tracking(0.5)
+                                
+                                TextField("e.g. royal@sagaisambaandh.com", text: $emailInput)
+                                    .keyboardType(.emailAddress)
+                                    .autocapitalization(.none)
+                                    .font(BrandFonts.body(size: 14))
+                                    .foregroundColor(.inkBrown) // Explicitly dark brown input text
+                                    .padding(12)
+                                    .background(Color.cardBackground)
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.royalGold.opacity(0.3), lineWidth: 1)
+                                    )
+                            }
+                            
+                            // Password
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("PASSWORD")
+                                    .font(BrandFonts.label(size: 9))
+                                    .foregroundColor(.royalMaroon) // Red label text for visibility
+                                    .fontWeight(.bold)
+                                    .tracking(0.5)
+                                
+                                SecureField("••••••••", text: $passwordInput)
+                                    .font(BrandFonts.body(size: 14))
+                                    .foregroundColor(.inkBrown) // Explicitly dark brown input text
+                                    .padding(12)
+                                    .background(Color.cardBackground)
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.royalGold.opacity(0.3), lineWidth: 1)
+                                    )
+                            }
+                        }
+                        
+                        if let error = errorMessage {
+                            Text(error)
+                                .font(BrandFonts.body(size: 12))
+                                .foregroundColor(.red)
+                                .multilineTextAlignment(.center)
+                                .padding(.top, 4)
+                        }
+                        
+                        // Submit CTA
+                        Button(action: handleLogin) {
+                            Text("Enter Sanctuary")
+                                .font(BrandFonts.body(size: 14, weight: .bold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(Color.royalMaroon)
+                                .cornerRadius(8)
+                                .shadow(color: Color.royalMaroon.opacity(0.3), radius: 4, x: 0, y: 3)
+                        }
+                        .padding(.top, 5)
+                        
+                        // Registration redirect link
+                        Button(action: { showingRegister = true }) {
+                            HStack {
+                                Text("Already have a lineage record?")
+                                    .font(BrandFonts.body(size: 12))
+                                    .foregroundColor(.gray)
+                                Text("Sign Up here")
+                                    .font(BrandFonts.body(size: 12, weight: .bold))
+                                    .foregroundColor(.royalMaroon)
+                            }
+                        }
+                        
+                        Divider()
+                            .background(Color.royalGold.opacity(0.25))
+                        
+                        // Guest Bypass Option
+                        Button(action: {
+                            withAnimation(.easeOut(duration: 0.4)) {
+                                isGuestBypassed = true
+                            }
+                        }) {
+                            Text("Browse as Guest")
+                                .font(BrandFonts.body(size: 13, weight: .bold))
+                                .foregroundColor(.gray)
+                                .underline()
+                        }
+                    }
+                    .padding(24)
+                    .background(Color.cardBackground)
+                    .cornerRadius(16)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.royalGold.opacity(0.2), lineWidth: 1.5)
+                    )
+                    .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+                    .padding(.horizontal, 20)
+                    
+                    Spacer(minLength: geometry.size.height * 0.05)
                 }
-                .padding(24)
+                .frame(minHeight: geometry.size.height)
             }
-            Spacer()
         }
         .background(Color.sandstoneIvory.edgesIgnoringSafeArea(.all))
         .navigationBarHidden(true)
