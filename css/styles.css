@@ -2633,3 +2633,92 @@ footer {
     box-shadow: 0 0 0 0 rgba(201, 162, 39, 0);
   }
 }
+
+/* Web Splash Onboarding Screen */
+.web-splash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(180deg, #6B1220 0%, #3D0A12 100%);
+  z-index: 999999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s;
+}
+
+.web-splash.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.web-splash-logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transform: scale(0.9);
+  opacity: 0;
+  animation: splashZoomIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.web-splash-logo {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 3.5px solid var(--gold-antique);
+  box-shadow: var(--shadow-royal);
+  margin-bottom: 20px;
+}
+
+.web-splash-title {
+  font-family: var(--font-eyebrow);
+  font-size: 1.1rem;
+  color: var(--gold-bright);
+  letter-spacing: 4px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.web-splash-subtitle {
+  font-family: var(--font-royal);
+  font-size: 2.2rem;
+  color: var(--text-dark); /* resolves to sandstone ivory */
+  letter-spacing: 1px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.web-splash-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(232, 199, 102, 0.2);
+  border-top-color: var(--gold-bright);
+  border-radius: 50%;
+  animation: splashSpin 1s linear infinite;
+}
+
+@keyframes splashZoomIn {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes splashSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
