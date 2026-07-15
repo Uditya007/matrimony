@@ -2721,3 +2721,9 @@ footer {
     transform: rotate(360deg);
   }
 }
+
+/* Footer Social Icons Hover styling */
+.footer-socials a:hover {
+  color: var(--text-dark) !important; /* Glows sandstone ivory/white */
+  transform: scale(1.15) translateY(-2px);
+}
