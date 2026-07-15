@@ -293,15 +293,15 @@ header {
   content: '';
   position: absolute;
   top: 0;
-  right: 0;
+  left: 0; /* Align to the left side */
   width: 50%;
   height: 100%;
   background-image: url('../images/royal_palace_hero.png');
   background-size: cover;
-  background-position: center left;
+  background-position: center right;
   opacity: 0.15;
-  mask-image: linear-gradient(to left, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%);
-  -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%);
+  mask-image: linear-gradient(to right, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%);
+  -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%);
   pointer-events: none;
 }
 
