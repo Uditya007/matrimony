@@ -67,7 +67,6 @@ function updateNavigationState() {
     `;
   } else {
     html = `
-      <a href="login.html" class="btn btn-minimal" id="navLoginBtn">Login</a>
       <a href="register.html" class="btn btn-royal" id="navSignUpBtn">Sign Up</a>
     `;
   }
@@ -85,6 +84,9 @@ function updateNavigationState() {
 function initMobileMenu() {
   const container = document.querySelector('header .nav-container');
   if (!container) return;
+
+  const navLinks = document.querySelector('.nav-links');
+  if (!navLinks) return; // Only create mobile menu button if navigation links exist on this page
 
   // Prevent multiple menus being appended
   if (document.getElementById('mobileMenuBtn')) return;
