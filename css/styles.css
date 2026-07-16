@@ -3298,9 +3298,16 @@ footer {
 /* Mobile Ticker Banner Overrides */
 @media (max-width: 768px) {
   .ticker-banner {
-    padding: 3px 0;
-    font-size: 0.58rem;
-    letter-spacing: 0.6px;
-    line-height: 1.2;
+    height: 18px !important;
+    padding: 0 !important;
+    font-size: 0.52rem !important;
+    letter-spacing: 0.5px !important;
+    line-height: 18px !important;
+    display: flex;
+    align-items: center;
+  }
+  .ticker-text-wrapper {
+    height: 18px !important;
+    line-height: 18px !important;
   }
 }
