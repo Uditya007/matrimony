@@ -3327,3 +3327,27 @@ footer {
     line-height: 18px !important;
   }
 }
+
+/* Mobile View Auth Screen Fixes (Login & Registration) */
+@media (max-width: 768px) {
+  .auth-body {
+    padding: 85px 12px 40px !important; /* Shrunk padding to maximize viewport usage */
+  }
+  .auth-card {
+    padding: 24px 16px !important; /* Shrunk card padding to leave more space for inputs */
+    max-width: 100% !important;
+  }
+  .form-row {
+    grid-template-columns: 1fr !important; /* Collapse grid columns to single column on mobile */
+    gap: 12px !important;
+  }
+  .auth-header {
+    margin-bottom: 20px !important;
+  }
+  .auth-header h2 {
+    font-size: 1.6rem !important; /* Smaller headings */
+  }
+  .register-progress {
+    margin-bottom: 30px !important;
+  }
+}
