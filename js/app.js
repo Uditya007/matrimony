@@ -297,6 +297,9 @@ function initHomepage() {
 
   // Initialize hero slideshow
   initHeroSlideshow();
+
+  // Initialize FAQ Accordion details toggles
+  initFaqAccordion();
 }
 
 function initHeroSlideshow() {
@@ -309,6 +312,29 @@ function initHeroSlideshow() {
     currentSlideIdx = (currentSlideIdx + 1) % slides.length;
     slides[currentSlideIdx].classList.add('active');
   }, 4000);
+}
+
+function initFaqAccordion() {
+  const faqQuestions = document.querySelectorAll('.faq-question');
+  faqQuestions.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.parentElement;
+      const isActive = item.classList.contains('active');
+      
+      // Close all items first (optional, makes it look extremely clean!)
+      document.querySelectorAll('.faq-item').forEach(i => {
+        i.classList.remove('active');
+        const icon = i.querySelector('.faq-icon');
+        if (icon) icon.textContent = '+';
+      });
+
+      if (!isActive) {
+        item.classList.add('active');
+        const icon = item.querySelector('.faq-icon');
+        if (icon) icon.textContent = '−';
+      }
+    });
+  });
 }
 
 // ==========================================

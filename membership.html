@@ -59,9 +59,9 @@
         <span class="plan-desc">For basic lineage listing and entry into our secure Rajput directory.</span>
         
         <div class="plan-price" id="priceStarter">
-          ₹4,999<span>/month</span>
+          Free<span>/1 month trial</span>
         </div>
-        <div class="plan-billing-options" id="subStarter">Basic directory entry</div>
+        <div class="plan-billing-options" id="subStarter">Free 1 Month Trial</div>
         
         <ul class="plan-features">
           <li>
@@ -308,13 +308,13 @@
     
     // Package multiplier values
     const prices = {
-      monthly: { Starter: '₹4,999', Silver: '₹11,999', Gold: '₹24,999', span: '/month' },
+      monthly: { Starter: 'Free', Silver: '₹11,999', Gold: '₹24,999', span: '/1 month trial' },
       quarterly: { Starter: '₹11,999', Silver: '₹28,799', Gold: '₹59,999', span: '/3 months' },
       halfyearly: { Starter: '₹19,999', Silver: '₹49,999', Gold: '₹99,999', span: '/6 months' }
     };
 
     const subtitles = {
-      monthly: { Starter: 'Basic directory entry', Silver: 'Profiles get 4x more responses', Gold: 'Maximum trust & convenience' },
+      monthly: { Starter: 'Free 1 Month Trial', Silver: 'Profiles get 4x more responses', Gold: 'Maximum trust & convenience' },
       quarterly: { Starter: 'Popular entry builder (Save 20%)', Silver: 'Proven quarterly connection success', Gold: 'Premium priority matched' },
       halfyearly: { Starter: 'Extended profile search (Save 30%)', Silver: 'Highly recommended value tier', Gold: 'Success-based matching protocol' }
     };
@@ -360,6 +360,19 @@
       const users = JSON.parse(localStorage.getItem('users')) || [];
       const updatedUsers = users.map(u => u.email.toLowerCase() === user.email.toLowerCase() ? { ...u, tier: planName } : u);
       localStorage.setItem('users', JSON.stringify(updatedUsers));
+
+      // Sync with Supabase Profiles Table if Active
+      if (window.supabaseActive && window.supabaseClient) {
+        window.supabaseClient
+          .from('profiles')
+          .update({ tier: planName })
+          .eq('email', user.email)
+          .then(({ error }) => {
+            if (error) {
+              console.error("Error syncing subscription tier to Supabase:", error);
+            }
+          });
+      }
 
       // Notify user
       alert(`Khammaghani! You have successfully upgraded to the Shree Rajput Sagai Sambandh ${planName} Plan (${periodLabel}). Enjoy premium matchmaking standards!`);
