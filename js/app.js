@@ -770,6 +770,17 @@ function initDashboardPage() {
   // Display initial profiles grid
   renderMatchesGrid();
 
+  // If redirected from chatbot on home page, open the suggested profile details modal
+  const chatbotTriggerProfileId = sessionStorage.getItem('openProfileId');
+  if (chatbotTriggerProfileId) {
+    sessionStorage.removeItem('openProfileId');
+    setTimeout(() => {
+      if (typeof openProfileDetailModal === 'function') {
+        openProfileDetailModal(chatbotTriggerProfileId);
+      }
+    }, 500);
+  }
+
   // Setup sidebar filter event listeners (Real-time live filtering!)
   document.getElementById('filterGender').addEventListener('change', (e) => {
     activeFilters.gender = e.target.value;
