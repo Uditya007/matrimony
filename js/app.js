@@ -294,6 +294,21 @@ function initHomepage() {
     
     featuredContainer.innerHTML = featured.map(profile => createProfileCardHtml(profile, false)).join('');
   }
+
+  // Initialize hero slideshow
+  initHeroSlideshow();
+}
+
+function initHeroSlideshow() {
+  const slides = document.querySelectorAll('.hero-slide');
+  if (slides.length === 0) return;
+
+  let currentSlideIdx = 0;
+  setInterval(() => {
+    slides[currentSlideIdx].classList.remove('active');
+    currentSlideIdx = (currentSlideIdx + 1) % slides.length;
+    slides[currentSlideIdx].classList.add('active');
+  }, 4000);
 }
 
 // ==========================================
