@@ -90,6 +90,8 @@ header {
   border-bottom: 1.5px solid rgba(201, 162, 39, 0.25); /* Subtle gold divider line */
   box-shadow: 0 4px 20px rgba(92, 6, 18, 0.04);
   backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-container {
@@ -3268,7 +3270,7 @@ footer {
   font-family: var(--font-body);
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  z-index: 9999;
+  z-index: 5; /* Lowered z-index to prevent overlapping menu drawer */
   position: relative;
 }
 
@@ -3290,5 +3292,14 @@ footer {
   }
   100% {
     transform: translate3d(-100%, 0, 0);
+  }
+}
+
+/* Mobile Ticker Banner Overrides */
+@media (max-width: 768px) {
+  .ticker-banner {
+    padding: 5px 0;
+    font-size: 0.65rem;
+    letter-spacing: 0.8px;
   }
 }
