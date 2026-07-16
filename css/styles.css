@@ -3182,9 +3182,9 @@ footer {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--maroon-royal), var(--maroon-light));
-  color: var(--gold-antique);
-  border: 1px solid var(--gold-antique);
+  background: var(--gold-antique); /* Solid Gold background */
+  color: var(--maroon-royal) !important; /* Dark Maroon arrow icon */
+  border: 1.5px solid var(--gold-antique);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3194,7 +3194,8 @@ footer {
 
 .chat-input-area .btn-send-chat:hover {
   transform: scale(1.05);
-  background: linear-gradient(135deg, var(--maroon-light), var(--maroon-royal));
+  background: var(--gold-light); /* Lighter gold background on hover */
+  color: var(--maroon-royal) !important;
 }
 
 /* Responsive adjustment for Mobile viewports */
