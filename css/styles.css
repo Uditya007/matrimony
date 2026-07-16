@@ -3280,11 +3280,11 @@ footer {
   color: #5c0612; /* Deep Maroon text for high contrast */
   overflow: hidden;
   white-space: nowrap;
-  padding: 8px 0;
-  font-size: 0.78rem;
+  padding: 4px 0; /* Shrunk padding from 8px to 4px */
+  font-size: 0.68rem; /* Shrunk font size from 0.78rem to 0.68rem */
   font-weight: 800; /* Bold text weight */
   font-family: var(--font-body);
-  letter-spacing: 1.2px;
+  letter-spacing: 1px;
   text-transform: uppercase;
   z-index: 5; /* Lowered z-index to prevent overlapping menu drawer */
   position: relative;
