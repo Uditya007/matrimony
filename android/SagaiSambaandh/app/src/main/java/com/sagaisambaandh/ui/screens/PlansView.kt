@@ -38,20 +38,20 @@ fun PlansView(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .background(SandstoneIvory.copy(alpha = 0.15f))
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         // Header
         Text(
             text = "Regal Memberships",
-            color = RoyalMaroon,
+            color = LightGold,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Serif
         )
         Text(
             text = "Select a Rajputana subscription tier to unlock premium features and direct family contact lines.",
-            color = Color.Gray,
+            color = SandstoneIvory.copy(alpha = 0.7f),
             fontSize = 13.sp,
             modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
         )
@@ -60,7 +60,7 @@ fun PlansView(
         TabRow(
             selectedTabIndex = billingCycle,
             containerColor = Color.Transparent,
-            contentColor = RoyalMaroon,
+            contentColor = LightGold,
             divider = {},
             indicator = {},
             modifier = Modifier
@@ -73,7 +73,7 @@ fun PlansView(
                 onClick = { billingCycle = 0 },
                 modifier = Modifier
                     .background(
-                        if (billingCycle == 0) CardBackground else Color.Transparent,
+                        if (billingCycle == 0) DeepMaroon else Color.Transparent,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .height(36.dp)
@@ -82,7 +82,7 @@ fun PlansView(
                     text = "Monthly",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (billingCycle == 0) RoyalMaroon else Color.Gray
+                    color = if (billingCycle == 0) LightGold else SandstoneIvory.copy(alpha = 0.6f)
                 )
             }
 
@@ -91,7 +91,7 @@ fun PlansView(
                 onClick = { billingCycle = 1 },
                 modifier = Modifier
                     .background(
-                        if (billingCycle == 1) CardBackground else Color.Transparent,
+                        if (billingCycle == 1) DeepMaroon else Color.Transparent,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .height(36.dp)
@@ -100,7 +100,7 @@ fun PlansView(
                     text = "Annual (Save 20%)",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (billingCycle == 1) RoyalMaroon else Color.Gray
+                    color = if (billingCycle == 1) LightGold else SandstoneIvory.copy(alpha = 0.6f)
                 )
             }
         }
@@ -215,9 +215,9 @@ fun PlanCard(
     isFeatured: Boolean,
     onSelect: () -> Unit
 ) {
-    val cardBg = if (isFeatured) RoyalMaroon else CardBackground
-    val textMain = if (isFeatured) Color.White else RoyalMaroon
-    val textMutedColor = if (isFeatured) Color.White.copy(alpha = 0.8f) else Color.Gray
+    val cardBg = if (isFeatured) RoyalMaroon else DeepMaroon
+    val textMain = if (isFeatured) Color.White else SandstoneIvory
+    val textMutedColor = if (isFeatured) Color.White.copy(alpha = 0.8f) else SandstoneIvory.copy(alpha = 0.7f)
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -266,7 +266,7 @@ fun PlanCard(
             ) {
                 Text(
                     text = if (price == 0) "Free" else "₹$price",
-                    color = if (isFeatured) LightGold else RoyalMaroon,
+                    color = if (isFeatured) LightGold else LightGold,
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Serif
@@ -314,8 +314,8 @@ fun PlanCard(
                 onClick = onSelect,
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isFeatured) LightGold else RoyalMaroon,
-                    contentColor = if (isFeatured) RoyalMaroon else Color.White
+                    containerColor = if (isFeatured) LightGold else RoyalGold,
+                    contentColor = RoyalMaroon
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {

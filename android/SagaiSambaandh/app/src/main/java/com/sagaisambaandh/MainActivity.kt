@@ -49,8 +49,8 @@ fun MainScreen(session: SagaiSessionManager) {
     Scaffold(
         bottomBar = {
             NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = RoyalMaroon
+                containerColor = DeepMaroon,
+                contentColor = RoyalGold
             ) {
                 NavigationBarItem(
                     selected = selectedTab == 0,
@@ -58,11 +58,11 @@ fun MainScreen(session: SagaiSessionManager) {
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                     label = { Text("Home", fontSize = 11.sp) },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = RoyalMaroon,
-                        selectedTextColor = RoyalMaroon,
-                        indicatorColor = RoyalGold.copy(alpha = 0.2f),
-                        unselectedIconColor = Color.Gray,
-                        unselectedTextColor = Color.Gray
+                        selectedIconColor = LightGold,
+                        selectedTextColor = LightGold,
+                        indicatorColor = RoyalGold.copy(alpha = 0.15f),
+                        unselectedIconColor = Color.White.copy(alpha = 0.5f),
+                        unselectedTextColor = Color.White.copy(alpha = 0.5f)
                     )
                 )
 
@@ -72,11 +72,11 @@ fun MainScreen(session: SagaiSessionManager) {
                     icon = { Icon(Icons.Default.Shield, contentDescription = "Clans") },
                     label = { Text("Clans", fontSize = 11.sp) },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = RoyalMaroon,
-                        selectedTextColor = RoyalMaroon,
-                        indicatorColor = RoyalGold.copy(alpha = 0.2f),
-                        unselectedIconColor = Color.Gray,
-                        unselectedTextColor = Color.Gray
+                        selectedIconColor = LightGold,
+                        selectedTextColor = LightGold,
+                        indicatorColor = RoyalGold.copy(alpha = 0.15f),
+                        unselectedIconColor = Color.White.copy(alpha = 0.5f),
+                        unselectedTextColor = Color.White.copy(alpha = 0.5f)
                     )
                 )
 
@@ -86,11 +86,11 @@ fun MainScreen(session: SagaiSessionManager) {
                     icon = { Icon(Icons.Default.Star, contentDescription = "Plans") },
                     label = { Text("Plans", fontSize = 11.sp) },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = RoyalMaroon,
-                        selectedTextColor = RoyalMaroon,
-                        indicatorColor = RoyalGold.copy(alpha = 0.2f),
-                        unselectedIconColor = Color.Gray,
-                        unselectedTextColor = Color.Gray
+                        selectedIconColor = LightGold,
+                        selectedTextColor = LightGold,
+                        indicatorColor = RoyalGold.copy(alpha = 0.15f),
+                        unselectedIconColor = Color.White.copy(alpha = 0.5f),
+                        unselectedTextColor = Color.White.copy(alpha = 0.5f)
                     )
                 )
 
@@ -100,11 +100,11 @@ fun MainScreen(session: SagaiSessionManager) {
                     icon = { Icon(Icons.Default.Person, contentDescription = "Account") },
                     label = { Text("Account", fontSize = 11.sp) },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = RoyalMaroon,
-                        selectedTextColor = RoyalMaroon,
-                        indicatorColor = RoyalGold.copy(alpha = 0.2f),
-                        unselectedIconColor = Color.Gray,
-                        unselectedTextColor = Color.Gray
+                        selectedIconColor = LightGold,
+                        selectedTextColor = LightGold,
+                        indicatorColor = RoyalGold.copy(alpha = 0.15f),
+                        unselectedIconColor = Color.White.copy(alpha = 0.5f),
+                        unselectedTextColor = Color.White.copy(alpha = 0.5f)
                     )
                 )
             }

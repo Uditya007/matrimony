@@ -1,5 +1,6 @@
 package com.sagaisambaandh.ui.screens
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sagaisambaandh.data.Profile
@@ -51,60 +52,112 @@ fun HomeView(
         matchGender && matchClan
     }
 
+    var activeHeroSlide by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) {
+        while(true) {
+            kotlinx.coroutines.delay(4000)
+            activeHeroSlide = (activeHeroSlide + 1) % 3
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .background(SandstoneIvory.copy(alpha = 0.15f))
+            .background(MaterialTheme.colorScheme.background)
     ) {
+        // Ticker Marquee Ribbon
+        MarqueeTicker()
+
         // Hero Banner with Palace Skyline
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(JodhpurIndigo, Color(0xFF101830))
+                        colors = listOf(DeepMaroon, RoyalMaroon)
                     )
                 )
                 .padding(bottom = 20.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
+            // Animated Slide Content
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 40.dp, bottom = 48.dp, start = 20.dp, end = 20.dp)
+                    .padding(top = 30.dp, bottom = 48.dp, start = 20.dp, end = 20.dp)
+                    .height(130.dp)
             ) {
                 Text(
-                    text = "A UNION OF RAJPUT LINEAGE & LEGACY",
+                    text = "SHREE RAJPUT SAGAI SAMBANDH",
                     color = LightGold,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 3.sp
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "Where Lineage\nMeets Sacred Legacy",
-                    color = SandstoneIvory,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Serif,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 36.sp
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "Welcome to the most premium, secure, and dedicated matchmaking portal for the noble Rajput community.",
-                    color = SandstoneIvory.copy(alpha = 0.8f),
-                    fontSize = 13.sp,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 18.sp,
-                    modifier = Modifier.padding(horizontal = 20.dp)
-                )
+                
+                when (activeHeroSlide) {
+                    0 -> {
+                        Text(
+                            text = "Where Lineage\nMeets Sacred Legacy",
+                            color = SandstoneIvory,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Serif,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 32.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Premium, secure, and dedicated matchmaking portal.",
+                            color = SandstoneIvory.copy(alpha = 0.8f),
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    1 -> {
+                        Text(
+                            text = "Gotra-Sensitive\nMatchmaking System",
+                            color = SandstoneIvory,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Serif,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 32.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Strict checks to prevent overlapping gotra matches.",
+                            color = SandstoneIvory.copy(alpha = 0.8f),
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    2 -> {
+                        Text(
+                            text = "Vetted Rajput\nLineage Records",
+                            color = SandstoneIvory,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Serif,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 32.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Direct family-to-family contact connection lines.",
+                            color = SandstoneIvory.copy(alpha = 0.8f),
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
 
             PalaceDivider(
-                fillColor = SandstoneIvory,
+                fillColor = RoyalMaroon,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -116,7 +169,7 @@ fun HomeView(
                 .padding(horizontal = 20.dp)
                 .offset(y = (-30).dp),
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = CardBackground),
+            colors = CardDefaults.cardColors(containerColor = DeepMaroon),
             elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
         ) {
             Column(
@@ -125,7 +178,7 @@ fun HomeView(
             ) {
                 Text(
                     text = "FIND YOUR NOBLE MATCH",
-                    color = RoyalMaroon,
+                    color = LightGold,
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp,
                     letterSpacing = 1.5.sp
@@ -138,7 +191,7 @@ fun HomeView(
                 ) {
                     // Looking For Picker
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = "LOOKING FOR", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        Text(text = "LOOKING FOR", fontSize = 8.sp, color = LightGold.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -149,7 +202,7 @@ fun HomeView(
                         ) {
                             Text(
                                 text = if (lookingFor == "Bride") "Bride (Ladi)" else "Groom (Lada)",
-                                color = InkBrown,
+                                color = SandstoneIvory,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -160,11 +213,11 @@ fun HomeView(
 
                     // Clan dropdown
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = "RAJPUT CLAN", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        Text(text = "RAJPUT CLAN", fontSize = 8.sp, color = LightGold.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
                         Box {
                             Text(
                                 text = selectedClan,
-                                color = InkBrown,
+                                color = SandstoneIvory,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier
@@ -195,9 +248,9 @@ fun HomeView(
                 Button(
                     onClick = {
                         if (session.currentUser.value == null) {
-                            onNavigateToTab(3) // Direct to login tab
+                            onNavigateToTab(3)
                         } else {
-                            onNavigateToTab(3) // Already logged in, direct to dashboard grid
+                            onNavigateToTab(3)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -222,7 +275,7 @@ fun HomeView(
         ) {
             Text(
                 text = "Featured Rajput Lineages",
-                color = RoyalMaroon,
+                color = LightGold,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Serif,
@@ -230,7 +283,7 @@ fun HomeView(
             )
             Text(
                 text = "Verified brides and grooms recently active",
-                color = Color.Gray,
+                color = SandstoneIvory.copy(alpha = 0.7f),
                 fontSize = 12.sp,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 2.dp)
             )
@@ -240,7 +293,7 @@ fun HomeView(
             if (filteredProfiles.isEmpty()) {
                 Text(
                     text = "No noble profiles match your search criteria currently.",
-                    color = Color.Gray,
+                    color = SandstoneIvory.copy(alpha = 0.5f),
                     fontStyle = FontStyle.Italic,
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center,
@@ -282,8 +335,8 @@ fun HomeView(
         ) {
             Text(
                 text = "The Shree Rajput Sagai Sambandh Promise",
-                color = RoyalMaroon,
-                fontSize = 20.sp,
+                color = LightGold,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Serif
             )
@@ -303,14 +356,14 @@ fun HomeView(
         ) {
             Text(
                 text = "Frequently Asked Questions",
-                color = RoyalMaroon,
+                color = LightGold,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Serif
             )
             Text(
-                text = "Learn more about our lineage checks and Gotra compatibility guidelines.",
-                color = Color.Gray,
+                text = "Learn more about our lineage checks and Gotra guidelines.",
+                color = SandstoneIvory.copy(alpha = 0.7f),
                 fontSize = 12.sp,
                 modifier = Modifier.padding(top = 2.dp, bottom = 16.dp)
             )
@@ -345,12 +398,44 @@ fun HomeView(
 }
 
 @Composable
+fun MarqueeTicker() {
+    val transition = rememberInfiniteTransition()
+    val offsetX by transition.animateFloat(
+        initialValue = 1f,
+        targetValue = -1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 15000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Brush.linearGradient(colors = listOf(Color(0xFFC9A227), Color(0xFFE8C766), Color(0xFFC9A227))))
+            .padding(vertical = 6.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val screenWidthDp = maxWidth
+            Text(
+                text = "✨ Register your noble profile today and enjoy a Free Trial for a month! ✨   ✨ Register your noble profile today and enjoy a Free Trial for a month! ✨",
+                color = RoyalMaroon,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                modifier = Modifier.offset(x = screenWidthDp * offsetX)
+            )
+        }
+    }
+}
+
+@Composable
 fun FaqAccordionItem(question: String, answer: String) {
     var expanded by remember { mutableStateOf(false) }
 
     Card(
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        colors = CardDefaults.cardColors(containerColor = DeepMaroon),
         border = CardDefaults.outlinedCardBorder().copy(
             brush = Brush.linearGradient(
                 colors = if (expanded) listOf(RoyalGold, LightGold) else listOf(RoyalGold.copy(alpha = 0.2f), RoyalGold.copy(alpha = 0.2f))
@@ -369,7 +454,7 @@ fun FaqAccordionItem(question: String, answer: String) {
             ) {
                 Text(
                     text = question,
-                    color = RoyalMaroon,
+                    color = LightGold,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
                     fontFamily = FontFamily.Serif,
@@ -386,7 +471,7 @@ fun FaqAccordionItem(question: String, answer: String) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = answer,
-                    color = InkBrown,
+                    color = SandstoneIvory,
                     fontSize = 12.sp,
                     lineHeight = 16.sp
                 )

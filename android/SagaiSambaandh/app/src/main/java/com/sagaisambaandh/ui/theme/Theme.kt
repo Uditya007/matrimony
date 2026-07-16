@@ -25,13 +25,15 @@ val CardBackground = Color(0xFFFCFBF7)
 val LightColorScheme = lightColorScheme(
     primary = RoyalMaroon,
     onPrimary = Color.White,
-    secondary = JodhpurIndigo,
-    onSecondary = Color.White,
-    tertiary = RoyalGold,
-    background = SandstoneIvory,
-    onBackground = InkBrown,
-    surface = CardBackground,
-    onSurface = InkBrown
+    secondary = RoyalGold,
+    onSecondary = RoyalMaroon,
+    tertiary = LightGold,
+    background = RoyalMaroon,
+    onBackground = SandstoneIvory,
+    surface = DeepMaroon,
+    onSurface = SandstoneIvory,
+    surfaceVariant = DeepMaroon,
+    onSurfaceVariant = SandstoneIvory
 )
 
 // Fallback Typography using system defaults
