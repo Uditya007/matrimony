@@ -294,6 +294,104 @@ fun HomeView(
             Spacer(modifier = Modifier.height(12.dp))
             PromiseRow(icon = Icons.Default.Info, title = "Direct Family Connection", desc = "Enable direct dialogues between noble families with zero mediator interference.")
         }
+
+        // FAQ Section
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 24.dp)
+        ) {
+            Text(
+                text = "Frequently Asked Questions",
+                color = RoyalMaroon,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Serif
+            )
+            Text(
+                text = "Learn more about our lineage checks and Gotra compatibility guidelines.",
+                color = Color.Gray,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 2.dp, bottom = 16.dp)
+            )
+
+            FaqAccordionItem(
+                question = "What is Shree Rajput Sagai Sambandh?",
+                answer = "Shree Rajput Sagai Sambandh is an elite matrimonial portal designed exclusively for the Rajput community. We prioritize lineage audits, background verification checks, and Gotra compatibility to match candidates of noble lineage."
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            FaqAccordionItem(
+                question = "How does Gotra-sensitive matchmaking work?",
+                answer = "According to traditional Rajput custom, marriages within the same Gotra (Sagotra Union) are strictly prohibited. Our system scans database candidates and checks their paternal and maternal Gotras, rejecting overlapping candidates to guarantee lineage guidelines are maintained."
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            FaqAccordionItem(
+                question = "Is there a free trial option available?",
+                answer = "Yes! In celebration of our inaugural launch, we are offering the Starter Plan completely Free for 1 Month. This allows you to list your profile, search the Rajput directory, and explore potential alignments without any upfront fees."
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            FaqAccordionItem(
+                question = "How are profiles screened and verified?",
+                answer = "Every profile undergoes manual validation by our dedicated family screening desk. We verify details such as clan heritage, native birthplace, and contacts to maintain a secure and trustworthy database of genuine Rajput matches."
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            FaqAccordionItem(
+                question = "How do I connect to a customer relation agent?",
+                answer = "You can contact our WhatsApp Relations Desk directly at +91 9928592159 for custom match selection and background validation support. Khammaghani!"
+            )
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+    }
+}
+
+@Composable
+fun FaqAccordionItem(question: String, answer: String) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Card(
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = Brush.linearGradient(
+                colors = if (expanded) listOf(RoyalGold, LightGold) else listOf(RoyalGold.copy(alpha = 0.2f), RoyalGold.copy(alpha = 0.2f))
+            ),
+            width = 1.dp
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { expanded = !expanded }
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = question,
+                    color = RoyalMaroon,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    fontFamily = FontFamily.Serif,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = if (expanded) "−" else "+",
+                    color = RoyalGold,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            if (expanded) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = answer,
+                    color = InkBrown,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp
+                )
+            }
+        }
     }
 }
 

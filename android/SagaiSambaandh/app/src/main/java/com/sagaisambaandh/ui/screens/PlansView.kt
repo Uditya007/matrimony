@@ -30,7 +30,7 @@ fun PlansView(
     var showDialog by remember { mutableStateOf(false) }
     var dialogMessage by remember { mutableStateOf("") }
 
-    val starterPrice = if (billingCycle == 0) 4999 else 3999
+    val starterPrice = if (billingCycle == 0) 0 else 3999
     val silverPrice = if (billingCycle == 0) 11999 else 9599
     val goldPrice = if (billingCycle == 0) 24999 else 19999
 
@@ -113,7 +113,7 @@ fun PlansView(
             PlanCard(
                 title = "Starter",
                 price = starterPrice,
-                cycle = if (billingCycle == 0) "month" : "month (billed annually)",
+                cycle = if (billingCycle == 0) "1 month trial" else "month (billed annually)",
                 features = listOf(
                     "View complete Rajput profiles",
                     "Send 10 express interests / month",
@@ -133,7 +133,7 @@ fun PlansView(
             PlanCard(
                 title = "Rajputana Silver",
                 price = silverPrice,
-                cycle = if (billingCycle == 0) "month" : "month (billed annually)",
+                cycle = if (billingCycle == 0) "month" else "month (billed annually)",
                 features = listOf(
                     "Unlock 15 contact phone numbers",
                     "Astrology compatibility matching reports",
@@ -154,7 +154,7 @@ fun PlansView(
             PlanCard(
                 title = "Rajputana Gold",
                 price = goldPrice,
-                cycle = if (billingCycle == 0) "month" : "month (billed annually)",
+                cycle = if (billingCycle == 0) "month" else "month (billed annually)",
                 features = listOf(
                     "Direct WhatsApp access to family cards",
                     "Dedicated Rajput matchmaking manager",
@@ -265,7 +265,7 @@ fun PlanCard(
                 verticalAlignment = Alignment.Bottom
             ) {
                 Text(
-                    text = "₹$price",
+                    text = if (price == 0) "Free" else "₹$price",
                     color = if (isFeatured) LightGold else RoyalMaroon,
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
