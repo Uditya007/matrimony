@@ -33,16 +33,24 @@ fun MatchesView(
 ) {
     val profiles = session.profiles.value
     var activeFilterTab by remember { mutableStateOf(0) } // 0 = All, 1 = Compatible Gotras
+    val searchGender by session.searchGender
+    val searchClan by session.searchClan
 
     val user = session.currentUser.value
-    val filteredMatches = remember(profiles, activeFilterTab, user) {
+    val filteredMatches = remember(profiles, activeFilterTab, user, searchGender, searchClan) {
+        val searched = profiles.filter {
+            val genderMatch = it.gender == searchGender
+            val clanMatch = searchClan == "All Clans" || it.clan.lowercase() == searchClan.lowercase()
+            genderMatch && clanMatch
+        }
+
         if (activeFilterTab == 1 && user != null) {
             // Filter out profiles sharing the user's Gotra
-            profiles.filter {
+            searched.filter {
                 it.gotra.lowercase() != user.gotra.lowercase()
             }
         } else {
-            profiles
+            searched
         }
     }
 

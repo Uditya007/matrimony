@@ -64,4 +64,20 @@ class SagaiSessionManager {
             _currentUser.value = user.copy(tier = tier)
         }
     }
+
+    // Search filters state
+    private val _searchGender = mutableStateOf<String>("Bride")
+    val searchGender: State<String> = _searchGender
+
+    private val _searchClan = mutableStateOf<String>("All Clans")
+    val searchClan: State<String> = _searchClan
+
+    fun setSearchFilters(gender: String, clan: String) {
+        _searchGender.value = gender
+        _searchClan.value = clan
+    }
+
+    fun updateCurrentUser(updated: User) {
+        _currentUser.value = updated
+    }
 }

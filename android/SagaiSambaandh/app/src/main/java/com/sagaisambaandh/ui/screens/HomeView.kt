@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -277,11 +278,8 @@ fun HomeView(
                 // Search CTA Button
                 Button(
                     onClick = {
-                        if (session.currentUser.value == null) {
-                            onNavigateToTab(3)
-                        } else {
-                            onNavigateToTab(3)
-                        }
+                        session.setSearchFilters(lookingFor, selectedClan)
+                        onNavigateToTab(1)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
