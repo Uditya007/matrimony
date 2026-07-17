@@ -36,17 +36,24 @@ fun RegisterView(
     // Step 1 values
     var nameInput by remember { mutableStateOf("") }
     var emailInput by remember { mutableStateOf("") }
+    var passwordInput by remember { mutableStateOf("") }
+    var phoneInput by remember { mutableStateOf("") }
+    var dobInput by remember { mutableStateOf("") }
     var genderInput by remember { mutableStateOf("Bride") }
 
     // Step 2 values
     var selectedClan by remember { mutableStateOf("Rathore") }
     var gotraInput by remember { mutableStateOf("") }
+    var motherGotraInput by remember { mutableStateOf("") }
     var thikanaInput by remember { mutableStateOf("") }
     var clanExpanded by remember { mutableStateOf(false) }
 
     // Step 3 values
     var educationInput by remember { mutableStateOf("") }
     var occupationInput by remember { mutableStateOf("") }
+    var incomeInput by remember { mutableStateOf("") }
+    var heightInput by remember { mutableStateOf("") }
+    var maritalStatusInput by remember { mutableStateOf("Never Married") }
 
     val clansOptions = listOf("Rathore", "Sisodia", "Chauhan", "Kachwaha", "Bhati", "Shekhawat", "Panwar", "Tanwar", "Hada", "Sodha")
 
@@ -133,6 +140,57 @@ fun RegisterView(
                             value = emailInput,
                             onValueChange = { emailInput = it },
                             placeholder = { Text("e.g. contact@clan.com") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 6.dp, bottom = 16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = CardBackground,
+                                unfocusedContainerColor = CardBackground,
+                                focusedBorderColor = RoyalGold,
+                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                            )
+                        )
+
+                        // Password
+                        Text(text = "PASSWORD", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        OutlinedTextField(
+                            value = passwordInput,
+                            onValueChange = { passwordInput = it },
+                            placeholder = { Text("Enter a secure password") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 6.dp, bottom = 16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = CardBackground,
+                                unfocusedContainerColor = CardBackground,
+                                focusedBorderColor = RoyalGold,
+                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                            )
+                        )
+
+                        // Phone Number
+                        Text(text = "MOBILE PHONE NUMBER", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        OutlinedTextField(
+                            value = phoneInput,
+                            onValueChange = { phoneInput = it },
+                            placeholder = { Text("e.g. +91 9928592159") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 6.dp, bottom = 16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = CardBackground,
+                                unfocusedContainerColor = CardBackground,
+                                focusedBorderColor = RoyalGold,
+                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                            )
+                        )
+
+                        // Date of Birth
+                        Text(text = "DATE OF BIRTH", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        OutlinedTextField(
+                            value = dobInput,
+                            onValueChange = { dobInput = it },
+                            placeholder = { Text("e.g. DD-MM-YYYY") },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 6.dp, bottom = 16.dp),
@@ -263,6 +321,23 @@ fun RegisterView(
                             )
                         )
 
+                        // Mother's Gotra
+                        Text(text = "MOTHER'S GOTRA", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        OutlinedTextField(
+                            value = motherGotraInput,
+                            onValueChange = { motherGotraInput = it },
+                            placeholder = { Text("e.g. Kashyap / Vyas / Gautam") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 6.dp, bottom = 16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = CardBackground,
+                                unfocusedContainerColor = CardBackground,
+                                focusedBorderColor = RoyalGold,
+                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                            )
+                        )
+
                         // Thikana
                         Text(text = "THIKANA (NOBLE ESTATE / NATIVE VILLAGE)", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
                         OutlinedTextField(
@@ -346,6 +421,57 @@ fun RegisterView(
                             placeholder = { Text("e.g. Co-Founder, resorts venture") },
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .padding(top = 6.dp, bottom = 16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = CardBackground,
+                                unfocusedContainerColor = CardBackground,
+                                focusedBorderColor = RoyalGold,
+                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                            )
+                        )
+
+                        // Annual Income
+                        Text(text = "ANNUAL INCOME", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        OutlinedTextField(
+                            value = incomeInput,
+                            onValueChange = { incomeInput = it },
+                            placeholder = { Text("e.g. 15-20 Lakhs per annum") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 6.dp, bottom = 16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = CardBackground,
+                                unfocusedContainerColor = CardBackground,
+                                focusedBorderColor = RoyalGold,
+                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                            )
+                        )
+
+                        // Height
+                        Text(text = "HEIGHT", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        OutlinedTextField(
+                            value = heightInput,
+                            onValueChange = { heightInput = it },
+                            placeholder = { Text("e.g. 5 ft 8 in / 173 cm") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 6.dp, bottom = 16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = CardBackground,
+                                unfocusedContainerColor = CardBackground,
+                                focusedBorderColor = RoyalGold,
+                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                            )
+                        )
+
+                        // Marital Status
+                        Text(text = "MARITAL STATUS", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        OutlinedTextField(
+                            value = maritalStatusInput,
+                            onValueChange = { maritalStatusInput = it },
+                            placeholder = { Text("e.g. Never Married / Divorced") },
+                            modifier = Modifier
+                                .fillMaxWidth()
                                 .padding(top = 6.dp, bottom = 20.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedContainerColor = CardBackground,
@@ -375,7 +501,17 @@ fun RegisterView(
                                         email = emailInput.ifEmpty { "noble@clan.com" },
                                         gender = if (genderInput == "Bride") "Bride" else "Groom",
                                         clan = selectedClan,
-                                        tier = "Starter"
+                                        tier = "Starter",
+                                        gotra = gotraInput,
+                                        motherGotra = motherGotraInput,
+                                        thikana = thikanaInput,
+                                        phone = phoneInput,
+                                        dob = dobInput,
+                                        education = educationInput,
+                                        occupation = occupationInput,
+                                        income = incomeInput,
+                                        height = heightInput,
+                                        maritalStatus = maritalStatusInput
                                     )
                                     session.login(newUser)
                                 },

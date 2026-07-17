@@ -33,5 +33,15 @@ data class User(
     val clan: String,
     val tier: String = "Starter", // "Starter", "Silver", "Gold"
     val shortlistedIds: Set<String> = emptySet(),
-    val unlockedIds: Set<String> = emptySet()
+    val unlockedIds: Set<String> = emptySet(),
+    val gotra: String = "",
+    val motherGotra: String = "",
+    val thikana: String = "",
+    val phone: String = "",
+    val dob: String = "",
+    val education: String = "",
+    val occupation: String = "",
+    val income: String = "",
+    val height: String = "",
+    val maritalStatus: String = "Never Married"
 )

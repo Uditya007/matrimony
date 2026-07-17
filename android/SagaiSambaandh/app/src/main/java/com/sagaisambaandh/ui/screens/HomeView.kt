@@ -282,6 +282,40 @@ fun HomeView(
             }
         }
 
+        // Profile Completion checklist card like Shaadi.com (if logged in)
+        if (session.currentUser.value != null) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 10.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = DeepMaroon),
+                border = CardDefaults.outlinedCardBorder().copy(
+                    brush = Brush.linearGradient(listOf(RoyalGold.copy(alpha = 0.2f), RoyalGold.copy(alpha = 0.4f)))
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Complete your Profile",
+                        color = LightGold,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Serif
+                    )
+                    Text(
+                        text = "Completed profiles get 2x more matches and responses.",
+                        color = SandstoneIvory.copy(alpha = 0.7f),
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 2.dp, bottom = 12.dp)
+                    )
+                    
+                    ProfileChecklistItem(title = "Verify your Rajput Lineage", checked = true)
+                    ProfileChecklistItem(title = "Upload Heritage Photos", checked = false)
+                    ProfileChecklistItem(title = "Add Astro & Kundli details", checked = false)
+                }
+            }
+        }
+
         // Featured profiles showcase
         Column(
             modifier = Modifier
@@ -515,17 +549,40 @@ fun PromiseRow(
         Column {
             Text(
                 text = title,
-                color = InkBrown,
+                color = SandstoneIvory,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = desc,
-                color = Color.Gray,
+                color = SandstoneIvory.copy(alpha = 0.7f),
                 fontSize = 12.sp,
                 lineHeight = 16.sp
             )
         }
+    }
+}
+
+@Composable
+fun ProfileChecklistItem(title: String, checked: Boolean) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.CheckCircle,
+            contentDescription = null,
+            tint = if (checked) Color(0xFF4CAF50) else SandstoneIvory.copy(alpha = 0.3f),
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = title,
+            color = SandstoneIvory,
+            fontSize = 13.sp
+        )
     }
 }
