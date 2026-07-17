@@ -3,8 +3,7 @@ package com.sagaisambaandh
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -15,9 +14,9 @@ import androidx.compose.ui.unit.sp
 import com.sagaisambaandh.data.Profile
 import com.sagaisambaandh.data.SagaiSessionManager
 import com.sagaisambaandh.ui.screens.*
-import com.sagaisambaandh.ui.theme.RoyalGold
-import com.sagaisambaandh.ui.theme.RoyalMaroon
-import com.sagaisambaandh.ui.theme.SagaiSambaandhTheme
+import com.sagaisambaandh.ui.theme.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 class MainActivity : ComponentActivity() {
     private val sessionManager = SagaiSessionManager()
@@ -43,10 +42,13 @@ fun MainScreen(session: SagaiSessionManager) {
     var selectedTab by remember { mutableStateOf(0) }
     var selectedProfileForDetail by remember { mutableStateOf<Profile?>(null) }
     var showingRegister by remember { mutableStateOf(false) }
+    var isSplashActive by remember { mutableStateOf(true) }
 
-    val currentUser by session.currentUser.collectAsState()
+    val currentUser by session.currentUser
 
-    if (currentUser == null) {
+    if (isSplashActive) {
+        SplashView(onTimeout = { isSplashActive = false })
+    } else if (currentUser == null) {
         // App started: require Login or Register onboarding gate
         if (showingRegister) {
             RegisterView(
