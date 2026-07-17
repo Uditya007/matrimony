@@ -5,6 +5,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
 import org.json.JSONArray
 import org.json.JSONObject
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class SagaiSessionManager(private val context: Context) {
     private val sharedPrefs = context.getSharedPreferences("sagai_prefs", Context.MODE_PRIVATE)
@@ -34,6 +39,8 @@ class SagaiSessionManager(private val context: Context) {
                 e.printStackTrace()
             }
         }
+        
+        fetchSupabaseProfiles()
     }
 
     fun login(user: User) {
@@ -201,5 +208,82 @@ class SagaiSessionManager(private val context: Context) {
             maritalStatus = obj.optString("maritalStatus", "Never Married"),
             profilePic = obj.optString("profilePic", "").takeIf { it.isNotEmpty() }
         )
+    }
+
+    private fun fetchSupabaseProfiles() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = OkHttpClient()
+                val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
+                val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+                val request = Request.Builder()
+                    .url("$url/rest/v1/profiles?select=*")
+                    .addHeader("apikey", apiKey)
+                    .addHeader("Authorization", "Bearer $apiKey")
+                    .build()
+                
+                val response = client.newCall(request).execute()
+                val body = response.body?.string() ?: ""
+                if (response.isSuccessful && body.isNotEmpty()) {
+                    val rows = JSONArray(body)
+                    val liveList = mutableListOf<Profile>()
+                    for (i in 0 until rows.length()) {
+                        val obj = rows.getJSONObject(i)
+                        val id = obj.optString("id", "")
+                        val name = obj.optString("name", "Member")
+                        val gender = obj.optString("gender", "Groom")
+                        val clan = obj.optString("clan", "Rathore")
+                        val gotra = obj.optString("gotra", "")
+                        val thikana = obj.optString("thikana", "")
+                        val height = obj.optString("height", "5 ft 8 in")
+                        val education = obj.optString("education", "")
+                        val occupation = obj.optString("occupation", "")
+                        val income = obj.optString("income", "")
+                        val profilePic = obj.optString("profilePic", "")
+                        
+                        var ageVal = 25
+                        val dobStr = obj.optString("dob", "")
+                        if (dobStr.isNotEmpty()) {
+                            val parts = dobStr.split("-")
+                            if (parts.size >= 3) {
+                                parts[2].toIntOrNull()?.let { year ->
+                                    ageVal = 2026 - year
+                                }
+                            }
+                        }
+                        
+                        liveList.add(
+                            Profile(
+                                id = id,
+                                name = name,
+                                age = ageVal,
+                                gender = gender,
+                                clan = clan,
+                                gotra = gotra,
+                                kul = clan,
+                                thikana = thikana,
+                                location = thikana,
+                                height = height,
+                                occupation = occupation,
+                                education = education,
+                                income = income,
+                                isVerified = true,
+                                imageName = profilePic.ifEmpty { "groom_ranveer" }
+                            )
+                        )
+                    }
+                    
+                    if (liveList.isNotEmpty()) {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            _profiles.value = liveList + MockData.profiles.filter { mock ->
+                                liveList.none { it.id == mock.id }
+                            }
+                        }
+                    }
+                }
+            } catch (e: java.lang.Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }

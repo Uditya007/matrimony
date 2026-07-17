@@ -5,6 +5,75 @@ class SupabaseClient {
     private let supabaseURL = "https://afbrznllcfgfcjuinnlf.supabase.co"
     private let apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
     
+    // Fetch profiles from database dynamically
+    func fetchProfiles(completion: @escaping (Result<[Profile], Error>) -> Void) {
+        guard let url = URL(string: "\(supabaseURL)/rest/v1/profiles?select=*") else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue(apiKey, forHTTPHeaderField: "apikey")
+        request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            guard let data = data else {
+                completion(.failure(NSError(domain: "Supabase", code: -1)))
+                return
+            }
+            do {
+                if let rows = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+                    let parsedProfiles = rows.map { dict -> Profile in
+                        let id = dict["id"] as? String ?? ""
+                        let name = dict["name"] as? String ?? "Member"
+                        let gender = dict["gender"] as? String ?? "Groom"
+                        let clan = dict["clan"] as? String ?? "Rathore"
+                        let gotra = dict["gotra"] as? String ?? ""
+                        let thikana = dict["thikana"] as? String ?? ""
+                        let height = dict["height"] as? String ?? "5 ft 8 in"
+                        let education = dict["education"] as? String ?? ""
+                        let occupation = dict["occupation"] as? String ?? ""
+                        let income = dict["income"] as? String ?? ""
+                        let profilePic = dict["profilePic"] as? String ?? ""
+                        
+                        var ageVal = 25
+                        if let dobStr = dict["dob"] as? String, !dobStr.isEmpty {
+                            let parts = dobStr.components(separatedBy: "-")
+                            if parts.count >= 3, let year = Int(parts[2]) {
+                                ageVal = 2026 - year
+                            }
+                        }
+                        
+                        return Profile(
+                            id: id,
+                            name: name,
+                            age: ageVal,
+                            gender: gender,
+                            clan: clan,
+                            gotra: gotra,
+                            kul: clan,
+                            thikana: thikana,
+                            location: thikana,
+                            height: height,
+                            occupation: occupation,
+                            education: education,
+                            income: income,
+                            isVerified: true,
+                            img: profilePic.isEmpty ? nil : profilePic
+                        )
+                    }
+                    completion(.success(parsedProfiles))
+                } else {
+                    completion(.failure(NSError(domain: "Supabase", code: -2)))
+                }
+            } catch {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+    
     // Auth SignUp + profile creation
     func signUp(email: String, password: String, profile: User, completion: @escaping (Result<User, Error>) -> Void) {
         guard let url = URL(string: "\(supabaseURL)/auth/v1/signup") else { return }

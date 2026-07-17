@@ -17,6 +17,21 @@ class SagaiSessionManager: ObservableObject {
             self.shortlistedIds = Set(user.shortlistedIds)
             self.unlockedIds = Set(user.unlockedIds)
         }
+        
+        SupabaseClient.shared.fetchProfiles { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let liveProfiles):
+                    if !liveProfiles.isEmpty {
+                        self.profiles = liveProfiles + MockData.profiles.filter { mock in
+                            !liveProfiles.contains { $0.id == mock.id }
+                        }
+                    }
+                case .failure(let error):
+                    print("Supabase profile loading failed: \(error.localizedDescription)")
+                }
+            }
+        }
     }
     
     func login(user: User) {
