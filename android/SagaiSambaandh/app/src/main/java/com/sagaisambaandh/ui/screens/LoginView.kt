@@ -151,13 +151,13 @@ fun LoginView(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Email: royal@sagaisambaandh.com",
+                            text = "Username: 12345",
                             color = SandstoneIvory,
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp
                         )
                         Text(
-                            text = "Password: rajputana",
+                            text = "Password: 12345",
                             color = SandstoneIvory,
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp
@@ -243,11 +243,11 @@ fun LoginView(
                 // Action
                 Button(
                     onClick = {
-                        if (emailInput == "royal@sagaisambaandh.com" && passwordInput == "rajputana") {
+                        if (emailInput == "12345" && passwordInput == "12345") {
                             val demoUser = User(
                                 id = "U1",
                                 name = "Ranveer Singh",
-                                email = "royal@sagaisambaandh.com",
+                                email = "12345",
                                 gender = "Groom",
                                 clan = "Rathore",
                                 tier = "Silver",
@@ -287,5 +287,4 @@ fun LoginView(
             }
         }
     }
-}
 }

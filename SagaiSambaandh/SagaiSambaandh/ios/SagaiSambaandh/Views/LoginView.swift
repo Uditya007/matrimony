@@ -76,11 +76,11 @@ struct LoginView: View {
                                 .fontWeight(.bold)
                                 .tracking(1)
                             
-                            Text("Email: royal@sagaisambaandh.com")
+                            Text("Username: 12345")
                                 .font(BrandFonts.body(size: 11, weight: .bold))
                                 .foregroundColor(.inkBrown)
                             
-                            Text("Password: rajputana")
+                            Text("Password: 12345")
                                 .font(BrandFonts.body(size: 11, weight: .bold))
                                 .foregroundColor(.inkBrown)
                         }
@@ -193,12 +193,12 @@ struct LoginView: View {
     }
     
     private func handleLogin() {
-        if emailInput == "royal@sagaisambaandh.com" && passwordInput == "rajputana" {
+        if emailInput == "12345" && passwordInput == "12345" {
             // Log in demo user
             let demoUser = User(
                 id: "U1",
                 name: "Ranveer Singh",
-                email: "royal@sagaisambaandh.com",
+                email: "12345",
                 gender: "Groom",
                 clan: "Rathore",
                 tier: "Silver",

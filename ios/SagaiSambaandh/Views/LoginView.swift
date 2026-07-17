@@ -56,11 +56,11 @@ struct LoginView: View {
                         
                         Text("Sagai Sambaandh")
                             .font(BrandFonts.displayBold(size: 28))
-                            .foregroundColor(.royalMaroon)
+                            .foregroundColor(.lightGold)
                         
                         Text("Access Rajasthan's Royal Matrimony")
                             .font(BrandFonts.body(size: 12))
-                            .foregroundColor(.gray)
+                            .foregroundColor(.sandstoneIvory.opacity(0.7))
                     }
                     .multilineTextAlignment(.center)
                     
@@ -76,11 +76,11 @@ struct LoginView: View {
                                 .fontWeight(.bold)
                                 .tracking(1)
                             
-                            Text("Email: royal@sagaisambaandh.com")
+                            Text("Username: 12345")
                                 .font(BrandFonts.body(size: 11, weight: .bold))
                                 .foregroundColor(.inkBrown)
                             
-                            Text("Password: rajputana")
+                            Text("Password: 12345")
                                 .font(BrandFonts.body(size: 11, weight: .bold))
                                 .foregroundColor(.inkBrown)
                         }
@@ -171,23 +171,10 @@ struct LoginView: View {
                             }
                         }
                         
-                        Divider()
-                            .background(Color.royalGold.opacity(0.25))
-                        
-                        // Guest Bypass Option
-                        Button(action: {
-                            withAnimation(.easeOut(duration: 0.4)) {
-                                isGuestBypassed = true
-                            }
-                        }) {
-                            Text("Browse as Guest")
-                                .font(BrandFonts.body(size: 13, weight: .bold))
-                                .foregroundColor(.gray)
-                                .underline()
-                        }
+
                     }
                     .padding(24)
-                    .background(Color.cardBackground)
+                    .background(Color.deepMaroon)
                     .cornerRadius(16)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
@@ -201,17 +188,17 @@ struct LoginView: View {
                 .frame(minHeight: geometry.size.height)
             }
         }
-        .background(Color.sandstoneIvory.edgesIgnoringSafeArea(.all))
+        .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
         .navigationBarHidden(true)
     }
     
     private func handleLogin() {
-        if emailInput == "royal@sagaisambaandh.com" && passwordInput == "rajputana" {
+        if emailInput == "12345" && passwordInput == "12345" {
             // Log in demo user
             let demoUser = User(
                 id: "U1",
                 name: "Ranveer Singh",
-                email: "royal@sagaisambaandh.com",
+                email: "12345",
                 gender: "Groom",
                 clan: "Rathore",
                 tier: "Silver",
