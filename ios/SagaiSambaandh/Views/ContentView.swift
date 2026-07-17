@@ -7,6 +7,9 @@ class SagaiSessionManager: ObservableObject {
     @Published var shortlistedIds: Set<String> = []
     @Published var unlockedIds: Set<String> = []
     
+    @Published var searchGender: String = "Bride"
+    @Published var searchClan: String = "All Clans"
+    
     func login(user: User) {
         self.currentUser = user
         self.shortlistedIds = Set(user.shortlistedIds)
@@ -38,6 +41,15 @@ class SagaiSessionManager: ObservableObject {
     func isUnlocked(id: String) -> Bool {
         unlockedIds.contains(id)
     }
+    
+    func setSearchFilters(gender: String, clan: String) {
+        self.searchGender = gender
+        self.searchClan = clan
+    }
+    
+    func updateCurrentUser(updated: User) {
+        self.currentUser = updated
+    }
 }
 
 struct ContentView: View {
@@ -46,6 +58,8 @@ struct ContentView: View {
     @State private var showingRegister: Bool = false
     @State private var isSplashActive: Bool = true
     @State private var isGuestBypassed: Bool = false
+    @State private var isSideMenuOpen: Bool = false
+    @State private var showingMyProfileSheet: Bool = false
     
     var body: some View {
         ZStack {
@@ -59,7 +73,8 @@ struct ContentView: View {
                         }
                     }
             } else {
-                if session.currentUser == nil && !isGuestBypassed {
+                if session.currentUser == nil {
+                    // App started: lock behind Login / Register onboarding gate
                     if showingRegister {
                         RegisterView(showingRegister: $showingRegister, isGuestBypassed: $isGuestBypassed)
                             .environmentObject(session)
@@ -70,152 +85,256 @@ struct ContentView: View {
                             .transition(.asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                     }
                 } else {
-                    TabView(selection: $selectedTab) {
-                        // Home View
-                        NavigationView {
-                            HomeView(selectedTab: $selectedTab, showingRegister: $showingRegister)
-                                .environmentObject(session)
+                    ZStack {
+                        // Authenticated view with 5 Shaadi-style tabs
+                        TabView(selection: $selectedTab) {
+                            // Home View
+                            NavigationView {
+                                HomeView(selectedTab: $selectedTab, showingRegister: $showingRegister, isSideMenuOpen: $isSideMenuOpen)
+                                    .environmentObject(session)
+                            }
+                            .tabItem {
+                                Label("Home", systemImage: "house.fill")
+                            }
+                            .tag(0)
+                            
+                            // Matches View
+                            NavigationView {
+                                MatchesView(selectedTab: $selectedTab, showingRegister: $showingRegister, isSideMenuOpen: $isSideMenuOpen)
+                                    .environmentObject(session)
+                            }
+                            .tabItem {
+                                Label("Matches", systemImage: "heart.fill")
+                            }
+                            .tag(1)
+                            
+                            // Inbox View
+                            NavigationView {
+                                InboxView()
+                                    .navigationBarTitleDisplayMode(.inline)
+                                    .toolbar {
+                                        ToolbarItem(placement: .navigationBarLeading) {
+                                            Button(action: {
+                                                withAnimation {
+                                                    isSideMenuOpen = true
+                                                }
+                                            }) {
+                                                Image(systemName: "line.horizontal.3")
+                                                    .foregroundColor(.lightGold)
+                                                    .font(.title2)
+                                            }
+                                        }
+                                        ToolbarItem(placement: .principal) {
+                                            Text("Inbox")
+                                                .font(BrandFonts.displayBold(size: 18))
+                                                .foregroundColor(.lightGold)
+                                        }
+                                    }
+                            }
+                            .tabItem {
+                                Label("Inbox", systemImage: "envelope.fill")
+                            }
+                            .tag(2)
+                            
+                            // Chat View
+                            NavigationView {
+                                ChatView()
+                                    .navigationBarTitleDisplayMode(.inline)
+                                    .toolbar {
+                                        ToolbarItem(placement: .navigationBarLeading) {
+                                            Button(action: {
+                                                withAnimation {
+                                                    isSideMenuOpen = true
+                                                }
+                                            }) {
+                                                Image(systemName: "line.horizontal.3")
+                                                    .foregroundColor(.lightGold)
+                                                    .font(.title2)
+                                            }
+                                        }
+                                        ToolbarItem(placement: .principal) {
+                                            Text("Chat")
+                                                .font(BrandFonts.displayBold(size: 18))
+                                                .foregroundColor(.lightGold)
+                                        }
+                                    }
+                            }
+                            .tabItem {
+                                Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
+                            }
+                            .tag(3)
+                            
+                            // Premium plans view
+                            NavigationView {
+                                PlansView()
+                                    .environmentObject(session)
+                                    .navigationBarTitleDisplayMode(.inline)
+                                    .toolbar {
+                                        ToolbarItem(placement: .navigationBarLeading) {
+                                            Button(action: {
+                                                withAnimation {
+                                                    isSideMenuOpen = true
+                                                }
+                                            }) {
+                                                Image(systemName: "line.horizontal.3")
+                                                    .foregroundColor(.lightGold)
+                                                    .font(.title2)
+                                            }
+                                        }
+                                        ToolbarItem(placement: .principal) {
+                                            Text("Premium")
+                                                .font(BrandFonts.displayBold(size: 18))
+                                                .foregroundColor(.lightGold)
+                                        }
+                                    }
+                            }
+                            .tabItem {
+                                Label("Premium", systemImage: "crown.fill")
+                            }
+                            .tag(4)
                         }
-                        .tabItem {
-                            Label("Home", systemImage: "house.fill")
-                        }
-                        .tag(0)
+                        .accentColor(.royalGold)
+                        .disabled(isSideMenuOpen)
                         
-                        // Clans directory View
-                        NavigationView {
-                            ClansView()
-                        }
-                        .tabItem {
-                            Label("Rajput Clans", systemImage: "shield.lefthalf.filled")
-                        }
-                        .tag(1)
-                        
-                        // Pricing plans view
-                        NavigationView {
-                            PlansView()
-                                .environmentObject(session)
-                        }
-                        .tabItem {
-                            Label("Regal Plans", systemImage: "crown.fill")
-                        }
-                        .tag(2)
-                        
-                        // Profile Account View
-                        NavigationView {
-                            Group {
-                                if session.currentUser != nil {
-                                    DashboardView()
-                                        .environmentObject(session)
-                                } else {
-                                    if showingRegister {
-                                        RegisterView(showingRegister: $showingRegister, isGuestBypassed: $isGuestBypassed)
-                                            .environmentObject(session)
-                                    } else {
-                                        LoginView(showingRegister: $showingRegister, isGuestBypassed: $isGuestBypassed)
-                                            .environmentObject(session)
+                        // Dimmed overlay when side menu drawer is open
+                        if isSideMenuOpen {
+                            Color.black.opacity(0.5)
+                                .edgesIgnoringSafeArea(.all)
+                                .onTapGesture {
+                                    withAnimation {
+                                        isSideMenuOpen = false
                                     }
                                 }
-                            }
                         }
-                        .tabItem {
-                            Label("My Account", systemImage: "person.circle.fill")
+                        
+                        // Sliding Side Menu
+                        HStack {
+                            SideMenuView(
+                                isOpen: $isSideMenuOpen,
+                                showingMyProfile: $showingMyProfileSheet,
+                                selectedTab: $selectedTab
+                            )
+                            .environmentObject(session)
+                            .frame(width: 280)
+                            .offset(x: isSideMenuOpen ? 0 : -280)
+                            .transition(.move(edge: .leading))
+                            
+                            Spacer()
                         }
-                    .tag(3)
-                }
-                .accentColor(.royalGold)
-                .onAppear {
-                    // Set up a custom appearance for tabs if wanted
-                    UITabBar.appearance().backgroundColor = UIColor(Color.cardBackground)
-                    UITabBar.appearance().unselectedItemTintColor = UIColor(Color.inkBrown.opacity(0.5))
+                        .edgesIgnoringSafeArea(.vertical)
+                    }
+                    .sheet(isPresented: $showingMyProfileSheet) {
+                        MyProfileView()
+                            .environmentObject(session)
+                    }
+                    .onAppear {
+                        // Set up a custom appearance for tabs to match the maroon theme!
+                        let appearance = UITabBarAppearance()
+                        appearance.configureWithOpaqueBackground()
+                        appearance.backgroundColor = UIColor(Color.deepMaroon)
+                        
+                        // Unselected item coloring
+                        appearance.stackedLayoutAppearance.normal.iconColor = UIColor(Color.sandstoneIvory.opacity(0.4))
+                        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor(Color.sandstoneIvory.opacity(0.4))]
+                        
+                        // Selected item coloring
+                        appearance.stackedLayoutAppearance.selected.iconColor = UIColor(Color.lightGold)
+                        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(Color.lightGold)]
+                        
+                        UITabBar.appearance().standardAppearance = appearance
+                        if #available(iOS 15.0, *) {
+                            UITabBar.appearance().scrollEdgeAppearance = appearance
+                        }
+                    }
                 }
             }
         }
     }
-}
-
-struct SplashView: View {
-    @State private var scale: CGFloat = 0.85
-    @State private var opacity: Double = 0.0
     
-    var body: some View {
-        ZStack {
-            // Jodhpur Indigo background
-            LinearGradient(
-                colors: [Color.jodhpurIndigo, Color(hex: "#101830")],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .edgesIgnoringSafeArea(.all)
-            
-            VStack(spacing: 24) {
-                // Centered Medallion Logo
-                ZStack {
-                    // Outer Gold Border Rings
-                    Circle()
-                        .stroke(
-                            LinearGradient(
-                                colors: [.royalGold, .lightGold, .royalGold],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 3
-                        )
-                        .frame(width: 200, height: 200)
-                    
-                    Circle()
-                        .stroke(Color.royalGold.opacity(0.4), lineWidth: 1)
-                        .frame(width: 210, height: 210)
-                    
-                    // Medallion Image / Crest Fallback
-                    Group {
-                        if let img = UIImage(named: "logo") {
-                            Image(uiImage: img)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                        } else if let appIcon = UIImage(named: "appicon") {
-                            Image(uiImage: appIcon)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                        } else {
-                            // Royal Crest Vector Fallback
-                            VStack(spacing: 8) {
-                                Image(systemName: "shield.fill")
-                                    .font(.system(size: 48))
-                                    .foregroundColor(.lightGold)
-                                Text("SS")
-                                    .font(BrandFonts.displayBold(size: 28))
-                                    .foregroundColor(.lightGold)
+    struct SplashView: View {
+        @State private var scale: CGFloat = 0.85
+        @State private var opacity: Double = 0.0
+        
+        var body: some View {
+            ZStack {
+                // Maroon background
+                LinearGradient(
+                    colors: [Color.deepMaroon, Color.royalMaroon],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .edgesIgnoringSafeArea(.all)
+                
+                VStack(spacing: 24) {
+                    // Centered Medallion Logo
+                    ZStack {
+                        // Outer Gold Border Rings
+                        Circle()
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.royalGold, .lightGold, .royalGold],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 3
+                            )
+                            .frame(width: 200, height: 200)
+                        
+                        Circle()
+                            .stroke(Color.royalGold.opacity(0.4), lineWidth: 1)
+                            .frame(width: 210, height: 210)
+                        
+                        // Medallion Image / Crest Fallback
+                        Group {
+                            if let img = UIImage(named: "logo") {
+                                Image(uiImage: img)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                            } else if let appIcon = UIImage(named: "appicon") {
+                                Image(uiImage: appIcon)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                            } else {
+                                // Royal Crest Vector Fallback
+                                VStack(spacing: 8) {
+                                    Image(systemName: "shield.fill")
+                                        .font(.system(size: 48))
+                                        .foregroundColor(.lightGold)
+                                    Text("SS")
+                                        .font(BrandFonts.displayBold(size: 28))
+                                        .foregroundColor(.lightGold)
+                                }
                             }
                         }
+                        .frame(width: 180, height: 180)
+                        .clipShape(Circle())
                     }
-                    .frame(width: 180, height: 180)
-                    .clipShape(Circle())
-                }
-                .scaleEffect(scale)
-                .opacity(opacity)
-                
-                // Titles
-                VStack(spacing: 8) {
-                    Text("SHREE RAJPUT")
-                        .font(BrandFonts.label(size: 11))
-                        .foregroundColor(.lightGold)
-                        .tracking(4)
+                    .scaleEffect(scale)
+                    .opacity(opacity)
                     
-                    Text("Sagai Sambaandh")
-                        .font(BrandFonts.displayBold(size: 30))
-                        .foregroundColor(.sandstoneIvory)
-                    
-                    Text("Rajasthan's Royal Matrimony")
-                        .font(BrandFonts.displayItalic(size: 13))
-                        .foregroundColor(.sandstoneIvory.opacity(0.8))
+                    // Titles
+                    VStack(spacing: 8) {
+                        Text("SHREE RAJPUT")
+                            .font(BrandFonts.label(size: 11))
+                            .foregroundColor(.lightGold)
+                            .tracking(4)
+                        
+                        Text("Sagai Sambaandh")
+                            .font(BrandFonts.displayBold(size: 30))
+                            .foregroundColor(.sandstoneIvory)
+                        
+                        Text("Rajasthan's Royal Matrimony")
+                            .font(BrandFonts.displayItalic(size: 13))
+                            .foregroundColor(.sandstoneIvory.opacity(0.8))
+                    }
+                    .opacity(opacity)
                 }
-                .opacity(opacity)
             }
-        }
-        .onAppear {
-            withAnimation(.easeOut(duration: 1.0)) {
-                self.scale = 1.0
-                self.opacity = 1.0
+            .onAppear {
+                withAnimation(.easeOut(duration: 1.0)) {
+                    self.scale = 1.0
+                    self.opacity = 1.0
+                }
             }
         }
     }

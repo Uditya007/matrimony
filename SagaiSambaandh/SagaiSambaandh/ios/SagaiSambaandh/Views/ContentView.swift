@@ -7,6 +7,9 @@ class SagaiSessionManager: ObservableObject {
     @Published var shortlistedIds: Set<String> = []
     @Published var unlockedIds: Set<String> = []
     
+    @Published var searchGender: String = "Bride"
+    @Published var searchClan: String = "All Clans"
+    
     func login(user: User) {
         self.currentUser = user
         self.shortlistedIds = Set(user.shortlistedIds)
@@ -38,6 +41,15 @@ class SagaiSessionManager: ObservableObject {
     func isUnlocked(id: String) -> Bool {
         unlockedIds.contains(id)
     }
+    
+    func setSearchFilters(gender: String, clan: String) {
+        self.searchGender = gender
+        self.searchClan = clan
+    }
+    
+    func updateCurrentUser(updated: User) {
+        self.currentUser = updated
+    }
 }
 
 struct ContentView: View {
@@ -45,7 +57,9 @@ struct ContentView: View {
     @State private var selectedTab: Int = 0
     @State private var showingRegister: Bool = false
     @State private var isSplashActive: Bool = true
-    @State private var isGuestBypassed: Bool = false // Kept for compile compatibility, but not exposed to users
+    @State private var isGuestBypassed: Bool = false
+    @State private var isSideMenuOpen: Bool = false
+    @State private var showingMyProfileSheet: Bool = false
     
     var body: some View {
         ZStack {
@@ -71,57 +85,148 @@ struct ContentView: View {
                             .transition(.asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                     }
                 } else {
-                    // Authenticated view with 5 Shaadi-style tabs
-                    TabView(selection: $selectedTab) {
-                        // Home View
-                        NavigationView {
-                            HomeView(selectedTab: $selectedTab, showingRegister: $showingRegister)
-                                .environmentObject(session)
+                    ZStack {
+                        // Authenticated view with 5 Shaadi-style tabs
+                        TabView(selection: $selectedTab) {
+                            // Home View
+                            NavigationView {
+                                HomeView(selectedTab: $selectedTab, showingRegister: $showingRegister, isSideMenuOpen: $isSideMenuOpen)
+                                    .environmentObject(session)
+                            }
+                            .tabItem {
+                                Label("Home", systemImage: "house.fill")
+                            }
+                            .tag(0)
+                            
+                            // Matches View
+                            NavigationView {
+                                MatchesView(selectedTab: $selectedTab, showingRegister: $showingRegister, isSideMenuOpen: $isSideMenuOpen)
+                                    .environmentObject(session)
+                            }
+                            .tabItem {
+                                Label("Matches", systemImage: "heart.fill")
+                            }
+                            .tag(1)
+                            
+                            // Inbox View
+                            NavigationView {
+                                InboxView()
+                                    .navigationBarTitleDisplayMode(.inline)
+                                    .toolbar {
+                                        ToolbarItem(placement: .navigationBarLeading) {
+                                            Button(action: {
+                                                withAnimation {
+                                                    isSideMenuOpen = true
+                                                }
+                                            }) {
+                                                Image(systemName: "line.horizontal.3")
+                                                    .foregroundColor(.lightGold)
+                                                    .font(.title2)
+                                            }
+                                        }
+                                        ToolbarItem(placement: .principal) {
+                                            Text("Inbox")
+                                                .font(BrandFonts.displayBold(size: 18))
+                                                .foregroundColor(.lightGold)
+                                        }
+                                    }
+                            }
+                            .tabItem {
+                                Label("Inbox", systemImage: "envelope.fill")
+                            }
+                            .tag(2)
+                            
+                            // Chat View
+                            NavigationView {
+                                ChatView()
+                                    .navigationBarTitleDisplayMode(.inline)
+                                    .toolbar {
+                                        ToolbarItem(placement: .navigationBarLeading) {
+                                            Button(action: {
+                                                withAnimation {
+                                                    isSideMenuOpen = true
+                                                }
+                                            }) {
+                                                Image(systemName: "line.horizontal.3")
+                                                    .foregroundColor(.lightGold)
+                                                    .font(.title2)
+                                            }
+                                        }
+                                        ToolbarItem(placement: .principal) {
+                                            Text("Chat")
+                                                .font(BrandFonts.displayBold(size: 18))
+                                                .foregroundColor(.lightGold)
+                                        }
+                                    }
+                            }
+                            .tabItem {
+                                Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
+                            }
+                            .tag(3)
+                            
+                            // Premium plans view
+                            NavigationView {
+                                PlansView()
+                                    .environmentObject(session)
+                                    .navigationBarTitleDisplayMode(.inline)
+                                    .toolbar {
+                                        ToolbarItem(placement: .navigationBarLeading) {
+                                            Button(action: {
+                                                withAnimation {
+                                                    isSideMenuOpen = true
+                                                }
+                                            }) {
+                                                Image(systemName: "line.horizontal.3")
+                                                    .foregroundColor(.lightGold)
+                                                    .font(.title2)
+                                            }
+                                        }
+                                        ToolbarItem(placement: .principal) {
+                                            Text("Premium")
+                                                .font(BrandFonts.displayBold(size: 18))
+                                                .foregroundColor(.lightGold)
+                                        }
+                                    }
+                            }
+                            .tabItem {
+                                Label("Premium", systemImage: "crown.fill")
+                            }
+                            .tag(4)
                         }
-                        .tabItem {
-                            Label("Home", systemImage: "house.fill")
-                        }
-                        .tag(0)
+                        .accentColor(.royalGold)
+                        .disabled(isSideMenuOpen)
                         
-                        // Matches View
-                        NavigationView {
-                            MatchesView(selectedTab: $selectedTab, showingRegister: $showingRegister)
-                                .environmentObject(session)
+                        // Dimmed overlay when side menu drawer is open
+                        if isSideMenuOpen {
+                            Color.black.opacity(0.5)
+                                .edgesIgnoringSafeArea(.all)
+                                .onTapGesture {
+                                    withAnimation {
+                                        isSideMenuOpen = false
+                                    }
+                                }
                         }
-                        .tabItem {
-                            Label("Matches", systemImage: "heart.fill")
-                        }
-                        .tag(1)
                         
-                        // Inbox View
-                        NavigationView {
-                            InboxView()
+                        // Sliding Side Menu
+                        HStack {
+                            SideMenuView(
+                                isOpen: $isSideMenuOpen,
+                                showingMyProfile: $showingMyProfileSheet,
+                                selectedTab: $selectedTab
+                            )
+                            .environmentObject(session)
+                            .frame(width: 280)
+                            .offset(x: isSideMenuOpen ? 0 : -280)
+                            .transition(.move(edge: .leading))
+                            
+                            Spacer()
                         }
-                        .tabItem {
-                            Label("Inbox", systemImage: "envelope.fill")
-                        }
-                        .tag(2)
-                        
-                        // Chat View
-                        NavigationView {
-                            ChatView()
-                        }
-                        .tabItem {
-                            Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
-                        }
-                        .tag(3)
-                        
-                        // Premium plans view
-                        NavigationView {
-                            PlansView()
-                                .environmentObject(session)
-                        }
-                        .tabItem {
-                            Label("Premium", systemImage: "crown.fill")
-                        }
-                        .tag(4)
+                        .edgesIgnoringSafeArea(.vertical)
                     }
-                    .accentColor(.royalGold)
+                    .sheet(isPresented: $showingMyProfileSheet) {
+                        MyProfileView()
+                            .environmentObject(session)
+                    }
                     .onAppear {
                         // Set up a custom appearance for tabs to match the maroon theme!
                         let appearance = UITabBarAppearance()

@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 struct HomeView: View {
     @EnvironmentObject var session: SagaiSessionManager
@@ -8,6 +9,8 @@ struct HomeView: View {
     @State private var lookingFor: String = "Bride"
     @State private var selectedClan: String = "All Clans"
     @State private var selectedProfileForDetail: Profile? = nil
+    @State private var activeHeroSlide: Int = 0
+    let timer = Timer.publish(every: 4, on: .main, in: .common).autoconnect()
     
     private let clansOptions = ["All Clans", "Rathore", "Sisodia", "Chauhan", "Kachwaha", "Bhati", "Shekhawat"]
     
@@ -22,14 +25,25 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                // Hero Header Banner
+                // Hero Header Banner with Slide Show
                 ZStack(alignment: .bottom) {
-                    // Deep Royal Jodhpur Indigo Header
+                    // Couples Slideshow Background Image
+                    AsyncImage(url: URL(string: "https://shreerajputsagaisambandh.com/images/slide\(activeHeroSlide + 1).jpg")) { image in
+                        image.resizable()
+                             .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Color.deepMaroon
+                    }
+                    .frame(height: 260)
+                    .clipped()
+                    
+                    // Dark maroon gradient overlay to keep text readable
                     LinearGradient(
-                        colors: [.jodhpurIndigo, Color(hex: "#101830")],
+                        colors: [Color.deepMaroon.opacity(0.4), Color.royalMaroon.opacity(0.9)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
+                    .frame(height: 260)
                     
                     VStack(spacing: 12) {
                         Text("A UNION OF RAJPUT LINEAGE & LEGACY")
@@ -54,7 +68,10 @@ struct HomeView: View {
                     .padding(.bottom, 60)
                     
                     // Palace silhouette vector divider
-                    PalaceDivider(fillColor: .sandstoneIvory)
+                    PalaceDivider(fillColor: .deepMaroon)
+                }
+                .onReceive(timer) { _ in
+                    activeHeroSlide = (activeHeroSlide + 1) % 3
                 }
                 
                 // Content Section
@@ -101,12 +118,8 @@ struct HomeView: View {
                         
                         // Search CTA Button
                         Button(action: {
-                            if session.currentUser == nil {
-                                showingRegister = false
-                                selectedTab = 3 // Go to Login view
-                            } else {
-                                selectedTab = 3 // Go to Dashboard matches feed
-                            }
+                            session.setSearchFilters(gender: lookingFor, clan: selectedClan)
+                            selectedTab = 1 // Go to Matches tab
                         }) {
                             Text(session.currentUser == nil ? "Log In to Search" : "Search Matches")
                                 .font(BrandFonts.body(size: 14, weight: .bold))
@@ -125,7 +138,7 @@ struct HomeView: View {
                         }
                     }
                     .padding(20)
-                    .background(Color.cardBackground)
+                    .background(Color.deepMaroon)
                     .cornerRadius(12)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
@@ -135,16 +148,43 @@ struct HomeView: View {
                     .offset(y: -40)
                     .padding(.bottom, -30)
                     
+                    // Profile Completion Checklist Widget
+                    if session.currentUser != nil {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Complete your Profile")
+                                .font(BrandFonts.displayBold(size: 16))
+                                .foregroundColor(.lightGold)
+                            
+                            Text("Completed profiles get 2x more matches and responses.")
+                                .font(BrandFonts.body(size: 12))
+                                .foregroundColor(.sandstoneIvory.opacity(0.7))
+                                .padding(.bottom, 6)
+                            
+                            ProfileChecklistItem(title: "Verify your Rajput Lineage", checked: true)
+                            ProfileChecklistItem(title: "Upload Heritage Photos", checked: false)
+                            ProfileChecklistItem(title: "Add Astro & Kundli details", checked: false)
+                        }
+                        .padding()
+                        .background(Color.deepMaroon)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.royalGold.opacity(0.3), lineWidth: 1)
+                        )
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 20)
+                    }
+                    
                     // Featured Showcase
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Featured Rajput Lineages")
                                     .font(BrandFonts.displayBold(size: 20))
-                                    .foregroundColor(.royalMaroon)
+                                    .foregroundColor(.lightGold)
                                 Text("Verified brides and grooms recently active")
                                     .font(BrandFonts.body(size: 12))
-                                    .foregroundColor(.gray)
+                                    .foregroundColor(.sandstoneIvory.opacity(0.7))
                             }
                             Spacer()
                         }
@@ -192,7 +232,7 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 15) {
                         Text("The Shree Rajput Sagai Sambandh Promise")
                             .font(BrandFonts.displayBold(size: 20))
-                            .foregroundColor(.royalMaroon)
+                            .foregroundColor(.lightGold)
                             .padding(.horizontal, 20)
                         
                         VStack(spacing: 12) {
@@ -203,12 +243,12 @@ struct HomeView: View {
                         .padding(.horizontal, 20)
                     }
                     .padding(.vertical, 20)
-                    .background(Color.royalGold.opacity(0.05))
+                    .background(Color.deepMaroon)
                 }
-                .background(Color.sandstoneIvory.opacity(0.15))
+                .background(Color.deepMaroon)
             }
         }
-        .background(Color.sandstoneIvory.edgesIgnoringSafeArea(.all))
+        .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
         .navigationBarHidden(true)
         .sheet(item: $selectedProfileForDetail) { profile in
             ProfileDetailView(profile: profile)
@@ -232,13 +272,32 @@ struct PromiseRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(BrandFonts.body(size: 14, weight: .bold))
-                    .foregroundColor(.inkBrown)
+                    .foregroundColor(.sandstoneIvory)
                 Text(desc)
                     .font(BrandFonts.body(size: 12))
-                    .foregroundColor(.gray)
+                    .foregroundColor(.sandstoneIvory.opacity(0.7))
                     .lineSpacing(2)
             }
         }
         .padding(.vertical, 5)
+    }
+}
+
+struct ProfileChecklistItem: View {
+    let title: String
+    let checked: Bool
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: checked ? "checkmark.circle.fill" : "circle")
+                .foregroundColor(checked ? .green : .sandstoneIvory.opacity(0.3))
+                .font(.system(size: 16))
+            
+            Text(title)
+                .font(BrandFonts.body(size: 13))
+                .foregroundColor(.sandstoneIvory)
+            
+            Spacer()
+        }
     }
 }

@@ -4,12 +4,12 @@ struct MatchesView: View {
     @EnvironmentObject var session: SagaiSessionManager
     @Binding var selectedTab: Int
     @Binding var showingRegister: Bool
-    @Binding var isSideMenuOpen: Bool
     @State private var activeFilterTab: Int = 0 // 0 = All, 1 = Gotra Compatible
     @State private var selectedProfileForDetail: Profile? = nil
     
     var body: some View {
         VStack(spacing: 0) {
+            toolbar
             filterTabs
             matchesList
         }
@@ -17,36 +17,18 @@ struct MatchesView: View {
             ProfileDetailView(profile: profile)
                 .environmentObject(session)
         }
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {
-                    withAnimation {
-                        isSideMenuOpen = true
-                    }
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "line.horizontal.3")
-                            .foregroundColor(.lightGold)
-                            .font(.title2)
-                        
-                        Image("logo")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 32, height: 32)
-                            .clipShape(Circle())
-                            .background(Color.white)
-                            .cornerRadius(16)
-                            .overlay(Circle().stroke(Color.royalGold, lineWidth: 0.5))
-                    }
-                }
-            }
-            ToolbarItem(placement: .principal) {
-                Text("Matches")
-                    .font(BrandFonts.displayBold(size: 18))
-                    .foregroundColor(.lightGold)
-            }
+    }
+    
+    private var toolbar: some View {
+        HStack {
+            Spacer()
+            Text("Matches")
+                .font(BrandFonts.displayBold(size: 20))
+                .foregroundColor(.lightGold)
+            Spacer()
         }
+        .padding()
+        .background(Color.deepMaroon)
     }
     
     private var filterTabs: some View {
