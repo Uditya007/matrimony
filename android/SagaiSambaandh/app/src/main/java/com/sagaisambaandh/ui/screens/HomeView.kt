@@ -25,6 +25,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import com.sagaisambaandh.data.Profile
 import com.sagaisambaandh.data.SagaiSessionManager
 import com.sagaisambaandh.ui.components.PalaceDivider
@@ -69,18 +71,31 @@ fun HomeView(
         // Ticker Marquee Ribbon
         MarqueeTicker()
 
-        // Hero Banner with Palace Skyline
+        // Hero Banner with Palace Skyline & Couples Photos Slideshow Background
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(DeepMaroon, RoyalMaroon)
-                    )
-                )
-                .padding(bottom = 20.dp),
+                .height(240.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
+            // Couples Slide background image
+            AsyncImage(
+                model = "https://shreerajputsagaisambandh.com/images/slide${activeHeroSlide + 1}.jpg",
+                contentDescription = "Royal Couples Slideshow",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // Overlaid Dark Red/Maroon Gradient overlay to keep text legible
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(DeepMaroon.copy(alpha = 0.5f), RoyalMaroon.copy(alpha = 0.85f))
+                        )
+                    )
+            )
             // Animated Slide Content
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,

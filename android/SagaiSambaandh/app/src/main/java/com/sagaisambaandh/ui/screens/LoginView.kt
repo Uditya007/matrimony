@@ -47,7 +47,7 @@ fun LoginView(
                 .fillMaxWidth()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(JodhpurIndigo, Color(0xFF101830))
+                        colors = listOf(DeepMaroon, RoyalMaroon)
                     )
                 )
                 .height(110.dp),
