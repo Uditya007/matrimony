@@ -17,7 +17,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -77,6 +79,7 @@ fun MainScreen(session: SagaiSessionManager) {
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
         var showMyProfileSheet by remember { mutableStateOf(false) }
+        var showBiodataSheet by remember { mutableStateOf(false) }
 
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -98,6 +101,10 @@ fun MainScreen(session: SagaiSessionManager) {
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .clickable {
+                                    showMyProfileSheet = true
+                                    scope.launch { drawerState.close() }
+                                }
                                 .padding(vertical = 16.dp)
                         ) {
                             Box(modifier = Modifier.size(64.dp)) {
@@ -108,12 +115,24 @@ fun MainScreen(session: SagaiSessionManager) {
                                         .background(Color.White.copy(alpha = 0.15f), shape = CircleShape)
                                         .border(1.dp, LightGold.copy(alpha = 0.5f), shape = CircleShape)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Person,
-                                        contentDescription = "Avatar",
-                                        tint = LightGold,
-                                        modifier = Modifier.size(36.dp)
-                                    )
+                                    val resId = getAvatarResId(currentUser?.profilePic)
+                                    if (resId != null) {
+                                        Image(
+                                            painter = painterResource(id = resId),
+                                            contentDescription = "Avatar",
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .size(60.dp)
+                                                .clip(CircleShape)
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = "Avatar",
+                                            tint = LightGold,
+                                            modifier = Modifier.size(36.dp)
+                                        )
+                                    }
                                 }
                                 Box(
                                     contentAlignment = Alignment.Center,
@@ -186,7 +205,10 @@ fun MainScreen(session: SagaiSessionManager) {
                         DrawerMenuItem(
                             icon = Icons.Default.Download,
                             title = "Download and Share Profile",
-                            onClick = { scope.launch { drawerState.close() } }
+                            onClick = {
+                                scope.launch { drawerState.close() }
+                                showBiodataSheet = true
+                            }
                         )
                         DrawerMenuItem(
                             icon = Icons.Default.Star,
@@ -447,6 +469,14 @@ fun MainScreen(session: SagaiSessionManager) {
                         )
                     }
                 }
+
+                // Rajput Matrimonial Biodata sheet
+                if (showBiodataSheet) {
+                    com.sagaisambaandh.ui.screens.BiodataDialog(
+                        session = session,
+                        onDismiss = { showBiodataSheet = false }
+                    )
+                }
             }
         }
     }
@@ -499,4 +529,18 @@ fun DrawerMenuItem(
         }
     }
 }
+
+fun getAvatarResId(name: String?): Int? {
+    return when (name) {
+        "groom_ranveer" -> R.drawable.groom_ranveer
+        "groom_aditya" -> R.drawable.groom_aditya
+        "groom_devendra" -> R.drawable.groom_devendra
+        "groom_siddharth" -> R.drawable.groom_siddharth
+        "groom_vikramaditya" -> R.drawable.groom_vikramaditya
+        "bride_aishwarya" -> R.drawable.bride_aishwarya
+        "bride_priyanka" -> R.drawable.bride_priyanka
+        "bride_riya" -> R.drawable.bride_riya
+        "bride_divya" -> R.drawable.bride_divya
+        else -> null
+    }
 }

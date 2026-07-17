@@ -4,7 +4,9 @@ struct SideMenuView: View {
     @Binding var isOpen: Bool
     @Binding var showingMyProfile: Bool
     @Binding var selectedTab: Int
+    @Binding var showingBiodata: Bool
     @EnvironmentObject var session: SagaiSessionManager
+    @State private var showingAvatarSelection: Bool = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -13,11 +15,41 @@ struct SideMenuView: View {
                 HStack(spacing: 15) {
                     // Silhouette avatar with plus sign overlay
                     ZStack(alignment: .bottomTrailing) {
-                        Image(systemName: "person.crop.circle.fill")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 60, height: 60)
-                            .foregroundColor(.sandstoneIvory.opacity(0.8))
+                        Button(action: {
+                            showingAvatarSelection = true
+                        }) {
+                            if let pic = user.profilePic, !pic.isEmpty {
+                                if pic.contains("http") {
+                                    AsyncImage(url: URL(string: pic)) { phase in
+                                        switch phase {
+                                        case .success(let image):
+                                            image.resizable()
+                                                 .aspectRatio(contentMode: .fill)
+                                                 .frame(width: 60, height: 60)
+                                                 .clipShape(Circle())
+                                        default:
+                                            Image(systemName: "person.crop.circle.fill")
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fit)
+                                                .frame(width: 60, height: 60)
+                                                .foregroundColor(.sandstoneIvory.opacity(0.8))
+                                        }
+                                    }
+                                } else {
+                                    Image(pic)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 60, height: 60)
+                                        .clipShape(Circle())
+                                }
+                            } else {
+                                Image(systemName: "person.crop.circle.fill")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 60, height: 60)
+                                    .foregroundColor(.sandstoneIvory.opacity(0.8))
+                            }
+                        }
                         
                         Circle()
                             .fill(Color.blue)
@@ -27,6 +59,9 @@ struct SideMenuView: View {
                                     .font(.system(size: 11, weight: .bold))
                                     .foregroundColor(.white)
                             )
+                            .onTapGesture {
+                                showingAvatarSelection = true
+                            }
                     }
                     
                     VStack(alignment: .leading, spacing: 3) {
@@ -51,6 +86,11 @@ struct SideMenuView: View {
                 .padding(.top, 60)
                 .padding(.bottom, 20)
                 .background(Color.deepMaroon)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    withAnimation { isOpen = false }
+                    showingMyProfile = true
+                }
             }
             
             Divider()
@@ -71,7 +111,7 @@ struct SideMenuView: View {
                     
                     SideMenuItem(icon: "arrow.down.doc.fill", title: "Download and Share Profile") {
                         withAnimation { isOpen = false }
-                        // Share
+                        showingBiodata = true
                     }
                     
                     SideMenuItem(icon: "star.fill", title: "Upgrade to Premium", iconColor: .royalGold) {
@@ -134,6 +174,10 @@ struct SideMenuView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
+        .sheet(isPresented: $showingAvatarSelection) {
+            AvatarSelectionView()
+                .environmentObject(session)
+        }
     }
 }
 

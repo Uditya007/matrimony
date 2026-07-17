@@ -16,6 +16,7 @@ struct MyProfileView: View {
     @State private var income: String = ""
     @State private var height: String = ""
     @State private var maritalStatus: String = ""
+    @State private var showingAvatarChooser: Bool = false
     
     var body: some View {
         NavigationView {
@@ -27,6 +28,51 @@ struct MyProfileView: View {
                         .foregroundColor(.sandstoneIvory.opacity(0.7))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
+                    
+                    // Current Avatar Selection View
+                    VStack(spacing: 8) {
+                        if let pic = session.currentUser?.profilePic, !pic.isEmpty {
+                            if pic.contains("http") {
+                                AsyncImage(url: URL(string: pic)) { phase in
+                                    switch phase {
+                                    case .success(let image):
+                                        image.resizable()
+                                             .aspectRatio(contentMode: .fill)
+                                             .frame(width: 80, height: 80)
+                                             .clipShape(Circle())
+                                    default:
+                                        Image(systemName: "person.crop.circle.fill")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 80, height: 80)
+                                            .foregroundColor(.sandstoneIvory.opacity(0.8))
+                                    }
+                                }
+                            } else {
+                                Image(pic)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 80, height: 80)
+                                    .clipShape(Circle())
+                            }
+                        } else {
+                            Image(systemName: "person.crop.circle.fill")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 80, height: 80)
+                                .foregroundColor(.sandstoneIvory.opacity(0.8))
+                        }
+                        
+                        Button("Change Portrait") {
+                            showingAvatarChooser = true
+                        }
+                        .font(BrandFonts.bodyBold(size: 13))
+                        .foregroundColor(.lightGold)
+                    }
+                    .sheet(isPresented: $showingAvatarChooser) {
+                        AvatarSelectionView()
+                            .environmentObject(session)
+                    }
                     
                     VStack(alignment: .leading, spacing: 20) {
                         // Section 1: Personal Info
@@ -162,6 +208,8 @@ struct MyProfileView: View {
             gender: user.gender,
             clan: clan,
             tier: user.tier,
+            shortlistedIds: user.shortlistedIds,
+            unlockedIds: user.unlockedIds,
             gotra: gotra,
             motherGotra: motherGotra,
             thikana: thikana,
@@ -171,9 +219,7 @@ struct MyProfileView: View {
             occupation: occupation,
             income: income,
             height: height,
-            maritalStatus: maritalStatus,
-            shortlistedIds: user.shortlistedIds,
-            unlockedIds: user.unlockedIds
+            maritalStatus: maritalStatus
         )
         session.updateCurrentUser(updated: updated)
         presentationMode.wrappedValue.dismiss()

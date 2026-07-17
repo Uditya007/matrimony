@@ -43,5 +43,6 @@ data class User(
     val occupation: String = "",
     val income: String = "",
     val height: String = "",
-    val maritalStatus: String = "Never Married"
+    val maritalStatus: String = "Never Married",
+    val profilePic: String? = null
 )

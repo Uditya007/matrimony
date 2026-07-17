@@ -60,6 +60,7 @@ struct ContentView: View {
     @State private var isGuestBypassed: Bool = false
     @State private var isSideMenuOpen: Bool = false
     @State private var showingMyProfileSheet: Bool = false
+    @State private var showingBiodataSheet: Bool = false
     
     var body: some View {
         ZStack {
@@ -212,7 +213,8 @@ struct ContentView: View {
                             SideMenuView(
                                 isOpen: $isSideMenuOpen,
                                 showingMyProfile: $showingMyProfileSheet,
-                                selectedTab: $selectedTab
+                                selectedTab: $selectedTab,
+                                showingBiodata: $showingBiodataSheet
                             )
                             .environmentObject(session)
                             .frame(width: 280)
@@ -225,6 +227,10 @@ struct ContentView: View {
                     }
                     .sheet(isPresented: $showingMyProfileSheet) {
                         MyProfileView()
+                            .environmentObject(session)
+                    }
+                    .sheet(isPresented: $showingBiodataSheet) {
+                        BiodataCardView()
                             .environmentObject(session)
                     }
                     .onAppear {

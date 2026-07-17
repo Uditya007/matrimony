@@ -45,4 +45,5 @@ struct User: Identifiable, Codable, Hashable {
     var income: String = ""
     var height: String = ""
     var maritalStatus: String = "Never Married"
+    var profilePic: String? = nil
 }
