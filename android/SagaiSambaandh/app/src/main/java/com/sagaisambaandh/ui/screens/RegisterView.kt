@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,10 +73,30 @@ fun RegisterView(
                         colors = listOf(DeepMaroon, RoyalMaroon)
                     )
                 )
-                .height(110.dp),
-            contentAlignment = Alignment.BottomCenter
+                .height(130.dp),
+            contentAlignment = Alignment.Center
         ) {
-            PalaceDivider(fillColor = SandstoneIvory)
+            // Medallion Crest in the center
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(54.dp)
+                    .background(RoyalGold.copy(alpha = 0.15f), shape = CircleShape)
+                    .border(1.5.dp, LightGold, shape = CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Shield,
+                    contentDescription = "Royal Crest",
+                    tint = LightGold,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                PalaceDivider(fillColor = DeepMaroon)
+            }
         }
 
         Column(
@@ -102,182 +124,203 @@ fun RegisterView(
             // Step Content
             when (step) {
                 1 -> {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "Noble Registration",
-                            color = RoyalMaroon,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Serif
-                        )
-                        Text(
-                            text = "Create your premium matrimonial lineage record",
-                            color = Color.Gray,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
-                        )
-
-                        // Name
-                        Text(text = "FULL NAME (KUNWAR/BANNISA)", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
-                        OutlinedTextField(
-                            value = nameInput,
-                            onValueChange = { nameInput = it },
-                            placeholder = { Text("e.g. Vikramaditya Singh") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 6.dp, bottom = 16.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = CardBackground,
-                                unfocusedContainerColor = CardBackground,
-                                focusedBorderColor = RoyalGold,
-                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                    if (step == 1) {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "Noble Registration",
+                                color = LightGold,
+                                fontSize = 26.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Serif
                             )
-                        )
-
-                        // Email
-                        Text(text = "ROYAL CONTACT EMAIL", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
-                        OutlinedTextField(
-                            value = emailInput,
-                            onValueChange = { emailInput = it },
-                            placeholder = { Text("e.g. contact@clan.com") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 6.dp, bottom = 16.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = CardBackground,
-                                unfocusedContainerColor = CardBackground,
-                                focusedBorderColor = RoyalGold,
-                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                            Text(
+                                text = "Create your premium matrimonial lineage record",
+                                color = SandstoneIvory.copy(alpha = 0.7f),
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
                             )
-                        )
 
-                        // Password
-                        Text(text = "PASSWORD", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
-                        OutlinedTextField(
-                            value = passwordInput,
-                            onValueChange = { passwordInput = it },
-                            placeholder = { Text("Enter a secure password") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 6.dp, bottom = 16.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = CardBackground,
-                                unfocusedContainerColor = CardBackground,
-                                focusedBorderColor = RoyalGold,
-                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
-                            )
-                        )
-
-                        // Phone Number
-                        Text(text = "MOBILE PHONE NUMBER", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
-                        OutlinedTextField(
-                            value = phoneInput,
-                            onValueChange = { phoneInput = it },
-                            placeholder = { Text("e.g. +91 9928592159") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 6.dp, bottom = 16.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = CardBackground,
-                                unfocusedContainerColor = CardBackground,
-                                focusedBorderColor = RoyalGold,
-                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
-                            )
-                        )
-
-                        // Date of Birth
-                        Text(text = "DATE OF BIRTH", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
-                        OutlinedTextField(
-                            value = dobInput,
-                            onValueChange = { dobInput = it },
-                            placeholder = { Text("e.g. DD-MM-YYYY") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 6.dp, bottom = 16.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = CardBackground,
-                                unfocusedContainerColor = CardBackground,
-                                focusedBorderColor = RoyalGold,
-                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
-                            )
-                        )
-
-                        // Gender Segment
-                        Text(text = "GENDER", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 6.dp, bottom = 20.dp)
-                                .background(RoyalGold.copy(alpha = 0.1f), shape = RoundedCornerShape(8.dp))
-                                .padding(4.dp)
-                        ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
+                            // Name
+                            Text(text = "FULL NAME (KUNWAR/BANNISA)", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                            OutlinedTextField(
+                                value = nameInput,
+                                onValueChange = { nameInput = it },
+                                placeholder = { Text("e.g. Vikramaditya Singh") },
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .height(32.dp)
-                                    .background(
-                                        if (genderInput == "Bride") CardBackground else Color.Transparent,
-                                        shape = RoundedCornerShape(6.dp)
-                                    )
-                                    .clickable { genderInput = "Bride" }
-                            ) {
-                                Text(text = "Noble Bride (Ladi)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = RoyalMaroon)
-                            }
-                            Box(
-                                contentAlignment = Alignment.Center,
+                                    .fillMaxWidth()
+                                    .padding(top = 6.dp, bottom = 16.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedPlaceholderColor = Color.Gray,
+                                    unfocusedPlaceholderColor = Color.Gray,
+                                    focusedContainerColor = CardBackground,
+                                    unfocusedContainerColor = CardBackground,
+                                    focusedBorderColor = RoyalGold,
+                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                                )
+                            )
+
+                            // Email
+                            Text(text = "ROYAL CONTACT EMAIL", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                            OutlinedTextField(
+                                value = emailInput,
+                                onValueChange = { emailInput = it },
+                                placeholder = { Text("e.g. contact@clan.com") },
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .height(32.dp)
-                                    .background(
-                                        if (genderInput == "Groom") CardBackground else Color.Transparent,
-                                        shape = RoundedCornerShape(6.dp)
-                                    )
-                                    .clickable { genderInput = "Groom" }
+                                    .fillMaxWidth()
+                                    .padding(top = 6.dp, bottom = 16.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedPlaceholderColor = Color.Gray,
+                                    unfocusedPlaceholderColor = Color.Gray,
+                                    focusedContainerColor = CardBackground,
+                                    unfocusedContainerColor = CardBackground,
+                                    focusedBorderColor = RoyalGold,
+                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                                )
+                            )
+
+                            // Password
+                            Text(text = "PASSWORD", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                            OutlinedTextField(
+                                value = passwordInput,
+                                onValueChange = { passwordInput = it },
+                                placeholder = { Text("Enter a secure password") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 6.dp, bottom = 16.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedPlaceholderColor = Color.Gray,
+                                    unfocusedPlaceholderColor = Color.Gray,
+                                    focusedContainerColor = CardBackground,
+                                    unfocusedContainerColor = CardBackground,
+                                    focusedBorderColor = RoyalGold,
+                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                                )
+                            )
+
+                            // Phone Number
+                            Text(text = "MOBILE PHONE NUMBER", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                            OutlinedTextField(
+                                value = phoneInput,
+                                onValueChange = { phoneInput = it },
+                                placeholder = { Text("e.g. +91 9928592159") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 6.dp, bottom = 16.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedPlaceholderColor = Color.Gray,
+                                    unfocusedPlaceholderColor = Color.Gray,
+                                    focusedContainerColor = CardBackground,
+                                    unfocusedContainerColor = CardBackground,
+                                    focusedBorderColor = RoyalGold,
+                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                                )
+                            )
+
+                            // Date of Birth
+                            Text(text = "DATE OF BIRTH", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                            OutlinedTextField(
+                                value = dobInput,
+                                onValueChange = { dobInput = it },
+                                placeholder = { Text("e.g. DD-MM-YYYY") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 6.dp, bottom = 16.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedPlaceholderColor = Color.Gray,
+                                    unfocusedPlaceholderColor = Color.Gray,
+                                    focusedContainerColor = CardBackground,
+                                    unfocusedContainerColor = CardBackground,
+                                    focusedBorderColor = RoyalGold,
+                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                                )
+                            )
+
+                            // Gender Segment
+                            Text(text = "GENDER", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 6.dp, bottom = 20.dp)
+                                    .background(RoyalGold.copy(alpha = 0.1f), shape = RoundedCornerShape(8.dp))
+                                    .padding(4.dp)
                             ) {
-                                Text(text = "Noble Groom (Lada)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = RoyalMaroon)
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(32.dp)
+                                        .background(
+                                            if (genderInput == "Bride") CardBackground else Color.Transparent,
+                                            shape = RoundedCornerShape(6.dp)
+                                        )
+                                        .clickable { genderInput = "Bride" }
+                                ) {
+                                    Text(text = "Noble Bride (Ladi)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = RoyalMaroon)
+                                }
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(32.dp)
+                                        .background(
+                                            if (genderInput == "Groom") CardBackground else Color.Transparent,
+                                            shape = RoundedCornerShape(6.dp)
+                                        )
+                                        .clickable { genderInput = "Groom" }
+                                ) {
+                                    Text(text = "Noble Groom (Lada)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = RoyalMaroon)
+                                }
                             }
-                        }
 
-                        Button(
-                            onClick = { step = 2 },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = RoyalMaroon)
-                        ) {
-                            Text(text = "Continue to Lineage", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        }
+                            Button(
+                                onClick = { step = 2 },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = RoyalGold)
+                            ) {
+                                Text(text = "Continue to Lineage", color = DeepMaroon, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            }
 
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(
-                            modifier = Modifier
-                                .clickable(onClick = onNavigateToLogin)
-                                .align(Alignment.CenterHorizontally)
-                                .padding(8.dp)
-                        ) {
-                            Text(text = "Already have a lineage record? ", color = Color.Gray, fontSize = 12.sp)
-                            Text(text = "Log In here", color = RoyalMaroon, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(
+                                modifier = Modifier
+                                    .clickable(onClick = onNavigateToLogin)
+                                    .align(Alignment.CenterHorizontally)
+                                    .padding(8.dp)
+                            ) {
+                                Text(text = "Already have a lineage record? ", color = SandstoneIvory.copy(alpha = 0.6f), fontSize = 12.sp)
+                                Text(text = "Log In here", color = LightGold, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }}
                     }
                 }
                 2 -> {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = "Noble Lineage & Gotra",
-                            color = RoyalMaroon,
+                            color = LightGold,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.Serif
                         )
                         Text(
                             text = "Enter ancestral thikana details for verification",
-                            color = Color.Gray,
+                            color = SandstoneIvory.copy(alpha = 0.7f),
                             fontSize = 12.sp,
                             modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
                         )
 
                         // Clan Selection
-                        Text(text = "RAJPUT CLAN", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        Text(text = "RAJPUT CLAN", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -287,7 +330,7 @@ fun RegisterView(
                                 .clickable { clanExpanded = true }
                                 .padding(12.dp)
                         ) {
-                            Text(text = selectedClan, color = InkBrown, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                            Text(text = selectedClan, color = Color.Black, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                             DropdownMenu(
                                 expanded = clanExpanded,
                                 onDismissRequest = { clanExpanded = false }
@@ -305,7 +348,7 @@ fun RegisterView(
                         }
 
                         // Gotra
-                        Text(text = "GOTRA (ANCESTRAL RISHI)", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        Text(text = "GOTRA (ANCESTRAL RISHI)", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
                         OutlinedTextField(
                             value = gotraInput,
                             onValueChange = { gotraInput = it },
@@ -314,6 +357,10 @@ fun RegisterView(
                                 .fillMaxWidth()
                                 .padding(top = 6.dp, bottom = 16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedPlaceholderColor = Color.Gray,
+                                unfocusedPlaceholderColor = Color.Gray,
                                 focusedContainerColor = CardBackground,
                                 unfocusedContainerColor = CardBackground,
                                 focusedBorderColor = RoyalGold,
@@ -322,7 +369,7 @@ fun RegisterView(
                         )
 
                         // Mother's Gotra
-                        Text(text = "MOTHER'S GOTRA", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        Text(text = "MOTHER'S GOTRA", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
                         OutlinedTextField(
                             value = motherGotraInput,
                             onValueChange = { motherGotraInput = it },
@@ -331,6 +378,10 @@ fun RegisterView(
                                 .fillMaxWidth()
                                 .padding(top = 6.dp, bottom = 16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedPlaceholderColor = Color.Gray,
+                                unfocusedPlaceholderColor = Color.Gray,
                                 focusedContainerColor = CardBackground,
                                 unfocusedContainerColor = CardBackground,
                                 focusedBorderColor = RoyalGold,
@@ -339,7 +390,7 @@ fun RegisterView(
                         )
 
                         // Thikana
-                        Text(text = "THIKANA (NOBLE ESTATE / NATIVE VILLAGE)", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        Text(text = "THIKANA (NOBLE ESTATE / NATIVE VILLAGE)", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
                         OutlinedTextField(
                             value = thikanaInput,
                             onValueChange = { thikanaInput = it },
@@ -348,6 +399,10 @@ fun RegisterView(
                                 .fillMaxWidth()
                                 .padding(top = 6.dp, bottom = 20.dp),
                             colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedPlaceholderColor = Color.Gray,
+                                unfocusedPlaceholderColor = Color.Gray,
                                 focusedContainerColor = CardBackground,
                                 unfocusedContainerColor = CardBackground,
                                 focusedBorderColor = RoyalGold,
@@ -359,7 +414,10 @@ fun RegisterView(
                             OutlinedButton(
                                 onClick = { step = 1 },
                                 shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = RoyalMaroon),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = LightGold),
+                                border = ButtonDefaults.outlinedCardBorder().copy(
+                                    brush = Brush.linearGradient(listOf(LightGold, LightGold))
+                                ),
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(44.dp)
@@ -370,12 +428,12 @@ fun RegisterView(
                             Button(
                                 onClick = { step = 3 },
                                 shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = RoyalMaroon),
+                                colors = ButtonDefaults.buttonColors(containerColor = RoyalGold),
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(44.dp)
                             ) {
-                                Text(text = "Continue", fontWeight = FontWeight.Bold)
+                                Text(text = "Continue", color = DeepMaroon, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -384,20 +442,20 @@ fun RegisterView(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = "Professional Details",
-                            color = RoyalMaroon,
+                            color = LightGold,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.Serif
                         )
                         Text(
                             text = "Complete noble credentials to record profile",
-                            color = Color.Gray,
+                            color = SandstoneIvory.copy(alpha = 0.7f),
                             fontSize = 12.sp,
                             modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
                         )
 
                         // Education
-                        Text(text = "HIGHEST DEGREE / EDUCATION", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        Text(text = "HIGHEST DEGREE / EDUCATION", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
                         OutlinedTextField(
                             value = educationInput,
                             onValueChange = { educationInput = it },
@@ -406,6 +464,10 @@ fun RegisterView(
                                 .fillMaxWidth()
                                 .padding(top = 6.dp, bottom = 16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedPlaceholderColor = Color.Gray,
+                                unfocusedPlaceholderColor = Color.Gray,
                                 focusedContainerColor = CardBackground,
                                 unfocusedContainerColor = CardBackground,
                                 focusedBorderColor = RoyalGold,
@@ -414,7 +476,7 @@ fun RegisterView(
                         )
 
                         // Occupation
-                        Text(text = "OCCUPATION / PROFESSION", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        Text(text = "OCCUPATION / PROFESSION", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
                         OutlinedTextField(
                             value = occupationInput,
                             onValueChange = { occupationInput = it },
@@ -423,6 +485,10 @@ fun RegisterView(
                                 .fillMaxWidth()
                                 .padding(top = 6.dp, bottom = 16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedPlaceholderColor = Color.Gray,
+                                unfocusedPlaceholderColor = Color.Gray,
                                 focusedContainerColor = CardBackground,
                                 unfocusedContainerColor = CardBackground,
                                 focusedBorderColor = RoyalGold,
@@ -431,7 +497,7 @@ fun RegisterView(
                         )
 
                         // Annual Income
-                        Text(text = "ANNUAL INCOME", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        Text(text = "ANNUAL INCOME", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
                         OutlinedTextField(
                             value = incomeInput,
                             onValueChange = { incomeInput = it },
@@ -440,6 +506,10 @@ fun RegisterView(
                                 .fillMaxWidth()
                                 .padding(top = 6.dp, bottom = 16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedPlaceholderColor = Color.Gray,
+                                unfocusedPlaceholderColor = Color.Gray,
                                 focusedContainerColor = CardBackground,
                                 unfocusedContainerColor = CardBackground,
                                 focusedBorderColor = RoyalGold,
@@ -448,7 +518,7 @@ fun RegisterView(
                         )
 
                         // Height
-                        Text(text = "HEIGHT", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        Text(text = "HEIGHT", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
                         OutlinedTextField(
                             value = heightInput,
                             onValueChange = { heightInput = it },
@@ -457,6 +527,10 @@ fun RegisterView(
                                 .fillMaxWidth()
                                 .padding(top = 6.dp, bottom = 16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedPlaceholderColor = Color.Gray,
+                                unfocusedPlaceholderColor = Color.Gray,
                                 focusedContainerColor = CardBackground,
                                 unfocusedContainerColor = CardBackground,
                                 focusedBorderColor = RoyalGold,
@@ -465,7 +539,7 @@ fun RegisterView(
                         )
 
                         // Marital Status
-                        Text(text = "MARITAL STATUS", fontSize = 8.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        Text(text = "MARITAL STATUS", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
                         OutlinedTextField(
                             value = maritalStatusInput,
                             onValueChange = { maritalStatusInput = it },
@@ -474,6 +548,10 @@ fun RegisterView(
                                 .fillMaxWidth()
                                 .padding(top = 6.dp, bottom = 20.dp),
                             colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedPlaceholderColor = Color.Gray,
+                                unfocusedPlaceholderColor = Color.Gray,
                                 focusedContainerColor = CardBackground,
                                 unfocusedContainerColor = CardBackground,
                                 focusedBorderColor = RoyalGold,
@@ -485,7 +563,10 @@ fun RegisterView(
                             OutlinedButton(
                                 onClick = { step = 2 },
                                 shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = RoyalMaroon),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = LightGold),
+                                border = ButtonDefaults.outlinedCardBorder().copy(
+                                    brush = Brush.linearGradient(listOf(LightGold, LightGold))
+                                ),
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(44.dp)
@@ -516,12 +597,12 @@ fun RegisterView(
                                     session.login(newUser)
                                 },
                                 shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = RoyalMaroon),
+                                colors = ButtonDefaults.buttonColors(containerColor = RoyalGold),
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(44.dp)
                             ) {
-                                Text(text = "Complete Seal", fontWeight = FontWeight.Bold)
+                                Text(text = "Complete Seal", color = DeepMaroon, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -534,17 +615,16 @@ fun RegisterView(
 @Composable
 fun StepCircle(stepNum: Int, activeStep: Int) {
     val active = activeStep >= stepNum
-    val color = if (active) RoyalMaroon else Color.Gray.copy(alpha = 0.3f)
-    val text = if (active) Color.White else Color.Gray
-
+    val color = if (active) RoyalGold else SandstoneIvory.copy(alpha = 0.3f)
+    val text = if (active) DeepMaroon else SandstoneIvory.copy(alpha = 0.6f)
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(24.dp)
-            .background(color, shape = CircleShape)
+            .background(color, shape = RoundedCornerShape(12.dp))
     ) {
         Text(
-            text = "$stepNum",
+            text = stepNum.toString(),
             color = text,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold

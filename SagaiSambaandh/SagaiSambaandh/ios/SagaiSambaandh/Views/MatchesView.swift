@@ -9,85 +9,91 @@ struct MatchesView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Top Toolbar
-            HStack {
-                Spacer()
-                Text("Matches")
-                    .font(BrandFonts.displayBold(size: 20))
-                    .foregroundColor(.lightGold)
-                Spacer()
-            }
-            .padding()
-            .background(Color.deepMaroon)
-            
-            // Filter Tabs
-            Picker("Filter", selection: $activeFilterTab) {
-                Text("All Matches").tag(0)
-                Text("Gotra Compatible").tag(1)
-            }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(Color.deepMaroon)
-            
-            ScrollView {
-                VStack(spacing: 20) {
-                    ForEach(filteredMatches) { profile in
-                        VStack(alignment: .leading, spacing: 12) {
-                            // Profile card display area
-                            ProfileSummaryCard(
-                                profile: profile,
-                                isLocked: session.currentUser == nil,
-                                onUnlockTap: {
-                                    showingRegister = true
-                                },
-                                onDetailTap: {
-                                    if session.currentUser != nil {
-                                        selectedProfileForDetail = profile
-                                    } else {
-                                        showingRegister = true
-                                    }
-                                }
-                            )
-                            
-                            // Connect Button styled like Shaadi.com green button
-                            Button(action: {
-                                if session.currentUser == nil {
-                                    showingRegister = true
-                                } else {
-                                    // Trigger connection request
-                                }
-                            }) {
-                                HStack {
-                                    Image(systemName: "checkmark.circle.fill")
-                                    Text("Connect Now")
-                                        .font(BrandFonts.bodyBold(size: 14))
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .height(44)
-                                .background(Color.green)
-                                .cornerRadius(22)
-                            }
-                        }
-                        .padding()
-                        .background(Color.deepMaroon)
-                        .cornerRadius(16)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.royalGold.opacity(0.3), lineWidth: 1)
-                        )
-                        .shadow(color: Color.black.opacity(0.1), radius: 4)
-                    }
-                }
-                .padding()
-            }
-            .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
+            toolbar
+            filterTabs
+            matchesList
         }
         .sheet(item: $selectedProfileForDetail) { profile in
             ProfileDetailView(profile: profile)
                 .environmentObject(session)
         }
+    }
+    
+    private var toolbar: some View {
+        HStack {
+            Spacer()
+            Text("Matches")
+                .font(BrandFonts.displayBold(size: 20))
+                .foregroundColor(.lightGold)
+            Spacer()
+        }
+        .padding()
+        .background(Color.deepMaroon)
+    }
+    
+    private var filterTabs: some View {
+        Picker("Filter", selection: $activeFilterTab) {
+            Text("All Matches").tag(0)
+            Text("Gotra Compatible").tag(1)
+        }
+        .pickerStyle(SegmentedPickerStyle())
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(Color.deepMaroon)
+    }
+    
+    private var matchesList: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                ForEach(filteredMatches) { profile in
+                    matchRow(for: profile)
+                }
+            }
+            .padding()
+        }
+        .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
+    }
+    
+    private func matchRow(for profile: Profile) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ProfileSummaryCard(
+                profile: profile,
+                isLocked: isProfileLocked,
+                onUnlockTap: showRegistration,
+                onDetailTap: {
+                    openDetail(for: profile)
+                }
+            )
+            
+            connectButton
+        }
+        .padding()
+        .background(Color.deepMaroon)
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.royalGold.opacity(0.3), lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.1), radius: 4)
+    }
+    
+    private var connectButton: some View {
+        Button(action: handleConnectTap) {
+            HStack {
+                Image(systemName: "checkmark.circle.fill")
+                Text("Connect Now")
+                    .font(BrandFonts.bodyBold(size: 14))
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 44)
+            .background(Color.green)
+            .cornerRadius(22)
+        }
+    }
+    
+    private var isProfileLocked: Bool {
+        session.currentUser == nil
     }
     
     private var filteredMatches: [Profile] {
@@ -97,6 +103,26 @@ struct MatchesView: View {
             }
         }
         return session.profiles
+    }
+    
+    private func showRegistration() {
+        showingRegister = true
+    }
+    
+    private func openDetail(for profile: Profile) {
+        if isProfileLocked {
+            showRegistration()
+        } else {
+            selectedProfileForDetail = profile
+        }
+    }
+    
+    private func handleConnectTap() {
+        if isProfileLocked {
+            showRegistration()
+        } else {
+            // Trigger connection request
+        }
     }
 }
 

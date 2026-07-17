@@ -8,6 +8,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.border
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,10 +54,30 @@ fun LoginView(
                         colors = listOf(DeepMaroon, RoyalMaroon)
                     )
                 )
-                .height(110.dp),
-            contentAlignment = Alignment.BottomCenter
+                .height(130.dp),
+            contentAlignment = Alignment.Center
         ) {
-            PalaceDivider(fillColor = SandstoneIvory)
+            // Medallion Crest in the center
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(54.dp)
+                    .background(RoyalGold.copy(alpha = 0.15f), shape = CircleShape)
+                    .border(1.5.dp, LightGold, shape = CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Shield,
+                    contentDescription = "Royal Crest",
+                    tint = LightGold,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                PalaceDivider(fillColor = DeepMaroon)
+            }
         }
 
         Column(
@@ -65,14 +89,14 @@ fun LoginView(
         ) {
             Text(
                 text = "Noble Login",
-                color = RoyalMaroon,
+                color = LightGold,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Serif
             )
             Text(
                 text = "Access Rajasthan's Royal Matrimony",
-                color = Color.Gray,
+                color = SandstoneIvory.copy(alpha = 0.7f),
                 fontSize = 13.sp,
                 modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
             )
@@ -80,7 +104,7 @@ fun LoginView(
             // Demo panel
             Card(
                 shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(containerColor = RoyalGold.copy(alpha = 0.06f)),
+                colors = CardDefaults.cardColors(containerColor = DeepMaroon),
                 border = CardDefaults.outlinedCardBorder().copy(
                     brush = Brush.linearGradient(listOf(RoyalGold.copy(alpha = 0.3f), RoyalGold.copy(alpha = 0.3f)))
                 ),
@@ -91,7 +115,7 @@ fun LoginView(
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = "NOBLE ACCESS DEMO:",
-                        color = RoyalMaroon,
+                        color = LightGold,
                         fontWeight = FontWeight.Bold,
                         fontSize = 9.sp,
                         letterSpacing = 1.sp
@@ -99,13 +123,13 @@ fun LoginView(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Email: royal@sagaisambaandh.com",
-                        color = InkBrown,
+                        color = SandstoneIvory,
                         fontWeight = FontWeight.Bold,
                         fontSize = 11.sp
                     )
                     Text(
                         text = "Password: rajputana",
-                        color = InkBrown,
+                        color = SandstoneIvory,
                         fontWeight = FontWeight.Bold,
                         fontSize = 11.sp
                     )
@@ -122,7 +146,7 @@ fun LoginView(
                     Text(
                         text = "ROYAL CREDENTIALS (EMAIL)",
                         fontSize = 8.sp,
-                        color = Color.Gray,
+                        color = SandstoneIvory.copy(alpha = 0.8f),
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 6.dp)
                     )
@@ -132,6 +156,10 @@ fun LoginView(
                         placeholder = { Text("e.g. kunwar.rathore@gmail.com") },
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedPlaceholderColor = Color.Gray,
+                            unfocusedPlaceholderColor = Color.Gray,
                             focusedContainerColor = CardBackground,
                             unfocusedContainerColor = CardBackground,
                             focusedBorderColor = RoyalGold,
@@ -145,7 +173,7 @@ fun LoginView(
                     Text(
                         text = "PASSWORD",
                         fontSize = 8.sp,
-                        color = Color.Gray,
+                        color = SandstoneIvory.copy(alpha = 0.8f),
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 6.dp)
                     )
@@ -157,6 +185,10 @@ fun LoginView(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedPlaceholderColor = Color.Gray,
+                            unfocusedPlaceholderColor = Color.Gray,
                             focusedContainerColor = CardBackground,
                             unfocusedContainerColor = CardBackground,
                             focusedBorderColor = RoyalGold,
@@ -199,11 +231,11 @@ fun LoginView(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = RoyalMaroon)
+                colors = ButtonDefaults.buttonColors(containerColor = RoyalGold)
             ) {
                 Text(
                     text = "Enter Sanctuary",
-                    color = Color.White,
+                    color = DeepMaroon,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )
@@ -218,8 +250,8 @@ fun LoginView(
                     .padding(8.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Text(text = "Already have a lineage record? ", color = Color.Gray, fontSize = 12.sp)
-                Text(text = "Sign Up here", color = RoyalMaroon, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Text(text = "Already have a lineage record? ", color = SandstoneIvory.copy(alpha = 0.6f), fontSize = 12.sp)
+                Text(text = "Sign Up here", color = LightGold, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             }
         }
     }
