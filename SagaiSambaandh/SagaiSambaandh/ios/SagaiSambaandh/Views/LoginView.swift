@@ -56,11 +56,11 @@ struct LoginView: View {
                         
                         Text("Sagai Sambaandh")
                             .font(BrandFonts.displayBold(size: 28))
-                            .foregroundColor(.royalMaroon)
+                            .foregroundColor(.lightGold)
                         
                         Text("Access Rajasthan's Royal Matrimony")
                             .font(BrandFonts.body(size: 12))
-                            .foregroundColor(.gray)
+                            .foregroundColor(.sandstoneIvory.opacity(0.7))
                     }
                     .multilineTextAlignment(.center)
                     
@@ -171,23 +171,10 @@ struct LoginView: View {
                             }
                         }
                         
-                        Divider()
-                            .background(Color.royalGold.opacity(0.25))
-                        
-                        // Guest Bypass Option
-                        Button(action: {
-                            withAnimation(.easeOut(duration: 0.4)) {
-                                isGuestBypassed = true
-                            }
-                        }) {
-                            Text("Browse as Guest")
-                                .font(BrandFonts.body(size: 13, weight: .bold))
-                                .foregroundColor(.gray)
-                                .underline()
-                        }
+
                     }
                     .padding(24)
-                    .background(Color.cardBackground)
+                    .background(Color.deepMaroon)
                     .cornerRadius(16)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
@@ -201,7 +188,7 @@ struct LoginView: View {
                 .frame(minHeight: geometry.size.height)
             }
         }
-        .background(Color.sandstoneIvory.edgesIgnoringSafeArea(.all))
+        .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
         .navigationBarHidden(true)
     }
     

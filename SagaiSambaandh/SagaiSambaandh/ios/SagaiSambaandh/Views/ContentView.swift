@@ -45,7 +45,7 @@ struct ContentView: View {
     @State private var selectedTab: Int = 0
     @State private var showingRegister: Bool = false
     @State private var isSplashActive: Bool = true
-    @State private var isGuestBypassed: Bool = false
+    @State private var isGuestBypassed: Bool = false // Kept for compile compatibility, but not exposed to users
     
     var body: some View {
         ZStack {
@@ -59,7 +59,8 @@ struct ContentView: View {
                         }
                     }
             } else {
-                if session.currentUser == nil && !isGuestBypassed {
+                if session.currentUser == nil {
+                    // App started: lock behind Login / Register onboarding gate
                     if showingRegister {
                         RegisterView(showingRegister: $showingRegister, isGuestBypassed: $isGuestBypassed)
                             .environmentObject(session)
@@ -70,6 +71,7 @@ struct ContentView: View {
                             .transition(.asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                     }
                 } else {
+                    // Authenticated view with 5 Shaadi-style tabs
                     TabView(selection: $selectedTab) {
                         // Home View
                         NavigationView {
@@ -81,52 +83,63 @@ struct ContentView: View {
                         }
                         .tag(0)
                         
-                        // Clans directory View
+                        // Matches View
                         NavigationView {
-                            ClansView()
+                            MatchesView(selectedTab: $selectedTab, showingRegister: $showingRegister)
+                                .environmentObject(session)
                         }
                         .tabItem {
-                            Label("Rajput Clans", systemImage: "shield.lefthalf.filled")
+                            Label("Matches", systemImage: "heart.fill")
                         }
                         .tag(1)
                         
-                        // Pricing plans view
+                        // Inbox View
+                        NavigationView {
+                            InboxView()
+                        }
+                        .tabItem {
+                            Label("Inbox", systemImage: "envelope.fill")
+                        }
+                        .tag(2)
+                        
+                        // Chat View
+                        NavigationView {
+                            ChatView()
+                        }
+                        .tabItem {
+                            Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
+                        }
+                        .tag(3)
+                        
+                        // Premium plans view
                         NavigationView {
                             PlansView()
                                 .environmentObject(session)
                         }
                         .tabItem {
-                            Label("Regal Plans", systemImage: "crown.fill")
+                            Label("Premium", systemImage: "crown.fill")
                         }
-                        .tag(2)
-                        
-                        // Profile Account View
-                        NavigationView {
-                            Group {
-                                if session.currentUser != nil {
-                                    DashboardView()
-                                        .environmentObject(session)
-                                } else {
-                                    if showingRegister {
-                                        RegisterView(showingRegister: $showingRegister, isGuestBypassed: $isGuestBypassed)
-                                            .environmentObject(session)
-                                    } else {
-                                        LoginView(showingRegister: $showingRegister, isGuestBypassed: $isGuestBypassed)
-                                            .environmentObject(session)
-                                    }
-                                }
-                            }
-                        }
-                        .tabItem {
-                            Label("My Account", systemImage: "person.circle.fill")
-                        }
-                        .tag(3)
+                        .tag(4)
                     }
                     .accentColor(.royalGold)
                     .onAppear {
-                        // Set up a custom appearance for tabs if wanted
-                        UITabBar.appearance().backgroundColor = UIColor(Color.cardBackground)
-                        UITabBar.appearance().unselectedItemTintColor = UIColor(Color.inkBrown.opacity(0.5))
+                        // Set up a custom appearance for tabs to match the maroon theme!
+                        let appearance = UITabBarAppearance()
+                        appearance.configureWithOpaqueBackground()
+                        appearance.backgroundColor = UIColor(Color.deepMaroon)
+                        
+                        // Unselected item coloring
+                        appearance.stackedLayoutAppearance.normal.iconColor = UIColor(Color.sandstoneIvory.opacity(0.4))
+                        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor(Color.sandstoneIvory.opacity(0.4))]
+                        
+                        // Selected item coloring
+                        appearance.stackedLayoutAppearance.selected.iconColor = UIColor(Color.lightGold)
+                        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(Color.lightGold)]
+                        
+                        UITabBar.appearance().standardAppearance = appearance
+                        if #available(iOS 15.0, *) {
+                            UITabBar.appearance().scrollEdgeAppearance = appearance
+                        }
                     }
                 }
             }
@@ -139,9 +152,9 @@ struct ContentView: View {
         
         var body: some View {
             ZStack {
-                // Jodhpur Indigo background
+                // Maroon background
                 LinearGradient(
-                    colors: [Color.jodhpurIndigo, Color(hex: "#101830")],
+                    colors: [Color.deepMaroon, Color.royalMaroon],
                     startPoint: .top,
                     endPoint: .bottom
                 )
