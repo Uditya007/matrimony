@@ -12,6 +12,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.border
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import com.sagaisambaandh.R
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,216 +47,245 @@ fun LoginView(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(SandstoneIvory.copy(alpha = 0.15f))
+            .background(DeepMaroon)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp, vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Logo banner
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Large Floating Medallion Logo
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(DeepMaroon, RoyalMaroon)
-                    )
-                )
-                .height(130.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(160.dp)
         ) {
-            // Medallion Crest in the center
+            // Outer Gold Rings
             Box(
-                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(54.dp)
-                    .background(RoyalGold.copy(alpha = 0.15f), shape = CircleShape)
-                    .border(1.5.dp, LightGold, shape = CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Shield,
-                    contentDescription = "Royal Crest",
-                    tint = LightGold,
-                    modifier = Modifier.size(26.dp)
-                )
-            }
+                    .size(150.dp)
+                    .border(1.dp, RoyalGold.copy(alpha = 0.4f), shape = CircleShape)
+            )
             Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                PalaceDivider(fillColor = DeepMaroon)
-            }
+                modifier = Modifier
+                    .size(140.dp)
+                    .border(
+                        width = 2.5.dp,
+                        brush = Brush.linearGradient(listOf(RoyalGold, LightGold, RoyalGold)),
+                        shape = CircleShape
+                    )
+            )
+
+            // Logo Image
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Sagai Sambaandh Logo",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(125.dp)
+                    .background(Color.White, shape = CircleShape)
+                    .border(1.dp, RoyalGold.copy(alpha = 0.2f), shape = CircleShape)
+            )
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Titles
+        Text(
+            text = "SHREE RAJPUT",
+            color = LightGold,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 4.sp
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = "Sagai Sambaandh",
+            color = Color.White,
+            fontSize = 30.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily.Serif,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = "Access Rajasthan's Royal Matrimony",
+            color = SandstoneIvory.copy(alpha = 0.7f),
+            fontSize = 12.sp,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        // Form Card Container
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.15f)),
+            border = CardDefaults.outlinedCardBorder().copy(
+                brush = Brush.linearGradient(listOf(RoyalGold.copy(alpha = 0.25f), RoyalGold.copy(alpha = 0.25f)))
+            ),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "Noble Login",
-                color = LightGold,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Serif
-            )
-            Text(
-                text = "Access Rajasthan's Royal Matrimony",
-                color = SandstoneIvory.copy(alpha = 0.7f),
-                fontSize = 13.sp,
-                modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
-            )
-
-            // Demo panel
-            Card(
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(containerColor = DeepMaroon),
-                border = CardDefaults.outlinedCardBorder().copy(
-                    brush = Brush.linearGradient(listOf(RoyalGold.copy(alpha = 0.3f), RoyalGold.copy(alpha = 0.3f)))
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "NOBLE ACCESS DEMO:",
-                        color = LightGold,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 9.sp,
-                        letterSpacing = 1.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Email: royal@sagaisambaandh.com",
-                        color = SandstoneIvory,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp
-                    )
-                    Text(
-                        text = "Password: rajputana",
-                        color = SandstoneIvory,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp
-                    )
-                }
-            }
-
-            // Forms
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Email
-                Column {
-                    Text(
-                        text = "ROYAL CREDENTIALS (EMAIL)",
-                        fontSize = 8.sp,
-                        color = SandstoneIvory.copy(alpha = 0.8f),
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 6.dp)
-                    )
-                    OutlinedTextField(
-                        value = emailInput,
-                        onValueChange = { emailInput = it },
-                        placeholder = { Text("e.g. kunwar.rathore@gmail.com") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black,
-                            focusedPlaceholderColor = Color.Gray,
-                            unfocusedPlaceholderColor = Color.Gray,
-                            focusedContainerColor = CardBackground,
-                            unfocusedContainerColor = CardBackground,
-                            focusedBorderColor = RoyalGold,
-                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+            Column(modifier = Modifier.padding(20.dp)) {
+                // Demo panel
+                Card(
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = DeepMaroon),
+                    border = CardDefaults.outlinedCardBorder().copy(
+                        brush = Brush.linearGradient(listOf(RoyalGold.copy(alpha = 0.3f), RoyalGold.copy(alpha = 0.3f)))
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = "NOBLE ACCESS DEMO:",
+                            color = LightGold,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 9.sp,
+                            letterSpacing = 1.sp
                         )
-                    )
-                }
-
-                // Password
-                Column {
-                    Text(
-                        text = "PASSWORD",
-                        fontSize = 8.sp,
-                        color = SandstoneIvory.copy(alpha = 0.8f),
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 6.dp)
-                    )
-                    OutlinedTextField(
-                        value = passwordInput,
-                        onValueChange = { passwordInput = it },
-                        placeholder = { Text("••••••••") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black,
-                            focusedPlaceholderColor = Color.Gray,
-                            unfocusedPlaceholderColor = Color.Gray,
-                            focusedContainerColor = CardBackground,
-                            unfocusedContainerColor = CardBackground,
-                            focusedBorderColor = RoyalGold,
-                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Email: royal@sagaisambaandh.com",
+                            color = SandstoneIvory,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
                         )
-                    )
-                }
-            }
-
-            if (errorMessage != null) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = errorMessage!!,
-                    color = Color.Red,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Action
-            Button(
-                onClick = {
-                    if (emailInput == "royal@sagaisambaandh.com" && passwordInput == "rajputana") {
-                        val demoUser = User(
-                            id = "U1",
-                            name = "Ranveer Singh",
-                            email = "royal@sagaisambaandh.com",
-                            gender = "Groom",
-                            clan = "Rathore",
-                            tier = "Silver",
-                            shortlistedIds = setOf("P2", "P8"),
-                            unlockedIds = setOf("P2")
+                        Text(
+                            text = "Password: rajputana",
+                            color = SandstoneIvory,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
                         )
-                        session.login(demoUser)
-                    } else {
-                        errorMessage = "Invalid credentials. Please use the demo credentials provided."
                     }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = RoyalGold)
-            ) {
-                Text(
-                    text = "Enter Sanctuary",
-                    color = DeepMaroon,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-            }
+                }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                // Forms
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Email
+                    Column {
+                        Text(
+                            text = "ROYAL CREDENTIALS (EMAIL)",
+                            fontSize = 8.sp,
+                            color = SandstoneIvory.copy(alpha = 0.8f),
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        )
+                        OutlinedTextField(
+                            value = emailInput,
+                            onValueChange = { emailInput = it },
+                            placeholder = { Text("e.g. royal@sagaisambaandh.com") },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedPlaceholderColor = Color.Gray,
+                                unfocusedPlaceholderColor = Color.Gray,
+                                focusedContainerColor = CardBackground,
+                                unfocusedContainerColor = CardBackground,
+                                focusedBorderColor = RoyalGold,
+                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                            )
+                        )
+                    }
 
-            // Redirect
-            Row(
-                modifier = Modifier
-                    .clickable(onClick = onNavigateToRegister)
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(text = "Already have a lineage record? ", color = SandstoneIvory.copy(alpha = 0.6f), fontSize = 12.sp)
-                Text(text = "Sign Up here", color = LightGold, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    // Password
+                    Column {
+                        Text(
+                            text = "PASSWORD",
+                            fontSize = 8.sp,
+                            color = SandstoneIvory.copy(alpha = 0.8f),
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        )
+                        OutlinedTextField(
+                            value = passwordInput,
+                            onValueChange = { passwordInput = it },
+                            placeholder = { Text("••••••••") },
+                            visualTransformation = PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedPlaceholderColor = Color.Gray,
+                                unfocusedPlaceholderColor = Color.Gray,
+                                focusedContainerColor = CardBackground,
+                                unfocusedContainerColor = CardBackground,
+                                focusedBorderColor = RoyalGold,
+                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
+                            )
+                        )
+                    }
+                }
+
+                if (errorMessage != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = errorMessage!!,
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Action
+                Button(
+                    onClick = {
+                        if (emailInput == "royal@sagaisambaandh.com" && passwordInput == "rajputana") {
+                            val demoUser = User(
+                                id = "U1",
+                                name = "Ranveer Singh",
+                                email = "royal@sagaisambaandh.com",
+                                gender = "Groom",
+                                clan = "Rathore",
+                                tier = "Silver",
+                                shortlistedIds = setOf("P2", "P8"),
+                                unlockedIds = setOf("P2")
+                            )
+                            session.login(demoUser)
+                        } else {
+                            errorMessage = "Invalid credentials. Please use the demo credentials provided."
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = RoyalGold)
+                ) {
+                    Text(
+                        text = "Enter Sanctuary",
+                        color = DeepMaroon,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Redirect
+                Row(
+                    modifier = Modifier
+                        .clickable(onClick = onNavigateToRegister)
+                        .align(Alignment.CenterHorizontally)
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(text = "Already have a lineage record? ", color = SandstoneIvory.copy(alpha = 0.6f), fontSize = 12.sp)
+                    Text(text = "Sign Up here", color = LightGold, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
             }
         }
     }
+}
 }

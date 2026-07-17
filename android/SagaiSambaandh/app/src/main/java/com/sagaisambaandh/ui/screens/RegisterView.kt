@@ -11,6 +11,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import com.sagaisambaandh.R
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,70 +66,109 @@ fun RegisterView(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(SandstoneIvory.copy(alpha = 0.15f))
+            .background(DeepMaroon)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp, vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Banner
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Large Floating Medallion Logo
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(DeepMaroon, RoyalMaroon)
-                    )
-                )
-                .height(130.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(160.dp)
         ) {
-            // Medallion Crest in the center
+            // Outer Gold Rings
             Box(
-                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(54.dp)
-                    .background(RoyalGold.copy(alpha = 0.15f), shape = CircleShape)
-                    .border(1.5.dp, LightGold, shape = CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Shield,
-                    contentDescription = "Royal Crest",
-                    tint = LightGold,
-                    modifier = Modifier.size(26.dp)
-                )
-            }
+                    .size(150.dp)
+                    .border(1.dp, RoyalGold.copy(alpha = 0.4f), shape = CircleShape)
+            )
             Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                PalaceDivider(fillColor = DeepMaroon)
-            }
+                modifier = Modifier
+                    .size(140.dp)
+                    .border(
+                        width = 2.5.dp,
+                        brush = Brush.linearGradient(listOf(RoyalGold, LightGold, RoyalGold)),
+                        shape = CircleShape
+                    )
+            )
+
+            // Logo Image
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Sagai Sambaandh Logo",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(125.dp)
+                    .background(Color.White, shape = CircleShape)
+                    .border(1.dp, RoyalGold.copy(alpha = 0.2f), shape = CircleShape)
+            )
         }
 
-        Column(
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Titles
+        Text(
+            text = "SHREE RAJPUT",
+            color = LightGold,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 4.sp
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = "Sagai Sambaandh",
+            color = Color.White,
+            fontSize = 30.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily.Serif,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = "Access Rajasthan's Royal Matrimony",
+            color = SandstoneIvory.copy(alpha = 0.7f),
+            fontSize = 12.sp,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Step Indicators
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(bottom = 20.dp)
         ) {
-            // Step Indicators
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp)
-            ) {
-                StepCircle(stepNum = 1, activeStep = step)
-                StepLine(active = step > 1)
-                StepCircle(stepNum = 2, activeStep = step)
-                StepLine(active = step > 2)
-                StepCircle(stepNum = 3, activeStep = step)
-            }
+            StepCircle(stepNum = 1, activeStep = step)
+            StepLine(active = step > 1)
+            StepCircle(stepNum = 2, activeStep = step)
+            StepLine(active = step > 2)
+            StepCircle(stepNum = 3, activeStep = step)
+        }
 
-            // Step Content
-            when (step) {
-                1 -> {
-                    if (step == 1) {
-                        Column(modifier = Modifier.fillMaxWidth()) {
+        // Form Card Container
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.15f)),
+            border = CardDefaults.outlinedCardBorder().copy(
+                brush = Brush.linearGradient(listOf(RoyalGold.copy(alpha = 0.25f), RoyalGold.copy(alpha = 0.25f)))
+            ),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                // Step Content
+                when (step) {
+                    1 -> {
+                        if (step == 1) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 text = "Noble Registration",
                                 color = LightGold,
@@ -415,7 +458,7 @@ fun RegisterView(
                                 onClick = { step = 1 },
                                 shape = RoundedCornerShape(8.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = LightGold),
-                                border = ButtonDefaults.outlinedCardBorder().copy(
+                                border = ButtonDefaults.outlinedButtonBorder().copy(
                                     brush = Brush.linearGradient(listOf(LightGold, LightGold))
                                 ),
                                 modifier = Modifier
@@ -564,7 +607,7 @@ fun RegisterView(
                                 onClick = { step = 2 },
                                 shape = RoundedCornerShape(8.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = LightGold),
-                                border = ButtonDefaults.outlinedCardBorder().copy(
+                                border = ButtonDefaults.outlinedButtonBorder().copy(
                                     brush = Brush.linearGradient(listOf(LightGold, LightGold))
                                 ),
                                 modifier = Modifier
