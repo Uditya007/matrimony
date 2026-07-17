@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
@@ -29,6 +28,14 @@ import com.sagaisambaandh.data.SagaiSessionManager
 import com.sagaisambaandh.data.User
 import com.sagaisambaandh.ui.components.PalaceDivider
 import com.sagaisambaandh.ui.theme.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +44,7 @@ fun RegisterView(
     onNavigateToLogin: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var step by remember { mutableStateOf(1) }
+    var step by remember { mutableIntStateOf(1) }
 
     // Step 1 values
     var nameInput by remember { mutableStateOf("") }
@@ -167,8 +174,7 @@ fun RegisterView(
                 // Step Content
                 when (step) {
                     1 -> {
-                        if (step == 1) {
-                            Column(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 text = "Noble Registration",
                                 color = LightGold,
@@ -343,10 +349,10 @@ fun RegisterView(
                             ) {
                                 Text(text = "Already have a lineage record? ", color = SandstoneIvory.copy(alpha = 0.6f), fontSize = 12.sp)
                                 Text(text = "Log In here", color = LightGold, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            }}
+                            }
+                        }
                     }
-                }
-                2 -> {
+                    2 -> {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = "Noble Lineage & Gotra",
@@ -620,7 +626,7 @@ fun RegisterView(
                             Button(
                                 onClick = {
                                     val newUser = User(
-                                        id = "U${(10..99).random()}",
+                                        id = "U${(100..999).random()}",
                                         name = nameInput.ifEmpty { "Kunwar" },
                                         email = emailInput.ifEmpty { "noble@clan.com" },
                                         gender = if (genderInput == "Bride") "Bride" else "Groom",
@@ -637,7 +643,11 @@ fun RegisterView(
                                         height = heightInput,
                                         maritalStatus = maritalStatusInput
                                     )
-                                    session.login(newUser)
+                                    registerUserInSupabase(newUser, passwordInput.ifEmpty { "12345" }) { success, registeredUser ->
+                                        CoroutineScope(Dispatchers.Main).launch {
+                                            session.login(registeredUser)
+                                        }
+                                    }
                                 },
                                 shape = RoundedCornerShape(8.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = RoyalGold),
@@ -654,6 +664,8 @@ fun RegisterView(
         }
     }
 }
+}
+
 
 @Composable
 fun StepCircle(stepNum: Int, activeStep: Int) {
@@ -684,4 +696,75 @@ fun StepLine(active: Boolean) {
             .height(3.dp)
             .background(color)
     )
+}
+
+fun registerUserInSupabase(user: User, passwordVal: String, onComplete: (Boolean, User) -> Unit) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val client = OkHttpClient()
+            val mediaType = "application/json; charset=utf-8".toMediaType()
+            val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
+            val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+
+            val authJson = JSONObject().apply {
+                put("email", user.email)
+                put("password", passwordVal)
+            }
+            val authRequest = Request.Builder()
+                .url("$url/auth/v1/signup")
+                .addHeader("apikey", apiKey)
+                .post(authJson.toString().toRequestBody(mediaType))
+                .build()
+
+            val authResponse = client.newCall(authRequest).execute()
+            val authBody = authResponse.body?.string() ?: ""
+            if (!authResponse.isSuccessful) {
+                onComplete(false, user)
+                return@launch
+            }
+
+            val authObj = JSONObject(authBody)
+            val userObj = authObj.optJSONObject("user")
+            val uid = userObj?.optString("id") ?: "U${(100..999).random()}"
+
+            val profileWithUid = user.copy(id = uid)
+            val profileJson = JSONObject().apply {
+                put("id", profileWithUid.id)
+                put("name", profileWithUid.name)
+                put("email", profileWithUid.email)
+                put("gender", profileWithUid.gender)
+                put("clan", profileWithUid.clan)
+                put("tier", profileWithUid.tier)
+                put("gotra", profileWithUid.gotra)
+                put("motherGotra", profileWithUid.motherGotra)
+                put("thikana", profileWithUid.thikana)
+                put("phone", profileWithUid.phone)
+                put("dob", profileWithUid.dob)
+                put("education", profileWithUid.education)
+                put("occupation", profileWithUid.occupation)
+                put("income", profileWithUid.income)
+                put("height", profileWithUid.height)
+                put("maritalStatus", profileWithUid.maritalStatus)
+                put("profilePic", profileWithUid.profilePic ?: "")
+            }
+
+            val dbRequest = Request.Builder()
+                .url("$url/rest/v1/profiles")
+                .addHeader("apikey", apiKey)
+                .addHeader("Authorization", "Bearer $apiKey")
+                .addHeader("Content-Type", "application/json")
+                .post(profileJson.toString().toRequestBody(mediaType))
+                .build()
+
+            val dbResponse = client.newCall(dbRequest).execute()
+            if (dbResponse.isSuccessful) {
+                onComplete(true, profileWithUid)
+            } else {
+                onComplete(false, profileWithUid)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            onComplete(false, user)
+        }
+    }
 }

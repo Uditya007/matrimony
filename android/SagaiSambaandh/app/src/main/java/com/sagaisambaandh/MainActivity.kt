@@ -33,10 +33,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
 class MainActivity : ComponentActivity() {
-    private val sessionManager = SagaiSessionManager()
+    private lateinit var sessionManager: SagaiSessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        sessionManager = SagaiSessionManager(applicationContext)
         setContent {
             SagaiSambaandhTheme {
                 Surface(

@@ -10,12 +10,16 @@ struct RegisterView: View {
     // Step 1: Personal Info
     @State private var nameInput: String = ""
     @State private var emailInput: String = ""
+    @State private var passwordInput: String = ""
+    @State private var phoneInput: String = ""
+    @State private var dobInput: String = ""
     @State private var ageInput: String = "24"
     @State private var genderInput: String = "Bride"
     
     // Step 2: Lineage Details
     @State private var selectedClan: String = "Rathore"
     @State private var gotraInput: String = ""
+    @State private var motherGotraInput: String = ""
     @State private var kulInput: String = ""
     @State private var thikanaInput: String = ""
     
@@ -23,6 +27,8 @@ struct RegisterView: View {
     @State private var educationInput: String = ""
     @State private var occupationInput: String = ""
     @State private var incomeInput: String = ""
+    @State private var heightInput: String = ""
+    @State private var maritalStatusInput: String = "Never Married"
     
     private let clansOptions = ["Rathore", "Sisodia", "Chauhan", "Kachwaha", "Bhati", "Shekhawat", "Panwar", "Tanwar", "Hada", "Sodha"]
     
@@ -31,7 +37,7 @@ struct RegisterView: View {
             // Elegant Indigo Header with Logo Medallion
             ZStack(alignment: .bottom) {
                 LinearGradient(
-                    colors: [.jodhpurIndigo, Color(hex: "#101830")],
+                    colors: [.deepMaroon, .royalMaroon],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -75,7 +81,7 @@ struct RegisterView: View {
                     Spacer()
                 }
                 
-                PalaceDivider(fillColor: .sandstoneIvory)
+                PalaceDivider(fillColor: .deepMaroon)
             }
             
             ScrollView {
@@ -100,7 +106,7 @@ struct RegisterView: View {
             }
             Spacer()
         }
-        .background(Color.sandstoneIvory.edgesIgnoringSafeArea(.all))
+        .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
         .navigationBarHidden(true)
     }
     
@@ -110,10 +116,10 @@ struct RegisterView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Noble Registration")
                     .font(BrandFonts.displayBold(size: 26))
-                    .foregroundColor(.royalMaroon)
+                    .foregroundColor(.lightGold)
                 Text("Create your premium matrimonial lineage record")
                     .font(BrandFonts.body(size: 13))
-                    .foregroundColor(.gray)
+                    .foregroundColor(.sandstoneIvory.opacity(0.7))
             }
             
             VStack(spacing: 16) {
@@ -137,6 +143,43 @@ struct RegisterView: View {
                     TextField("e.g. contact@clan.com", text: $emailInput)
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
+                        .padding(12)
+                        .background(Color.cardBackground)
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.2), lineWidth: 1))
+                }
+                
+                // Password
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("PASSWORD")
+                        .font(BrandFonts.label(size: 8))
+                        .foregroundColor(.gray)
+                    SecureField("Enter secure password", text: $passwordInput)
+                        .padding(12)
+                        .background(Color.cardBackground)
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.2), lineWidth: 1))
+                }
+                
+                // Phone Number
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("MOBILE PHONE NUMBER")
+                        .font(BrandFonts.label(size: 8))
+                        .foregroundColor(.gray)
+                    TextField("e.g. +91 9928592159", text: $phoneInput)
+                        .keyboardType(.phonePad)
+                        .padding(12)
+                        .background(Color.cardBackground)
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.2), lineWidth: 1))
+                }
+                
+                // Date of Birth
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("DATE OF BIRTH")
+                        .font(BrandFonts.label(size: 8))
+                        .foregroundColor(.gray)
+                    TextField("e.g. DD-MM-YYYY", text: $dobInput)
                         .padding(12)
                         .background(Color.cardBackground)
                         .cornerRadius(8)
@@ -214,11 +257,24 @@ struct RegisterView: View {
                 }
                 
                 // Gotra
+                // Gotra
                 VStack(alignment: .leading, spacing: 6) {
                     Text("GOTRA (ANCESTRAL RISHI)")
                         .font(BrandFonts.label(size: 8))
                         .foregroundColor(.gray)
                     TextField("e.g. Gautam / Atri / Vatsa", text: $gotraInput)
+                        .padding(12)
+                        .background(Color.cardBackground)
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.2), lineWidth: 1))
+                }
+
+                // Mother's Gotra
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("MOTHER'S GOTRA")
+                        .font(BrandFonts.label(size: 8))
+                        .foregroundColor(.gray)
+                    TextField("e.g. Kashyap / Vyas / Gautam", text: $motherGotraInput)
                         .padding(12)
                         .background(Color.cardBackground)
                         .cornerRadius(8)
@@ -300,6 +356,42 @@ struct RegisterView: View {
                         .cornerRadius(8)
                         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.2), lineWidth: 1))
                 }
+                
+                // Annual Income
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("ANNUAL INCOME")
+                        .font(BrandFonts.label(size: 8))
+                        .foregroundColor(.gray)
+                    TextField("e.g. 15-20 Lakhs per annum", text: $incomeInput)
+                        .padding(12)
+                        .background(Color.cardBackground)
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.2), lineWidth: 1))
+                }
+                
+                // Height
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("HEIGHT")
+                        .font(BrandFonts.label(size: 8))
+                        .foregroundColor(.gray)
+                    TextField("e.g. 5 ft 8 in / 173 cm", text: $heightInput)
+                        .padding(12)
+                        .background(Color.cardBackground)
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.2), lineWidth: 1))
+                }
+                
+                // Marital Status
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("MARITAL STATUS")
+                        .font(BrandFonts.label(size: 8))
+                        .foregroundColor(.gray)
+                    TextField("e.g. Never Married / Divorced", text: $maritalStatusInput)
+                        .padding(12)
+                        .background(Color.cardBackground)
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.2), lineWidth: 1))
+                }
             }
             
             HStack(spacing: 15) {
@@ -329,20 +421,47 @@ struct RegisterView: View {
     }
     
     private func handleRegister() {
-        // Register mock user profile
+        let tempId = "U\(Int.random(in: 100...999))"
         let newUser = User(
-            id: "U\(Int.random(in: 10...99))",
+            id: tempId,
             name: nameInput.isEmpty ? "Kunwar" : nameInput,
             email: emailInput.isEmpty ? "noble@clan.com" : emailInput,
             gender: genderInput == "Bride" ? "Bride" : "Groom",
             clan: selectedClan,
             tier: "Starter",
             shortlistedIds: [],
-            unlockedIds: []
+            unlockedIds: [],
+            gotra: gotraInput,
+            motherGotra: motherGotraInput,
+            thikana: thikanaInput,
+            phone: phoneInput,
+            dob: dobInput,
+            education: educationInput,
+            occupation: occupationInput,
+            income: incomeInput,
+            height: heightInput,
+            maritalStatus: maritalStatusInput
         )
-        withAnimation(.easeOut(duration: 0.4)) {
-            session.login(user: newUser)
-            isGuestBypassed = true
+        
+        let pwd = passwordInput.isEmpty ? "12345" : passwordInput
+        
+        SupabaseClient.shared.signUp(email: newUser.email, password: pwd, profile: newUser) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let registeredUser):
+                    withAnimation(.easeOut(duration: 0.4)) {
+                        session.login(user: registeredUser)
+                        isGuestBypassed = true
+                    }
+                case .failure(let error):
+                    print("Supabase register error: \(error.localizedDescription)")
+                    // fallback to keep app running during offline testing
+                    withAnimation(.easeOut(duration: 0.4)) {
+                        session.login(user: newUser)
+                        isGuestBypassed = true
+                    }
+                }
+            }
         }
     }
 }

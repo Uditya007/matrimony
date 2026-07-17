@@ -159,6 +159,30 @@ struct LoginView: View {
                         }
                         .padding(.top, 5)
                         
+                        // Divider
+                        HStack {
+                            Rectangle().fill(Color.gray.opacity(0.3)).frame(height: 0.5)
+                            Text("OR").font(BrandFonts.label(size: 10)).foregroundColor(.gray)
+                            Rectangle().fill(Color.gray.opacity(0.3)).frame(height: 0.5)
+                        }
+                        .padding(.vertical, 4)
+                        
+                        // Google Login CTA
+                        Button(action: handleGoogleLogin) {
+                            HStack(spacing: 12) {
+                                Image(systemName: "globe")
+                                    .foregroundColor(.royalMaroon)
+                                Text("Continue with Google")
+                                    .font(BrandFonts.body(size: 14, weight: .bold))
+                                    .foregroundColor(.royalMaroon)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color.white)
+                            .cornerRadius(8)
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.royalGold.opacity(0.3), lineWidth: 1))
+                        }
+                        
                         // Registration redirect link
                         Button(action: { showingRegister = true }) {
                             HStack {
@@ -210,6 +234,35 @@ struct LoginView: View {
             }
         } else {
             errorMessage = "Invalid credentials. Please use the demo credentials provided."
+        }
+    }
+    
+    private func handleGoogleLogin() {
+        let googleUser = User(
+            id: "google_u1",
+            name: "Ranveer Singh",
+            email: "ranveer.singh@gmail.com",
+            gender: "Groom",
+            clan: "Rathore",
+            tier: "Starter",
+            shortlistedIds: [],
+            unlockedIds: [],
+            gotra: "Gautam",
+            motherGotra: "Chauhan",
+            thikana: "Rohet",
+            phone: "+91 98765 43210",
+            dob: "12-04-1996",
+            education: "M.Tech IIT Bombay",
+            occupation: "Software Architect",
+            income: "₹35 Lakhs/Yr",
+            height: "6 ft 0 in",
+            maritalStatus: "Never Married",
+            profilePic: "groom_ranveer"
+        )
+        
+        withAnimation(.easeOut(duration: 0.4)) {
+            session.login(user: googleUser)
+            isGuestBypassed = true
         }
     }
 }

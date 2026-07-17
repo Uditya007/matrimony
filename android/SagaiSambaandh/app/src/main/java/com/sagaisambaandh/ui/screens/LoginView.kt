@@ -271,6 +271,70 @@ fun LoginView(
                     )
                 }
 
+                // Divider
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Divider(modifier = Modifier.weight(1f), color = Color.Gray.copy(alpha = 0.3f))
+                    Text(
+                        text = "OR",
+                        color = Color.Gray,
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                    Divider(modifier = Modifier.weight(1f), color = Color.Gray.copy(alpha = 0.3f))
+                }
+
+                // Google button
+                Button(
+                    onClick = {
+                        val googleUser = User(
+                            id = "google_u1",
+                            name = "Ranveer Singh",
+                            email = "ranveer.singh@gmail.com",
+                            gender = "Groom",
+                            clan = "Rathore",
+                            tier = "Starter",
+                            shortlistedIds = emptySet(),
+                            unlockedIds = emptySet(),
+                            gotra = "Gautam",
+                            motherGotra = "Chauhan",
+                            thikana = "Rohet",
+                            phone = "+91 98765 43210",
+                            dob = "12-04-1996",
+                            education = "M.Tech IIT Bombay",
+                            occupation = "Software Architect",
+                            income = "₹35 Lakhs/Yr",
+                            height = "6 ft 0 in",
+                            maritalStatus = "Never Married",
+                            profilePic = "groom_ranveer"
+                        )
+                        session.login(googleUser)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, RoyalGold.copy(alpha = 0.5f), RoundedCornerShape(8.dp)),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Public,
+                        contentDescription = "Google Logo",
+                        tint = DeepMaroon,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Continue with Google",
+                        color = DeepMaroon,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Redirect

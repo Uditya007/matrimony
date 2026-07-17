@@ -421,9 +421,9 @@ struct RegisterView: View {
     }
     
     private func handleRegister() {
-        // Register mock user profile
+        let tempId = "U\(Int.random(in: 100...999))"
         let newUser = User(
-            id: "U\(Int.random(in: 10...99))",
+            id: tempId,
             name: nameInput.isEmpty ? "Kunwar" : nameInput,
             email: emailInput.isEmpty ? "noble@clan.com" : emailInput,
             gender: genderInput == "Bride" ? "Bride" : "Groom",
@@ -442,9 +442,26 @@ struct RegisterView: View {
             height: heightInput,
             maritalStatus: maritalStatusInput
         )
-        withAnimation(.easeOut(duration: 0.4)) {
-            session.login(user: newUser)
-            isGuestBypassed = true
+        
+        let pwd = passwordInput.isEmpty ? "12345" : passwordInput
+        
+        SupabaseClient.shared.signUp(email: newUser.email, password: pwd, profile: newUser) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let registeredUser):
+                    withAnimation(.easeOut(duration: 0.4)) {
+                        session.login(user: registeredUser)
+                        isGuestBypassed = true
+                    }
+                case .failure(let error):
+                    print("Supabase register error: \(error.localizedDescription)")
+                    // fallback to keep app running during offline testing
+                    withAnimation(.easeOut(duration: 0.4)) {
+                        session.login(user: newUser)
+                        isGuestBypassed = true
+                    }
+                }
+            }
         }
     }
 }

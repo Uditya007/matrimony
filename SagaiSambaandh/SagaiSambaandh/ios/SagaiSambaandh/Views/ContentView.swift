@@ -10,16 +10,31 @@ class SagaiSessionManager: ObservableObject {
     @Published var searchGender: String = "Bride"
     @Published var searchClan: String = "All Clans"
     
+    init() {
+        if let data = UserDefaults.standard.data(forKey: "saved_user_session"),
+           let user = try? JSONDecoder().decode(User.self, from: data) {
+            self.currentUser = user
+            self.shortlistedIds = Set(user.shortlistedIds)
+            self.unlockedIds = Set(user.unlockedIds)
+        }
+    }
+    
     func login(user: User) {
         self.currentUser = user
         self.shortlistedIds = Set(user.shortlistedIds)
         self.unlockedIds = Set(user.unlockedIds)
+        
+        if let data = try? JSONEncoder().encode(user) {
+            UserDefaults.standard.set(data, forKey: "saved_user_session")
+        }
     }
     
     func logout() {
         self.currentUser = nil
         self.shortlistedIds = []
         self.unlockedIds = []
+        
+        UserDefaults.standard.removeObject(forKey: "saved_user_session")
     }
     
     func toggleShortlist(id: String) {
@@ -49,6 +64,9 @@ class SagaiSessionManager: ObservableObject {
     
     func updateCurrentUser(updated: User) {
         self.currentUser = updated
+        if let data = try? JSONEncoder().encode(updated) {
+            UserDefaults.standard.set(data, forKey: "saved_user_session")
+        }
     }
 }
 
