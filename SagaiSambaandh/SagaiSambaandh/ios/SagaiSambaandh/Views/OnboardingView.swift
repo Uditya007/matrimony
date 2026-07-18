@@ -16,6 +16,10 @@ struct OnboardingView: View {
     @State private var heightInput: String = "5 ft 8 in"
     @State private var selectedGender: String = "Groom"
     @State private var selectedClan: String = "Rathore"
+    @State private var profilePicInput: String = ""
+    
+    @State private var showingImagePicker: Bool = false
+    @State private var inputImage: UIImage? = nil
     
     @State private var isSaving: Bool = false
     @State private var errorMessage: String? = nil
@@ -68,7 +72,49 @@ struct OnboardingView: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
                     }
-                    .padding(.vertical, 20)
+                    .padding(.vertical, 10)
+                    
+                    // Circular Avatar Picker
+                    VStack(spacing: 8) {
+                        Button(action: {
+                            showingImagePicker = true
+                        }) {
+                            ZStack {
+                                if !profilePicInput.isEmpty {
+                                    if #available(iOS 15.0, *) {
+                                        AsyncImage(url: URL(string: profilePicInput)) { image in
+                                            image.resizable().scaledToFill()
+                                        } placeholder: {
+                                            ProgressView()
+                                        }
+                                        .frame(width: 100, height: 100)
+                                        .clipShape(Circle())
+                                    } else {
+                                        Image("groom_ranveer")
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 100, height: 100)
+                                            .clipShape(Circle())
+                                    }
+                                } else {
+                                    Circle()
+                                        .fill(Color.white.opacity(0.1))
+                                        .frame(width: 100, height: 100)
+                                        .overlay(
+                                            Image(systemName: "plus")
+                                                .font(.system(size: 32, weight: .bold))
+                                                .foregroundColor(.lightGold)
+                                        )
+                                }
+                            }
+                            .overlay(Circle().stroke(Color.royalGold, lineWidth: 2))
+                        }
+                        
+                        Text("Tap to choose profile picture")
+                            .font(BrandFonts.body(size: 11))
+                            .foregroundColor(.lightGold.opacity(0.8))
+                    }
+                    .padding(.bottom, 10)
                     
                     if let err = errorMessage {
                         Text(err)
@@ -136,10 +182,10 @@ struct OnboardingView: View {
                         
                         // Thikana & Phone
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Native Thikana (Ancestral Place)")
+                            Text("Thikana / Ancestral Origin")
                                 .font(BrandFonts.bodyBold(size: 14))
                                 .foregroundColor(.lightGold)
-                            TextField("e.g. Rohet, Jodhpur", text: $thikanaInput)
+                            TextField("e.g. Rohet, Pali", text: $thikanaInput)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .foregroundColor(.black)
                         }
@@ -150,16 +196,26 @@ struct OnboardingView: View {
                                 .foregroundColor(.lightGold)
                             TextField("e.g. +91 98765 43210", text: $phoneInput)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .foregroundColor(.black)
                                 .keyboardType(.phonePad)
+                        }
+                        
+                        // Date of Birth
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Date of Birth")
+                                .font(BrandFonts.bodyBold(size: 14))
+                                .foregroundColor(.lightGold)
+                            TextField("DD-MM-YYYY", text: $dobInput)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .foregroundColor(.black)
                         }
                         
-                        // Qualifications
+                        // Education & Occupation
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Education / Qualification")
+                            Text("Education Qualification")
                                 .font(BrandFonts.bodyBold(size: 14))
                                 .foregroundColor(.lightGold)
-                            TextField("e.g. MBA, B.Tech IIT", text: $educationInput)
+                            TextField("e.g. B.Tech, MBA", text: $educationInput)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .foregroundColor(.black)
                         }
@@ -168,19 +224,20 @@ struct OnboardingView: View {
                             Text("Occupation / Profession")
                                 .font(BrandFonts.bodyBold(size: 14))
                                 .foregroundColor(.lightGold)
-                            TextField("e.g. Software Engineer, Business", text: $occupationInput)
+                            TextField("e.g. Business, Software Engineer", text: $occupationInput)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .foregroundColor(.black)
                         }
                         
+                        // Income & Height
                         HStack(spacing: 16) {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Annual Income")
                                     .font(BrandFonts.bodyBold(size: 14))
                                     .foregroundColor(.lightGold)
-                                TextField("e.g. ₹15 Lakhs/Yr", text: $incomeInput)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .foregroundColor(.black)
+                                TextField("e.g. 15 Lakhs+", text: $incomeInput)
+                                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                                        .foregroundColor(.black)
                             }
                             
                             VStack(alignment: .leading, spacing: 8) {
@@ -193,7 +250,6 @@ struct OnboardingView: View {
                                     }
                                 }
                                 .pickerStyle(MenuPickerStyle())
-                                .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(8)
                                 .background(Color.cardBackground.opacity(0.1))
                                 .cornerRadius(8)
@@ -232,8 +288,10 @@ struct OnboardingView: View {
             .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
             .navigationBarHidden(true)
         }
+        .sheet(isPresented: $showingImagePicker, onDismiss: loadImage) {
+            ImagePicker(image: $inputImage)
+        }
         .onAppear {
-            // Load existing fields if user has prefilled values
             if let user = session.currentUser {
                 selectedGender = user.gender
                 selectedClan = user.clan
@@ -245,8 +303,50 @@ struct OnboardingView: View {
                 occupationInput = user.occupation
                 incomeInput = user.income
                 heightInput = user.height.isEmpty ? "5 ft 8 in" : user.height
+                profilePicInput = user.profilePic ?? ""
             }
         }
+    }
+    
+    private func loadImage() {
+        guard let inputImage = inputImage else { return }
+        uploadImage(inputImage)
+    }
+    
+    private func uploadImage(_ image: UIImage) {
+        guard let data = image.jpegData(compressionQuality: 0.8) else { return }
+        guard let currentUser = session.currentUser else { return }
+        
+        isSaving = true
+        errorMessage = nil
+        
+        let filename = "\(currentUser.email.replacingOccurrences(of: "@", with: "_").replacingOccurrences(of: ".", with: "_"))_avatar.jpg"
+        guard let url = URL(string: "https://afbrznllcfgfcjuinnlf.supabase.co/storage/v1/object/avatars/\(filename)") else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        let apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+        request.addValue(apiKey, forHTTPHeaderField: "apikey")
+        request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.addValue("image/jpeg", forHTTPHeaderField: "Content-Type")
+        request.addValue("true", forHTTPHeaderField: "x-upsert")
+        request.httpBody = data
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                self.isSaving = false
+                if let error = error {
+                    self.errorMessage = "Upload failed: \(error.localizedDescription)"
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                    self.profilePicInput = "https://afbrznllcfgfcjuinnlf.supabase.co/storage/v1/object/public/avatars/\(filename)"
+                } else {
+                    self.errorMessage = "Upload failed. Please try again."
+                }
+            }
+        }.resume()
     }
     
     private func saveProfile() {
@@ -278,7 +378,7 @@ struct OnboardingView: View {
             income: incomeInput,
             height: heightInput,
             maritalStatus: "Never Married",
-            profilePic: currentUser.profilePic ?? (selectedGender == "Groom" ? "groom_ranveer" : "bride_aishwarya")
+            profilePic: profilePicInput.isEmpty ? (selectedGender == "Groom" ? "groom_ranveer" : "bride_aishwarya") : profilePicInput
         )
         
         // Save to Supabase
@@ -287,16 +387,47 @@ struct OnboardingView: View {
                 self.isSaving = false
                 switch result {
                 case .success:
-                    // Successfully inserted or updated. Save locally and bypass onboarding!
                     self.session.updateCurrentUser(updated: updatedUser)
                     self.isGuestBypassed = true
                 case .failure(let err):
-                    // Even if database call fails, allow local update during offline testing
                     print("Supabase profile save error: \(err.localizedDescription)")
                     self.session.updateCurrentUser(updated: updatedUser)
                     self.isGuestBypassed = true
                 }
             }
+        }
+    }
+}
+
+// SwiftUI ImagePicker Controller wrapper
+struct ImagePicker: UIViewControllerRepresentable {
+    @Binding var image: UIImage?
+    @Environment(\.presentationMode) var presentationMode
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+        let parent: ImagePicker
+
+        init(_ parent: ImagePicker) {
+            self.parent = parent
+        }
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            if let uiImage = info[.originalImage] as? UIImage {
+                parent.image = uiImage
+            }
+            parent.presentationMode.wrappedValue.dismiss()
         }
     }
 }
