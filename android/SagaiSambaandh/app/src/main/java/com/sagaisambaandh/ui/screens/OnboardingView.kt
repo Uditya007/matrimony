@@ -55,7 +55,15 @@ fun OnboardingView(
     var motherGotraInput by remember { mutableStateOf(currentUser.motherGotra) }
     var thikanaInput by remember { mutableStateOf(currentUser.thikana) }
     var phoneInput by remember { mutableStateOf(currentUser.phone) }
-    var dobInput by remember { mutableStateOf(currentUser.dob.ifEmpty { "19-10-1996" }) }
+    val initialDob = remember(currentUser.dob) {
+        val parts = currentUser.dob.split("-")
+        if (parts.size == 3 && parts[0].length == 4) {
+            "${parts[2]}-${parts[1]}-${parts[0]}" // YYYY-MM-DD -> DD-MM-YYYY
+        } else {
+            currentUser.dob.ifEmpty { "19-10-1996" }
+        }
+    }
+    var dobInput by remember { mutableStateOf(initialDob) }
     var educationInput by remember { mutableStateOf(currentUser.education) }
     var occupationInput by remember { mutableStateOf(currentUser.occupation) }
     var incomeInput by remember { mutableStateOf(currentUser.income) }
@@ -153,6 +161,12 @@ fun OnboardingView(
         isSaving = true
         errorMessage = null
         
+        var formattedDob = dobInput
+        val dobParts = dobInput.split("-")
+        if (dobParts.size == 3 && dobParts[2].length == 4) {
+            formattedDob = "${dobParts[2]}-${dobParts[1]}-${dobParts[0]}"
+        }
+        
         val updatedUser = User(
             id = currentUser.id,
             name = currentUser.name,
@@ -166,7 +180,7 @@ fun OnboardingView(
             motherGotra = motherGotraInput,
             thikana = thikanaInput,
             phone = phoneInput,
-            dob = dobInput,
+            dob = formattedDob,
             education = educationInput,
             occupation = occupationInput,
             income = incomeInput,

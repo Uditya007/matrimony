@@ -299,6 +299,12 @@ struct OnboardingView: View {
                 motherGotraInput = user.motherGotra
                 thikanaInput = user.thikana
                 phoneInput = user.phone
+                let parts = user.dob.components(separatedBy: "-")
+                if parts.count == 3 && parts[0].count == 4 {
+                    dobInput = "\(parts[2])-\(parts[1])-\(parts[0])" // YYYY-MM-DD -> DD-MM-YYYY
+                } else {
+                    dobInput = user.dob.isEmpty ? "19-10-1996" : user.dob
+                }
                 educationInput = user.education
                 occupationInput = user.occupation
                 incomeInput = user.income
@@ -359,6 +365,12 @@ struct OnboardingView: View {
         isSaving = true
         errorMessage = nil
         
+        var formattedDob = dobInput
+        let dobParts = dobInput.components(separatedBy: "-")
+        if dobParts.count == 3 && dobParts[2].count == 4 {
+            formattedDob = "\(dobParts[2])-\(dobParts[1])-\(dobParts[0])"
+        }
+        
         let updatedUser = User(
             id: currentUser.id,
             name: currentUser.name,
@@ -372,7 +384,7 @@ struct OnboardingView: View {
             motherGotra: motherGotraInput,
             thikana: thikanaInput,
             phone: phoneInput,
-            dob: dobInput,
+            dob: formattedDob,
             education: educationInput,
             occupation: occupationInput,
             income: incomeInput,
