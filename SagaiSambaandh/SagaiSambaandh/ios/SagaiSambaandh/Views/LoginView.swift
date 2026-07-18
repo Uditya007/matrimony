@@ -281,6 +281,7 @@ struct LoginView: View {
                 
                 DispatchQueue.main.async {
                     let dbId = matchedProfile?["id"] as? String ?? UUID().uuidString.lowercased()
+                    let isNew = matchedProfile == nil
                     let loggedUser = User(
                         id: dbId,
                         name: googleName,
@@ -300,7 +301,8 @@ struct LoginView: View {
                         income: matchedProfile?["income"] as? String ?? "",
                         height: matchedProfile?["height"] as? String ?? "",
                         maritalStatus: "Never Married",
-                        profilePic: matchedProfile?["profilePic"] as? String ?? (photoUrl.isEmpty ? "groom_ranveer" : photoUrl)
+                        profilePic: matchedProfile?["profilePic"] as? String ?? (photoUrl.isEmpty ? "groom_ranveer" : photoUrl),
+                        isNewUser: isNew
                     )
                     
                     withAnimation(.easeOut(duration: 0.4)) {

@@ -46,4 +46,5 @@ struct User: Identifiable, Codable, Hashable {
     var height: String = ""
     var maritalStatus: String = "Never Married"
     var profilePic: String? = nil
+    var isNewUser: Bool? = false
 }

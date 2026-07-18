@@ -416,7 +416,7 @@ struct OnboardingView: View {
         )
         
         // Save to Supabase (upsert/update if existing, insert if new)
-        let isExistingUser = currentUser.id.contains("-") || !currentUser.id.contains("@")
+        let isExistingUser = currentUser.isNewUser != true
         
         if isExistingUser {
             SupabaseClient.shared.updateProfile(user: updatedUser) { success in
