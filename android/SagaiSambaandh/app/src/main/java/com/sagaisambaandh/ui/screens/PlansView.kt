@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sagaisambaandh.data.SagaiSessionManager
@@ -177,8 +178,8 @@ fun PlansView(
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
-                title = { Text(text = "Shree Rajput Sagai Sambandh", fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold) },
-                text = { Text(text = dialogMessage) },
+                title = { Text(text = "Shree Rajput Sagai Sambandh", color = DeepMaroon, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold) },
+                text = { Text(text = dialogMessage, color = Color.DarkGray) },
                 confirmButton = {
                     TextButton(onClick = { showDialog = false }) {
                         Text(text = "Khammaghani", color = RoyalMaroon, fontWeight = FontWeight.Bold)

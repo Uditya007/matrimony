@@ -31,6 +31,7 @@ import com.sagaisambaandh.ui.screens.*
 import com.sagaisambaandh.ui.theme.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var sessionManager: SagaiSessionManager
@@ -316,6 +317,7 @@ fun MainScreen(session: SagaiSessionManager) {
                                     contentDescription = "Sagai Sambandh Logo",
                                     modifier = Modifier
                                         .size(32.dp)
+                                        .clip(CircleShape)
                                         .background(Color.White, shape = CircleShape)
                                         .border(0.5.dp, RoyalGold, shape = CircleShape)
                                 )
@@ -538,16 +540,5 @@ fun DrawerMenuItem(
 }
 
 fun getAvatarResId(name: String?): Int? {
-    return when (name) {
-        "groom_ranveer" -> R.drawable.groom_ranveer
-        "groom_aditya" -> R.drawable.groom_aditya
-        "groom_devendra" -> R.drawable.groom_devendra
-        "groom_siddharth" -> R.drawable.groom_siddharth
-        "groom_vikramaditya" -> R.drawable.groom_vikramaditya
-        "bride_aishwarya" -> R.drawable.bride_aishwarya
-        "bride_priyanka" -> R.drawable.bride_priyanka
-        "bride_riya" -> R.drawable.bride_riya
-        "bride_divya" -> R.drawable.bride_divya
-        else -> null
-    }
+    return null
 }

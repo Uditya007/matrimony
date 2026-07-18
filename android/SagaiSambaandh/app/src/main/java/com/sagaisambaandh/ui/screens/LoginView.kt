@@ -10,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.border
 import androidx.compose.foundation.Image
@@ -82,6 +83,7 @@ fun LoginView(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(125.dp)
+                    .clip(CircleShape)
                     .background(Color.White, shape = CircleShape)
                     .border(1.dp, RoyalGold.copy(alpha = 0.2f), shape = CircleShape)
             )

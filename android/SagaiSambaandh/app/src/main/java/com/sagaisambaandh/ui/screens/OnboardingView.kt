@@ -7,7 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Crown
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -59,6 +59,17 @@ fun OnboardingView(
     
     var clanExpanded by remember { mutableStateOf(false) }
     var heightExpanded by remember { mutableStateOf(false) }
+
+    val textFieldColors = TextFieldDefaults.colors(
+        focusedTextColor = Color.Black,
+        unfocusedTextColor = Color.Black,
+        focusedContainerColor = CardBackground,
+        unfocusedContainerColor = CardBackground,
+        focusedPlaceholderColor = Color.Gray,
+        unfocusedPlaceholderColor = Color.Gray,
+        focusedIndicatorColor = RoyalGold,
+        unfocusedIndicatorColor = Color.Transparent
+    )
 
     fun saveProfile() {
         if (gotraInput.isEmpty() || motherGotraInput.isEmpty() || thikanaInput.isEmpty() || phoneInput.isEmpty()) {
@@ -154,7 +165,7 @@ fun OnboardingView(
         ) {
             Spacer(modifier = Modifier.height(20.dp))
             Icon(
-                imageVector = Icons.Default.Crown,
+                imageVector = Icons.Default.Star,
                 contentDescription = null,
                 tint = RoyalGold,
                 modifier = Modifier.size(54.dp)
@@ -264,9 +275,9 @@ fun OnboardingView(
                         TextField(
                             value = gotraInput,
                             onValueChange = { gotraInput = it },
-                            placeholder = { Text("e.g. Kashyap") },
+                            placeholder = { Text("e.g. Kashyap", color = Color.Gray) },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = TextFieldDefaults.colors(focusedContainerColor = CardBackground, unfocusedContainerColor = CardBackground)
+                            colors = textFieldColors
                         )
                     }
                     Column(modifier = Modifier.weight(1f)) {
@@ -274,9 +285,9 @@ fun OnboardingView(
                         TextField(
                             value = motherGotraInput,
                             onValueChange = { motherGotraInput = it },
-                            placeholder = { Text("e.g. Chauhan") },
+                            placeholder = { Text("e.g. Chauhan", color = Color.Gray) },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = TextFieldDefaults.colors(focusedContainerColor = CardBackground, unfocusedContainerColor = CardBackground)
+                            colors = textFieldColors
                         )
                     }
                 }
@@ -287,9 +298,9 @@ fun OnboardingView(
                     TextField(
                         value = thikanaInput,
                         onValueChange = { thikanaInput = it },
-                        placeholder = { Text("e.g. Rohet, Jodhpur") },
+                        placeholder = { Text("e.g. Rohet, Jodhpur", color = Color.Gray) },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = TextFieldDefaults.colors(focusedContainerColor = CardBackground, unfocusedContainerColor = CardBackground)
+                        colors = textFieldColors
                     )
                 }
                 
@@ -298,9 +309,9 @@ fun OnboardingView(
                     TextField(
                         value = phoneInput,
                         onValueChange = { phoneInput = it },
-                        placeholder = { Text("e.g. +91 98765 43210") },
+                        placeholder = { Text("e.g. +91 98765 43210", color = Color.Gray) },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = TextFieldDefaults.colors(focusedContainerColor = CardBackground, unfocusedContainerColor = CardBackground)
+                        colors = textFieldColors
                     )
                 }
                 
@@ -310,9 +321,9 @@ fun OnboardingView(
                     TextField(
                         value = educationInput,
                         onValueChange = { educationInput = it },
-                        placeholder = { Text("e.g. MBA, B.Tech IIT") },
+                        placeholder = { Text("e.g. MBA, B.Tech IIT", color = Color.Gray) },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = TextFieldDefaults.colors(focusedContainerColor = CardBackground, unfocusedContainerColor = CardBackground)
+                        colors = textFieldColors
                     )
                 }
                 
@@ -321,9 +332,9 @@ fun OnboardingView(
                     TextField(
                         value = occupationInput,
                         onValueChange = { occupationInput = it },
-                        placeholder = { Text("e.g. Software Engineer, Business") },
+                        placeholder = { Text("e.g. Software Engineer, Business", color = Color.Gray) },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = TextFieldDefaults.colors(focusedContainerColor = CardBackground, unfocusedContainerColor = CardBackground)
+                        colors = textFieldColors
                     )
                 }
                 
@@ -334,9 +345,9 @@ fun OnboardingView(
                         TextField(
                             value = incomeInput,
                             onValueChange = { incomeInput = it },
-                            placeholder = { Text("e.g. ₹15 Lakhs/Yr") },
+                            placeholder = { Text("e.g. ₹15 Lakhs/Yr", color = Color.Gray) },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = TextFieldDefaults.colors(focusedContainerColor = CardBackground, unfocusedContainerColor = CardBackground)
+                            colors = textFieldColors
                         )
                     }
                     Column(modifier = Modifier.weight(1f)) {

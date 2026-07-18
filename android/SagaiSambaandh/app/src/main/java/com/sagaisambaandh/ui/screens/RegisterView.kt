@@ -108,6 +108,7 @@ fun RegisterView(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(125.dp)
+                    .clip(CircleShape)
                     .background(Color.White, shape = CircleShape)
                     .border(1.dp, RoyalGold.copy(alpha = 0.2f), shape = CircleShape)
             )
