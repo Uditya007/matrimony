@@ -95,6 +95,11 @@ struct ContentView: View {
     @State private var showingMyProfileSheet: Bool = false
     @State private var showingBiodataSheet: Bool = false
     
+    private var isOnboardingRequired: Bool {
+        guard let user = session.currentUser else { return false }
+        return user.gotra.isEmpty || user.motherGotra.isEmpty || user.thikana.isEmpty || user.phone.isEmpty
+    }
+    
     var body: some View {
         ZStack {
             if isSplashActive {
@@ -118,6 +123,9 @@ struct ContentView: View {
                             .environmentObject(session)
                             .transition(.asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                     }
+                } else if isOnboardingRequired {
+                    OnboardingView(isGuestBypassed: $isGuestBypassed)
+                        .environmentObject(session)
                 } else {
                     ZStack {
                         // Authenticated view with 5 Shaadi-style tabs

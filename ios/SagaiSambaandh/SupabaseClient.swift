@@ -119,8 +119,8 @@ class SupabaseClient {
         }.resume()
     }
     
-    // Insert into profiles table
-    private func insertProfile(profile: User, completion: @escaping (Result<User, Error>) -> Void) {
+    // Insert a new profile record
+    func insertProfile(profile: User, completion: @escaping (Result<User, Error>) -> Void) {
         guard let url = URL(string: "\(supabaseURL)/rest/v1/profiles") else { return }
         
         var request = URLRequest(url: url)
