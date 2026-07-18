@@ -280,7 +280,7 @@ struct LoginView: View {
                 }
                 
                 DispatchQueue.main.async {
-                    let dbId = matchedProfile?["id"] as? String ?? googleEmail
+                    let dbId = matchedProfile?["id"] as? String ?? UUID().uuidString.lowercased()
                     let loggedUser = User(
                         id: dbId,
                         name: googleName,

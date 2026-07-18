@@ -80,7 +80,7 @@ fun LoginView(
             
             // Perform lookup on a background thread to check if they already exist in Supabase
             CoroutineScope(Dispatchers.IO).launch {
-                var dbId = email
+                var dbId = java.util.UUID.randomUUID().toString()
                 var gotra = ""
                 var motherGotra = ""
                 var thikana = ""
@@ -111,7 +111,7 @@ fun LoginView(
                         val arr = JSONArray(body)
                         if (arr.length() > 0) {
                             val obj = arr.getJSONObject(0)
-                            dbId = obj.optString("id", email)
+                            dbId = obj.optString("id", java.util.UUID.randomUUID().toString())
                             gotra = obj.optString("gotra", "")
                             motherGotra = obj.optString("motherGotra", "")
                             thikana = obj.optString("thikana", "")

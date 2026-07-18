@@ -9,7 +9,11 @@ struct OnboardingView: View {
     @State private var motherGotraInput: String = ""
     @State private var thikanaInput: String = ""
     @State private var phoneInput: String = ""
-    @State private var dobInput: String = "19-10-1996"
+    @State private var selectedDobDate: Date = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.date(from: "1996-10-19") ?? Date()
+    }()
     @State private var educationInput: String = ""
     @State private var occupationInput: String = ""
     @State private var incomeInput: String = ""
@@ -155,7 +159,7 @@ struct OnboardingView: View {
                             .pickerStyle(MenuPickerStyle())
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(8)
-                            .background(Color.cardBackground.opacity(0.1))
+                            .background(Color.white.opacity(0.1))
                             .cornerRadius(8)
                         }
                         
@@ -166,8 +170,10 @@ struct OnboardingView: View {
                                     .font(BrandFonts.bodyBold(size: 14))
                                     .foregroundColor(.lightGold)
                                 TextField("e.g. Kashyap", text: $gotraInput)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .foregroundColor(.black)
+                                    .padding(10)
+                                    .background(Color.white.opacity(0.1))
+                                    .cornerRadius(8)
+                                    .foregroundColor(.white)
                             }
                             
                             VStack(alignment: .leading, spacing: 8) {
@@ -175,8 +181,10 @@ struct OnboardingView: View {
                                     .font(BrandFonts.bodyBold(size: 14))
                                     .foregroundColor(.lightGold)
                                 TextField("e.g. Chauhan", text: $motherGotraInput)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .foregroundColor(.black)
+                                    .padding(10)
+                                    .background(Color.white.opacity(0.1))
+                                    .cornerRadius(8)
+                                    .foregroundColor(.white)
                             }
                         }
                         
@@ -186,8 +194,10 @@ struct OnboardingView: View {
                                 .font(BrandFonts.bodyBold(size: 14))
                                 .foregroundColor(.lightGold)
                             TextField("e.g. Rohet, Pali", text: $thikanaInput)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .foregroundColor(.black)
+                                .padding(10)
+                                .background(Color.white.opacity(0.1))
+                                .cornerRadius(8)
+                                .foregroundColor(.white)
                         }
                         
                         VStack(alignment: .leading, spacing: 8) {
@@ -195,8 +205,10 @@ struct OnboardingView: View {
                                 .font(BrandFonts.bodyBold(size: 14))
                                 .foregroundColor(.lightGold)
                             TextField("e.g. +91 98765 43210", text: $phoneInput)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .foregroundColor(.black)
+                                .padding(10)
+                                .background(Color.white.opacity(0.1))
+                                .cornerRadius(8)
+                                .foregroundColor(.white)
                                 .keyboardType(.phonePad)
                         }
                         
@@ -205,9 +217,14 @@ struct OnboardingView: View {
                             Text("Date of Birth")
                                 .font(BrandFonts.bodyBold(size: 14))
                                 .foregroundColor(.lightGold)
-                            TextField("DD-MM-YYYY", text: $dobInput)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .foregroundColor(.black)
+                            
+                            DatePicker("", selection: $selectedDobDate, displayedComponents: .date)
+                                .datePickerStyle(CompactDatePickerStyle())
+                                .labelsHidden()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(6)
+                                .background(Color.white.opacity(0.1))
+                                .cornerRadius(8)
                         }
                         
                         // Education & Occupation
@@ -216,8 +233,10 @@ struct OnboardingView: View {
                                 .font(BrandFonts.bodyBold(size: 14))
                                 .foregroundColor(.lightGold)
                             TextField("e.g. B.Tech, MBA", text: $educationInput)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .foregroundColor(.black)
+                                .padding(10)
+                                .background(Color.white.opacity(0.1))
+                                .cornerRadius(8)
+                                .foregroundColor(.white)
                         }
                         
                         VStack(alignment: .leading, spacing: 8) {
@@ -225,8 +244,10 @@ struct OnboardingView: View {
                                 .font(BrandFonts.bodyBold(size: 14))
                                 .foregroundColor(.lightGold)
                             TextField("e.g. Business, Software Engineer", text: $occupationInput)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .foregroundColor(.black)
+                                .padding(10)
+                                .background(Color.white.opacity(0.1))
+                                .cornerRadius(8)
+                                .foregroundColor(.white)
                         }
                         
                         // Income & Height
@@ -236,8 +257,10 @@ struct OnboardingView: View {
                                     .font(BrandFonts.bodyBold(size: 14))
                                     .foregroundColor(.lightGold)
                                 TextField("e.g. 15 Lakhs+", text: $incomeInput)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .foregroundColor(.black)
+                                    .padding(10)
+                                    .background(Color.white.opacity(0.1))
+                                    .cornerRadius(8)
+                                    .foregroundColor(.white)
                             }
                             
                             VStack(alignment: .leading, spacing: 8) {
@@ -251,7 +274,7 @@ struct OnboardingView: View {
                                 }
                                 .pickerStyle(MenuPickerStyle())
                                 .padding(8)
-                                .background(Color.cardBackground.opacity(0.1))
+                                .background(Color.white.opacity(0.1))
                                 .cornerRadius(8)
                             }
                         }
@@ -299,12 +322,13 @@ struct OnboardingView: View {
                 motherGotraInput = user.motherGotra
                 thikanaInput = user.thikana
                 phoneInput = user.phone
-                let parts = user.dob.components(separatedBy: "-")
-                if parts.count == 3 && parts[0].count == 4 {
-                    dobInput = "\(parts[2])-\(parts[1])-\(parts[0])" // YYYY-MM-DD -> DD-MM-YYYY
-                } else {
-                    dobInput = user.dob.isEmpty ? "19-10-1996" : user.dob
+                
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd"
+                if let parsedDate = formatter.date(from: user.dob) {
+                    selectedDobDate = parsedDate
                 }
+                
                 educationInput = user.education
                 occupationInput = user.occupation
                 incomeInput = user.income
@@ -365,11 +389,9 @@ struct OnboardingView: View {
         isSaving = true
         errorMessage = nil
         
-        var formattedDob = dobInput
-        let dobParts = dobInput.components(separatedBy: "-")
-        if dobParts.count == 3 && dobParts[2].count == 4 {
-            formattedDob = "\(dobParts[2])-\(dobParts[1])-\(dobParts[0])"
-        }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let formattedDob = formatter.string(from: selectedDobDate)
         
         let updatedUser = User(
             id: currentUser.id,

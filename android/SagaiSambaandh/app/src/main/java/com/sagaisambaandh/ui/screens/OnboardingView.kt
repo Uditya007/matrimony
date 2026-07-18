@@ -38,9 +38,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.filled.Add
 import coil.compose.AsyncImage
 import okhttp3.MediaType.Companion.toMediaType
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaType
+import java.util.Calendar
+import androidx.compose.foundation.clickable
 import org.json.JSONObject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -141,13 +140,29 @@ fun OnboardingView(
     var clanExpanded by remember { mutableStateOf(false) }
     var heightExpanded by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+    val calendar = Calendar.getInstance()
+    val datePickerDialog = remember {
+        android.app.DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                dobInput = String.format("%02d-%02d-%d", dayOfMonth, month + 1, year)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+    }
+
     val textFieldColors = TextFieldDefaults.colors(
-        focusedTextColor = Color.Black,
-        unfocusedTextColor = Color.Black,
-        focusedContainerColor = CardBackground,
-        unfocusedContainerColor = CardBackground,
-        focusedPlaceholderColor = Color.Gray,
-        unfocusedPlaceholderColor = Color.Gray,
+        focusedTextColor = Color.White,
+        unfocusedTextColor = Color.White,
+        focusedContainerColor = Color.White.copy(alpha = 0.1f),
+        unfocusedContainerColor = Color.White.copy(alpha = 0.1f),
+        focusedLabelColor = LightGold,
+        unfocusedLabelColor = LightGold.copy(alpha = 0.8f),
+        focusedPlaceholderColor = Color.LightGray,
+        unfocusedPlaceholderColor = Color.LightGray,
         focusedIndicatorColor = RoyalGold,
         unfocusedIndicatorColor = Color.Transparent
     )
@@ -452,6 +467,25 @@ fun OnboardingView(
                         modifier = Modifier.fillMaxWidth(),
                         colors = textFieldColors
                     )
+                }
+                
+                // Date of Birth Calendar Field
+                Column {
+                    Text("Date of Birth", color = LightGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        TextField(
+                            value = dobInput,
+                            onValueChange = {},
+                            readOnly = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = textFieldColors
+                        )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { datePickerDialog.show() }
+                        )
+                    }
                 }
                 
                 // Education & Occupation
