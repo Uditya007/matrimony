@@ -13,6 +13,7 @@
 
 /* Begin PBXFileReference section */
 		5CB1311F300797E200553493 /* Sagai Sambaandh.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Sagai Sambaandh.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		5CD29F9B300B84DB00A2F5FF /* Sagai-Sambaandh-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Sagai-Sambaandh-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -39,6 +40,7 @@
 		5CB13116300797E200553493 = {
 			isa = PBXGroup;
 			children = (
+				5CD29F9B300B84DB00A2F5FF /* Sagai-Sambaandh-Info.plist */,
 				5CB13121300797E200553493 /* SagaiSambaandh */,
 				5CB13120300797E200553493 /* Products */,
 			);
@@ -266,6 +268,7 @@
 				DEVELOPMENT_TEAM = P6S2Y272M3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Sagai-Sambaandh-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -298,6 +301,7 @@
 				DEVELOPMENT_TEAM = P6S2Y272M3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Sagai-Sambaandh-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
