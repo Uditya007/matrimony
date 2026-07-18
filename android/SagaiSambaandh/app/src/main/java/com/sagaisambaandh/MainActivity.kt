@@ -60,6 +60,10 @@ fun MainScreen(session: SagaiSessionManager) {
     var isSplashActive by remember { mutableStateOf(true) }
 
     val currentUser by session.currentUser
+    
+    val isOnboardingRequired = currentUser?.let {
+        it.gotra.isEmpty() || it.motherGotra.isEmpty() || it.thikana.isEmpty() || it.phone.isEmpty()
+    } ?: false
 
     if (isSplashActive) {
         SplashView(onTimeout = { isSplashActive = false })
@@ -76,6 +80,8 @@ fun MainScreen(session: SagaiSessionManager) {
                 onNavigateToRegister = { showingRegister = true }
             )
         }
+    } else if (isOnboardingRequired) {
+        OnboardingView(session = session)
     } else {
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
