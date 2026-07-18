@@ -80,6 +80,7 @@ fun LoginView(
             
             // Perform lookup on a background thread to check if they already exist in Supabase
             CoroutineScope(Dispatchers.IO).launch {
+                var dbId = email
                 var gotra = ""
                 var motherGotra = ""
                 var thikana = ""
@@ -99,7 +100,7 @@ fun LoginView(
                     val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
                     
                     val request = Request.Builder()
-                        .url("$url/rest/v1/profiles?id=eq.$email&select=*")
+                        .url("$url/rest/v1/profiles?email=eq.$email&select=*")
                         .addHeader("apikey", apiKey)
                         .addHeader("Authorization", "Bearer $apiKey")
                         .build()
@@ -110,6 +111,7 @@ fun LoginView(
                         val arr = JSONArray(body)
                         if (arr.length() > 0) {
                             val obj = arr.getJSONObject(0)
+                            dbId = obj.optString("id", email)
                             gotra = obj.optString("gotra", "")
                             motherGotra = obj.optString("motherGotra", "")
                             thikana = obj.optString("thikana", "")
@@ -129,7 +131,7 @@ fun LoginView(
                 }
                 
                 val googleUser = User(
-                    id = email,
+                    id = dbId,
                     name = displayName,
                     email = email,
                     gender = gender,

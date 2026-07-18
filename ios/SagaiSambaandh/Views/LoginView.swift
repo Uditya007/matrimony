@@ -263,7 +263,7 @@ struct LoginView: View {
             let photoUrl = user.profile?.imageURL(withDimension: 200)?.absoluteString ?? ""
             
             // Perform live Supabase lookup
-            guard let fetchUrl = URL(string: "https://afbrznllcfgfcjuinnlf.supabase.co/rest/v1/profiles?id=eq.\(googleEmail)&select=*") else { return }
+            guard let fetchUrl = URL(string: "https://afbrznllcfgfcjuinnlf.supabase.co/rest/v1/profiles?email=eq.\(googleEmail)&select=*") else { return }
             
             var fetchRequest = URLRequest(url: fetchUrl)
             fetchRequest.httpMethod = "GET"
@@ -280,8 +280,9 @@ struct LoginView: View {
                 }
                 
                 DispatchQueue.main.async {
+                    let dbId = matchedProfile?["id"] as? String ?? googleEmail
                     let loggedUser = User(
-                        id: googleEmail,
+                        id: dbId,
                         name: googleName,
                         email: googleEmail,
                         gender: matchedProfile?["gender"] as? String ?? "Groom",
