@@ -243,50 +243,70 @@ struct LoginView: View {
         
         GIDSignIn.sharedInstance.signOut()
         GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { signInResult, error in
-            DispatchQueue.main.async {
-                if let error = error {
+            if let error = error {
+                DispatchQueue.main.async {
                     errorMessage = "Google Sign-In failed: \(error.localizedDescription)"
-                    return
                 }
-                
-                guard let user = signInResult?.user,
-                      let idToken = user.idToken?.tokenString else {
-                    errorMessage = "Google Sign-In returned invalid token."
-                    return
-                }
-                
-                let googleEmail = user.profile?.email ?? "noble@gmail.com"
-                let googleName = user.profile?.name ?? "Ranveer Singh"
-                
-                let matchedProfile = session.profiles.first { $0.id == googleEmail || $0.name.lowercased() == googleName.lowercased() }
-                
-                let loggedUser = User(
-                    id: matchedProfile?.id ?? "google_" + UUID().uuidString.prefix(6).lowercased(),
-                    name: googleName,
-                    email: googleEmail,
-                    gender: matchedProfile?.gender ?? "Groom",
-                    clan: matchedProfile?.clan ?? "Rathore",
-                    tier: "Starter",
-                    shortlistedIds: [],
-                    unlockedIds: [],
-                    gotra: matchedProfile?.gotra ?? "Gautam",
-                    motherGotra: "Chauhan",
-                    thikana: matchedProfile?.thikana ?? "Rohet",
-                    phone: "+91 98765 43210",
-                    dob: "12-04-1996",
-                    education: matchedProfile?.education ?? "M.Tech IIT Bombay",
-                    occupation: matchedProfile?.occupation ?? "Software Architect",
-                    income: matchedProfile?.income ?? "₹35 Lakhs/Yr",
-                    height: matchedProfile?.height ?? "6 ft 0 in",
-                    maritalStatus: "Never Married",
-                    profilePic: matchedProfile?.img ?? "groom_ranveer"
-                )
-                
-                withAnimation(.easeOut(duration: 0.4)) {
-                    session.login(user: loggedUser)
-                    isGuestBypassed = true
-                }
+                return
             }
+            
+            guard let user = signInResult?.user,
+                  let idToken = user.idToken?.tokenString else {
+                DispatchQueue.main.async {
+                    errorMessage = "Google Sign-In returned invalid token."
+                }
+                return
+            }
+            
+            let googleEmail = user.profile?.email ?? "noble@gmail.com"
+            let googleName = user.profile?.name ?? "Ranveer Singh"
+            let photoUrl = user.profile?.imageURL(withDimension: 200)?.absoluteString ?? ""
+            
+            // Perform live Supabase lookup
+            guard let fetchUrl = URL(string: "https://afbrznllcfgfcjuinnlf.supabase.co/rest/v1/profiles?id=eq.\(googleEmail)&select=*") else { return }
+            
+            var fetchRequest = URLRequest(url: fetchUrl)
+            fetchRequest.httpMethod = "GET"
+            let apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+            fetchRequest.addValue(apiKey, forHTTPHeaderField: "apikey")
+            fetchRequest.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+            
+            URLSession.shared.dataTask(with: fetchRequest) { data, response, error in
+                var matchedProfile: [String: Any]? = nil
+                if let data = data,
+                   let rows = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+                   let firstRow = rows.first {
+                    matchedProfile = firstRow
+                }
+                
+                DispatchQueue.main.async {
+                    let loggedUser = User(
+                        id: googleEmail,
+                        name: googleName,
+                        email: googleEmail,
+                        gender: matchedProfile?["gender"] as? String ?? "Groom",
+                        clan: matchedProfile?["clan"] as? String ?? "Rathore",
+                        tier: "Starter",
+                        shortlistedIds: [],
+                        unlockedIds: [],
+                        gotra: matchedProfile?["gotra"] as? String ?? "",
+                        motherGotra: matchedProfile?["motherGotra"] as? String ?? "",
+                        thikana: matchedProfile?["thikana"] as? String ?? "",
+                        phone: matchedProfile?["phone"] as? String ?? "",
+                        dob: matchedProfile?["dob"] as? String ?? "",
+                        education: matchedProfile?["education"] as? String ?? "",
+                        occupation: matchedProfile?["occupation"] as? String ?? "",
+                        income: matchedProfile?["income"] as? String ?? "",
+                        height: matchedProfile?["height"] as? String ?? "",
+                        maritalStatus: "Never Married",
+                        profilePic: matchedProfile?["profilePic"] as? String ?? (photoUrl.isEmpty ? "groom_ranveer" : photoUrl)
+                    )
+                    
+                    withAnimation(.easeOut(duration: 0.4)) {
+                        session.login(user: loggedUser)
+                    }
+                }
+            }.resume()
         }
     }
 }

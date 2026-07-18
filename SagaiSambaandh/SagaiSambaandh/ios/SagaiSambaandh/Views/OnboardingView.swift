@@ -27,6 +27,30 @@ struct OnboardingView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 24) {
+                    // Back Button Row
+                    HStack {
+                        Button(action: {
+                            withAnimation(.easeOut(duration: 0.4)) {
+                                session.logout()
+                            }
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "arrow.left")
+                                    .font(.system(size: 16, weight: .bold))
+                                Text("Back to Login")
+                                    .font(BrandFonts.bodyBold(size: 14))
+                            }
+                            .foregroundColor(.lightGold)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
+                            .background(Color.white.opacity(0.05))
+                            .cornerRadius(8)
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 10)
+                    
                     // Header Card
                     VStack(spacing: 8) {
                         Image(systemName: "crown.fill")
