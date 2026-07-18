@@ -1,4 +1,5 @@
 import SwiftUI
+import GoogleSignIn
 
 struct LoginView: View {
     @EnvironmentObject var session: SagaiSessionManager
@@ -238,31 +239,53 @@ struct LoginView: View {
     }
     
     private func handleGoogleLogin() {
-        let googleUser = User(
-            id: "google_u1",
-            name: "Ranveer Singh",
-            email: "ranveer.singh@gmail.com",
-            gender: "Groom",
-            clan: "Rathore",
-            tier: "Starter",
-            shortlistedIds: [],
-            unlockedIds: [],
-            gotra: "Gautam",
-            motherGotra: "Chauhan",
-            thikana: "Rohet",
-            phone: "+91 98765 43210",
-            dob: "12-04-1996",
-            education: "M.Tech IIT Bombay",
-            occupation: "Software Architect",
-            income: "₹35 Lakhs/Yr",
-            height: "6 ft 0 in",
-            maritalStatus: "Never Married",
-            profilePic: "groom_ranveer"
-        )
+        guard let rootViewController = UIApplication.shared.windows.first?.rootViewController else { return }
         
-        withAnimation(.easeOut(duration: 0.4)) {
-            session.login(user: googleUser)
-            isGuestBypassed = true
+        GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { signInResult, error in
+            if let error = error {
+                errorMessage = "Google Sign-In failed: \(error.localizedDescription)"
+                return
+            }
+            
+            guard let user = signInResult?.user,
+                  let idToken = user.idToken?.tokenString else {
+                errorMessage = "Google Sign-In returned invalid token."
+                return
+            }
+            
+            let googleEmail = user.profile?.email ?? "noble@gmail.com"
+            let googleName = user.profile?.name ?? "Ranveer Singh"
+            
+            let matchedProfile = session.profiles.first { $0.id == googleEmail || $0.name.lowercased() == googleName.lowercased() }
+            
+            let loggedUser = User(
+                id: matchedProfile?.id ?? "google_" + UUID().uuidString.prefix(6).lowercased(),
+                name: googleName,
+                email: googleEmail,
+                gender: matchedProfile?.gender ?? "Groom",
+                clan: matchedProfile?.clan ?? "Rathore",
+                tier: "Starter",
+                shortlistedIds: [],
+                unlockedIds: [],
+                gotra: matchedProfile?.gotra ?? "Gautam",
+                motherGotra: "Chauhan",
+                thikana: matchedProfile?.thikana ?? "Rohet",
+                phone: "+91 98765 43210",
+                dob: "12-04-1996",
+                education: matchedProfile?.education ?? "M.Tech IIT Bombay",
+                occupation: matchedProfile?.occupation ?? "Software Architect",
+                income: matchedProfile?.income ?? "₹35 Lakhs/Yr",
+                height: matchedProfile?.height ?? "6 ft 0 in",
+                maritalStatus: "Never Married",
+                profilePic: matchedProfile?.img ?? "groom_ranveer"
+            )
+            
+            DispatchQueue.main.async {
+                withAnimation(.easeOut(duration: 0.4)) {
+                    session.login(user: loggedUser)
+                    isGuestBypassed = true
+                }
+            }
         }
     }
 }
