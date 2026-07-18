@@ -180,12 +180,17 @@ class SupabaseClient {
         
         let fields: [String: Any] = [
             "name": user.name,
+            "gender": user.gender,
             "clan": user.clan,
             "gotra": user.gotra,
             "motherGotra": user.motherGotra,
             "thikana": user.thikana,
             "phone": user.phone,
             "dob": user.dob,
+            "education": user.education,
+            "occupation": user.occupation,
+            "income": user.income,
+            "height": user.height,
             "profilePic": user.profilePic ?? ""
         ]
         

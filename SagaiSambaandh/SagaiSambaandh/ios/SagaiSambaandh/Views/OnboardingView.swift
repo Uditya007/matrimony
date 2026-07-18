@@ -381,18 +381,33 @@ struct OnboardingView: View {
             profilePic: profilePicInput.isEmpty ? (selectedGender == "Groom" ? "groom_ranveer" : "bride_aishwarya") : profilePicInput
         )
         
-        // Save to Supabase
-        SupabaseClient.shared.insertProfile(profile: updatedUser) { result in
-            DispatchQueue.main.async {
-                self.isSaving = false
-                switch result {
-                case .success:
-                    self.session.updateCurrentUser(updated: updatedUser)
-                    self.isGuestBypassed = true
-                case .failure(let err):
-                    print("Supabase profile save error: \(err.localizedDescription)")
-                    self.session.updateCurrentUser(updated: updatedUser)
-                    self.isGuestBypassed = true
+        // Save to Supabase (upsert/update if existing, insert if new)
+        let isExistingUser = currentUser.id.contains("-") || !currentUser.id.contains("@")
+        
+        if isExistingUser {
+            SupabaseClient.shared.updateProfile(user: updatedUser) { success in
+                DispatchQueue.main.async {
+                    self.isSaving = false
+                    if success {
+                        self.session.updateCurrentUser(updated: updatedUser)
+                        self.isGuestBypassed = true
+                    } else {
+                        self.errorMessage = "Failed to update profile. Please try again."
+                    }
+                }
+            }
+        } else {
+            SupabaseClient.shared.insertProfile(profile: updatedUser) { result in
+                DispatchQueue.main.async {
+                    self.isSaving = false
+                    switch result {
+                    case .success:
+                        self.session.updateCurrentUser(updated: updatedUser)
+                        self.isGuestBypassed = true
+                    case .failure(let err):
+                        print("Supabase profile save error: \(err.localizedDescription)")
+                        self.errorMessage = "Failed to create profile: \(err.localizedDescription)"
+                    }
                 }
             }
         }
