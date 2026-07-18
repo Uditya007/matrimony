@@ -56,7 +56,7 @@ fun LoginView(
     val gso = remember {
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
-            .requestIdToken("946288819563-bkg75q9ba57t1e61cjj0070o9hrlbjip.apps.googleusercontent.com")
+            .requestIdToken("946288819563-rt41sphrfcb745blh88se09n5e55p52g.apps.googleusercontent.com")
             .build()
     }
     val googleSignInClient = remember { GoogleSignIn.getClient(context, gso) }
