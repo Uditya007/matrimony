@@ -128,7 +128,7 @@ class SupabaseClient {
         request.addValue(apiKey, forHTTPHeaderField: "apikey")
         request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.addValue("return=representation", forHTTPHeaderField: "Prefer")
+        request.addValue("return=representation,resolution=merge-duplicates", forHTTPHeaderField: "Prefer")
         
         // Match Supabase table column names
         let fields: [String: Any] = [
