@@ -145,6 +145,7 @@ struct ContentView: View {
                             // Inbox View
                             NavigationView {
                                 InboxView()
+                                    .environmentObject(session)
                                     .navigationBarTitleDisplayMode(.inline)
                                     .toolbar {
                                         ToolbarItem(placement: .navigationBarLeading) {
