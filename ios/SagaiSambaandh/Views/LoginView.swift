@@ -241,6 +241,7 @@ struct LoginView: View {
     private func handleGoogleLogin() {
         guard let rootViewController = UIApplication.shared.windows.first?.rootViewController else { return }
         
+        GIDSignIn.sharedInstance.signOut()
         GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { signInResult, error in
             DispatchQueue.main.async {
                 if let error = error {

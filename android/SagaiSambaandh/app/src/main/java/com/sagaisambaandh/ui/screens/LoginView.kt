@@ -40,6 +40,13 @@ import androidx.compose.ui.platform.LocalContext
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONArray
+import org.json.JSONObject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,28 +78,82 @@ fun LoginView(
             val displayName = account?.displayName ?: "Ranveer Singh"
             val photoUrl = account?.photoUrl?.toString() ?: ""
             
-            val googleUser = User(
-                id = email,
-                name = displayName,
-                email = email,
-                gender = "Groom",
-                clan = "Rathore",
-                tier = "Starter",
-                shortlistedIds = emptySet(),
-                unlockedIds = emptySet(),
-                gotra = "",
-                motherGotra = "",
-                thikana = "",
-                phone = "",
-                dob = "",
-                education = "",
-                occupation = "",
-                income = "",
-                height = "",
-                maritalStatus = "Never Married",
-                profilePic = photoUrl.ifEmpty { "groom_ranveer" }
-            )
-            session.login(googleUser)
+            // Perform lookup on a background thread to check if they already exist in Supabase
+            CoroutineScope(Dispatchers.IO).launch {
+                var gotra = ""
+                var motherGotra = ""
+                var thikana = ""
+                var phone = ""
+                var dob = ""
+                var education = ""
+                var occupation = ""
+                var income = ""
+                var height = ""
+                var gender = "Groom"
+                var clan = "Rathore"
+                var pic = photoUrl.ifEmpty { "groom_ranveer" }
+                
+                try {
+                    val client = OkHttpClient()
+                    val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
+                    val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+                    
+                    val request = Request.Builder()
+                        .url("$url/rest/v1/profiles?id=eq.$email&select=*")
+                        .addHeader("apikey", apiKey)
+                        .addHeader("Authorization", "Bearer $apiKey")
+                        .build()
+                    
+                    val response = client.newCall(request).execute()
+                    val body = response.body?.string() ?: ""
+                    if (response.isSuccessful && body.isNotEmpty()) {
+                        val arr = JSONArray(body)
+                        if (arr.length() > 0) {
+                            val obj = arr.getJSONObject(0)
+                            gotra = obj.optString("gotra", "")
+                            motherGotra = obj.optString("motherGotra", "")
+                            thikana = obj.optString("thikana", "")
+                            phone = obj.optString("phone", "")
+                            dob = obj.optString("dob", "")
+                            education = obj.optString("education", "")
+                            occupation = obj.optString("occupation", "")
+                            income = obj.optString("income", "")
+                            height = obj.optString("height", "")
+                            gender = obj.optString("gender", "Groom")
+                            clan = obj.optString("clan", "Rathore")
+                            pic = obj.optString("profilePic", pic)
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                
+                val googleUser = User(
+                    id = email,
+                    name = displayName,
+                    email = email,
+                    gender = gender,
+                    clan = clan,
+                    tier = "Starter",
+                    shortlistedIds = emptySet(),
+                    unlockedIds = emptySet(),
+                    gotra = gotra,
+                    motherGotra = motherGotra,
+                    thikana = thikana,
+                    phone = phone,
+                    dob = dob,
+                    education = education,
+                    occupation = occupation,
+                    income = income,
+                    height = height,
+                    maritalStatus = "Never Married",
+                    profilePic = pic
+                )
+                
+                CoroutineScope(Dispatchers.Main).launch {
+                    session.login(googleUser)
+                }
+            }
         } catch (e: ApiException) {
             e.printStackTrace()
             errorMessage = "Google login failed: ${e.localizedMessage}"
@@ -347,7 +408,9 @@ fun LoginView(
                 // Google button
                 Button(
                     onClick = {
-                        googleSignInLauncher.launch(googleSignInClient.signInIntent)
+                        googleSignInClient.signOut().addOnCompleteListener {
+                            googleSignInLauncher.launch(googleSignInClient.signInIntent)
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
