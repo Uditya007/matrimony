@@ -438,7 +438,7 @@ fun MainScreen(session: SagaiSessionManager) {
                             onNavigateToRegister = {},
                             onProfileDetailSelect = { selectedProfileForDetail = it }
                         )
-                        2 -> InboxView()
+                        2 -> InboxView(session = session)
                         3 -> ChatView()
                         4 -> PlansView(session = session)
                     }

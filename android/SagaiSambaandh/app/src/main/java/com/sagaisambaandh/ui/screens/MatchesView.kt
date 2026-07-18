@@ -22,6 +22,14 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PaperPlane
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.json.JSONObject
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -176,6 +184,9 @@ fun MatchesView(
                         onConnect = { profile ->
                             successProfileName = profile.name
                             showingConnectSuccess = true
+                            user?.id?.let { senderId ->
+                                sendConnectionRequest(senderId, profile.id)
+                            }
                         }
                     )
                 }
@@ -213,6 +224,9 @@ fun MatchesView(
                                         } else {
                                             successProfileName = match.name
                                             showingConnectSuccess = true
+                                            user.id?.let { senderId ->
+                                                sendConnectionRequest(senderId, match.id)
+                                            }
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
@@ -534,3 +548,31 @@ fun SwipeDeckDeck(
 
 // Border utility wrapper
 private fun borderStroke(width: androidx.compose.ui.unit.Dp, color: Color) = androidx.compose.foundation.BorderStroke(width, color)
+
+fun sendConnectionRequest(senderId: String, receiverId: String) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val client = OkHttpClient()
+            val mediaType = "application/json; charset=utf-8".toMediaType()
+            val url = "https://afbrznllcfgfcjuinnlf.supabase.co/rest/v1/connections"
+            val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+            
+            val json = JSONObject().apply {
+                put("sender_id", senderId)
+                put("receiver_id", receiverId)
+                put("status", "pending")
+            }
+            
+            val request = Request.Builder()
+                .url(url)
+                .addHeader("apikey", apiKey)
+                .addHeader("Authorization", "Bearer $apiKey")
+                .post(json.toString().toRequestBody(mediaType))
+                .build()
+            
+            client.newCall(request).execute()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+}

@@ -199,4 +199,97 @@ class SupabaseClient {
             }
         }.resume()
     }
+    
+    // Send a Like / Connection request to the connections database table
+    func sendConnection(senderId: String, receiverId: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let url = URL(string: "\(supabaseURL)/rest/v1/connections") else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue(apiKey, forHTTPHeaderField: "apikey")
+        request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let fields: [String: Any] = [
+            "sender_id": senderId,
+            "receiver_id": receiverId,
+            "status": "pending"
+        ]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: fields)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 201 || httpResponse.statusCode == 200 {
+                completion(.success(()))
+            } else {
+                completion(.failure(NSError(domain: "SupabaseClient", code: -4, userInfo: [NSLocalizedDescriptionKey: "Failed to send like"])))
+            }
+        }.resume()
+    }
+    
+    // Fetch connection requests for a user
+    func fetchConnections(userId: String, completion: @escaping (Result<[ConnectionRecord], Error>) -> Void) {
+        // Query rows where user is either sender or receiver
+        guard let url = URL(string: "\(supabaseURL)/rest/v1/connections?or=(sender_id.eq.\(userId),receiver_id.eq.\(userId))") else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue(apiKey, forHTTPHeaderField: "apikey")
+        request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            guard let data = data else {
+                completion(.success([]))
+                return
+            }
+            do {
+                let records = try JSONDecoder().decode([ConnectionRecord].self, from: data)
+                completion(.success(records))
+            } catch {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+    
+    // Update connection status (e.g. accept or reject a request)
+    func updateConnection(connectionId: String, status: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let url = URL(string: "\(supabaseURL)/rest/v1/connections?id=eq.\(connectionId)") else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue(apiKey, forHTTPHeaderField: "apikey")
+        request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let fields = ["status": status]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: fields)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 || httpResponse.statusCode == 200 {
+                completion(.success(()))
+            } else {
+                completion(.failure(NSError(domain: "SupabaseClient", code: -5, userInfo: [NSLocalizedDescriptionKey: "Failed to update like status"])))
+            }
+        }.resume()
+    }
+}
+
+struct ConnectionRecord: Identifiable, Codable, Hashable {
+    var id: String {
+        return sender_id + "_" + receiver_id
+    }
+    var sender_id: String
+    var receiver_id: String
+    var status: String // "pending", "accepted", "rejected"
 }

@@ -27,6 +27,9 @@ struct MatchesView: View {
                         onConnect: { profile in
                             successProfileName = profile.name
                             showingConnectionSuccess = true
+                            if let senderId = session.currentUser?.id {
+                                SupabaseClient.shared.sendConnection(senderId: senderId, receiverId: profile.id) { _ in }
+                            }
                         }
                     )
                     .frame(maxHeight: .infinity)
@@ -139,7 +142,7 @@ struct MatchesView: View {
             )
             
             Button(action: {
-                handleConnectTap(profileName: profile.name)
+                handleConnectTap(profile: profile)
             }) {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
@@ -194,12 +197,15 @@ struct MatchesView: View {
         }
     }
     
-    private func handleConnectTap(profileName: String) {
+    private func handleConnectTap(profile: Profile) {
         if isProfileLocked {
             showRegistration()
         } else {
-            successProfileName = profileName
+            successProfileName = profile.name
             showingConnectionSuccess = true
+            if let senderId = session.currentUser?.id {
+                SupabaseClient.shared.sendConnection(senderId: senderId, receiverId: profile.id) { _ in }
+            }
         }
     }
     
