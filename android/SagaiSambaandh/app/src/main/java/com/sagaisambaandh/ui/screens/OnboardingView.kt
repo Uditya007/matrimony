@@ -26,10 +26,21 @@ import com.sagaisambaandh.ui.theme.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material.icons.filled.Add
+import coil.compose.AsyncImage
+import okhttp3.MediaType.Companion.toMediaType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaType
 import org.json.JSONObject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,6 +62,67 @@ fun OnboardingView(
     var heightInput by remember { mutableStateOf(currentUser.height.ifEmpty { "5 ft 8 in" }) }
     var selectedGender by remember { mutableStateOf(currentUser.gender.ifEmpty { "Groom" }) }
     var selectedClan by remember { mutableStateOf(currentUser.clan.ifEmpty { "Rathore" }) }
+    var profilePicInput by remember { mutableStateOf(currentUser.profilePic ?: "") }
+    
+    val context = LocalContext.current
+    val contentResolver = context.contentResolver
+    
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            isSaving = true
+            errorMessage = null
+            
+            // Upload selected image file to Supabase Storage avatars bucket
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val bytes = contentResolver.openInputStream(uri)?.readBytes()
+                    if (bytes != null) {
+                        val client = OkHttpClient()
+                        val filename = "${currentUser.email.replace("@", "_").replace(".", "_")}_avatar.jpg"
+                        val storageUrl = "https://afbrznllcfgfcjuinnlf.supabase.co/storage/v1/object/avatars/$filename"
+                        val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+                        
+                        val mediaType = "image/jpeg".toMediaType()
+                        val request = Request.Builder()
+                            .url(storageUrl)
+                            .addHeader("apikey", apiKey)
+                            .addHeader("Authorization", "Bearer $apiKey")
+                            .addHeader("x-upsert", "true")
+                            .put(bytes.toRequestBody(mediaType))
+                            .build()
+                        
+                        val response = client.newCall(request).execute()
+                        if (response.isSuccessful) {
+                            val publicUrl = "https://afbrznllcfgfcjuinnlf.supabase.co/storage/v1/object/public/avatars/$filename"
+                            CoroutineScope(Dispatchers.Main).launch {
+                                profilePicInput = publicUrl
+                                isSaving = false
+                            }
+                        } else {
+                            val errBody = response.body?.string() ?: ""
+                            CoroutineScope(Dispatchers.Main).launch {
+                                errorMessage = "Upload failed: $errBody"
+                                isSaving = false
+                            }
+                        }
+                    } else {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            errorMessage = "Could not read image file."
+                            isSaving = false
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    CoroutineScope(Dispatchers.Main).launch {
+                        errorMessage = "Upload error: ${e.localizedMessage}"
+                        isSaving = false
+                    }
+                }
+            }
+        }
+    }
     
     var isSaving by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -100,7 +172,7 @@ fun OnboardingView(
             income = incomeInput,
             height = heightInput,
             maritalStatus = "Never Married",
-            profilePic = currentUser.profilePic ?: (if (selectedGender == "Groom") "groom_ranveer" else "bride_aishwarya")
+            profilePic = profilePicInput.ifEmpty { if (selectedGender == "Groom") "groom_ranveer" else "bride_aishwarya" }
         )
         
         CoroutineScope(Dispatchers.IO).launch {
@@ -201,6 +273,43 @@ fun OnboardingView(
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .border(2.dp, RoyalGold, CircleShape)
+                    .background(Color.White.copy(alpha = 0.1f))
+                    .clickable {
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                if (profilePicInput.isNotEmpty()) {
+                    AsyncImage(
+                        model = profilePicInput,
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Photo",
+                        tint = LightGold,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+            }
+            Text(
+                text = "Tap to choose profile picture",
+                color = LightGold.copy(alpha = 0.8f),
+                fontSize = 11.sp,
+                modifier = Modifier.padding(top = 6.dp)
             )
             
             errorMessage?.let { err ->
