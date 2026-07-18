@@ -213,6 +213,7 @@ struct InboxView: View {
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.royalGold.opacity(0.25), lineWidth: 1))
     }
     
+    @ViewBuilder
     private var emptyState: some View {
         Spacer()
         VStack(spacing: 20) {

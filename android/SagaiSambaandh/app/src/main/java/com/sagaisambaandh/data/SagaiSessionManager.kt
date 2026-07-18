@@ -268,7 +268,7 @@ class SagaiSessionManager(private val context: Context) {
                                 education = education,
                                 income = income,
                                 isVerified = true,
-                                imageName = profilePic.ifEmpty { "groom_ranveer" }
+                                img = profilePic.ifEmpty { "groom_ranveer" }
                             )
                         )
                     }
