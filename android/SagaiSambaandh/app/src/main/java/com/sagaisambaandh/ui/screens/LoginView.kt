@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Public
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.border
 import androidx.compose.foundation.Image
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
 import com.sagaisambaandh.R
@@ -33,6 +34,12 @@ import com.sagaisambaandh.data.SagaiSessionManager
 import com.sagaisambaandh.data.User
 import com.sagaisambaandh.ui.components.PalaceDivider
 import com.sagaisambaandh.ui.theme.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +51,53 @@ fun LoginView(
     var emailInput by remember { mutableStateOf("") }
     var passwordInput by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val context = LocalContext.current
+    val gso = remember {
+        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .requestIdToken("946288819563-bkg75q9ba57t1e61cjj0070o9hrlbjip.apps.googleusercontent.com")
+            .build()
+    }
+    val googleSignInClient = remember { GoogleSignIn.getClient(context, gso) }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val email = account?.email ?: "noble@gmail.com"
+            val displayName = account?.displayName ?: "Ranveer Singh"
+            val photoUrl = account?.photoUrl?.toString() ?: ""
+            
+            val googleUser = User(
+                id = email,
+                name = displayName,
+                email = email,
+                gender = "Groom",
+                clan = "Rathore",
+                tier = "Starter",
+                shortlistedIds = emptySet(),
+                unlockedIds = emptySet(),
+                gotra = "",
+                motherGotra = "",
+                thikana = "",
+                phone = "",
+                dob = "",
+                education = "",
+                occupation = "",
+                income = "",
+                height = "",
+                maritalStatus = "Never Married",
+                profilePic = photoUrl.ifEmpty { "groom_ranveer" }
+            )
+            session.login(googleUser)
+        } catch (e: ApiException) {
+            e.printStackTrace()
+            errorMessage = "Google login failed: ${e.localizedMessage}"
+        }
+    }
 
     Column(
         modifier = modifier
@@ -293,28 +347,7 @@ fun LoginView(
                 // Google button
                 Button(
                     onClick = {
-                        val googleUser = User(
-                            id = "google_u1",
-                            name = "Ranveer Singh",
-                            email = "ranveer.singh@gmail.com",
-                            gender = "Groom",
-                            clan = "Rathore",
-                            tier = "Starter",
-                            shortlistedIds = emptySet(),
-                            unlockedIds = emptySet(),
-                            gotra = "",
-                            motherGotra = "",
-                            thikana = "",
-                            phone = "",
-                            dob = "",
-                            education = "",
-                            occupation = "",
-                            income = "",
-                            height = "",
-                            maritalStatus = "Never Married",
-                            profilePic = "groom_ranveer"
-                        )
-                        session.login(googleUser)
+                        googleSignInLauncher.launch(googleSignInClient.signInIntent)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
