@@ -962,7 +962,8 @@ footer {
   margin-bottom: 30px;
 }
 
-.auth-header h2 {
+.auth-header h2,
+.auth-header h1 {
   font-size: 2rem;
   margin-bottom: 8px;
 }
@@ -3344,7 +3345,8 @@ footer {
   .auth-header {
     margin-bottom: 20px !important;
   }
-  .auth-header h2 {
+  .auth-header h2,
+  .auth-header h1 {
     font-size: 1.6rem !important; /* Smaller headings */
   }
   .register-progress {

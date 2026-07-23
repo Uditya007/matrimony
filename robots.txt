@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /login.html
+Allow: /register.html
+Allow: /membership.html
+Disallow: /dashboard.html
+
+Sitemap: https://sagaisambaandh.com/sitemap.xml
