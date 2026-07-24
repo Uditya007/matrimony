@@ -627,6 +627,8 @@
 
           if (error) {
             console.error("Supabase DB save error details:", error);
+            showToast('Database update failed: ' + error.message, 'gold');
+            return; // Block redirection and let the user see the error
           }
         }
 
