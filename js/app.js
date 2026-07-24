@@ -1221,6 +1221,17 @@ window.openProfileDetailModal = function(id) {
   const profile = profiles.find(p => p.id === id);
   if (!profile) return;
 
+  // Toggle Edit Profile button visibility based on whether they are viewing their own profile
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  const editBtn = document.getElementById('modalEditProfileBtn');
+  if (editBtn) {
+    if (currentUser && currentUser.id === id) {
+      editBtn.style.display = 'block';
+    } else {
+      editBtn.style.display = 'none';
+    }
+  }
+
   // Reset tab states to show "Detailed Profile" active by default
   switchModalTab('detailed');
 
@@ -1606,5 +1617,213 @@ function renderPartnerPreferencesComparison(candidate) {
     `;
   }).join('');
 }
+
+// ----------------------------------------------------
+// PROFILE EDIT & AVATAR UPLOAD CONTROLLERS
+// ----------------------------------------------------
+
+// Handle avatar image selection and base64 caching/preview
+window.handleEditAvatarChange = function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 3 * 1024 * 1024) {
+    showToast('Image file size must be less than 3MB!', 'gold');
+    event.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('editAvatarPreview');
+    if (preview) {
+      preview.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;" alt="Preview" />`;
+    }
+    window.tempAvatarData = e.target.result; // cache base64 for local preview fallback
+    window.tempAvatarFile = file; // cache raw file for Supabase Storage uploads
+  };
+  reader.readAsDataURL(file);
+};
+
+// Toggle detailed modal into Edit Profile Form view
+window.toggleEditProfileForm = function(show) {
+  const viewContainer = document.getElementById('modalViewContainer');
+  const editContainer = document.getElementById('modalEditContainer');
+  const editBtn = document.getElementById('modalEditProfileBtn');
+
+  if (show) {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) return;
+
+    // Toggle containers
+    if (viewContainer) viewContainer.style.display = 'none';
+    if (editContainer) editContainer.style.display = 'block';
+    if (editBtn) editBtn.style.display = 'none';
+
+    // Clear previous caches
+    window.tempAvatarData = null;
+    window.tempAvatarFile = null;
+    const picInput = document.getElementById('editProfilePicInput');
+    if (picInput) picInput.value = '';
+
+    // Populate input fields
+    document.getElementById('editName').value = currentUser.name || '';
+    document.getElementById('editPhone').value = currentUser.phone || '';
+    document.getElementById('editClan').value = currentUser.clan || 'Rathore';
+    document.getElementById('editGotra').value = currentUser.gotra || '';
+    document.getElementById('editMotherGotra').value = currentUser.motherGotra || '';
+    document.getElementById('editThikana').value = currentUser.thikana || '';
+    document.getElementById('editDOB').value = currentUser.dob || '1998-06-15';
+    document.getElementById('editHeight').value = currentUser.height || '5 ft 8 in';
+    document.getElementById('editEducation').value = currentUser.education || '';
+    document.getElementById('editOccupation').value = currentUser.occupation || '';
+    document.getElementById('editIncome').value = currentUser.income || '';
+    document.getElementById('editMaritalStatus').value = currentUser.maritalStatus || 'Never Married';
+    document.getElementById('editAbout').value = currentUser.about || '';
+    document.getElementById('editExpectations').value = currentUser.expectations || '';
+
+    // Render avatar preview
+    const preview = document.getElementById('editAvatarPreview');
+    if (preview) {
+      if (currentUser.profilePic && !currentUser.profilePic.startsWith('mock_')) {
+        preview.innerHTML = `<img src="${currentUser.profilePic}" style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar" />`;
+      } else {
+        const initials = (currentUser.name || 'N M').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        preview.textContent = initials;
+        preview.style.background = getAvatarGradient(currentUser.clan || 'Rathore');
+      }
+    }
+  } else {
+    // Return to default detailed view container
+    if (viewContainer) viewContainer.style.display = 'block';
+    if (editContainer) editContainer.style.display = 'none';
+    if (editBtn) editBtn.style.display = 'block';
+  }
+};
+
+// Handle submission of the profile editing form
+window.handleProfileUpdateSubmit = async function(event) {
+  event.preventDefault();
+
+  const saveBtn = document.getElementById('saveProfileChangesBtn');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Preserving Lineage...';
+  }
+
+  try {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) return;
+
+    let profilePicUrl = currentUser.profilePic || '';
+
+    // 1. Upload avatar portrait image file to Supabase Storage bucket
+    if (window.tempAvatarFile && window.supabaseActive) {
+      try {
+        const file = window.tempAvatarFile;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${currentUser.id}_${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`; // Upload directly under root of bucket
+
+        const { data, error } = await window.supabaseClient.storage
+          .from('profiles')
+          .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+        if (error) throw error;
+
+        // Retrieve public URL
+        const { data: { publicUrl } } = window.supabaseClient.storage
+          .from('profiles')
+          .getPublicUrl(filePath);
+
+        profilePicUrl = publicUrl;
+      } catch (err) {
+        console.error("Avatar storage upload failed, fall back to base64 representation:", err);
+        if (window.tempAvatarData) {
+          profilePicUrl = window.tempAvatarData;
+        }
+      }
+    } else if (window.tempAvatarData) {
+      // Fallback base64 representation if offline
+      profilePicUrl = window.tempAvatarData;
+    }
+
+    // 2. Build updated profile object
+    const updatedUser = {
+      ...currentUser,
+      name: document.getElementById('editName').value.trim(),
+      phone: document.getElementById('editPhone').value.trim(),
+      clan: document.getElementById('editClan').value,
+      gotra: document.getElementById('editGotra').value.trim(),
+      motherGotra: document.getElementById('editMotherGotra').value.trim(),
+      thikana: document.getElementById('editThikana').value.trim(),
+      dob: document.getElementById('editDOB').value,
+      height: document.getElementById('editHeight').value.trim(),
+      education: document.getElementById('editEducation').value.trim(),
+      occupation: document.getElementById('editOccupation').value.trim(),
+      income: document.getElementById('editIncome').value.trim(),
+      maritalStatus: document.getElementById('editMaritalStatus').value,
+      about: document.getElementById('editAbout').value.trim(),
+      expectations: document.getElementById('editExpectations').value.trim(),
+      profilePic: profilePicUrl,
+      initials: document.getElementById('editName').value.trim().split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+    };
+
+    // 3. Save updated user object locally to localStorage session
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+
+    // 4. Update profiles table record in Supabase database
+    if (window.supabaseActive) {
+      const { error } = await window.supabaseClient
+        .from('profiles')
+        .update({
+          name: updatedUser.name,
+          phone: updatedUser.phone,
+          clan: updatedUser.clan,
+          gotra: updatedUser.gotra,
+          motherGotra: updatedUser.motherGotra,
+          thikana: updatedUser.thikana,
+          dob: updatedUser.dob,
+          height: updatedUser.height,
+          education: updatedUser.education,
+          occupation: updatedUser.occupation,
+          income: updatedUser.income,
+          maritalStatus: updatedUser.maritalStatus,
+          about: updatedUser.about,
+          expectations: updatedUser.expectations,
+          profilePic: updatedUser.profilePic
+        })
+        .eq('id', currentUser.id);
+
+      if (error) {
+        console.error("Supabase profile save error details:", error);
+      }
+    }
+
+    showToast('Noble Rajput profile updated successfully!', 'gold');
+
+    // Update left panel profile cards instantly
+    populateLeftUserCard(updatedUser);
+
+    // Hide edit container and close modal
+    toggleEditProfileForm(false);
+    const modal = document.getElementById('profileDetailModal');
+    if (modal) modal.classList.remove('active');
+
+    // Reload suggestions matching new age/location preferences
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+
+  } catch (e) {
+    console.error("Profile preservation exception details:", e);
+    showToast('Profile preservation failed. Please check inputs.');
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Profile Changes';
+    }
+  }
+};
 
 
