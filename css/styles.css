@@ -4013,3 +4013,94 @@ footer {
   color: var(--primary-color);
   font-weight: bold;
 }
+
+/* 3-Column Dashboard Mobile Responsiveness Override Rules */
+@media (max-width: 768px) {
+  .dashboard-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 15px !important;
+    gap: 20px !important;
+  }
+  
+  .dashboard-online-right-panel {
+    order: 1 !important; /* Filters stacked at the top for immediate access */
+    width: 100% !important;
+  }
+  
+  .dashboard-main {
+    order: 2 !important; /* Main suggestions in the middle */
+    width: 100% !important;
+  }
+  
+  .dashboard-user-left-panel {
+    order: 3 !important; /* Logged-in user profile summary card at the bottom */
+    width: 100% !important;
+  }
+  
+  .dashboard-online-sidebar {
+    display: none !important; /* Hide online matches list sidebar to optimize viewport space */
+  }
+  
+  .dashboard-sidebar {
+    width: 100% !important;
+    margin-top: 0 !important;
+    box-shadow: none !important;
+    border: 1px solid rgba(170, 124, 17, 0.2) !important;
+    box-sizing: border-box !important;
+  }
+
+  .dashboard-user-card {
+    position: static !important; /* Remove sticky placement on mobile */
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Enable smooth horizontal swiping on mobile for subnav tabs */
+  .dashboard-subnav {
+    padding: 0 !important;
+    border-bottom: 1.5px solid rgba(170, 124, 17, 0.2) !important;
+    background-color: var(--bg-card);
+  }
+  
+  .subnav-container {
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    gap: 15px !important;
+    padding: 10px 15px !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  .subnav-tab {
+    flex: 0 0 auto !important;
+    padding: 8px 12px !important;
+    font-size: 0.8rem !important;
+  }
+  
+  .activity-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  
+  .wax-seal-promo-card {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 15px !important;
+    padding: 20px 15px !important;
+  }
+  
+  .promo-banner {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 15px !important;
+    padding: 20px 15px !important;
+  }
+  
+  .promo-banner .btn-royal {
+    width: 100% !important;
+  }
+}
+
