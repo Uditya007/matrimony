@@ -3554,7 +3554,7 @@ footer {
 .user-card-name {
   font-family: var(--font-royal);
   font-size: 1.25rem;
-  color: var(--primary-color);
+  color: var(--text-white);
   margin-bottom: 4px;
 }
 
