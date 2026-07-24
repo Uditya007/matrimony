@@ -35,6 +35,36 @@ document.addEventListener('DOMContentLoaded', () => {
   // Handle Stateful Header across pages
   updateNavigationState();
 
+  // Sync Supabase Auth Session globally on page load
+  if (window.supabaseActive) {
+    window.supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        const cachedUser = localStorage.getItem('currentUser');
+        if (!cachedUser || JSON.parse(cachedUser).email !== session.user.email) {
+          // Fetch profile record from database
+          const { data: profile } = await window.supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          if (profile) {
+            localStorage.setItem('currentUser', JSON.stringify(profile));
+            updateNavigationState();
+            
+            // Auto redirect homepage if logged in
+            const path = window.location.pathname;
+            const pageRaw = path.split('/').pop() || 'index.html';
+            const page = pageRaw.split('?')[0].split('#')[0];
+            if (page === 'index.html' || page === '' || page === 'index') {
+              window.location.href = 'dashboard.html';
+            }
+          }
+        }
+      }
+    });
+  }
+
   // Initialize mobile responsive menu drawer
   initMobileMenu();
 
@@ -263,6 +293,13 @@ function checkAuth() {
 // 2. HOMEPAGE HANDLER
 // ==========================================
 function initHomepage() {
+  // Redirect logged-in users to dashboard automatically
+  const currentUser = localStorage.getItem('currentUser');
+  if (currentUser) {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
   const searchBtn = document.getElementById('homepageSearchBtn');
   if (searchBtn) {
     searchBtn.addEventListener('click', () => {
