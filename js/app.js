@@ -722,41 +722,48 @@ let activeFilters = {
   shortlistOnly: false
 };
 
-function initDashboardPage() {
+async function initDashboardPage() {
+  // Handle Supabase OAuth redirection & async user loading before checkAuth executes
+  const isOAuthRedirect = window.location.hash.includes('access_token=') || window.location.hash.includes('id_token=');
+  
+  if (isOAuthRedirect && window.supabaseActive) {
+    try {
+      const { data: { session } } = await window.supabaseClient.auth.getSession();
+      if (session) {
+        // Fetch user profile record
+        const { data: profile } = await window.supabaseClient
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (profile) {
+          localStorage.setItem('currentUser', JSON.stringify(profile));
+          window.location.hash = ''; // Clear redirect hash params
+          window.location.reload();
+          return;
+        } else {
+          // OAuth succeeded but no profile details created yet, redirect to onboarding/register wizard
+          const tempGoogleUser = {
+            uid: session.user.id,
+            name: session.user.user_metadata.full_name || 'Noble Member',
+            email: session.user.email
+          };
+          localStorage.setItem('tempGoogleUser', JSON.stringify(tempGoogleUser));
+          window.location.hash = ''; // Clear redirect hash params
+          window.location.href = 'register.html';
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("Google Auth session load failed:", e);
+    }
+  }
+
   const currentUser = checkAuth();
   if (!currentUser) return;
 
-  // Handle Supabase OAuth redirection & async user loading
   if (window.supabaseActive) {
-    // 1. Fetch active session to check if just logged in via Google OAuth
-    window.supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) {
-        const cachedUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (!cachedUser || cachedUser.email !== session.user.email) {
-          // New OAuth sign in session! Fetch user profile record
-          const { data: profile } = await window.supabaseClient
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          if (profile) {
-            localStorage.setItem('currentUser', JSON.stringify(profile));
-            // reload greeting and contents
-            window.location.reload();
-          } else {
-            // OAuth succeeded but no profile details created yet, redirect to onboarding wizard
-            const tempGoogleUser = {
-              uid: session.user.id,
-              name: session.user.user_metadata.full_name || 'Noble Member',
-              email: session.user.email
-            };
-            localStorage.setItem('tempGoogleUser', JSON.stringify(tempGoogleUser));
-            window.location.href = 'register.html';
-          }
-        }
-      }
-    });
 
     // 2. Load all matching profiles from database
     window.supabaseClient.from('profiles').select('*')
