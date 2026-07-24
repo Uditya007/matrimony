@@ -208,7 +208,9 @@ header {
 .nav-auth-buttons {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 15px;
+  margin-left: auto;
 }
 
 /* Buttons Styling */
