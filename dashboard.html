@@ -42,64 +42,54 @@
       </div>
     </div>
   </header>
+  
+  <!-- Sub-header Dashboard Navigation Tabs -->
+  <div class="dashboard-subnav">
+    <div class="subnav-container">
+      <a href="dashboard.html" class="subnav-tab active" id="subnavDashboard">Dashboard</a>
+      <a href="#" class="subnav-tab" id="subnavMyProfile" onclick="openUserProfilePreview()">My Profile</a>
+      <a href="#" class="subnav-tab" id="subnavShortlists" onclick="document.getElementById('shortlistToggleBtn').click()">Shortlisted Matches</a>
+      <a href="membership.html" class="subnav-tab" id="subnavMembership">Regal Plans</a>
+      <a href="index.html#faqSection" class="subnav-tab" id="subnavGuide">FAQ & Guidelines</a>
+    </div>
+  </div>
 
   <!-- Dashboard Container -->
   <div class="dashboard-wrapper" id="dashboardMainArea">
     
-    <!-- Sidebar: Real-time Filters -->
-    <aside class="dashboard-sidebar" id="dashboardSidebarFilters">
-      <h3 class="sidebar-title">
-        <span>Lineage Filters</span>
-        <button type="button" class="filter-clear-btn" id="clearFiltersBtn">Reset</button>
-      </h3>
-
-      <div class="form-group">
-        <label for="filterSearch">Search Profile</label>
-        <input type="text" id="filterSearch" placeholder="Search by name, gotra, city..." style="font-size: 0.85rem; padding: 10px 14px;">
-      </div>
-
-      <div class="form-group">
-        <label for="filterGender">Looking For</label>
-        <select id="filterGender">
-          <option value="All">All Grooms & Brides</option>
-          <option value="Groom">Grooms (Banna)</option>
-          <option value="Bride">Brides (Ladi)</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="filterCaste">Rajput Clan</label>
-        <select id="filterCaste">
-          <option value="All">All Clans</option>
-          <option value="Rathore">Rathore</option>
-          <option value="Sisodia">Sisodia</option>
-          <option value="Chauhan">Chauhan</option>
-          <option value="Kachwaha">Kachwaha</option>
-          <option value="Bhati">Bhati</option>
-          <option value="Shekhawat">Shekhawat</option>
-          <option value="Panwar">Panwar</option>
-          <option value="Tanwar">Tanwar</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="filterAge">Age Criteria</label>
-        <select id="filterAge">
-          <option value="All">Any Age Range</option>
-          <option value="20-25">20 - 25 Years</option>
-          <option value="25-30">25 - 30 Years</option>
-          <option value="30-35">30 - 35 Years</option>
-        </select>
-      </div>
-
-      <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 10px;">
-        <button type="button" class="btn btn-minimal" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;" id="shortlistToggleBtn">
-          View Shortlisted
-        </button>
+    <!-- Left Column: User Profile Card (Dynamic) -->
+    <aside class="dashboard-user-left-panel">
+      <div class="dashboard-user-card" id="userCardWidget">
+        <div class="user-card-avatar-wrapper">
+          <div class="user-card-avatar" id="userCardAvatar">U</div>
+        </div>
+        <h3 class="user-card-name" id="userCardName">Noble User</h3>
+        <p class="user-card-id" id="userCardId">SRS-4956BD</p>
+        
+        <div class="user-card-membership" id="userCardMembership">Starter Plan</div>
+        
+        <div class="user-card-details">
+          <div class="user-card-detail-item">
+            <label>Clan:</label>
+            <span id="userCardClan">Rathore</span>
+          </div>
+          <div class="user-card-detail-item">
+            <label>Gotra:</label>
+            <span id="userCardGotra">Sandila</span>
+          </div>
+          <div class="user-card-detail-item">
+            <label>Thikana:</label>
+            <span id="userCardThikana">Jodhpur</span>
+          </div>
+        </div>
+        
+        <div class="wax-seal-badge" id="waxSealBadge" onclick="purchaseAddon('Verification')">
+          <span>🛡️</span> Get Wax Seal Audit
+        </div>
       </div>
     </aside>
 
-    <!-- Main matches section -->
+    <!-- Center Column: Main matches & Activity statistics section -->
     <main class="dashboard-main" id="dashboardMainMatches">
       
       <!-- Royal Greeting Card -->
@@ -109,7 +99,7 @@
           <p>Here are noble, handpicked suggestions matching your traditional parameters.</p>
         </div>
 
-        <div class="dashboard-stats" id="dashboardStatsWidget">
+        <div class="dashboard-stats" id="dashboardStatsWidget" style="display: none;">
           <div class="stat-pill" title="Matches Shortlisted by You">
             <span>❤️ Shortlisted:</span>
             <strong id="statShortlistedCount">0</strong>
@@ -121,13 +111,57 @@
         </div>
       </div>
 
+      <!-- Activity Summary Grid -->
+      <section class="activity-summary-section">
+        <h3 class="activity-section-title">Your Activity Summary</h3>
+        <div class="activity-grid">
+          <div class="activity-box">
+            <div class="activity-count" id="dashboardActivityShortlists">0</div>
+            <div class="activity-label">Shortlists</div>
+          </div>
+          <div class="activity-box">
+            <div class="activity-count" id="dashboardActivityInterests">0</div>
+            <div class="activity-label">Interests Sent</div>
+          </div>
+          <div class="activity-box">
+            <div class="activity-count">3<span class="new-pill">New</span></div>
+            <div class="activity-label">Recent Visitors</div>
+          </div>
+          <div class="activity-box">
+            <div class="activity-count" id="dashboardActivityChats">0</div>
+            <div class="activity-label">Chats Active</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Wax Seal Lineage Audit Card -->
+      <div class="wax-seal-promo-card">
+        <div class="wax-seal-graphic-container">
+          <span class="wax-seal-graphic">👑</span>
+        </div>
+        <div class="wax-seal-promo-info">
+          <h3>Royal Wax Seal Lineage Verification</h3>
+          <p>Verify your ancestral family records, gotra lineages, and thikanas with our screening desk to get the prestigious Wax Seal Badge on your profile.</p>
+          <button onclick="purchaseAddon('Verification')" class="btn btn-royal" style="padding: 8px 18px; font-size: 0.8rem;">Verify Lineage</button>
+        </div>
+      </div>
+
+      <!-- Upgrade Promo Banner -->
+      <div class="promo-banner">
+        <div class="promo-text">
+          <h3>Rajputana Gold Promise</h3>
+          <p>Hire a personal royal matchmaker manager to curate noble matches, coordinate families, and verify gotras.</p>
+        </div>
+        <a href="membership.html" class="btn btn-royal" style="background: var(--gold-gradient); color: var(--primary-color); border: none; font-weight: bold; font-size: 0.8rem; padding: 10px 18px;">Upgrade Now</a>
+      </div>
+
       <!-- Sorting and Results Count Bar -->
       <div class="search-results-bar" id="searchResultsCountBar">
         <div class="results-count">
           Showing <span id="resultsCountSpan">0</span> Noble Matches matching your lineage criteria
         </div>
-        <div class="results-sort" style="display: none;">
-          <select id="sortMatches">
+        <div class="results-sort">
+          <select id="sortMatches" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170, 124, 17, 0.3); background-color: var(--bg-card); color: var(--text-dark);">
             <option value="compatibility">Heritage Compatibility</option>
             <option value="age">Age: Youngest First</option>
           </select>
@@ -139,7 +173,75 @@
         <!-- Rendered Dynamically via app.js -->
       </div>
     </main>
-  </div>
+
+    <!-- Right Column: Online sidebar + Real-time Lineage Filters -->
+    <aside class="dashboard-online-right-panel">
+      
+      <!-- Active Noble Matches (Online Sidebar) -->
+      <div class="dashboard-online-sidebar">
+        <h3 class="online-sidebar-header">
+          <span>Active Members</span>
+          <span class="online-indicator-dot" title="Members Online"></span>
+        </h3>
+        <div class="online-matches-list" id="onlineMatchesList">
+          <!-- Populated Dynamically via app.js -->
+        </div>
+      </div>
+
+      <!-- Lineage Filters (Moved to Right Panel below Online Matches) -->
+      <div class="dashboard-sidebar" id="dashboardSidebarFilters" style="position: static; margin-top: 20px; box-shadow: var(--shadow-royal); border: 1px solid rgba(170, 124, 17, 0.2); width: 100%; box-sizing: border-box;">
+        <h3 class="sidebar-title" style="font-size: 1.1rem; margin-bottom: 15px;">
+          <span>Lineage Filters</span>
+          <button type="button" class="filter-clear-btn" id="clearFiltersBtn">Reset</button>
+        </h3>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label for="filterSearch" style="font-size: 0.75rem; margin-bottom: 4px;">Search Profile</label>
+          <input type="text" id="filterSearch" placeholder="Search name, gotra..." style="font-size: 0.8rem; padding: 8px 12px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label for="filterGender" style="font-size: 0.75rem; margin-bottom: 4px;">Looking For</label>
+          <select id="filterGender" style="font-size: 0.8rem; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+            <option value="All">All Grooms & Brides</option>
+            <option value="Groom">Grooms (Banna)</option>
+            <option value="Bride">Brides (Ladi)</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label for="filterCaste" style="font-size: 0.75rem; margin-bottom: 4px;">Rajput Clan</label>
+          <select id="filterCaste" style="font-size: 0.8rem; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+            <option value="All">All Clans</option>
+            <option value="Rathore">Rathore</option>
+            <option value="Sisodia">Sisodia</option>
+            <option value="Chauhan">Chauhan</option>
+            <option value="Kachwaha">Kachwaha</option>
+            <option value="Bhati">Bhati</option>
+            <option value="Shekhawat">Shekhawat</option>
+            <option value="Panwar">Panwar</option>
+            <option value="Tanwar">Tanwar</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label for="filterAge" style="font-size: 0.75rem; margin-bottom: 4px;">Age Criteria</label>
+          <select id="filterAge" style="font-size: 0.8rem; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+            <option value="All">Any Age Range</option>
+            <option value="20-25">20 - 25 Years</option>
+            <option value="25-30">25 - 30 Years</option>
+            <option value="30-35">30 - 35 Years</option>
+          </select>
+        </div>
+
+        <button type="button" class="btn btn-minimal" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.8rem; padding: 8px;" id="shortlistToggleBtn">
+          View Shortlisted
+        </button>
+      </div>
+
+    </aside>
+
+  </div></div>
 
   <!-- Detailed Profile Modal Overlay -->
   <div class="profile-modal" id="profileDetailModal">

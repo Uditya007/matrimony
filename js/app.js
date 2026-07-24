@@ -800,15 +800,22 @@ async function initDashboardPage() {
   const currentUser = checkAuth();
   if (!currentUser) return;
 
-  if (window.supabaseActive) {
+  // 1. Populate the left user profile card widget dynamically
+  populateLeftUserCard(currentUser);
 
-    // 2. Load all matching profiles from database
+  // 2. Populate the right-side active online matches list dynamically
+  populateOnlineSidebar(currentUser);
+
+  if (window.supabaseActive) {
+    // Load all matching profiles from database
     window.supabaseClient.from('profiles').select('*')
       .then(({ data, error }) => {
         if (!error && data) {
           window.firestoreUsers = data; // cache in memory to sync matches grid
           renderMatchesGrid();
           updateDashboardStats();
+          // Re-populate online sidebar with real database users if available
+          populateOnlineSidebar(currentUser);
         } else if (error) {
           console.error("Error loading Supabase profiles:", error);
         }
@@ -1147,7 +1154,6 @@ function createProfileCardHtml(profile, isDashboard = true) {
   `;
 }
 
-// Update dashboard stats
 function updateDashboardStats() {
   const shortlists = JSON.parse(localStorage.getItem('shortlisted')) || [];
   const interests = JSON.parse(localStorage.getItem('interests')) || {};
@@ -1157,6 +1163,16 @@ function updateDashboardStats() {
 
   const intCount = document.getElementById('statInterestsCount');
   if (intCount) intCount.textContent = Object.keys(interests).length;
+
+  // Sync new dashboard activity summary grid elements
+  const actShort = document.getElementById('dashboardActivityShortlists');
+  if (actShort) actShort.textContent = shortlists.length;
+
+  const actInt = document.getElementById('dashboardActivityInterests');
+  if (actInt) actInt.textContent = Object.keys(interests).length;
+
+  const actChats = document.getElementById('dashboardActivityChats');
+  if (actChats) actChats.textContent = Math.max(0, shortlists.length - 1); // Mock active chats based on shortlist count
 }
 
 // Shortlisting handler
@@ -1323,3 +1339,143 @@ function initScrollReveal() {
     });
   }
 }
+
+// ----------------------------------------------------
+// DYNAMIC 3-COLUMN DASHBOARD HELPERS
+// ----------------------------------------------------
+
+// Populate left profile card with current logged-in user data
+function populateLeftUserCard(user) {
+  const avatar = document.getElementById('userCardAvatar');
+  const name = document.getElementById('userCardName');
+  const idEl = document.getElementById('userCardId');
+  const membership = document.getElementById('userCardMembership');
+  const clan = document.getElementById('userCardClan');
+  const gotra = document.getElementById('userCardGotra');
+  const thikana = document.getElementById('userCardThikana');
+
+  if (name) name.textContent = user.name || 'Noble Member';
+  if (idEl) {
+    const rawId = user.id || 'SRS100';
+    idEl.textContent = 'SRS-' + (rawId.includes('-') ? rawId.split('-')[0].substring(0, 6).toUpperCase() : rawId.substring(0, 6).toUpperCase());
+  }
+  if (membership) membership.textContent = (user.tier || 'Starter') + ' Plan';
+  if (clan) clan.textContent = user.clan || 'Rathore';
+  if (gotra) gotra.textContent = user.gotra || 'Sandila';
+  if (thikana) thikana.textContent = user.thikana || 'Jodhpur';
+
+  if (avatar) {
+    if (user.profilePic && !user.profilePic.startsWith('mock_') && (user.profilePic.startsWith('http') || user.profilePic.startsWith('/') || user.profilePic.startsWith('data:'))) {
+      avatar.innerHTML = `<img src="${user.profilePic}" class="user-card-avatar-img" alt="Avatar" />`;
+    } else {
+      // Fallback to initials
+      const initials = (user.name || 'N M').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      avatar.textContent = initials;
+      avatar.style.background = getAvatarGradient(user.clan || 'Rathore');
+    }
+  }
+}
+
+// Populate right-side sidebar with online matches of opposite gender
+function populateOnlineSidebar(currentUser) {
+  const onlineList = document.getElementById('onlineMatchesList');
+  if (!onlineList) return;
+
+  const allProfiles = window.firestoreUsers || getAllProfiles();
+  // Filter for opposite gender matches
+  const oppositeGender = currentUser.gender === 'Groom' ? 'Bride' : 'Groom';
+  const matches = allProfiles.filter(p => p.gender === oppositeGender && p.id !== currentUser.id);
+
+  // Take 6 random candidates
+  const shuffled = [...matches].sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, 6);
+
+  onlineList.innerHTML = selected.map(p => {
+    let avatarHtml = '';
+    if (p.profilePic && !p.profilePic.startsWith('mock_')) {
+      avatarHtml = `<img src="${p.profilePic}" alt="${p.name}" />`;
+    } else if (p.img) {
+      avatarHtml = `<img src="${p.img}" alt="${p.name}" />`;
+    } else {
+      avatarHtml = p.initials || p.name[0];
+    }
+
+    return `
+      <div class="online-match-item" onclick="openProfileDetailModal('${p.id}')">
+        <div class="online-match-avatar" style="background: ${getAvatarGradient(p.clan)}">
+          ${avatarHtml}
+        </div>
+        <div class="online-match-info">
+          <div class="online-match-name">${p.name}</div>
+          <div class="online-match-meta">${p.clan} • ${p.age || '24'} Yrs • ${p.location ? p.location.split(',')[0] : 'Rajasthan'}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Open logged-in user profile preview in detailed modal
+window.openUserProfilePreview = function() {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) return;
+
+  const mockProfile = {
+    id: currentUser.id,
+    name: currentUser.name,
+    clan: currentUser.clan,
+    gender: currentUser.gender,
+    age: currentUser.dob ? (new Date().getFullYear() - new Date(currentUser.dob).getFullYear()) : 24,
+    height: currentUser.height || '5 ft 8 in',
+    location: currentUser.thikana || 'Jodhpur, Rajasthan',
+    gotra: currentUser.gotra || 'Sandila',
+    motherGotra: currentUser.motherGotra || 'Khangarot',
+    thikana: currentUser.thikana || 'Jodhpur',
+    phone: currentUser.phone || 'Contact locked',
+    income: currentUser.income || '10 LPA',
+    education: currentUser.education || 'B.Tech / MBA',
+    occupation: currentUser.occupation || 'Engineer',
+    maritalStatus: currentUser.maritalStatus || 'Never Married',
+    bio: currentUser.about || 'A noble member of Shree Rajput Sagai Sambandh preserving ancestral values.',
+    img: currentUser.profilePic,
+    initials: currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
+    aiScore: 100,
+    isVerified: true
+  };
+
+  const modal = document.getElementById('profileDetailModal');
+  if (!modal) return;
+
+  // Populate basic modal fields
+  document.getElementById('modalName').textContent = mockProfile.name;
+  document.getElementById('modalCaste').textContent = mockProfile.clan + ' Clan';
+  document.getElementById('modalSubline').textContent = `${mockProfile.age} Yrs • ${mockProfile.height} • ${mockProfile.location}`;
+  document.getElementById('statIncome').textContent = mockProfile.income;
+  document.getElementById('statRashi').textContent = 'Kanya (Virgo)';
+  document.getElementById('statManglik').textContent = 'Non-Manglik';
+  document.getElementById('statAiMatch').textContent = 'Your Profile';
+  document.getElementById('modalBio').textContent = mockProfile.bio;
+
+  // Populate detailed items
+  document.getElementById('detailReligion').textContent = 'Hindu (Rajput)';
+  document.getElementById('detailCaste').textContent = mockProfile.clan;
+  document.getElementById('detailGotra').textContent = mockProfile.gotra;
+  document.getElementById('detailMotherGotra').textContent = mockProfile.motherGotra;
+  document.getElementById('detailThikana').textContent = mockProfile.thikana;
+  document.getElementById('detailPhone').textContent = mockProfile.phone;
+  document.getElementById('detailEducation').textContent = mockProfile.education;
+  document.getElementById('detailOccupation').textContent = mockProfile.occupation;
+
+  // Avatar Initials
+  const modalInitials = document.getElementById('modalInitials');
+  if (modalInitials) {
+    if (mockProfile.img && !mockProfile.img.startsWith('mock_')) {
+      modalInitials.innerHTML = `<img src="${mockProfile.img}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" alt="My Avatar" />`;
+    } else {
+      modalInitials.innerHTML = `<div class="profile-avatar-placeholder" style="font-size: 3rem; display: flex; align-items: center; justify-content: center; height: 100%; width:100%; background: ${getAvatarGradient(mockProfile.clan)}; color: var(--text-white); border-radius: 8px;">${mockProfile.initials}</div>`;
+    }
+  }
+
+  // Open the modal
+  modal.classList.add('active');
+};
+
