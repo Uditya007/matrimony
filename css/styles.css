@@ -1135,19 +1135,22 @@ footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  color: var(--text-white);
 }
 
 .filter-clear-btn {
   font-size: 0.75rem;
-  color: var(--primary-color);
+  color: var(--gold-antique);
   font-family: var(--font-body);
   font-weight: 600;
   cursor: pointer;
   background: none;
   border: none;
+  transition: var(--transition);
 }
 
 .filter-clear-btn:hover {
+  color: var(--text-white);
   text-decoration: underline;
 }
 
@@ -3472,12 +3475,12 @@ footer {
 }
 
 .subnav-tab:hover {
-  color: var(--primary-color);
+  color: var(--text-white);
 }
 
 .subnav-tab.active {
-  color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
+  color: var(--text-white);
+  border-bottom-color: var(--gold-bright);
   font-weight: 600;
 }
 
@@ -3767,7 +3770,7 @@ footer {
 
 .wax-seal-promo-info h3 {
   font-family: var(--font-royal);
-  color: var(--primary-color);
+  color: var(--text-white);
   font-size: 1.1rem;
   margin-bottom: 5px;
 }
@@ -3800,7 +3803,7 @@ footer {
 .online-sidebar-header {
   font-family: var(--font-royal);
   font-size: 1.1rem;
-  color: var(--primary-color);
+  color: var(--text-white);
   border-bottom: 1.5px solid var(--gold-antique);
   padding-bottom: 8px;
   margin-bottom: 18px;
