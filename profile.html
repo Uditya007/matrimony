@@ -181,11 +181,11 @@
     
     <!-- Left Column: Portrait and Plan details -->
     <aside class="profile-card-left">
-      <div class="profile-avatar-upload-wrapper">
+      <label class="profile-avatar-upload-wrapper" for="profilePicInput" style="display: block; cursor: pointer;">
         <div class="profile-avatar-frame" id="profileAvatarFrame">U</div>
         <div class="avatar-upload-overlay">📷 Upload Photo</div>
-        <input type="file" id="profilePicInput" accept="image/*" onchange="handleProfilePicChange(event)">
-      </div>
+        <input type="file" id="profilePicInput" accept="image/*" onchange="handleProfilePicChange(event)" style="display: none;">
+      </label>
       
       <h3 class="user-card-name" id="sideCardName" style="font-size: 1.4rem; margin-bottom: 5px;">Noble User</h3>
       <p class="user-card-id" id="sideCardId" style="font-size: 0.8rem; margin-bottom: 20px;">SRS-XXXXXX</p>
