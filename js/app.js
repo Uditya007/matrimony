@@ -1221,6 +1221,9 @@ window.openProfileDetailModal = function(id) {
   const profile = profiles.find(p => p.id === id);
   if (!profile) return;
 
+  // Reset tab states to show "Detailed Profile" active by default
+  switchModalTab('detailed');
+
   // Build dynamic content for detailed modal view inside a gorgeous Jharokha window frame
   document.getElementById('modalInitials').innerHTML = `
     <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
@@ -1241,33 +1244,31 @@ window.openProfileDetailModal = function(id) {
   
   // Stat boxes
   document.getElementById('statIncome').textContent = profile.income;
-  document.getElementById('statRashi').textContent = profile.rashi.split(' (')[0];
-  document.getElementById('statManglik').textContent = profile.manglik;
+  document.getElementById('statRashi').textContent = profile.rashi ? profile.rashi.split(' (')[0] : 'Kanya';
+  document.getElementById('statManglik').textContent = profile.manglik || 'Non-Manglik';
   
   // Bind AI affinity compatibility matching score inside modal stat box
   document.getElementById('statAiMatch').textContent = `${profile.aiScore || 92}% Match`;
 
   // Details
   document.getElementById('detailReligion').textContent = profile.religion || 'Hindu';
-  document.getElementById('detailCaste').textContent = profile.caste || 'Rajput';
+  document.getElementById('detailCaste').textContent = profile.clan || 'Rajput';
   document.getElementById('detailDOB').textContent = profile.dob || '1998-06-15';
   document.getElementById('detailPOB').textContent = profile.pob || profile.native || 'Udaipur, Rajasthan';
   document.getElementById('detailGotra').textContent = profile.gotra;
   document.getElementById('detailNative').textContent = profile.native;
   document.getElementById('detailEducation').textContent = profile.education;
   document.getElementById('detailOccupation').textContent = profile.occupation;
-  document.getElementById('detailNakshatra').textContent = profile.nakshatra;
-  document.getElementById('detailFamilyType').textContent = `${profile.familyType} Values`;
-  
-  // Preferences
-  document.getElementById('detailPrefAge').textContent = `${profile.prefMinAge || 21} - ${profile.prefMaxAge || 29} Years`;
-  document.getElementById('detailPrefCaste').textContent = profile.prefCaste || 'Any';
-  document.getElementById('detailPrefLocation').textContent = profile.prefLocation || 'Any';
+  document.getElementById('detailNakshatra').textContent = profile.nakshatra || 'Rohini';
+  document.getElementById('detailFamilyType').textContent = `${profile.familyType || 'Traditional'} Values`;
   
   // Custom summaries
   document.getElementById('modalBio').textContent = profile.about;
-  document.getElementById('modalFamily').textContent = profile.familyDetails;
-  document.getElementById('modalExpectations').textContent = profile.expectations;
+  document.getElementById('modalFamily').textContent = profile.familyDetails || 'Descent from a highly respected Rajput family in Rajasthan preserving traditional gotra and ancestral parameters.';
+  document.getElementById('modalExpectations').textContent = profile.expectations || 'Seeking a well-educated partner from a noble Rajput family who values heritage, gotra compatibility, and lineage preservation.';
+
+  // Build the Partner Preferences side-by-side comparison tables dynamically
+  renderPartnerPreferencesComparison(profile);
 
   // Reset Lock/Unlock state
   const unlockBox = document.getElementById('modalUnlockBox');
@@ -1476,6 +1477,134 @@ window.openUserProfilePreview = function() {
   }
 
   // Open the modal
+  // Open the modal
   modal.classList.add('active');
 };
+
+// Switch tabs inside Detailed Profile Modal
+window.switchModalTab = function(tabName) {
+  const tabDetailed = document.getElementById('modalTabDetailedProfile');
+  const tabPref = document.getElementById('modalTabPartnerPreferences');
+  const btnDetailed = document.getElementById('modalBtnDetailedProfile');
+  const btnPref = document.getElementById('modalBtnPartnerPreferences');
+
+  if (tabName === 'detailed') {
+    if (tabDetailed) tabDetailed.style.display = 'block';
+    if (tabPref) tabPref.style.display = 'none';
+    if (btnDetailed) btnDetailed.classList.add('active');
+    if (btnPref) btnPref.classList.remove('active');
+  } else if (tabName === 'preferences') {
+    if (tabDetailed) tabDetailed.style.display = 'none';
+    if (tabPref) tabPref.style.display = 'block';
+    if (btnDetailed) btnDetailed.classList.remove('active');
+    if (btnPref) btnPref.classList.add('active');
+  }
+};
+
+// Render side-by-side partner preference checklist inside profile modal
+function renderPartnerPreferencesComparison(candidate) {
+  const container = document.getElementById('prefComparisonTable');
+  const summaryText = document.getElementById('prefCompatibilitySummaryText');
+  if (!container) return;
+
+  const currentUserRaw = localStorage.getItem('currentUser');
+  const user = currentUserRaw ? JSON.parse(currentUserRaw) : {
+    name: 'Noble Member',
+    gender: 'Groom',
+    clan: 'Rathore',
+    gotra: 'Sandila',
+    thikana: 'Jodhpur',
+    dob: '2001-12-19',
+    height: '5 ft 8 in',
+    maritalStatus: 'Never Married',
+    income: '10 LPA'
+  };
+
+  // Extract user age
+  let userAge = 25;
+  if (user.dob) {
+    userAge = new Date().getFullYear() - new Date(user.dob).getFullYear();
+  }
+
+  // Define candidate preference parameters
+  const prefMinAge = candidate.prefMinAge || 21;
+  const prefMaxAge = candidate.prefMaxAge || 29;
+  const prefCaste = candidate.prefCaste || 'Any Rajput Clan';
+  const prefLocation = candidate.prefLocation || 'Rajasthan / Delhi-NCR';
+
+  // Build check rules list
+  const rules = [
+    {
+      label: 'Preferred Age',
+      expected: `${prefMinAge} to ${prefMaxAge} Yrs`,
+      userVal: `${userAge} Yrs`,
+      isMatch: userAge >= prefMinAge && userAge <= prefMaxAge
+    },
+    {
+      label: 'Preferred Height',
+      expected: `5' 2" (157cm) to 6' 1" (185cm)`,
+      userVal: user.height || '5 ft 8 in',
+      isMatch: true // Standard match for demo
+    },
+    {
+      label: 'Marital Status',
+      expected: 'Never Married',
+      userVal: user.maritalStatus || 'Never Married',
+      isMatch: (user.maritalStatus || 'Never Married') === 'Never Married'
+    },
+    {
+      label: 'Religion',
+      expected: 'Hindu (Rajput)',
+      userVal: 'Hindu (Rajput)',
+      isMatch: true
+    },
+    {
+      label: 'Clan / Caste',
+      expected: prefCaste,
+      userVal: `${user.clan} Clan`,
+      isMatch: prefCaste === 'Any' || prefCaste === 'Any Rajput Clan' || prefCaste.toLowerCase().includes(user.clan.toLowerCase())
+    },
+    {
+      label: 'Gotra Compatibility',
+      expected: `Must NOT match: ${candidate.gotra}`,
+      userVal: user.gotra || 'Sandila',
+      isMatch: (user.gotra || 'Sandila').toLowerCase() !== (candidate.gotra || '').toLowerCase() // Prohibit Sagotra union
+    },
+    {
+      label: 'Native Location',
+      expected: prefLocation,
+      userVal: user.thikana || 'Rajasthan',
+      isMatch: true
+    },
+    {
+      label: 'Annual Income',
+      expected: 'INR 5 Lakhs to 30 Lakhs',
+      userVal: user.income || '10 LPA',
+      isMatch: true
+    }
+  ];
+
+  // Count total matches
+  const matchCount = rules.filter(r => r.isMatch).length;
+  if (summaryText) {
+    summaryText.textContent = `You match ${matchCount}/${rules.length} of her partner preferences`;
+  }
+
+  // Render rows
+  container.innerHTML = rules.map(rule => {
+    return `
+      <div class="pref-comparison-row ${rule.isMatch ? 'matched' : 'mismatched'}">
+        <div class="pref-label-col">${rule.label}</div>
+        <div class="pref-expect-col">${rule.expected}</div>
+        <div class="pref-user-col">${rule.userVal}</div>
+        <div class="pref-status-col">
+          <span class="${rule.isMatch ? 'pref-status-matched' : 'pref-status-mismatched'}">
+            ${rule.isMatch ? '✓' : '⚠️'}
+          </span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 

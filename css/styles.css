@@ -3911,4 +3911,104 @@ footer {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+}
 
+/* Modal Inner Tab Switchers */
+.modal-tabs {
+  background-color: rgba(92, 6, 18, 0.01);
+}
+
+.modal-tab-btn {
+  font-family: var(--font-royal);
+  font-size: 0.9rem;
+  padding: 15px 5px;
+  border: none;
+  background: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.modal-tab-btn:hover {
+  color: var(--primary-color);
+}
+
+.modal-tab-btn.active {
+  color: var(--primary-color) !important;
+  border-bottom-color: var(--primary-color) !important;
+  font-weight: 700 !important;
+}
+
+/* Partner Preference Side-by-Side Comparison Grid */
+.pref-comparison-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 1fr 60px;
+  align-items: center;
+  padding: 14px 20px;
+  background-color: var(--bg-warm);
+  border: 1px solid rgba(170, 124, 17, 0.15);
+  border-radius: var(--border-radius);
+  font-size: 0.88rem;
+  transition: var(--transition);
+  gap: 15px;
+}
+
+@media (max-width: 576px) {
+  .pref-comparison-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px 15px;
+  }
+  .pref-status-col {
+    justify-content: flex-start !important;
+    margin-top: 5px;
+  }
+}
+
+.pref-comparison-row:hover {
+  transform: translateX(2px);
+  border-color: var(--gold-antique);
+}
+
+.pref-comparison-row.matched {
+  border-left: 4.5px solid #2b8a3e;
+}
+
+.pref-comparison-row.mismatched {
+  border-left: 4.5px solid var(--primary-color);
+}
+
+.pref-label-col {
+  font-weight: 700;
+  color: var(--primary-color);
+  font-family: var(--font-royal);
+  letter-spacing: 0.5px;
+}
+
+.pref-expect-col {
+  color: var(--text-muted);
+}
+
+.pref-user-col {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.pref-status-col {
+  display: flex;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.pref-status-matched {
+  color: #2b8a3e;
+  font-weight: bold;
+}
+
+.pref-status-mismatched {
+  color: var(--primary-color);
+  font-weight: bold;
+}

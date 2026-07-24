@@ -282,118 +282,130 @@
         </div>
       </div>
 
+      <!-- Modal Inner Subnav Tabs -->
+      <div class="modal-tabs" style="display: flex; border-bottom: 1.5px solid rgba(170, 124, 17, 0.2); padding: 0 40px; gap: 25px;">
+        <button class="modal-tab-btn active" id="modalBtnDetailedProfile" onclick="switchModalTab('detailed')">Detailed Profile</button>
+        <button class="modal-tab-btn" id="modalBtnPartnerPreferences" onclick="switchModalTab('preferences')">Partner Preferences</button>
+      </div>
+
       <!-- Modal Body Details -->
-      <div class="modal-body">
+      <div class="modal-body" style="padding: 30px 40px;">
         
-        <!-- About Section -->
-        <div>
-          <h3 class="modal-section-title">Royal Persona</h3>
-          <p class="modal-bio" id="modalBio">Biography details will be shown here...</p>
-        </div>
-
-        <!-- Ancestral Lineage & Cultural Details -->
-        <div>
-          <h3 class="modal-section-title">Heritage & Lineage Info</h3>
-          <div class="details-grid">
-            <div class="detail-item">
-              <label>Religion</label>
-              <span id="detailReligion">Religion</span>
-            </div>
-            <div class="detail-item">
-              <label>Caste</label>
-              <span id="detailCaste">Caste</span>
-            </div>
-            <div class="detail-item">
-              <label>Date of Birth</label>
-              <span id="detailDOB">DOB</span>
-            </div>
-            <div class="detail-item">
-              <label>Place of Birth</label>
-              <span id="detailPOB">POB</span>
-            </div>
-            <div class="detail-item">
-              <label>Father's Gotra</label>
-              <span id="detailGotra">Gotra</span>
-            </div>
-            <div class="detail-item">
-              <label>Ancestral Native</label>
-              <span id="detailNative">Native</span>
-            </div>
-            <div class="detail-item">
-              <label>Professional Degree</label>
-              <span id="detailEducation">Education</span>
-            </div>
-            <div class="detail-item">
-              <label>Current Profession</label>
-              <span id="detailOccupation">Occupation</span>
-            </div>
-            <div class="detail-item">
-              <label>Astro Nakshatra</label>
-              <span id="detailNakshatra">Nakshatra</span>
-            </div>
-            <div class="detail-item">
-              <label>Ancestral Values</label>
-              <span id="detailFamilyType">Family Background</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Family Background Summary -->
-        <div>
-          <h3 class="modal-section-title">Family & Lineage Background</h3>
-          <p class="modal-bio" id="modalFamily">Family descriptions...</p>
-        </div>
-
-        <!-- Expectations -->
-        <div>
-          <h3 class="modal-section-title">Alignment Expectations</h3>
-          <p class="modal-bio" id="modalExpectations">Lineage preferences and expectations...</p>
-        </div>
-
-        <!-- Partner Preferences Details -->
-        <div>
-          <h3 class="modal-section-title">Detailed Partner Preferences</h3>
-          <div class="details-grid" style="grid-template-columns: repeat(2, 1fr);">
-            <div class="detail-item">
-              <label>Preferred Age Range</label>
-              <span id="detailPrefAge">Age Range</span>
-            </div>
-            <div class="detail-item">
-              <label>Preferred Clan/Caste</label>
-              <span id="detailPrefCaste">Clan/Caste</span>
-            </div>
-            <div class="detail-item" style="grid-column: span 2; border-bottom: none;">
-              <label>Preferred Location</label>
-              <span id="detailPrefLocation">Location</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Dynamic Unlock Contact Details Section -->
-        <div>
-          <h3 class="modal-section-title">Regal Connection Desk</h3>
+        <!-- Tab 1: Detailed Profile View -->
+        <div id="modalTabDetailedProfile" class="modal-tab-pane">
           
-          <div class="unlock-box" id="modalUnlockBox">
-            <h4>Heritage Lock Active</h4>
-            <p>For the privacy and protection of noble lineages, contact details are hidden until request approval.</p>
-            <button type="button" class="btn btn-royal" id="unlockContactBtn">Verify & Unlock Lineage Details</button>
+          <!-- About Section -->
+          <div style="margin-bottom: 25px;">
+            <h3 class="modal-section-title">Royal Persona</h3>
+            <p class="modal-bio" id="modalBio">Biography details will be shown here...</p>
           </div>
 
-          <div class="unlocked-details" id="modalUnlockedDetails">
-            <div class="details-grid" style="background-color: rgba(170, 124, 17, 0.05); padding: 25px; border-radius: var(--border-radius); border: 1.5px solid var(--gold-antique);">
+          <!-- Ancestral Lineage & Cultural Details -->
+          <div style="margin-bottom: 25px;">
+            <h3 class="modal-section-title">Heritage & Lineage Info</h3>
+            <div class="details-grid">
               <div class="detail-item">
-                <label>Direct Phone Line</label>
-                <span id="unlockedPhone" style="color: var(--primary-color); font-weight: 700;">+91 90000 00000</span>
+                <label>Religion</label>
+                <span id="detailReligion">Religion</span>
               </div>
               <div class="detail-item">
-                <label>Regal Email Desk</label>
-                <span id="unlockedEmail" style="color: var(--primary-color); font-weight: 700;">email@rajgharana.com</span>
+                <label>Caste / Clan</label>
+                <span id="detailCaste">Caste</span>
               </div>
-              <div class="detail-item" style="grid-column: span 2; border-bottom: none; padding-top: 10px;">
-                <label>Ancestral Residence</label>
-                <span id="unlockedAddress" style="font-weight: 700;">Jaipur, Rajasthan, India</span>
+              <div class="detail-item">
+                <label>Date of Birth</label>
+                <span id="detailDOB">DOB</span>
+              </div>
+              <div class="detail-item">
+                <label>Place of Birth</label>
+                <span id="detailPOB">POB</span>
+              </div>
+              <div class="detail-item">
+                <label>Father's Gotra</label>
+                <span id="detailGotra">Gotra</span>
+              </div>
+              <div class="detail-item">
+                <label>Ancestral Native</label>
+                <span id="detailNative">Native</span>
+              </div>
+              <div class="detail-item">
+                <label>Professional Degree</label>
+                <span id="detailEducation">Education</span>
+              </div>
+              <div class="detail-item">
+                <label>Current Profession</label>
+                <span id="detailOccupation">Occupation</span>
+              </div>
+              <div class="detail-item">
+                <label>Astro Nakshatra</label>
+                <span id="detailNakshatra">Nakshatra</span>
+              </div>
+              <div class="detail-item">
+                <label>Ancestral Values</label>
+                <span id="detailFamilyType">Family Background</span>
               </div>
             </div>
+          </div>
+
+          <!-- Family Background Summary -->
+          <div style="margin-bottom: 25px;">
+            <h3 class="modal-section-title">Family & Lineage Background</h3>
+            <p class="modal-bio" id="modalFamily">Family descriptions...</p>
+          </div>
+
+          <!-- Expectations -->
+          <div style="margin-bottom: 25px;">
+            <h3 class="modal-section-title">Alignment Expectations</h3>
+            <p class="modal-bio" id="modalExpectations">Lineage preferences and expectations...</p>
+          </div>
+
+          <!-- Dynamic Unlock Contact Details Section -->
+          <div>
+            <h3 class="modal-section-title">Regal Connection Desk</h3>
+            
+            <div class="unlock-box" id="modalUnlockBox">
+              <h4>Heritage Lock Active</h4>
+              <p>For the privacy and protection of noble lineages, contact details are hidden until request approval.</p>
+              <button type="button" class="btn btn-royal" id="unlockContactBtn">Verify & Unlock Lineage Details</button>
+            </div>
+
+            <div class="unlocked-details" id="modalUnlockedDetails">
+              <div class="details-grid" style="background-color: rgba(170, 124, 17, 0.05); padding: 25px; border-radius: var(--border-radius); border: 1.5px solid var(--gold-antique);">
+                <div class="detail-item">
+                  <label>Direct Phone Line</label>
+                  <span id="unlockedPhone" style="color: var(--primary-color); font-weight: 700;">+91 90000 00000</span>
+                </div>
+                <div class="detail-item">
+                  <label>Regal Email Desk</label>
+                  <span id="unlockedEmail" style="color: var(--primary-color); font-weight: 700;">email@rajgharana.com</span>
+                </div>
+                <div class="detail-item" style="grid-column: span 2; border-bottom: none; padding-top: 10px;">
+                  <label>Ancestral Residence</label>
+                  <span id="unlockedAddress" style="font-weight: 700;">Jaipur, Rajasthan, India</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Tab 2: Partner Preferences Side-by-Side View -->
+        <div id="modalTabPartnerPreferences" class="modal-tab-pane" style="display: none;">
+          <div class="pref-compatibility-header" style="display: flex; align-items: center; justify-content: center; gap: 10px; background-color: var(--gold-light); border: 1px solid var(--gold-antique); padding: 12px; border-radius: var(--border-radius); margin-bottom: 25px;">
+            <span style="font-size: 1.5rem;">👑</span>
+            <strong style="color: var(--primary-color); font-size: 0.95rem;" id="prefCompatibilitySummaryText">You match her partner preferences</strong>
+          </div>
+
+          <div style="margin-bottom: 20px; display: flex; justify-content: space-between; font-weight: bold; font-family: var(--font-royal); font-size: 0.85rem; padding: 0 10px; color: var(--primary-color); letter-spacing: 0.5px;">
+            <span style="width: 160px;">Preference Rule</span>
+            <span style="flex-grow: 1; min-width: 0; padding-left: 15px;">Her Requirement</span>
+            <span style="flex-grow: 1; min-width: 0; padding-left: 15px;">Your Value</span>
+            <span style="width: 60px; text-align: center;">Matches?</span>
+          </div>
+
+          <!-- Comparison Rows List (Populated Dynamically via app.js) -->
+          <div class="pref-comparison-table" style="display: flex; flex-direction: column; gap: 12px;" id="prefComparisonTable">
+            <!-- Rendered Dynamically -->
           </div>
         </div>
 
