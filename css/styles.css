@@ -3605,9 +3605,9 @@ footer {
   gap: 6px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #c92a2a;
-  background-color: rgba(201, 42, 42, 0.08);
-  border: 1px solid rgba(201, 42, 42, 0.2);
+  color: var(--text-white);
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 6px 12px;
   border-radius: var(--border-radius);
   margin-top: 15px;
@@ -3616,7 +3616,8 @@ footer {
 }
 
 .wax-seal-badge:hover {
-  background-color: rgba(201, 42, 42, 0.15);
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 /* Center Activity Summary Grid */
@@ -3631,7 +3632,7 @@ footer {
 .activity-section-title {
   font-family: var(--font-royal);
   font-size: 1.1rem;
-  color: var(--primary-color);
+  color: var(--text-white);
   margin-bottom: 15px;
   display: flex;
   justify-content: space-between;
@@ -3667,7 +3668,7 @@ footer {
 .activity-count {
   font-family: var(--font-royal);
   font-size: 1.8rem;
-  color: var(--primary-color);
+  color: var(--text-white);
   margin-bottom: 4px;
   font-weight: 600;
 }
@@ -3686,7 +3687,7 @@ footer {
 
 .activity-label {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 /* Custom Interactive Promotion Banners */
