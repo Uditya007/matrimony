@@ -3521,8 +3521,7 @@ footer {
   padding: 25px 20px;
   text-align: center;
   height: fit-content;
-  position: sticky;
-  top: 150px;
+  position: relative;
 }
 
 .user-card-avatar-wrapper {
