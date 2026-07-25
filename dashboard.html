@@ -87,6 +87,57 @@
           <span>🛡️</span> Get Wax Seal Audit
         </div>
       </div>
+
+      <!-- Lineage Filters (Moved to Left Panel below User Card) -->
+      <div class="dashboard-sidebar" id="dashboardSidebarFilters" style="position: static; margin-top: 20px; box-shadow: var(--shadow-royal); border: 1px solid rgba(170, 124, 17, 0.2); width: 100%; box-sizing: border-box;">
+        <h3 class="sidebar-title" style="font-size: 1.1rem; margin-bottom: 15px;">
+          <span>Lineage Filters</span>
+          <button type="button" class="filter-clear-btn" id="clearFiltersBtn">Reset</button>
+        </h3>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label for="filterSearch" style="font-size: 0.75rem; margin-bottom: 4px;">Search Profile</label>
+          <input type="text" id="filterSearch" placeholder="Search name, gotra..." style="font-size: 0.8rem; padding: 8px 12px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label for="filterGender" style="font-size: 0.75rem; margin-bottom: 4px;">Looking For</label>
+          <select id="filterGender" style="font-size: 0.8rem; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+            <option value="All">All Grooms & Brides</option>
+            <option value="Groom">Grooms (Banna)</option>
+            <option value="Bride">Brides (Ladi)</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label for="filterCaste" style="font-size: 0.75rem; margin-bottom: 4px;">Rajput Clan</label>
+          <select id="filterCaste" style="font-size: 0.8rem; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+            <option value="All">All Clans</option>
+            <option value="Rathore">Rathore</option>
+            <option value="Sisodia">Sisodia</option>
+            <option value="Chauhan">Chauhan</option>
+            <option value="Kachwaha">Kachwaha</option>
+            <option value="Bhati">Bhati</option>
+            <option value="Shekhawat">Shekhawat</option>
+            <option value="Panwar">Panwar</option>
+            <option value="Tanwar">Tanwar</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label for="filterAge" style="font-size: 0.75rem; margin-bottom: 4px;">Age Criteria</label>
+          <select id="filterAge" style="font-size: 0.8rem; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+            <option value="All">Any Age Range</option>
+            <option value="20-25">20 - 25 Years</option>
+            <option value="25-30">25 - 30 Years</option>
+            <option value="30-35">30 - 35 Years</option>
+          </select>
+        </div>
+
+        <button type="button" class="btn btn-minimal" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.8rem; padding: 8px;" id="shortlistToggleBtn">
+          View Shortlisted
+        </button>
+      </div>
     </aside>
 
     <!-- Center Column: Main matches & Activity statistics section -->
@@ -198,57 +249,6 @@
         <div class="online-matches-list" id="onlineMatchesList">
           <!-- Populated Dynamically via app.js -->
         </div>
-      </div>
-
-      <!-- Lineage Filters (Moved to Right Panel below Online Matches) -->
-      <div class="dashboard-sidebar" id="dashboardSidebarFilters" style="position: static; margin-top: 20px; box-shadow: var(--shadow-royal); border: 1px solid rgba(170, 124, 17, 0.2); width: 100%; box-sizing: border-box;">
-        <h3 class="sidebar-title" style="font-size: 1.1rem; margin-bottom: 15px;">
-          <span>Lineage Filters</span>
-          <button type="button" class="filter-clear-btn" id="clearFiltersBtn">Reset</button>
-        </h3>
-
-        <div class="form-group" style="margin-bottom: 12px;">
-          <label for="filterSearch" style="font-size: 0.75rem; margin-bottom: 4px;">Search Profile</label>
-          <input type="text" id="filterSearch" placeholder="Search name, gotra..." style="font-size: 0.8rem; padding: 8px 12px; border-radius: 4px; width: 100%; box-sizing: border-box;">
-        </div>
-
-        <div class="form-group" style="margin-bottom: 12px;">
-          <label for="filterGender" style="font-size: 0.75rem; margin-bottom: 4px;">Looking For</label>
-          <select id="filterGender" style="font-size: 0.8rem; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box;">
-            <option value="All">All Grooms & Brides</option>
-            <option value="Groom">Grooms (Banna)</option>
-            <option value="Bride">Brides (Ladi)</option>
-          </select>
-        </div>
-
-        <div class="form-group" style="margin-bottom: 12px;">
-          <label for="filterCaste" style="font-size: 0.75rem; margin-bottom: 4px;">Rajput Clan</label>
-          <select id="filterCaste" style="font-size: 0.8rem; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box;">
-            <option value="All">All Clans</option>
-            <option value="Rathore">Rathore</option>
-            <option value="Sisodia">Sisodia</option>
-            <option value="Chauhan">Chauhan</option>
-            <option value="Kachwaha">Kachwaha</option>
-            <option value="Bhati">Bhati</option>
-            <option value="Shekhawat">Shekhawat</option>
-            <option value="Panwar">Panwar</option>
-            <option value="Tanwar">Tanwar</option>
-          </select>
-        </div>
-
-        <div class="form-group" style="margin-bottom: 15px;">
-          <label for="filterAge" style="font-size: 0.75rem; margin-bottom: 4px;">Age Criteria</label>
-          <select id="filterAge" style="font-size: 0.8rem; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box;">
-            <option value="All">Any Age Range</option>
-            <option value="20-25">20 - 25 Years</option>
-            <option value="25-30">25 - 30 Years</option>
-            <option value="30-35">30 - 35 Years</option>
-          </select>
-        </div>
-
-        <button type="button" class="btn btn-minimal" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.8rem; padding: 8px;" id="shortlistToggleBtn">
-          View Shortlisted
-        </button>
       </div>
 
     </aside>

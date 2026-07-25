@@ -1393,7 +1393,7 @@ function populateOnlineSidebar(currentUser) {
   const onlineList = document.getElementById('onlineMatchesList');
   if (!onlineList) return;
 
-  const allProfiles = window.firestoreUsers || getAllProfiles();
+  const allProfiles = getAllProfiles();
   // Filter for opposite gender matches
   const oppositeGender = currentUser.gender === 'Groom' ? 'Bride' : 'Groom';
   const matches = allProfiles.filter(p => p.gender === oppositeGender && p.id !== currentUser.id);
