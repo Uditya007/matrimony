@@ -339,6 +339,23 @@
           </div>
         </div>
         
+        <!-- Section 4.5: Social Media Profiles -->
+        <h3 class="profile-form-section-title">
+          <span>🌐</span> Social Media Links (Optional)
+        </h3>
+        
+        <div class="form-grid-2col">
+          <div class="form-group">
+            <label for="profInstagram">Instagram Profile / Handle</label>
+            <input type="text" id="profInstagram" placeholder="e.g. @username or https://instagram.com/username">
+          </div>
+          
+          <div class="form-group">
+            <label for="profFacebook">Facebook Profile Link</label>
+            <input type="text" id="profFacebook" placeholder="e.g. https://facebook.com/username">
+          </div>
+        </div>
+        
         <!-- Section 5: Summaries -->
         <h3 class="profile-form-section-title">
           <span>📜</span> Royal Persona Biography & Expectations
@@ -425,6 +442,26 @@
     let tempAvatarData = null;
     let tempAvatarFile = null;
 
+    function parseSocialLinks(aboutText) {
+      let cleanAbout = aboutText || '';
+      let instagram = '';
+      let facebook = '';
+      
+      const socialRegex = /\[Social Links: (\{.*?\})\]/;
+      const match = cleanAbout.match(socialRegex);
+      if (match) {
+        try {
+          const socialObj = JSON.parse(match[1]);
+          instagram = socialObj.instagram || '';
+          facebook = socialObj.facebook || '';
+          cleanAbout = cleanAbout.replace(socialRegex, '').trim();
+        } catch (e) {
+          console.error("Failed to parse fallback social links:", e);
+        }
+      }
+      return { cleanAbout, instagram, facebook };
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       // 1. Double check authentication session
       const currentUser = checkAuth();
@@ -483,7 +520,12 @@
       document.getElementById('profIncome').value = user.income || '';
       document.getElementById('profPhone').value = user.phone || '';
       document.getElementById('profLocation').value = user.location || user.thikana || 'Jaipur, Rajasthan';
-      document.getElementById('profAbout').value = user.about || '';
+      
+      const parsedSocials = parseSocialLinks(user.about);
+      document.getElementById('profAbout').value = parsedSocials.cleanAbout || '';
+      document.getElementById('profInstagram').value = user.instagram || parsedSocials.instagram || '';
+      document.getElementById('profFacebook').value = user.facebook || parsedSocials.facebook || '';
+      
       document.getElementById('profExpectations').value = user.expectations || '';
     }
 
@@ -635,6 +677,8 @@
           location: document.getElementById('profLocation').value.trim(),
           about: document.getElementById('profAbout').value.trim(),
           expectations: document.getElementById('profExpectations').value.trim(),
+          instagram: document.getElementById('profInstagram').value.trim(),
+          facebook: document.getElementById('profFacebook').value.trim(),
           profilePic: profilePicUrl,
           initials: document.getElementById('profName').value.trim().split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
         };
@@ -644,30 +688,50 @@
 
         // 4. Update Supabase profiles table
         if (window.supabaseActive) {
-          const { error } = await window.supabaseClient
+          const updatePayload = {
+            name: updatedUser.name,
+            clan: updatedUser.clan,
+            gotra: updatedUser.gotra,
+            motherGotra: updatedUser.motherGotra,
+            thikana: updatedUser.thikana,
+            gender: updatedUser.gender,
+            dob: updatedUser.dob,
+            height: updatedUser.height,
+            rashi: updatedUser.rashi,
+            manglik: updatedUser.manglik,
+            maritalStatus: updatedUser.maritalStatus,
+            education: updatedUser.education,
+            occupation: updatedUser.occupation,
+            income: updatedUser.income,
+            phone: updatedUser.phone,
+            location: updatedUser.location,
+            about: updatedUser.about,
+            expectations: updatedUser.expectations,
+            profilePic: updatedUser.profilePic,
+            instagram: updatedUser.instagram,
+            facebook: updatedUser.facebook
+          };
+
+          let { error } = await window.supabaseClient
             .from('profiles')
-            .update({
-              name: updatedUser.name,
-              clan: updatedUser.clan,
-              gotra: updatedUser.gotra,
-              motherGotra: updatedUser.motherGotra,
-              thikana: updatedUser.thikana,
-              gender: updatedUser.gender,
-              dob: updatedUser.dob,
-              height: updatedUser.height,
-              rashi: updatedUser.rashi,
-              manglik: updatedUser.manglik,
-              maritalStatus: updatedUser.maritalStatus,
-              education: updatedUser.education,
-              occupation: updatedUser.occupation,
-              income: updatedUser.income,
-              phone: updatedUser.phone,
-              location: updatedUser.location,
-              about: updatedUser.about,
-              expectations: updatedUser.expectations,
-              profilePic: updatedUser.profilePic
-            })
+            .update(updatePayload)
             .eq('id', currentUser.id);
+
+          // Graceful fallback for schema caches: if columns don't exist in Supabase yet
+          if (error && error.message && (error.message.includes("Could not find the 'facebook'") || error.message.includes("Could not find the 'instagram'"))) {
+            console.log("Supabase social columns missing; serializing into 'about' text column as fallback...");
+            delete updatePayload.instagram;
+            delete updatePayload.facebook;
+
+            const socialsObj = { instagram: updatedUser.instagram, facebook: updatedUser.facebook };
+            updatePayload.about = `${updatedUser.about} [Social Links: ${JSON.stringify(socialsObj)}]`.trim();
+
+            const retryResult = await window.supabaseClient
+              .from('profiles')
+              .update(updatePayload)
+              .eq('id', currentUser.id);
+            error = retryResult.error;
+          }
 
           if (error) {
             console.error("Supabase DB save error details:", error);

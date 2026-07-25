@@ -1212,7 +1212,26 @@ window.handleSendInterest = function(id) {
 
 // ==========================================
 // 5. PROFILE DETAIL MODAL HANDLER
-// ==========================================
+function getProfileSocials(profile) {
+  let instagram = profile.instagram || '';
+  let facebook = profile.facebook || '';
+  
+  if (profile.about) {
+    const socialRegex = /\[Social Links: (\{.*?\})\]/;
+    const match = profile.about.match(socialRegex);
+    if (match) {
+      try {
+        const socialObj = JSON.parse(match[1]);
+        if (!instagram) instagram = socialObj.instagram || '';
+        if (!facebook) facebook = socialObj.facebook || '';
+      } catch (e) {
+        console.error("Failed to parse serialized socials in app.js:", e);
+      }
+    }
+  }
+  return { instagram, facebook };
+}
+
 window.openProfileDetailModal = function(id) {
   const modal = document.getElementById('profileDetailModal');
   if (!modal) return;
@@ -1281,12 +1300,10 @@ window.openProfileDetailModal = function(id) {
   // Build the Partner Preferences side-by-side comparison tables dynamically
   renderPartnerPreferencesComparison(profile);
 
-  // Reset Lock/Unlock state
-  const unlockBox = document.getElementById('modalUnlockBox');
-  const unlockedDetails = document.getElementById('modalUnlockedDetails');
-  
   unlockBox.style.display = 'block';
   unlockedDetails.classList.remove('active');
+  const socialsItem = document.getElementById('unlockedSocialsItem');
+  if (socialsItem) socialsItem.style.display = 'none';
 
   // Trigger click event for Unlock contact details
   const unlockBtn = document.getElementById('unlockContactBtn');
@@ -1307,9 +1324,46 @@ window.openProfileDetailModal = function(id) {
       unlockedDetails.classList.add('active');
       
       // Simulate authentic details based on seed data
-      document.getElementById('unlockedPhone').textContent = `+91 9116${Math.floor(100000 + Math.random() * 900000)}`;
-      document.getElementById('unlockedEmail').textContent = `${profile.name.toLowerCase().replace(/\s/g, '.')}@sagaisambaandh-member.com`;
+      document.getElementById('unlockedPhone').textContent = profile.phone || `+91 9116${Math.floor(100000 + Math.random() * 900000)}`;
+      document.getElementById('unlockedEmail').textContent = profile.email || `${profile.name.toLowerCase().replace(/\s/g, '.')}@sagaisambaandh-member.com`;
       document.getElementById('unlockedAddress').textContent = `${profile.location}, India`;
+      
+      // Render socials if profile has them
+      const socials = getProfileSocials(profile);
+      const socialsContainer = document.getElementById('unlockedSocials');
+      if (socialsItem && socialsContainer) {
+        if (socials.instagram || socials.facebook) {
+          socialsItem.style.display = 'block';
+          let html = '';
+          if (socials.instagram) {
+            let url = socials.instagram;
+            if (!url.startsWith('http')) {
+              url = 'https://instagram.com/' + url.replace('@', '').trim();
+            }
+            html += `
+              <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--gold-bright); display: flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; font-size: 0.85rem; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.25);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="color: var(--gold-antique);"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+                Instagram
+              </a>
+            `;
+          }
+          if (socials.facebook) {
+            let url = socials.facebook;
+            if (!url.startsWith('http')) {
+              url = 'https://facebook.com/' + url.trim();
+            }
+            html += `
+              <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--gold-bright); display: flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; font-size: 0.85rem; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.25);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="color: var(--gold-antique);"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg>
+                Facebook
+              </a>
+            `;
+          }
+          socialsContainer.innerHTML = html;
+        } else {
+          socialsItem.style.display = 'none';
+        }
+      }
       
       showToast('Lineage details decrypted successfully!', 'gold');
     }, 1200);
