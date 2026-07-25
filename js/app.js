@@ -389,7 +389,7 @@ function initLoginPage() {
         const demoUser = {
           name: 'Kunwar Shivraj Singh',
           gender: 'Groom',
-          email: 'royal@sagaisambaandh.com',
+          email: 'royal@shreerajputsagaisambandh.com',
           caste: 'Rajput',
           clan: 'Rathore',
           age: 28,
@@ -472,7 +472,7 @@ function initLoginPage() {
     }
 
     // Standard static credentials for seed testing (Fallback mode)
-    if ((email === 'royal@sagaisambaandh.com' || email === 'royal@lifepartnerconnects.com') && password === 'royal123') {
+    if ((email === 'royal@shreerajputsagaisambandh.com' || email === 'royal@lifepartnerconnects.com') && password === 'royal123') {
       const demoUser = {
         name: 'Kunwar Shivraj Singh',
         gender: 'Groom',
@@ -502,7 +502,7 @@ function initLoginPage() {
         window.location.href = 'dashboard.html';
       }, 1200);
     } else {
-      showToast('Invalid credentials. Try royal@sagaisambaandh.com / royal123', 'normal');
+      showToast('Invalid credentials. Try royal@shreerajputsagaisambandh.com / royal123', 'normal');
     }
   });
 }

@@ -2115,10 +2115,19 @@ footer {
   transition: var(--transition);
 }
 
+.paywall-plan-option strong {
+  color: var(--text-white) !important;
+  transition: var(--transition);
+}
+
 .paywall-plan-option:hover, .paywall-plan-option.selected {
   border-color: var(--primary-color);
   box-shadow: var(--shadow-gold);
   background-color: #FFFDF9;
+}
+
+.paywall-plan-option:hover strong, .paywall-plan-option.selected strong {
+  color: var(--primary-color) !important;
 }
 
 /* Business Add-Ons Grid */
@@ -3939,12 +3948,12 @@ footer {
 }
 
 .modal-tab-btn:hover {
-  color: var(--primary-color);
+  color: var(--text-white);
 }
 
 .modal-tab-btn.active {
-  color: var(--primary-color) !important;
-  border-bottom-color: var(--primary-color) !important;
+  color: var(--text-white) !important;
+  border-bottom-color: var(--gold-bright) !important;
   font-weight: 700 !important;
 }
 

@@ -2,38 +2,104 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Homepage -->
   <url>
-    <loc>https://sagaisambaandh.com/</loc>
-    <lastmod>2026-07-23</lastmod>
+    <loc>https://shreerajputsagaisambandh.com/</loc>
+    <lastmod>2026-07-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.00</priority>
   </url>
   <url>
-    <loc>https://sagaisambaandh.com/index.html</loc>
-    <lastmod>2026-07-23</lastmod>
+    <loc>https://shreerajputsagaisambandh.com/index.html</loc>
+    <lastmod>2026-07-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.90</priority>
   </url>
 
   <!-- Plans / Membership -->
   <url>
-    <loc>https://sagaisambaandh.com/membership.html</loc>
-    <lastmod>2026-07-23</lastmod>
+    <loc>https://shreerajputsagaisambandh.com/membership.html</loc>
+    <lastmod>2026-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
 
   <!-- Login -->
   <url>
-    <loc>https://sagaisambaandh.com/login.html</loc>
-    <lastmod>2026-07-23</lastmod>
+    <loc>https://shreerajputsagaisambandh.com/login.html</loc>
+    <lastmod>2026-07-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.50</priority>
   </url>
 
   <!-- Registration -->
   <url>
-    <loc>https://sagaisambaandh.com/register.html</loc>
-    <lastmod>2026-07-23</lastmod>
+    <loc>https://shreerajputsagaisambandh.com/register.html</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+
+  <!-- Clan Landing Pages -->
+  <url>
+    <loc>https://shreerajputsagaisambandh.com/rathore.html</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://shreerajputsagaisambandh.com/sisodia.html</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://shreerajputsagaisambandh.com/chauhan.html</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://shreerajputsagaisambandh.com/bhati.html</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://shreerajputsagaisambandh.com/kachwaha.html</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://shreerajputsagaisambandh.com/shekhawat.html</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <!-- Blog Listing -->
+  <url>
+    <loc>https://shreerajputsagaisambandh.com/blog.html</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <!-- Blog Articles -->
+  <url>
+    <loc>https://shreerajputsagaisambandh.com/blog/rajput-wedding-traditions.html</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://shreerajputsagaisambandh.com/blog/gotra-importance-rajput-marriage.html</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://shreerajputsagaisambandh.com/blog/rajput-matrimony-tips.html</loc>
+    <lastmod>2026-07-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
