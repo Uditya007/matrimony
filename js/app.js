@@ -52,13 +52,63 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('currentUser', JSON.stringify(profile));
             updateNavigationState();
             
-            // Auto redirect homepage if logged in
+            // Auto redirect landing/auth pages if logged in
             const path = window.location.pathname;
             const pageRaw = path.split('/').pop() || 'index.html';
             const page = pageRaw.split('?')[0].split('#')[0];
-            if (page === 'index.html' || page === '' || page === 'index') {
+            if (page === 'index.html' || page === '' || page === 'index' || page === 'login.html' || page === 'login' || page === 'register.html' || page === 'register') {
               window.location.href = 'dashboard.html';
             }
+          } else {
+            // New Google/OAuth sign up! Create a default profile row in profiles table.
+            const userMetadata = session.user.user_metadata || {};
+            const fullName = userMetadata.full_name || userMetadata.name || 'Noble Member';
+            const defaultProfile = {
+              id: session.user.id,
+              name: fullName,
+              email: session.user.email,
+              gender: 'Groom', // default placeholder
+              age: 25,
+              dob: '1998-06-15',
+              religion: 'Hindu',
+              caste: 'Rajput',
+              clan: 'Rathore',
+              gotra: 'Not Specified',
+              motherGotra: 'Not Specified',
+              thikana: 'Not Specified',
+              height: "5'8\"",
+              location: 'Rajasthan, India',
+              familyType: 'Traditional',
+              about: 'Proud descendant of a noble Rajput lineage.',
+              expectations: 'Seeking gotra-compatible Rajput matches.',
+              tier: 'Starter',
+              phone: ''
+            };
+
+            const { data: newProfile, error: insertError } = await window.supabaseClient
+              .from('profiles')
+              .insert([defaultProfile])
+              .select()
+              .maybeSingle();
+
+            if (!insertError && newProfile) {
+              localStorage.setItem('currentUser', JSON.stringify(newProfile));
+              updateNavigationState();
+              showToast('Khammaghani! Setting up your noble profile...', 'gold');
+              setTimeout(() => {
+                window.location.href = 'profile.html'; // Send to edit profile to complete setup!
+              }, 1500);
+            } else if (insertError) {
+              console.error("Failed to create default OAuth profile:", insertError);
+            }
+          }
+        } else {
+          // If cachedUser already exists, still auto-redirect from login/register pages
+          const path = window.location.pathname;
+          const pageRaw = path.split('/').pop() || 'index.html';
+          const page = pageRaw.split('?')[0].split('#')[0];
+          if (page === 'login.html' || page === 'login' || page === 'register.html' || page === 'register') {
+            window.location.href = 'dashboard.html';
           }
         }
       }
