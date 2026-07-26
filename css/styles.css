@@ -3016,11 +3016,11 @@ footer {
   right: 30px;
   width: 350px;
   height: 480px;
-  background: var(--bg-body);
+  background: var(--primary-dark);
   border: 1.5px solid var(--gold-antique);
   border-radius: 16px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-  z-index: 99998;
+  z-index: 99999;
   display: none; /* toggled active */
   flex-direction: column;
   overflow: hidden;
@@ -3224,7 +3224,7 @@ footer {
 
 .chat-input-area input {
   flex: 1;
-  background-color: var(--bg-body);
+  background-color: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(170, 124, 17, 0.25);
   border-radius: 24px;
   padding: 8px 16px;

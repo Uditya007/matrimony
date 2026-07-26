@@ -1403,7 +1403,8 @@ window.openOneOnOneChat = function(profileId) {
     chatBox = document.createElement('div');
     chatBox.id = 'oneOnOneChatWindow';
     chatBox.className = 'royal-chatbot-window'; // Reuse chatbot styles for aesthetic consistency!
-    chatBox.style.zIndex = '1000'; // Make sure it sits on top
+    chatBox.style.background = 'var(--primary-dark)';
+    chatBox.style.zIndex = '99999'; // Make sure it sits on top of everything
     document.body.appendChild(chatBox);
   }
 
