@@ -141,6 +141,21 @@ document.addEventListener('DOMContentLoaded', () => {
 // 1. HELPER FUNCTIONS
 // ==========================================
 
+// Gender normalization & matching helpers
+function normalizeGender(genderStr) {
+  if (!genderStr) return 'Groom';
+  const g = genderStr.trim().toLowerCase();
+  if (g.startsWith('f') || g === 'bride' || g === 'ladi') {
+    return 'Bride';
+  }
+  return 'Groom';
+}
+
+function getOppositeGender(genderStr) {
+  const normalized = normalizeGender(genderStr);
+  return normalized === 'Groom' ? 'Bride' : 'Groom';
+}
+
 // Stateful navbar updater
 function updateNavigationState() {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -900,12 +915,11 @@ async function initDashboardPage() {
 
     sessionStorage.removeItem('quickSearch'); // Clean up
   } else {
-    if (currentUser.gender === 'Groom') {
-      activeFilters.gender = 'Bride';
-      document.getElementById('filterGender').value = 'Bride';
-    } else if (currentUser.gender === 'Bride') {
-      activeFilters.gender = 'Groom';
-      document.getElementById('filterGender').value = 'Groom';
+    const targetGender = getOppositeGender(currentUser.gender);
+    activeFilters.gender = targetGender;
+    const filterGenderEl = document.getElementById('filterGender');
+    if (filterGenderEl) {
+      filterGenderEl.value = targetGender;
     }
   }
 
@@ -1022,11 +1036,13 @@ function renderMatchesGrid() {
   const container = document.getElementById('matchesGrid');
   if (!container) return;
 
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   const profiles = getAllProfiles();
   const shortlists = JSON.parse(localStorage.getItem('shortlisted')) || [];
 
   const filtered = profiles.filter(profile => {
-    if (activeFilters.gender !== 'All' && profile.gender !== activeFilters.gender) return false;
+    if (currentUser && profile.id === currentUser.id) return false;
+    if (activeFilters.gender !== 'All' && normalizeGender(profile.gender) !== normalizeGender(activeFilters.gender)) return false;
     if (activeFilters.caste !== 'All' && profile.caste !== activeFilters.caste) return false;
     
     if (activeFilters.age !== 'All') {
@@ -1046,7 +1062,6 @@ function renderMatchesGrid() {
     return true;
   });
 
-  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   if (currentUser && currentUser.caste && activeFilters.caste === 'All') {
     filtered.sort((a, b) => {
       if (a.caste === currentUser.caste && b.caste !== currentUser.caste) return -1;
@@ -1499,8 +1514,8 @@ function populateOnlineSidebar(currentUser) {
 
   const allProfiles = getAllProfiles();
   // Filter for opposite gender matches
-  const oppositeGender = currentUser.gender === 'Groom' ? 'Bride' : 'Groom';
-  const matches = allProfiles.filter(p => p.gender === oppositeGender && p.id !== currentUser.id);
+  const oppositeGender = getOppositeGender(currentUser.gender);
+  const matches = allProfiles.filter(p => normalizeGender(p.gender) === oppositeGender && p.id !== currentUser.id);
 
   // Take 6 random candidates
   const shuffled = [...matches].sort(() => 0.5 - Math.random());
