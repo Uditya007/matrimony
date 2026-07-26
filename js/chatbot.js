@@ -79,6 +79,10 @@
       windowPanel.classList.toggle('active');
       if (windowPanel.classList.contains('active')) {
         chatInput.focus();
+        // Close one-on-one chat if active
+        if (typeof closeOneOnOneChat === 'function') {
+          closeOneOnOneChat();
+        }
         // Remove pulse trigger ring once opened
         const pulse = trigger.querySelector('.pulse-ring');
         if (pulse) pulse.remove();

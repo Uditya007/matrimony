@@ -1113,6 +1113,7 @@ function createProfileCardHtml(profile, isDashboard = true) {
   const interests = JSON.parse(localStorage.getItem('interests')) || {};
   const isShortlisted = shortlists.includes(profile.id);
   const hasSentInterest = !!interests[profile.id];
+  const isAccepted = interests[profile.id] === 'accepted';
   const isLoggedIn = !!localStorage.getItem('currentUser');
 
   // Business badges: Recently Active, Verified Shield, and AI score overlay
@@ -1162,7 +1163,7 @@ function createProfileCardHtml(profile, isDashboard = true) {
       <svg class="jharokha-border" viewBox="0 0 100 125" preserveAspectRatio="none">
         <path d="M 50,2 C 65,14 85,17 90,32 C 95,47 98,57 98,98 L 2,98 C 2,57 5,47 10,32 C 15,17 35,14 50,2 Z" fill="none" stroke="var(--gold-antique)" stroke-width="2" />
       </svg>
-
+ 
       <span class="profile-gender-badge ${profile.gender === 'Groom' ? 'badge-groom' : 'badge-bride'}">${profile.gender}</span>
       ${aiScoreBadge}
       <div class="profile-details-preview">
@@ -1171,6 +1172,27 @@ function createProfileCardHtml(profile, isDashboard = true) {
       </div>
     </div>
   `;
+
+  let interestBtnHtml = '';
+  if (isAccepted) {
+    interestBtnHtml = `
+      <button onclick="openOneOnOneChat('${profile.id}')" class="btn btn-royal" style="font-size: 0.8rem; background: var(--gold-gradient); color: var(--primary-color); border: none; font-weight: bold; padding: 10px 14px;">
+        Chat Now 💬
+      </button>
+    `;
+  } else if (hasSentInterest) {
+    interestBtnHtml = `
+      <button class="btn btn-royal" style="font-size: 0.8rem; opacity: 0.7; pointer-events: none;" disabled>
+        Interest Sent ✓
+      </button>
+    `;
+  } else {
+    interestBtnHtml = `
+      <button onclick="handleSendInterest('${profile.id}')" class="btn btn-royal" style="font-size: 0.8rem;">
+        Send Interest
+      </button>
+    `;
+  }
 
   return `
     <div class="profile-card" data-id="${profile.id}">
@@ -1203,9 +1225,7 @@ function createProfileCardHtml(profile, isDashboard = true) {
           <button onclick="handleShortlist('${profile.id}')" class="btn btn-minimal" style="padding: 10px;" title="Shortlist Match">
             ${isShortlisted ? '❤️' : '🤍'}
           </button>
-          <button onclick="handleSendInterest('${profile.id}')" class="btn btn-royal" style="font-size: 0.8rem;">
-            ${hasSentInterest ? 'Interest Sent ✓' : 'Send Interest'}
-          </button>
+          ${interestBtnHtml}
           <button onclick="openProfileDetailModal('${profile.id}')" class="btn btn-primary" style="font-size: 0.8rem;">
             Details
           </button>
@@ -1237,7 +1257,10 @@ function updateDashboardStats() {
   if (actInt) actInt.textContent = Object.keys(interests).length;
 
   const actChats = document.getElementById('dashboardActivityChats');
-  if (actChats) actChats.textContent = Math.max(0, shortlists.length - 1); // Mock active chats based on shortlist count
+  if (actChats) {
+    const acceptedCount = Object.values(interests).filter(val => val === 'accepted').length;
+    actChats.textContent = acceptedCount;
+  }
 }
 
 // Shortlisting handler
@@ -1267,12 +1290,185 @@ window.handleSendInterest = function(id) {
     return;
   }
 
-  interests[id] = Date.now();
+  // 1. Mark as sent
+  interests[id] = 'sent';
   localStorage.setItem('interests', JSON.stringify(interests));
   showToast('Royal Match Interest dispatched successfully!', 'gold');
   
   updateDashboardStats();
   renderMatchesGrid();
+
+  // 2. Fetch profile info
+  const profiles = getAllProfiles();
+  const targetProfile = profiles.find(p => p.id === id);
+  const profileName = targetProfile ? targetProfile.name : 'Match';
+
+  // 3. Simulate accepted status after 5 seconds
+  setTimeout(() => {
+    // Reload latest interests
+    let currentInterests = JSON.parse(localStorage.getItem('interests')) || {};
+    if (currentInterests[id] === 'sent') {
+      currentInterests[id] = 'accepted';
+      localStorage.setItem('interests', JSON.stringify(currentInterests));
+
+      // Trigger standard toast notification
+      showToast(`Notification: ${profileName} accepted your Royal Interest! Chat is now unlocked!`, 'gold');
+
+      // Update dashboard stats and refresh matches grid to reveal "Chat Now 💬" button
+      updateDashboardStats();
+      renderMatchesGrid();
+    }
+  }, 5000);
+};
+
+// One-on-One chat window overlay handlers
+window.openOneOnOneChat = function(profileId) {
+  // Close any existing chatbot window first
+  const chatbotWindow = document.getElementById('royalChatbotWindow');
+  if (chatbotWindow) chatbotWindow.classList.remove('active');
+
+  const profiles = getAllProfiles();
+  const profile = profiles.find(p => p.id === profileId);
+  if (!profile) return;
+
+  // Check if chat container already exists
+  let chatBox = document.getElementById('oneOnOneChatWindow');
+  if (!chatBox) {
+    chatBox = document.createElement('div');
+    chatBox.id = 'oneOnOneChatWindow';
+    chatBox.className = 'royal-chatbot-window'; // Reuse chatbot styles for aesthetic consistency!
+    chatBox.style.zIndex = '1000'; // Make sure it sits on top
+    document.body.appendChild(chatBox);
+  }
+
+  // Create avatar HTML
+  let avatarHtml = '';
+  if (profile.profilePic && !profile.profilePic.startsWith('mock_')) {
+    avatarHtml = `<img src="${profile.profilePic}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
+  } else if (profile.img) {
+    avatarHtml = `<img src="${profile.img}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
+  } else {
+    avatarHtml = `<div class="profile-avatar-placeholder" style="font-size: 1.1rem; color: var(--text-white); font-weight: bold; width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${profile.initials}</div>`;
+  }
+
+  // Setup the layout
+  chatBox.innerHTML = `
+    <div class="chat-header">
+      <div class="header-avatar" style="background: ${getAvatarGradient(profile.clan)}; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; border: 1.5px solid var(--gold-antique); overflow:hidden;">
+        ${avatarHtml}
+      </div>
+      <div class="header-info">
+        <h3>${profile.name}</h3>
+        <span class="header-status">Online</span>
+      </div>
+      <button onclick="closeOneOnOneChat()" class="btn-close-chat" aria-label="Close Chat">×</button>
+    </div>
+    
+    <div id="oneOnOneMessages" class="chat-messages" style="height: 280px; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px;">
+      <div class="message bot-message" style="margin-bottom: 10px;">
+        <div class="message-bubble" style="background-color: rgba(255,255,255,0.06); border: 1px solid rgba(170,124,17,0.25); color: var(--text-white); padding: 8px 12px; border-radius: 12px; max-width: 80%;">
+          Khammaghani! Thank you for sending interest. I have reviewed your Gotra compatibility and would love to connect. What are your thikanas?
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-area" style="padding: 10px; display: flex; gap: 8px; border-top: 1px solid rgba(170,124,17,0.15); background-color: var(--bg-dark);">
+      <input type="text" id="oneOnOneInput" placeholder="Write to ${profile.name.split(' ')[0]}..." style="flex: 1; padding: 8px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.3); background-color: var(--bg-card); color: var(--text-dark); font-size: 0.85rem;" onkeypress="handleOneOnOneKeyPress(event, '${profileId}')">
+      <button onclick="sendOneOnOneMessage('${profileId}')" class="btn btn-royal" style="padding: 8px 15px; font-size: 0.8rem;" aria-label="Send Message">
+        Send
+      </button>
+    </div>
+  `;
+
+  // Open the window
+  chatBox.classList.add('active');
+  
+  // Focus input
+  const inputEl = document.getElementById('oneOnOneInput');
+  if (inputEl) inputEl.focus();
+};
+
+window.closeOneOnOneChat = function() {
+  const chatBox = document.getElementById('oneOnOneChatWindow');
+  if (chatBox) chatBox.classList.remove('active');
+};
+
+window.handleOneOnOneKeyPress = function(e, profileId) {
+  if (e.key === 'Enter') {
+    sendOneOnOneMessage(profileId);
+  }
+};
+
+window.sendOneOnOneMessage = function(profileId) {
+  const inputEl = document.getElementById('oneOnOneInput');
+  if (!inputEl) return;
+  const text = inputEl.value.trim();
+  if (!text) return;
+
+  const messagesContainer = document.getElementById('oneOnOneMessages');
+  if (!messagesContainer) return;
+
+  // 1. Add user message
+  const userMsgDiv = document.createElement('div');
+  userMsgDiv.className = 'message user-message';
+  userMsgDiv.style.alignSelf = 'flex-end';
+  userMsgDiv.style.marginBottom = '10px';
+  userMsgDiv.innerHTML = `
+    <div class="message-bubble" style="background-color: var(--primary-color); border: 1px solid var(--gold-antique); color: var(--text-white); padding: 8px 12px; border-radius: 12px; max-width: 80%; word-break: break-word; float: right; clear: both;">
+      ${text}
+    </div>
+  `;
+  messagesContainer.appendChild(userMsgDiv);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  // Clear input
+  inputEl.value = '';
+
+  // 2. Simulate response
+  const profiles = getAllProfiles();
+  const profile = profiles.find(p => p.id === profileId);
+  const matchName = profile ? profile.name.split(' ')[0] : 'Match';
+
+  // Add typing indicator
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'message bot-message typing-indicator';
+  typingDiv.style.marginBottom = '10px';
+  typingDiv.innerHTML = `
+    <div class="message-bubble" style="background-color: rgba(255,255,255,0.04); border: 1px solid rgba(170,124,17,0.15); color: var(--text-muted); font-style: italic; padding: 6px 12px; border-radius: 12px; max-width: 80%; float: left; clear: both;">
+      ${matchName} is typing...
+    </div>
+  `;
+  messagesContainer.appendChild(typingDiv);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  setTimeout(() => {
+    // Remove typing indicator
+    typingDiv.remove();
+
+    // Determine custom smart response
+    let responseText = '';
+    const query = text.toLowerCase();
+    if (query.includes('gotra') || query.includes('gothra')) {
+      responseText = `My father's gotra is ${profile.gotra.split(' (')[0]}. It is highly compatible with yours under traditional parameters!`;
+    } else if (query.includes('location') || query.includes('where') || query.includes('city') || query.includes('live')) {
+      responseText = `I reside in ${profile.location.split(',')[0]}. What about your family?`;
+    } else if (query.includes('education') || query.includes('job') || query.includes('occupation')) {
+      responseText = `I work as a ${profile.occupation}. Education and career are very important to our family.`;
+    } else {
+      responseText = `That sounds very promising. We should connect our parents next for gotra validation and family background discussion.`;
+    }
+
+    const botMsgDiv = document.createElement('div');
+    botMsgDiv.className = 'message bot-message';
+    botMsgDiv.style.marginBottom = '10px';
+    botMsgDiv.innerHTML = `
+      <div class="message-bubble" style="background-color: rgba(255,255,255,0.06); border: 1px solid rgba(170,124,17,0.25); color: var(--text-white); padding: 8px 12px; border-radius: 12px; max-width: 80%; float: left; clear: both;">
+        ${responseText}
+      </div>
+    `;
+    messagesContainer.appendChild(botMsgDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }, 1800);
 };
 
 // ==========================================
