@@ -156,7 +156,6 @@ function getOppositeGender(genderStr) {
   return normalized === 'Groom' ? 'Bride' : 'Groom';
 }
 
-// Stateful navbar updater
 function updateNavigationState() {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   const authContainer = document.getElementById('navAuthButtons');
@@ -167,13 +166,29 @@ function updateNavigationState() {
   if (currentUser) {
     const tier = currentUser.tier || 'Starter';
     html = `
-      <span style="font-size: 0.9rem; font-weight: 500; font-family: var(--font-royal); color: var(--primary-color); display: flex; align-items: center; gap: 8px; margin-left: 40px;">
+      <!-- Dynamic Royal Notification Bell -->
+      <div class="notification-bell-container" id="navNotificationBell" style="position: relative; margin-right: 25px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.03); border: 1px solid rgba(170,124,17,0.2); transition: all 0.3s;" onmouseover="this.style.background='rgba(170,124,17,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--gold-antique);"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9zM13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notification-badge" id="navNotificationBadge" style="position: absolute; top: -2px; right: -2px; background: #C41E3A; color: white; border-radius: 50%; font-size: 0.65rem; width: 14px; height: 14px; display: none; align-items: center; justify-content: center; font-weight: bold; border: 1px solid var(--primary-dark);">0</span>
+        
+        <!-- Notification Dropdown -->
+        <div class="notification-dropdown" id="navNotificationDropdown" style="display: none; position: absolute; top: 40px; right: 0; background: var(--primary-dark); border: 1.5px solid var(--gold-antique); border-radius: var(--border-radius); box-shadow: var(--shadow-royal); width: 290px; z-index: 1100; max-height: 350px; overflow-y: auto;">
+          <div style="padding: 12px 15px; border-bottom: 1.5px solid rgba(170,124,17,0.25); font-weight: bold; color: var(--gold-bright); font-size: 0.85rem; font-family: var(--font-royal); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.15);">
+            <span>Royal Notifications</span>
+          </div>
+          <div id="notificationList" style="padding: 5px 0;">
+            <div style="padding: 20px 15px; text-align: center; color: var(--text-muted); font-size: 0.8rem;">No notifications yet.</div>
+          </div>
+        </div>
+      </div>
+
+      <span style="font-size: 0.9rem; font-weight: 500; font-family: var(--font-royal); color: var(--primary-color); display: flex; align-items: center; gap: 8px; margin-right: 15px;">
         Khammaghani, <strong style="color: var(--gold-antique);">${currentUser.name.split(' ')[0]}</strong>
         <span style="font-size: 0.7rem; font-family: var(--font-body); padding: 2px 10px; background-color: var(--gold-light); border: 1px solid var(--gold-antique); border-radius: 12px; color: var(--primary-color); font-weight: bold;">
           ${tier} Plan
         </span>
       </span>
-      <a href="dashboard.html" class="btn btn-minimal">Dashboard</a>
+      <a href="dashboard.html" class="btn btn-minimal" style="margin-right: 8px;">Dashboard</a>
       <button onclick="handleLogout()" class="btn btn-primary">Logout</button>
     `;
   } else {
@@ -184,6 +199,40 @@ function updateNavigationState() {
   }
 
   authContainer.innerHTML = html;
+
+  // Initialize event listeners for the notifications dropdown
+  if (currentUser) {
+    const bell = document.getElementById('navNotificationBell');
+    const dropdown = document.getElementById('navNotificationDropdown');
+    if (bell && dropdown) {
+      bell.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        
+        // Clear unread indicator badge on click
+        const badge = document.getElementById('navNotificationBadge');
+        if (badge) {
+          badge.style.display = 'none';
+        }
+        
+        // Mark all as read when opening dropdown
+        let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+        notifications = notifications.map(n => ({ ...n, read: true }));
+        localStorage.setItem('notifications', JSON.stringify(notifications));
+      });
+
+      document.addEventListener('click', () => {
+        dropdown.style.display = 'none';
+      });
+      
+      // Render notifications
+      setTimeout(() => {
+        if (typeof renderNotifications === 'function') {
+          renderNotifications();
+        }
+      }, 50);
+    }
+  }
 
   // Also sync state with mobile drawer container if present
   const mobileAuth = document.getElementById('mobileNavAuth');
@@ -1314,6 +1363,23 @@ window.handleSendInterest = function(id) {
       // Trigger standard toast notification
       showToast(`Notification: ${profileName} accepted your Royal Interest! Chat is now unlocked!`, 'gold');
 
+      // Save notification to localStorage
+      let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+      const newNotif = {
+        id: Date.now(),
+        message: `${profileName} accepted your Royal Interest! Click to chat.`,
+        profileId: id,
+        timestamp: 'Just now',
+        read: false
+      };
+      notifications.unshift(newNotif);
+      localStorage.setItem('notifications', JSON.stringify(notifications));
+
+      // Refresh notification badge & list
+      if (typeof renderNotifications === 'function') {
+        renderNotifications();
+      }
+
       // Update dashboard stats and refresh matches grid to reveal "Chat Now 💬" button
       updateDashboardStats();
       renderMatchesGrid();
@@ -2139,6 +2205,180 @@ window.handleProfileUpdateSubmit = async function(event) {
       saveBtn.textContent = 'Save Profile Changes';
     }
   }
+};
+
+// Royal Notifications List rendering
+window.renderNotifications = function() {
+  const notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+  const listContainer = document.getElementById('notificationList');
+  const badge = document.getElementById('navNotificationBadge');
+
+  if (!listContainer) return;
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+  if (badge) {
+    if (unreadCount > 0) {
+      badge.textContent = unreadCount;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  if (notifications.length === 0) {
+    listContainer.innerHTML = `
+      <div style="padding: 20px 15px; text-align: center; color: var(--text-muted); font-size: 0.8rem;">No notifications yet.</div>
+    `;
+    return;
+  }
+
+  listContainer.innerHTML = notifications.map(n => `
+    <div onclick="handleNotificationClick(${n.id}, '${n.profileId}')" style="padding: 10px 15px; border-bottom: 1px solid rgba(170,124,17,0.1); cursor: pointer; background: ${n.read ? 'transparent' : 'rgba(170,124,17,0.06)'}; transition: background 0.2s; text-align: left;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='${n.read ? 'transparent' : 'rgba(170,124,17,0.06)'}'">
+      <div style="color: var(--text-white); font-size: 0.82rem; line-height: 1.3; margin-bottom: 3px;">${n.message}</div>
+      <div style="color: var(--text-muted); font-size: 0.7rem;">${n.timestamp}</div>
+    </div>
+  `).join('');
+};
+
+window.handleNotificationClick = function(notifId, profileId) {
+  // Mark as read
+  let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+  notifications = notifications.map(n => n.id === notifId ? { ...n, read: true } : n);
+  localStorage.setItem('notifications', JSON.stringify(notifications));
+  
+  // Render updates
+  renderNotifications();
+
+  // Close dropdown
+  const dropdown = document.getElementById('navNotificationDropdown');
+  if (dropdown) dropdown.style.display = 'none';
+
+  // Open chat!
+  openOneOnOneChat(profileId);
+};
+
+// Dynamic Modals for Chats Active and Interests Sent Click events
+window.openChatsModal = function() {
+  const interests = JSON.parse(localStorage.getItem('interests')) || {};
+  const acceptedIds = Object.keys(interests).filter(id => interests[id] === 'accepted');
+  const profiles = getAllProfiles();
+  const activeMatches = profiles.filter(p => acceptedIds.includes(p.id));
+
+  let listHtml = '';
+  if (activeMatches.length === 0) {
+    listHtml = `
+      <div style="text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">
+        No active connections yet. <br>
+        <span style="color: var(--gold-bright);">Send interest to compatible matches to unlock direct chats!</span>
+      </div>
+    `;
+  } else {
+    listHtml = activeMatches.map(p => `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid rgba(170,124,17,0.15); background: rgba(255,255,255,0.02); margin-bottom: 8px; border-radius: 4px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--gold-antique); overflow: hidden; background: ${getAvatarGradient(p.clan)}; display: flex; align-items: center; justify-content: center;">
+            ${p.img ? `<img src="${p.img}" style="width:100%; height:100%; object-fit:cover;" />` : `<span style="font-size:0.9rem; font-weight:bold; color:#fff;">${p.initials}</span>`}
+          </div>
+          <div style="text-align: left;">
+            <div style="font-weight: bold; color: var(--text-white); font-size: 0.88rem;">${p.name}</div>
+            <div style="font-size: 0.72rem; color: var(--gold-bright);">${p.clan} Clan • Gotra: ${p.gotra}</div>
+          </div>
+        </div>
+        <button onclick="closeInterestsOrChatsModal(); openOneOnOneChat('${p.id}')" class="btn btn-royal" style="padding: 6px 12px; font-size: 0.75rem; background: var(--gold-gradient); color: var(--primary-color); border: none; font-weight: bold; border-radius: 4px;">
+          Chat Now 💬
+        </button>
+      </div>
+    `).join('');
+  }
+
+  showInterestsOrChatsModal('Active Connections (Chats)', listHtml);
+};
+
+window.openInterestsModal = function() {
+  const interests = JSON.parse(localStorage.getItem('interests')) || {};
+  const sentIds = Object.keys(interests);
+  const profiles = getAllProfiles();
+  const interestedMatches = profiles.filter(p => sentIds.includes(p.id));
+
+  let listHtml = '';
+  if (interestedMatches.length === 0) {
+    listHtml = `
+      <div style="text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.85rem;">
+        You have not sent interests to any profiles yet.
+      </div>
+    `;
+  } else {
+    listHtml = interestedMatches.map(p => {
+      const status = interests[p.id];
+      const isAccepted = status === 'accepted';
+      return `
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid rgba(170,124,17,0.15); background: rgba(255,255,255,0.02); margin-bottom: 8px; border-radius: 4px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--gold-antique); overflow: hidden; background: ${getAvatarGradient(p.clan)}; display: flex; align-items: center; justify-content: center;">
+              ${p.img ? `<img src="${p.img}" style="width:100%; height:100%; object-fit:cover;" />` : `<span style="font-size:0.9rem; font-weight:bold; color:#fff;">${p.initials}</span>`}
+            </div>
+            <div style="text-align: left;">
+              <div style="font-weight: bold; color: var(--text-white); font-size: 0.88rem;">${p.name}</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">${p.clan} Clan • Gotra: ${p.gotra}</div>
+            </div>
+          </div>
+          <div>
+            ${isAccepted ? `
+              <button onclick="closeInterestsOrChatsModal(); openOneOnOneChat('${p.id}')" class="btn btn-royal" style="padding: 6px 12px; font-size: 0.75rem; background: var(--gold-gradient); color: var(--primary-color); border: none; font-weight: bold; border-radius: 4px;">
+                Chat Now 💬
+              </button>
+            ` : `
+              <span style="font-size: 0.72rem; color: var(--gold-bright); font-weight: 500; background: rgba(170,124,17,0.08); padding: 5px 10px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.2); display: inline-block;">
+                Pending Acceptance...
+              </span>
+            `}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  showInterestsOrChatsModal('Interests Sent', listHtml);
+};
+
+window.showInterestsOrChatsModal = function(title, contentHtml) {
+  let modalOverlay = document.getElementById('interestsChatsModalOverlay');
+  if (!modalOverlay) {
+    modalOverlay = document.createElement('div');
+    modalOverlay.id = 'interestsChatsModalOverlay';
+    modalOverlay.style.cssText = `
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    `;
+    modalOverlay.onclick = function(e) {
+      if (e.target === modalOverlay) closeInterestsOrChatsModal();
+    };
+    document.body.appendChild(modalOverlay);
+  }
+
+  modalOverlay.innerHTML = `
+    <div style="background: var(--primary-dark); border: 2.5px solid var(--gold-antique); border-radius: var(--border-radius-lg); width: 90%; max-width: 480px; box-shadow: var(--shadow-royal); overflow: hidden; display: flex; flex-direction: column; max-height: 80vh;">
+      <div style="padding: 15px 20px; background: rgba(0,0,0,0.2); border-bottom: 1.5px solid rgba(170,124,17,0.25); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-family: var(--font-royal); color: var(--gold-bright); font-size: 1.15rem; margin: 0;">${title}</h3>
+        <button onclick="closeInterestsOrChatsModal()" style="background: none; border: none; color: var(--gold-bright); font-size: 1.8rem; cursor: pointer; line-height: 1; padding: 0;">&times;</button>
+      </div>
+      <div style="padding: 20px; overflow-y: auto; flex: 1; font-family: var(--font-body);">
+        ${contentHtml}
+      </div>
+    </div>
+  `;
+  modalOverlay.style.display = 'flex';
+};
+
+window.closeInterestsOrChatsModal = function() {
+  const modalOverlay = document.getElementById('interestsChatsModalOverlay');
+  if (modalOverlay) modalOverlay.style.display = 'none';
 };
 
 
