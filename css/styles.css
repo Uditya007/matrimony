@@ -4235,3 +4235,42 @@ footer {
   border: 2px solid #FFFFFF !important;
 }
 
+/* White-themed Activity Summary overrides */
+.activity-summary-section {
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--gold-antique) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.activity-summary-section .activity-section-title {
+  color: var(--primary-color) !important;
+  border-bottom: 1.5px solid var(--gold-antique) !important;
+  padding-bottom: 8px !important;
+}
+
+.activity-summary-section .activity-section-title span {
+  color: var(--primary-color) !important;
+}
+
+.activity-summary-section .activity-box {
+  background-color: #F7FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+}
+
+.activity-summary-section .activity-box:hover {
+  background-color: #EDF2F7 !important;
+  border-color: var(--gold-antique) !important;
+}
+
+.activity-summary-section .activity-count {
+  color: #1A202C !important;
+}
+
+.activity-summary-section .activity-label {
+  color: #4A5568 !important;
+}
+
+.activity-summary-section .activity-icon-wrapper svg {
+  color: var(--primary-color) !important; /* Maroon icons on white cards for rich contrast! */
+}
+
