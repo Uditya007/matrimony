@@ -4347,3 +4347,106 @@ footer {
   color: var(--primary-color) !important; /* Maroon icons on white cards for rich contrast! */
 }
 
+/* Mobile Profile Card 2-in-a-row Layout Override */
+@media (max-width: 768px) {
+  .matches-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+  
+  .matches-grid .profile-card-image {
+    height: 140px !important;
+  }
+  
+  .profile-details-preview {
+    padding: 8px 10px 4px !important;
+  }
+  
+  .profile-details-preview h4 {
+    font-size: 0.9rem !important;
+  }
+  
+  .profile-caste-tag {
+    font-size: 0.68rem !important;
+  }
+  
+  .profile-gender-badge {
+    padding: 2px 6px !important;
+    font-size: 0.58rem !important;
+    top: 8px !important;
+    right: 8px !important;
+  }
+  
+  .profile-card-body {
+    padding: 8px 10px !important;
+    gap: 4px !important;
+  }
+  
+  .profile-meta-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+  
+  .profile-meta-item {
+    font-size: 0.68rem !important;
+    gap: 4px !important;
+  }
+  
+  .profile-meta-item svg {
+    width: 11px !important;
+    height: 11px !important;
+  }
+  
+  .wax-seal-container {
+    gap: 4px !important;
+    margin-top: 4px !important;
+  }
+  
+  .wax-seal-badge {
+    width: 22px !important;
+    height: 22px !important;
+  }
+  
+  .wax-seal-badge svg {
+    width: 10px !important;
+    height: 10px !important;
+  }
+  
+  .wax-seal-label {
+    font-size: 0.58rem !important;
+  }
+  
+  .profile-card-footer {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    padding: 8px 10px 10px !important;
+  }
+  
+  /* Make Send Interest button take full width (first row) */
+  .profile-card-footer button:nth-child(2),
+  .profile-card-footer .btn-royal {
+    order: -1 !important;
+    width: 100% !important;
+    flex: 0 0 100% !important;
+    font-size: 0.68rem !important;
+    padding: 6px 8px !important;
+  }
+  
+  /* Make Details button take the remaining width next to the heart button */
+  .profile-card-footer button:nth-child(3),
+  .profile-card-footer .btn-primary {
+    flex: 1 !important;
+    font-size: 0.68rem !important;
+    padding: 6px 8px !important;
+  }
+  
+  .profile-card-footer button:first-child,
+  .profile-card-footer .btn-minimal {
+    flex: 0 0 auto !important;
+    padding: 6px 10px !important;
+    font-size: 0.68rem !important;
+  }
+}
+
