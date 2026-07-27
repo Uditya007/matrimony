@@ -37,6 +37,10 @@
 body {
   font-family: var(--font-body);
   background-color: var(--bg-warm);
+  background-image: linear-gradient(rgba(74, 13, 24, 0.45), rgba(74, 13, 24, 0.45)), url('../images/royal-wallpaper.jpg');
+  background-repeat: repeat;
+  background-size: 380px;
+  background-attachment: fixed;
   color: var(--text-dark);
   line-height: 1.6;
   overflow-x: hidden;
