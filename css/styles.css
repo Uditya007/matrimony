@@ -1725,13 +1725,34 @@ footer {
   .details-grid {
     grid-template-columns: 1fr;
   }
+  footer {
+    padding: 30px 20px 20px !important;
+  }
   .footer-container {
     grid-template-columns: 1fr;
+    gap: 20px !important;
+    margin-bottom: 20px !important;
+  }
+  .footer-col h4 {
+    font-size: 0.95rem !important;
+    margin-bottom: 12px !important;
+    padding-bottom: 6px !important;
+  }
+  .footer-col ul {
+    gap: 8px !important;
+    font-size: 0.8rem !important;
+  }
+  .footer-about p {
+    font-size: 0.8rem !important;
+    line-height: 1.45 !important;
+    margin-top: 10px !important;
   }
   .footer-bottom {
     flex-direction: column;
-    gap: 15px;
+    gap: 8px !important;
     text-align: center;
+    padding-top: 15px !important;
+    font-size: 0.72rem !important;
   }
   .search-grid {
     grid-template-columns: 1fr;
