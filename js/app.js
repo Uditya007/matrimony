@@ -1403,7 +1403,7 @@ window.openOneOnOneChat = function(profileId) {
     chatBox = document.createElement('div');
     chatBox.id = 'oneOnOneChatWindow';
     chatBox.className = 'royal-chatbot-window'; // Reuse chatbot styles for aesthetic consistency!
-    chatBox.style.background = 'var(--primary-dark)';
+    chatBox.style.background = '#FFFFFF';
     chatBox.style.zIndex = '99999'; // Make sure it sits on top of everything
     document.body.appendChild(chatBox);
   }
@@ -1433,7 +1433,7 @@ window.openOneOnOneChat = function(profileId) {
     
     <div id="oneOnOneMessages" class="chat-messages" style="height: 280px; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px;">
       <div class="message bot-message" style="margin-bottom: 10px;">
-        <div class="message-bubble" style="background-color: rgba(255,255,255,0.06); border: 1px solid rgba(170,124,17,0.25); color: var(--text-white); padding: 8px 12px; border-radius: 12px; max-width: 80%;">
+        <div class="message-bubble" style="padding: 8px 12px; border-radius: 12px; max-width: 80%;">
           Khammaghani! Thank you for sending interest. I have reviewed your Gotra compatibility and would love to connect. What are your thikanas?
         </div>
       </div>
@@ -1481,7 +1481,7 @@ window.sendOneOnOneMessage = function(profileId) {
   userMsgDiv.style.alignSelf = 'flex-end';
   userMsgDiv.style.marginBottom = '10px';
   userMsgDiv.innerHTML = `
-    <div class="message-bubble" style="background-color: var(--primary-color); border: 1px solid var(--gold-antique); color: var(--text-white); padding: 8px 12px; border-radius: 12px; max-width: 80%; word-break: break-word; float: right; clear: both;">
+    <div class="message-bubble" style="padding: 8px 12px; border-radius: 12px; max-width: 80%; word-break: break-word;">
       ${text}
     </div>
   `;
@@ -1501,7 +1501,7 @@ window.sendOneOnOneMessage = function(profileId) {
   typingDiv.className = 'message bot-message typing-indicator';
   typingDiv.style.marginBottom = '10px';
   typingDiv.innerHTML = `
-    <div class="message-bubble" style="background-color: rgba(255,255,255,0.04); border: 1px solid rgba(170,124,17,0.15); color: var(--text-muted); font-style: italic; padding: 6px 12px; border-radius: 12px; max-width: 80%; float: left; clear: both;">
+    <div class="message-bubble" style="padding: 6px 12px; border-radius: 12px; max-width: 80%;">
       ${matchName} is typing...
     </div>
   `;
@@ -1529,7 +1529,7 @@ window.sendOneOnOneMessage = function(profileId) {
     botMsgDiv.className = 'message bot-message';
     botMsgDiv.style.marginBottom = '10px';
     botMsgDiv.innerHTML = `
-      <div class="message-bubble" style="background-color: rgba(255,255,255,0.06); border: 1px solid rgba(170,124,17,0.25); color: var(--text-white); padding: 8px 12px; border-radius: 12px; max-width: 80%; float: left; clear: both;">
+      <div class="message-bubble" style="padding: 8px 12px; border-radius: 12px; max-width: 80%; word-break: break-word;">
         ${responseText}
       </div>
     `;

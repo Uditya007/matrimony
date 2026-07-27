@@ -4118,3 +4118,77 @@ footer {
   }
 }
 
+/* White-themed One-on-One Chat Window overrides */
+#oneOnOneChatWindow {
+  background: #FFFFFF !important;
+  color: #2D3748 !important;
+  border: 1.5px solid var(--gold-antique) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25) !important;
+}
+
+#oneOnOneChatWindow .chat-header {
+  background: #FFFFFF !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+#oneOnOneChatWindow .chat-header h3 {
+  color: #1A202C !important;
+}
+
+#oneOnOneChatWindow .chat-header .header-status {
+  color: #4A5568 !important;
+}
+
+#oneOnOneChatWindow .chat-header .btn-close-chat {
+  color: #4A5568 !important;
+}
+
+#oneOnOneChatWindow .chat-messages {
+  background: #F7FAFC !important;
+}
+
+/* User messages in white theme: maroon bubble, white text */
+#oneOnOneChatWindow .user-message .message-bubble {
+  background: var(--primary-color) !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--primary-dark) !important;
+  border-top-right-radius: 2px !important;
+  box-shadow: 0 2px 5px rgba(107, 18, 32, 0.15) !important;
+}
+
+/* Match/Bot messages in white theme: light grey bubble, dark grey text */
+#oneOnOneChatWindow .bot-message .message-bubble {
+  background: #EDF2F7 !important;
+  color: #2D3748 !important;
+  border: 1px solid #E2E8F0 !important;
+  border-top-left-radius: 2px !important;
+}
+
+#oneOnOneChatWindow .typing-indicator .message-bubble {
+  background: #EDF2F7 !important;
+  color: #718096 !important;
+  border: none !important;
+  font-style: italic !important;
+}
+
+/* Input area in white theme */
+#oneOnOneChatWindow .chat-input-area {
+  background: #FFFFFF !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+#oneOnOneChatWindow #oneOnOneInput {
+  background: #EDF2F7 !important;
+  color: #1A202C !important;
+  border: 1px solid #E2E8F0 !important;
+}
+
+#oneOnOneChatWindow #oneOnOneInput::placeholder {
+  color: #A0AEC0 !important;
+}
+
+#oneOnOneChatWindow #oneOnOneInput:focus {
+  border-color: var(--gold-antique) !important;
+  background: #FFFFFF !important;
+}
+
