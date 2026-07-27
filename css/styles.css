@@ -3521,6 +3521,10 @@ footer {
   font-weight: 600;
 }
 
+#subnavLogout {
+  display: none;
+}
+
 /* 3-Column Dashboard Layout */
 @media (min-width: 1200px) {
   .dashboard-wrapper {
@@ -4169,6 +4173,12 @@ footer {
     flex: 0 0 auto !important;
     padding: 8px 12px !important;
     font-size: 0.8rem !important;
+  }
+  
+  #subnavLogout {
+    display: inline-block !important;
+    color: #e55353 !important; /* Soft premium red for logout action */
+    font-weight: bold !important;
   }
   
   .activity-grid {
