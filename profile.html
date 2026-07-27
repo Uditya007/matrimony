@@ -356,6 +356,28 @@
           </div>
         </div>
         
+        <!-- Section 4.7: Ancestral Biodata PDF Upload -->
+        <h3 class="profile-form-section-title">
+          <span>📜</span> Royal Biodata PDF (Optional)
+        </h3>
+        
+        <div class="form-group" style="margin-bottom: 25px;">
+          <label>Upload Ancestral Biodata (PDF format only, max 5MB)</label>
+          <div id="biodataUploadContainer" style="border: 2px dashed rgba(201, 162, 39, 0.4); padding: 25px; border-radius: var(--border-radius); text-align: center; background: rgba(255,255,255,0.02); transition: border-color 0.3s, background-color 0.3s; cursor: pointer; position: relative;">
+            <input type="file" id="profBiodataPdf" accept=".pdf" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="handleBiodataPdfChange(event)">
+            <div id="biodataUploadStatus">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gold-antique)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; display: inline-block;">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <polyline points="9 15 12 12 15 15"></polyline>
+              </svg>
+              <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-white); margin-bottom: 5px;">Drag & Drop your Biodata PDF here or Click to browse</div>
+              <div style="font-size: 0.75rem; color: var(--gold-bright);">Supports PDF files up to 5MB</div>
+            </div>
+          </div>
+        </div>
+        
         <!-- Section 5: Summaries -->
         <h3 class="profile-form-section-title">
           <span>📜</span> Royal Persona Biography & Expectations
@@ -441,17 +463,20 @@
     // Local page state
     let tempAvatarData = null;
     let tempAvatarFile = null;
+    let tempBiodataData = null;
+    let tempBiodataFile = null;
 
-    function parseSocialLinks(aboutText) {
+    function parseAboutField(aboutText) {
       let cleanAbout = aboutText || '';
       let instagram = '';
       let facebook = '';
+      let biodataUrl = '';
       
       const socialRegex = /\[Social Links: (\{.*?\})\]/;
-      const match = cleanAbout.match(socialRegex);
-      if (match) {
+      const socialMatch = cleanAbout.match(socialRegex);
+      if (socialMatch) {
         try {
-          const socialObj = JSON.parse(match[1]);
+          const socialObj = JSON.parse(socialMatch[1]);
           instagram = socialObj.instagram || '';
           facebook = socialObj.facebook || '';
           cleanAbout = cleanAbout.replace(socialRegex, '').trim();
@@ -459,7 +484,15 @@
           console.error("Failed to parse fallback social links:", e);
         }
       }
-      return { cleanAbout, instagram, facebook };
+
+      const biodataRegex = /\[Biodata Link: (.*?)\]/;
+      const biodataMatch = cleanAbout.match(biodataRegex);
+      if (biodataMatch) {
+        biodataUrl = biodataMatch[1].trim();
+        cleanAbout = cleanAbout.replace(biodataRegex, '').trim();
+      }
+
+      return { cleanAbout, instagram, facebook, biodataUrl };
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -469,6 +502,31 @@
       
       // 2. Load and render profile details
       populateFormFields(currentUser);
+
+      // 3. Configure drag-and-drop listeners for Biodata PDF Upload
+      const dropZone = document.getElementById('biodataUploadContainer');
+      if (dropZone) {
+        dropZone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropZone.style.borderColor = 'var(--gold-bright)';
+          dropZone.style.backgroundColor = 'rgba(255,255,255,0.06)';
+        });
+        dropZone.addEventListener('dragleave', () => {
+          dropZone.style.borderColor = 'rgba(201, 162, 39, 0.4)';
+          dropZone.style.backgroundColor = 'rgba(255,255,255,0.02)';
+        });
+        dropZone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          const files = e.dataTransfer.files;
+          if (files && files.length > 0) {
+            const fileInput = document.getElementById('profBiodataPdf');
+            if (fileInput) {
+              fileInput.files = files;
+              handleBiodataPdfChange({ target: fileInput });
+            }
+          }
+        });
+      }
     });
 
     // Populate input fields with user session data
@@ -521,11 +579,35 @@
       document.getElementById('profPhone').value = user.phone || '';
       document.getElementById('profLocation').value = user.location || user.thikana || 'Jaipur, Rajasthan';
       
-      const parsedSocials = parseSocialLinks(user.about);
-      document.getElementById('profAbout').value = parsedSocials.cleanAbout || '';
-      document.getElementById('profInstagram').value = user.instagram || parsedSocials.instagram || '';
-      document.getElementById('profFacebook').value = user.facebook || parsedSocials.facebook || '';
+      const parsedAbout = parseAboutField(user.about);
+      document.getElementById('profAbout').value = parsedAbout.cleanAbout || '';
+      document.getElementById('profInstagram').value = user.instagram || parsedAbout.instagram || '';
+      document.getElementById('profFacebook').value = user.facebook || parsedAbout.facebook || '';
       
+      // If user has a biodata PDF, render a preview link in the upload box
+      const existingBiodataUrl = user.biodataUrl || parsedAbout.biodataUrl || '';
+      const uploadStatus = document.getElementById('biodataUploadStatus');
+      if (existingBiodataUrl && uploadStatus) {
+        uploadStatus.innerHTML = `
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gold-bright)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; display: inline-block;">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <div style="font-size: 0.9rem; font-weight: bold; color: var(--gold-bright); margin-bottom: 5px;">📄 Ancestral Biodata Attached</div>
+          <div style="font-size: 0.8rem; margin-top: 5px; margin-bottom: 5px;">
+            <a href="${existingBiodataUrl}" target="_blank" style="color: var(--text-white); text-decoration: underline; font-weight: 500;" onclick="event.stopPropagation();">Click here to View Uploaded PDF</a>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Drag & Drop new PDF or click box to replace it</div>
+        `;
+        const container = document.getElementById('biodataUploadContainer');
+        if (container) {
+          container.style.borderColor = 'var(--gold-bright)';
+        }
+      }
+
       document.getElementById('profExpectations').value = user.expectations || '';
     }
 
@@ -611,6 +693,66 @@
       }
     }
 
+    // Biodata PDF file listener
+    async function handleBiodataPdfChange(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (file.type !== 'application/pdf') {
+        showToast('Please select a valid PDF file.', 'gold');
+        event.target.value = '';
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('File size exceeds the 5MB limit.', 'gold');
+        event.target.value = '';
+        return;
+      }
+
+      const container = document.getElementById('biodataUploadContainer');
+      const status = document.getElementById('biodataUploadStatus');
+      if (status) {
+        status.innerHTML = `
+          <div style="font-size: 1.2rem; margin-bottom: 5px;">⏳</div>
+          <div style="font-size: 0.9rem; color: var(--text-white); font-weight: 500;">Reading PDF...</div>
+        `;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        tempBiodataData = e.target.result; // base64 cached
+        tempBiodataFile = file; // raw file cached
+        
+        if (status) {
+          status.innerHTML = `
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gold-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; display: inline-block;">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <div style="font-size: 0.9rem; font-weight: bold; color: var(--gold-bright); margin-bottom: 5px;">📄 ${file.name}</div>
+            <div style="font-size: 0.75rem; color: #a2f2b7;">✓ Attached successfully (${(file.size / 1024 / 1024).toFixed(2)} MB)</div>
+          `;
+        }
+        if (container) {
+          container.style.borderColor = 'var(--gold-bright)';
+          container.style.backgroundColor = 'rgba(43,138,62,0.04)';
+        }
+      };
+      reader.onerror = function() {
+        showToast('Failed to read PDF file.');
+        if (status) {
+          status.innerHTML = `
+            <div style="font-size: 0.9rem; color: var(--text-white); font-weight: 500;">Error loading file. Click to retry.</div>
+          `;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
     // Handle Form update submission
     async function handleProfilePageSubmit(event) {
       event.preventDefault();
@@ -656,6 +798,37 @@
           profilePicUrl = tempAvatarData;
         }
 
+        let biodataPdfUrl = currentUser.biodataUrl || '';
+
+        // 1.5 Upload Biodata PDF to Supabase Storage if active
+        if (tempBiodataFile && window.supabaseActive) {
+          try {
+            const file = tempBiodataFile;
+            const fileExt = 'pdf';
+            const fileName = `${currentUser.id}_biodata_${Date.now()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { data, error } = await window.supabaseClient.storage
+              .from('profiles')
+              .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+            if (error) throw error;
+
+            const { data: { publicUrl } } = window.supabaseClient.storage
+              .from('profiles')
+              .getPublicUrl(filePath);
+
+            biodataPdfUrl = publicUrl;
+          } catch (storageErr) {
+            console.error("Biodata Storage upload failed, fallback to base64 preview:", storageErr);
+            if (tempBiodataData) {
+              biodataPdfUrl = tempBiodataData;
+            }
+          }
+        } else if (tempBiodataData) {
+          biodataPdfUrl = tempBiodataData;
+        }
+
         // 2. Construct updated profile record
         const updatedUser = {
           ...currentUser,
@@ -679,6 +852,7 @@
           expectations: document.getElementById('profExpectations').value.trim(),
           instagram: document.getElementById('profInstagram').value.trim(),
           facebook: document.getElementById('profFacebook').value.trim(),
+          biodataUrl: biodataPdfUrl,
           profilePic: profilePicUrl,
           initials: document.getElementById('profName').value.trim().split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
         };
@@ -709,7 +883,8 @@
             expectations: updatedUser.expectations,
             profilePic: updatedUser.profilePic,
             instagram: updatedUser.instagram,
-            facebook: updatedUser.facebook
+            facebook: updatedUser.facebook,
+            biodataUrl: updatedUser.biodataUrl
           };
 
           let { error } = await window.supabaseClient
@@ -718,13 +893,15 @@
             .eq('id', currentUser.id);
 
           // Graceful fallback for schema caches: if columns don't exist in Supabase yet
-          if (error && error.message && (error.message.includes("Could not find the 'facebook'") || error.message.includes("Could not find the 'instagram'"))) {
-            console.log("Supabase social columns missing; serializing into 'about' text column as fallback...");
+          if (error && error.message && (error.message.includes("Could not find the 'facebook'") || error.message.includes("Could not find the 'instagram'") || error.message.includes("Could not find the 'biodataUrl'"))) {
+            console.log("Supabase custom columns missing; serializing into 'about' text column as fallback...");
             delete updatePayload.instagram;
             delete updatePayload.facebook;
+            delete updatePayload.biodataUrl;
 
             const socialsObj = { instagram: updatedUser.instagram, facebook: updatedUser.facebook };
-            updatePayload.about = `${updatedUser.about} [Social Links: ${JSON.stringify(socialsObj)}]`.trim();
+            const fallbackAbout = `${updatedUser.about} [Social Links: ${JSON.stringify(socialsObj)}] [Biodata Link: ${updatedUser.biodataUrl}]`.trim();
+            updatePayload.about = fallbackAbout;
 
             const retryResult = await window.supabaseClient
               .from('profiles')

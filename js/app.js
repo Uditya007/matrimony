@@ -121,6 +121,33 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize native scroll reveal observers for elegant page scroll entries
   initScrollReveal();
 
+  // Configure drag-and-drop listeners for edit profile Biodata PDF Upload
+  const editDropZone = document.getElementById('editBiodataUploadContainer');
+  if (editDropZone) {
+    editDropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      editDropZone.style.borderColor = 'var(--gold-bright)';
+      editDropZone.style.backgroundColor = 'rgba(255,255,255,0.06)';
+    });
+    editDropZone.addEventListener('dragleave', () => {
+      editDropZone.style.borderColor = 'rgba(201, 162, 39, 0.4)';
+      editDropZone.style.backgroundColor = 'rgba(255,255,255,0.02)';
+    });
+    editDropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        const fileInput = document.getElementById('editBiodataPdf');
+        if (fileInput) {
+          fileInput.files = files;
+          if (typeof handleEditBiodataPdfChange === 'function') {
+            handleEditBiodataPdfChange({ target: fileInput });
+          }
+        }
+      }
+    });
+  }
+
   // Route-Specific Initializations
   const path = window.location.pathname;
   const pageRaw = path.split('/').pop() || 'index.html';
@@ -1560,6 +1587,19 @@ function getProfileSocials(profile) {
   return { instagram, facebook };
 }
 
+function getProfileBiodata(profile) {
+  let biodataUrl = profile.biodataUrl || '';
+  
+  if (profile.about) {
+    const biodataRegex = /\[Biodata Link: (.*?)\]/;
+    const match = profile.about.match(biodataRegex);
+    if (match) {
+      biodataUrl = match[1].trim();
+    }
+  }
+  return biodataUrl;
+}
+
 window.openProfileDetailModal = function(id) {
   const modal = document.getElementById('profileDetailModal');
   if (!modal) return;
@@ -1656,12 +1696,19 @@ window.openProfileDetailModal = function(id) {
       document.getElementById('unlockedEmail').textContent = profile.email || `${profile.name.toLowerCase().replace(/\s/g, '.')}@sagaisambaandh-member.com`;
       document.getElementById('unlockedAddress').textContent = `${profile.location}, India`;
       
-      // Render socials if profile has them
+      // Render socials and biodata documents if profile has them
       const socials = getProfileSocials(profile);
+      const biodataUrl = getProfileBiodata(profile);
       const socialsContainer = document.getElementById('unlockedSocials');
       if (socialsItem && socialsContainer) {
-        if (socials.instagram || socials.facebook) {
+        if (socials.instagram || socials.facebook || biodataUrl) {
           socialsItem.style.display = 'block';
+          // Update the label dynamically
+          const labelEl = socialsItem.querySelector('label');
+          if (labelEl) {
+            labelEl.textContent = (socials.instagram || socials.facebook) ? 'Socials & Documents' : 'Ancestral Documents';
+          }
+          
           let html = '';
           if (socials.instagram) {
             let url = socials.instagram;
@@ -1684,6 +1731,14 @@ window.openProfileDetailModal = function(id) {
               <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--gold-bright); display: flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; font-size: 0.85rem; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.25);">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="color: var(--gold-antique);"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg>
                 Facebook
+              </a>
+            `;
+          }
+          if (biodataUrl) {
+            html += `
+              <a href="${biodataUrl}" target="_blank" download="Biodata_${profile.name.replace(/\s/g, '_')}.pdf" style="color: var(--gold-bright); display: flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; font-size: 0.85rem; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.25);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-antique);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                View Biodata (PDF)
               </a>
             `;
           }
@@ -2027,6 +2082,70 @@ window.handleEditAvatarChange = function(event) {
   reader.readAsDataURL(file);
 };
 
+// Global variables for edit modal biodata upload state
+window.tempEditBiodataData = null;
+window.tempEditBiodataFile = null;
+
+// Handle edit profile biodata PDF attachment selection
+window.handleEditBiodataPdfChange = function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.type !== 'application/pdf') {
+    showToast('Please select a valid PDF file.', 'gold');
+    event.target.value = '';
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('File size exceeds the 5MB limit.', 'gold');
+    event.target.value = '';
+    return;
+  }
+
+  const container = document.getElementById('editBiodataUploadContainer');
+  const status = document.getElementById('editBiodataUploadStatus');
+  if (status) {
+    status.innerHTML = `
+      <div style="font-size: 1.2rem; margin-bottom: 5px;">⏳</div>
+      <div style="font-size: 0.9rem; color: var(--text-white); font-weight: 500;">Reading PDF...</div>
+    `;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    window.tempEditBiodataData = e.target.result; // base64 cached
+    window.tempEditBiodataFile = file; // raw file cached
+    
+    if (status) {
+      status.innerHTML = `
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gold-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; display: inline-block;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <div style="font-size: 0.9rem; font-weight: bold; color: var(--gold-bright); margin-bottom: 5px;">📄 ${file.name}</div>
+        <div style="font-size: 0.75rem; color: #a2f2b7;">✓ Attached successfully (${(file.size / 1024 / 1024).toFixed(2)} MB)</div>
+      `;
+    }
+    if (container) {
+      container.style.borderColor = 'var(--gold-bright)';
+      container.style.backgroundColor = 'rgba(43,138,62,0.04)';
+    }
+  };
+  reader.onerror = function() {
+    showToast('Failed to read PDF file.');
+    if (status) {
+      status.innerHTML = `
+        <div style="font-size: 0.9rem; color: var(--text-white); font-weight: 500;">Error loading file. Click to retry.</div>
+      `;
+    }
+  };
+  reader.readAsDataURL(file);
+};
+
 // Toggle detailed modal into Edit Profile Form view
 window.toggleEditProfileForm = function(show) {
   const viewContainer = document.getElementById('modalViewContainer');
@@ -2045,8 +2164,12 @@ window.toggleEditProfileForm = function(show) {
     // Clear previous caches
     window.tempAvatarData = null;
     window.tempAvatarFile = null;
+    window.tempEditBiodataData = null;
+    window.tempEditBiodataFile = null;
     const picInput = document.getElementById('editProfilePicInput');
     if (picInput) picInput.value = '';
+    const biodataInput = document.getElementById('editBiodataPdf');
+    if (biodataInput) biodataInput.value = '';
 
     // Populate input fields
     document.getElementById('editName').value = currentUser.name || '';
@@ -2061,7 +2184,16 @@ window.toggleEditProfileForm = function(show) {
     document.getElementById('editOccupation').value = currentUser.occupation || '';
     document.getElementById('editIncome').value = currentUser.income || '';
     document.getElementById('editMaritalStatus').value = currentUser.maritalStatus || 'Never Married';
-    document.getElementById('editAbout').value = currentUser.about || '';
+    
+    // Parse about block to strip fallback serialized data before rendering
+    let cleanAboutText = currentUser.about || '';
+    if (cleanAboutText) {
+      const socialRegex = /\[Social Links: (\{.*?\})\]/;
+      cleanAboutText = cleanAboutText.replace(socialRegex, '').trim();
+      const biodataRegex = /\[Biodata Link: (.*?)\]/;
+      cleanAboutText = cleanAboutText.replace(biodataRegex, '').trim();
+    }
+    document.getElementById('editAbout').value = cleanAboutText;
     document.getElementById('editExpectations').value = currentUser.expectations || '';
 
     // Render avatar preview
@@ -2073,6 +2205,46 @@ window.toggleEditProfileForm = function(show) {
         const initials = (currentUser.name || 'N M').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         preview.textContent = initials;
         preview.style.background = getAvatarGradient(currentUser.clan || 'Rathore');
+      }
+    }
+
+    // Render biodata attachment preview status if existing PDF is found
+    const existingBiodataUrl = getProfileBiodata(currentUser);
+    const biodataStatus = document.getElementById('editBiodataUploadStatus');
+    const biodataContainer = document.getElementById('editBiodataUploadContainer');
+    if (existingBiodataUrl && biodataStatus) {
+      biodataStatus.innerHTML = `
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gold-bright)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; display: inline-block;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <div style="font-size: 0.9rem; font-weight: bold; color: var(--gold-bright); margin-bottom: 5px;">📄 Ancestral Biodata Attached</div>
+        <div style="font-size: 0.8rem; margin-top: 5px; margin-bottom: 5px;">
+          <a href="${existingBiodataUrl}" target="_blank" style="color: var(--text-white); text-decoration: underline; font-weight: 500;" onclick="event.stopPropagation();">Click here to View Uploaded PDF</a>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);">Drag & Drop new PDF or click box to replace it</div>
+      `;
+      if (biodataContainer) {
+        biodataContainer.style.borderColor = 'var(--gold-bright)';
+      }
+    } else if (biodataStatus) {
+      // Reset back to upload prompt
+      biodataStatus.innerHTML = `
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gold-antique)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; display: inline-block;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="12" y1="18" x2="12" y2="12"></line>
+          <polyline points="9 15 12 12 15 15"></polyline>
+        </svg>
+        <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-white); margin-bottom: 5px;">Drag & Drop Biodata PDF here or Click to browse</div>
+        <div style="font-size: 0.75rem; color: var(--gold-bright);">PDF format only, max 5MB</div>
+      `;
+      if (biodataContainer) {
+        biodataContainer.style.borderColor = 'rgba(201, 162, 39, 0.4)';
+        biodataContainer.style.backgroundColor = 'rgba(255,255,255,0.02)';
       }
     }
   } else {
@@ -2130,6 +2302,38 @@ window.handleProfileUpdateSubmit = async function(event) {
       profilePicUrl = window.tempAvatarData;
     }
 
+    let biodataPdfUrl = getProfileBiodata(currentUser);
+
+    // 1.5. Upload biodata PDF to Supabase Storage if active
+    if (window.tempEditBiodataFile && window.supabaseActive) {
+      try {
+        const file = window.tempEditBiodataFile;
+        const fileExt = 'pdf';
+        const fileName = `${currentUser.id}_biodata_${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`; // Upload directly under root of bucket
+
+        const { data, error } = await window.supabaseClient.storage
+          .from('profiles')
+          .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+        if (error) throw error;
+
+        // Retrieve public URL
+        const { data: { publicUrl } } = window.supabaseClient.storage
+          .from('profiles')
+          .getPublicUrl(filePath);
+
+        biodataPdfUrl = publicUrl;
+      } catch (err) {
+        console.error("Biodata Storage upload failed, fall back to base64 representation:", err);
+        if (window.tempEditBiodataData) {
+          biodataPdfUrl = window.tempEditBiodataData;
+        }
+      }
+    } else if (window.tempEditBiodataData) {
+      biodataPdfUrl = window.tempEditBiodataData;
+    }
+
     // 2. Build updated profile object
     const updatedUser = {
       ...currentUser,
@@ -2147,6 +2351,7 @@ window.handleProfileUpdateSubmit = async function(event) {
       maritalStatus: document.getElementById('editMaritalStatus').value,
       about: document.getElementById('editAbout').value.trim(),
       expectations: document.getElementById('editExpectations').value.trim(),
+      biodataUrl: biodataPdfUrl,
       profilePic: profilePicUrl,
       initials: document.getElementById('editName').value.trim().split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
     };
@@ -2156,26 +2361,49 @@ window.handleProfileUpdateSubmit = async function(event) {
 
     // 4. Update profiles table record in Supabase database
     if (window.supabaseActive) {
-      const { error } = await window.supabaseClient
+      const updatePayload = {
+        name: updatedUser.name,
+        phone: updatedUser.phone,
+        clan: updatedUser.clan,
+        gotra: updatedUser.gotra,
+        motherGotra: updatedUser.motherGotra,
+        thikana: updatedUser.thikana,
+        dob: updatedUser.dob,
+        height: updatedUser.height,
+        education: updatedUser.education,
+        occupation: updatedUser.occupation,
+        income: updatedUser.income,
+        maritalStatus: updatedUser.maritalStatus,
+        about: updatedUser.about,
+        expectations: updatedUser.expectations,
+        profilePic: updatedUser.profilePic,
+        biodataUrl: updatedUser.biodataUrl
+      };
+
+      let { error } = await window.supabaseClient
         .from('profiles')
-        .update({
-          name: updatedUser.name,
-          phone: updatedUser.phone,
-          clan: updatedUser.clan,
-          gotra: updatedUser.gotra,
-          motherGotra: updatedUser.motherGotra,
-          thikana: updatedUser.thikana,
-          dob: updatedUser.dob,
-          height: updatedUser.height,
-          education: updatedUser.education,
-          occupation: updatedUser.occupation,
-          income: updatedUser.income,
-          maritalStatus: updatedUser.maritalStatus,
-          about: updatedUser.about,
-          expectations: updatedUser.expectations,
-          profilePic: updatedUser.profilePic
-        })
+        .update(updatePayload)
         .eq('id', currentUser.id);
+
+      // Graceful fallback for schema caches: if columns don't exist in Supabase yet
+      if (error && error.message && (error.message.includes("Could not find the 'facebook'") || error.message.includes("Could not find the 'instagram'") || error.message.includes("Could not find the 'biodataUrl'"))) {
+        console.log("Supabase custom columns missing; serializing into 'about' text column as fallback...");
+        delete updatePayload.instagram;
+        delete updatePayload.facebook;
+        delete updatePayload.biodataUrl;
+
+        // Restore social fields if existing in user object
+        const socials = getProfileSocials(updatedUser);
+        const socialsObj = { instagram: socials.instagram, facebook: socials.facebook };
+        const fallbackAbout = `${updatedUser.about} [Social Links: ${JSON.stringify(socialsObj)}] [Biodata Link: ${updatedUser.biodataUrl}]`.trim();
+        updatePayload.about = fallbackAbout;
+
+        const retryResult = await window.supabaseClient
+          .from('profiles')
+          .update(updatePayload)
+          .eq('id', currentUser.id);
+        error = retryResult.error;
+      }
 
       if (error) {
         console.error("Supabase profile save error details:", error);
