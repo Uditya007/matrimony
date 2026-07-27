@@ -162,40 +162,7 @@
         </div>
       </div>
 
-      <!-- Activity Summary Grid -->
-      <section class="activity-summary-section">
-        <h3 class="activity-section-title">Your Activity Summary</h3>
-        <div class="activity-grid">
-          <div class="activity-box">
-            <div class="activity-icon-wrapper" style="margin-bottom: 8px; display: flex; justify-content: center; align-items: center; height: 32px;">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color: var(--gold-antique);"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-            </div>
-            <div class="activity-count" id="dashboardActivityShortlists">0</div>
-            <div class="activity-label">Shortlists</div>
-          </div>
-          <div class="activity-box" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onclick="openInterestsModal()" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--shadow-royal)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
-            <div class="activity-icon-wrapper" style="margin-bottom: 8px; display: flex; justify-content: center; align-items: center; height: 32px;">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color: var(--gold-antique);"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-            </div>
-            <div class="activity-count" id="dashboardActivityInterests">0</div>
-            <div class="activity-label">Interests Sent</div>
-          </div>
-          <div class="activity-box">
-            <div class="activity-icon-wrapper" style="margin-bottom: 8px; display: flex; justify-content: center; align-items: center; height: 32px;">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color: var(--gold-antique);"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-            </div>
-            <div class="activity-count">3<span class="new-pill">New</span></div>
-            <div class="activity-label">Recent Visitors</div>
-          </div>
-          <div class="activity-box" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onclick="openChatsModal()" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--shadow-royal)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
-            <div class="activity-icon-wrapper" style="margin-bottom: 8px; display: flex; justify-content: center; align-items: center; height: 32px;">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color: var(--gold-antique);"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
-            </div>
-            <div class="activity-count" id="dashboardActivityChats">0</div>
-            <div class="activity-label">Chats Active</div>
-          </div>
-        </div>
-      </section>
+
 
       <!-- Wax Seal Lineage Audit Card -->
       <div class="wax-seal-promo-card">
@@ -238,10 +205,47 @@
     </main>
 
     <!-- Right Column: Online sidebar + Real-time Lineage Filters -->
-    <aside class="dashboard-online-right-panel">
+    <aside class="dashboard-online-right-panel" style="display: flex; flex-direction: column; gap: 20px;">
       
+      <!-- Activity Summary Grid (Sidebar Placement) -->
+      <section class="activity-summary-section" style="padding: 15px; margin-bottom: 0;">
+        <h3 class="activity-section-title" style="font-size: 1rem; border-bottom: 1.5px solid var(--gold-antique); padding-bottom: 8px; margin-bottom: 12px; font-weight: 600;">
+          <span>Your Activity Summary</span>
+        </h3>
+        <div class="activity-grid" style="grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <div class="activity-box" style="padding: 10px 5px;">
+            <div class="activity-icon-wrapper" style="margin-bottom: 4px; display: flex; justify-content: center; align-items: center; height: 24px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color: var(--gold-antique);"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            </div>
+            <div class="activity-count" id="dashboardActivityShortlists" style="font-size: 1.1rem; line-height: 1;">0</div>
+            <div class="activity-label" style="font-size: 0.68rem; margin-top: 2px;">Shortlists</div>
+          </div>
+          <div class="activity-box" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; padding: 10px 5px;" onclick="openInterestsModal()" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--shadow-royal)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
+            <div class="activity-icon-wrapper" style="margin-bottom: 4px; display: flex; justify-content: center; align-items: center; height: 24px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color: var(--gold-antique);"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </div>
+            <div class="activity-count" id="dashboardActivityInterests" style="font-size: 1.1rem; line-height: 1;">0</div>
+            <div class="activity-label" style="font-size: 0.68rem; margin-top: 2px;">Interests Sent</div>
+          </div>
+          <div class="activity-box" style="padding: 10px 5px;">
+            <div class="activity-icon-wrapper" style="margin-bottom: 4px; display: flex; justify-content: center; align-items: center; height: 24px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color: var(--gold-antique);"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+            </div>
+            <div class="activity-count" style="font-size: 1.1rem; line-height: 1;">3<span class="new-pill" style="font-size: 0.5rem; padding: 1px 4px; vertical-align: top; margin-left: 2px;">New</span></div>
+            <div class="activity-label" style="font-size: 0.68rem; margin-top: 2px;">Recent Visitors</div>
+          </div>
+          <div class="activity-box" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; padding: 10px 5px;" onclick="openChatsModal()" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='var(--shadow-royal)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
+            <div class="activity-icon-wrapper" style="margin-bottom: 4px; display: flex; justify-content: center; align-items: center; height: 24px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color: var(--gold-antique);"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+            </div>
+            <div class="activity-count" id="dashboardActivityChats" style="font-size: 1.1rem; line-height: 1;">0</div>
+            <div class="activity-label" style="font-size: 0.68rem; margin-top: 2px;">Chats Active</div>
+          </div>
+        </div>
+      </section>
+
       <!-- Active Noble Matches (Online Sidebar) -->
-      <div class="dashboard-online-sidebar">
+      <div class="dashboard-online-sidebar" style="position: static;">
         <h3 class="online-sidebar-header">
           <span>Active Members</span>
           <span class="online-indicator-dot" title="Members Online"></span>
