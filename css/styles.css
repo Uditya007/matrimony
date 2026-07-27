@@ -3717,12 +3717,6 @@ footer {
   margin-bottom: 25px;
 }
 
-@media (max-width: 580px) {
-  .promo-banners-container {
-    grid-template-columns: 1fr;
-  }
-}
-
 .promo-banner {
   background: linear-gradient(135deg, #5c0612 0%, #820b1e 100%);
   border: 1px solid var(--gold-antique);
@@ -4161,22 +4155,39 @@ footer {
     gap: 10px !important;
   }
   
-  .wax-seal-promo-card {
-    flex-direction: column !important;
-    text-align: center !important;
-    gap: 15px !important;
-    padding: 20px 15px !important;
-  }
-  
+  .wax-seal-promo-card,
   .promo-banner {
-    flex-direction: column !important;
-    text-align: center !important;
-    gap: 15px !important;
-    padding: 20px 15px !important;
+    padding: 10px 8px !important;
+    gap: 6px !important;
   }
   
+  .wax-seal-graphic-container {
+    width: 36px !important;
+    height: 36px !important;
+    margin-bottom: 2px !important;
+  }
+  
+  .wax-seal-graphic {
+    font-size: 1.1rem !important;
+  }
+  
+  .wax-seal-promo-info h3,
+  .promo-text h3 {
+    font-size: 0.78rem !important;
+  }
+  
+  .wax-seal-promo-info p,
+  .promo-text p {
+    font-size: 0.65rem !important;
+    margin-bottom: 6px !important;
+  }
+  
+  .wax-seal-promo-info button,
   .promo-banner .btn-royal {
-    width: 100% !important;
+    font-size: 0.65rem !important;
+    padding: 6px 10px !important;
+    width: auto !important;
+    margin-top: auto !important;
   }
 }
 
