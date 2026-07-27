@@ -4192,3 +4192,46 @@ footer {
   background: #FFFFFF !important;
 }
 
+/* White-themed Active Members Sidebar overrides */
+.dashboard-online-sidebar {
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--gold-antique) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dashboard-online-sidebar .online-sidebar-header {
+  color: var(--primary-color) !important;
+  border-bottom: 1.5px solid var(--gold-antique) !important;
+}
+
+.dashboard-online-sidebar .online-sidebar-header span {
+  color: var(--primary-color) !important;
+}
+
+.dashboard-online-sidebar .online-match-item {
+  background-color: #F7FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+}
+
+.dashboard-online-sidebar .online-match-item:hover {
+  background-color: #EDF2F7 !important;
+  border-color: var(--gold-antique) !important;
+  transform: translateX(3px) !important;
+}
+
+.dashboard-online-sidebar .online-match-name {
+  color: #1A202C !important;
+}
+
+.dashboard-online-sidebar .online-match-meta {
+  color: #4A5568 !important;
+}
+
+.dashboard-online-sidebar .online-match-avatar {
+  border: 1px solid var(--gold-antique) !important;
+}
+
+.dashboard-online-sidebar .online-match-avatar::after {
+  border: 2px solid #FFFFFF !important;
+}
+
