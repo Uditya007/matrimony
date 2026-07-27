@@ -645,7 +645,7 @@ header {
 }
 
 .profile-card-image {
-  height: 250px;
+  height: 195px;
   position: relative;
   overflow: hidden;
   background-color: var(--primary-color);
@@ -663,20 +663,20 @@ header {
 
 .profile-avatar-placeholder {
   font-family: var(--font-royal);
-  font-size: 5rem;
+  font-size: 4rem;
   color: rgba(212, 175, 55, 0.3);
 }
 
 .profile-gender-badge {
   position: absolute;
-  top: 15px;
-  right: 15px;
-  padding: 4px 12px;
+  top: 12px;
+  right: 12px;
+  padding: 3px 10px;
   border-radius: 20px;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
   z-index: 2;
 }
 
@@ -697,7 +697,7 @@ header {
   bottom: 0;
   left: 0;
   width: 100%;
-  padding: 20px 20px 10px;
+  padding: 12px 15px 8px;
   background: linear-gradient(360deg, rgba(58, 2, 9, 0.95) 0%, rgba(58, 2, 9, 0) 100%);
   color: var(--text-white);
   z-index: 2;
@@ -705,46 +705,46 @@ header {
 
 .profile-details-preview h4 {
   color: var(--text-white);
-  font-size: 1.4rem;
+  font-size: 1.15rem;
   margin-bottom: 2px;
 }
 
 .profile-caste-tag {
   font-family: var(--font-royal);
   color: var(--gold-bright);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   letter-spacing: 1px;
 }
 
 .profile-card-body {
-  padding: 25px 20px;
+  padding: 12px 15px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .profile-meta-list {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 6px;
 }
 
 .profile-meta-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
 }
 
 .profile-meta-item svg {
   fill: var(--gold-antique);
-  width: 15px;
-  height: 15px;
+  width: 13px;
+  height: 13px;
 }
 
 .profile-card-footer {
-  padding: 15px 20px 25px;
+  padding: 10px 15px 12px;
   border-top: 1px solid rgba(170, 124, 17, 0.1);
   display: flex;
   gap: 10px;
@@ -2479,7 +2479,7 @@ footer {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 15px;
+  margin-top: 6px;
 }
 
 .wax-seal-badge {
@@ -2550,7 +2550,7 @@ footer {
   font-family: var(--font-eyebrow);
   font-size: 0.7rem;
   letter-spacing: 1px;
-  color: var(--primary-color);
+  color: var(--gold-bright);
   font-weight: 700;
   text-transform: uppercase;
   display: flex;
