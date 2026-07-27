@@ -90,9 +90,12 @@ header {
   left: 0;
   width: 100%;
   z-index: 1000;
-  background-color: rgba(255, 255, 255, 0.95); /* Pure white background with high legibility */
+  background-image: linear-gradient(rgba(255, 248, 235, 0.93), rgba(255, 248, 235, 0.93)), url('../images/header-wallpaper.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   border-bottom: 1.5px solid rgba(201, 162, 39, 0.25); /* Subtle gold divider line */
-  box-shadow: 0 4px 20px rgba(92, 6, 18, 0.04);
+  box-shadow: 0 4px 20px rgba(92, 6, 18, 0.08);
   backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
@@ -3459,11 +3462,11 @@ footer {
 
 /* Sub-header Dashboard Navigation Tabs */
 .dashboard-subnav {
-  background: var(--bg-card);
-  border-bottom: 1px solid rgba(170, 124, 17, 0.25);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
-  position: sticky;
-  top: 80px;
+  background: transparent;
+  border-bottom: 1px solid rgba(170, 124, 17, 0.15);
+  box-shadow: none;
+  position: relative;
+  top: auto;
   z-index: 100;
   display: flex;
   justify-content: center;
@@ -3481,9 +3484,9 @@ footer {
   font-family: var(--font-royal);
   font-size: 0.9rem;
   letter-spacing: 1px;
-  color: var(--text-muted);
+  color: var(--primary-color); /* Premium maroon for high contrast on cream header background */
   text-decoration: none;
-  padding: 18px 5px;
+  padding: 14px 5px;
   border-bottom: 3px solid transparent;
   cursor: pointer;
   transition: var(--transition);
@@ -3491,12 +3494,12 @@ footer {
 }
 
 .subnav-tab:hover {
-  color: var(--text-white);
+  color: var(--primary-light);
 }
 
 .subnav-tab.active {
-  color: var(--text-white);
-  border-bottom-color: var(--gold-bright);
+  color: var(--primary-dark);
+  border-bottom-color: var(--gold-antique);
   font-weight: 600;
 }
 
@@ -4130,7 +4133,7 @@ footer {
   .dashboard-subnav {
     padding: 0 !important;
     border-bottom: 1.5px solid rgba(170, 124, 17, 0.2) !important;
-    background-color: var(--bg-card);
+    background-color: transparent !important;
   }
   
   .subnav-container {
