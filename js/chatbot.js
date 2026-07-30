@@ -19,12 +19,12 @@
     chatContainer.id = 'royalChatbotContainer';
     chatContainer.innerHTML = `
       <!-- Chatbot Trigger Button -->
-      <button id="royalChatbotTrigger" class="royal-chatbot-trigger" aria-label="Open Royal AI Advisor">
+      <button id="royalChatbotTrigger" class="royal-chatbot-trigger" aria-label="Open Matchmaker Chat">
         <span class="pulse-ring"></span>
         <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
           <path d="M12 2C6.477 2 2 6.13 2 11.22c0 2.87 1.42 5.43 3.65 7.15l-.65 2.63c-.1.4.26.77.66.66l3.14-1.22c1 .26 2.06.4 3.2.4 5.523 0 10-4.13 10-9.22S17.523 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/>
         </svg>
-        <span class="trigger-tooltip">Royal AI Matchmaker</span>
+        <span class="trigger-tooltip">Matchmaker Chat</span>
       </button>
 
       <!-- Chatbot Window Panel -->
@@ -32,8 +32,8 @@
         <div class="chat-header">
           <div class="header-avatar">👑</div>
           <div class="header-info">
-            <h3>Kunwar AI Advisor</h3>
-            <span class="header-status">Royal Matchmaker (Online)</span>
+            <h3>Kunwar Matchmaker Desk</h3>
+            <span class="header-status">Royal Matchmaker Desk (Online)</span>
           </div>
           <button id="closeChatbot" class="btn-close-chat" aria-label="Close Chat">×</button>
         </div>
@@ -41,9 +41,9 @@
         <div id="chatMessages" class="chat-messages">
           <div class="message bot-message">
             <div class="message-bubble">
-              Khammaghani! I am <strong>Kunwar AI Advisor</strong>, your personal matchmaker for Shree Rajput Sagai Sambandh. 
+              Khammaghani! I am <strong>Kunwar</strong> from Shree Rajput Sagai Sambandh Matchmaker Desk.
               <br><br>
-              How can I assist your lineage discovery today?
+              How can I assist your lineage discovery or partner search today?
             </div>
           </div>
           <div class="quick-replies">
@@ -55,7 +55,7 @@
         </div>
 
         <div class="chat-input-area">
-          <input type="text" id="chatInput" placeholder="Write to Kunwar AI..." aria-label="Message Input">
+          <input type="text" id="chatInput" placeholder="Write your query..." aria-label="Message Input">
           <button id="sendChatBtn" class="btn-send-chat" aria-label="Send Message">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
@@ -183,7 +183,7 @@
                 <li>Father's Mother's Gotra</li>
                 <li>Mother's Mother's Gotra</li>
               </ol>
-              Our AI Matchmaker automatically verifies these parameters for you!`;
+              Our Matchmaker Desk automatically verifies these parameters for you!`;
     }
 
     // Agent Handoff / WhatsApp Handoff
@@ -231,7 +231,7 @@
             <br><br>
             Try typing:
             <ul>
-              <li><strong>"Find perfect match"</strong> to run AI matchmaking.</li>
+              <li><strong>"Find perfect match"</strong> to check matching profiles.</li>
               <li><strong>"Gotra rules"</strong> to see compatibility guidelines.</li>
               <li><strong>"View plans"</strong> to check pricing packages.</li>
               <li><strong>"Connect to agent"</strong> to talk to our WhatsApp customer support.</li>
@@ -243,7 +243,7 @@
     const currentUserRaw = localStorage.getItem('currentUser');
     if (!currentUserRaw) {
       return `🔐 <strong>Access Restricted:</strong><br>
-              Khammaghani! Please log in or register your noble profile to run our AI Matchmaker and reveal compatible Rajput brides/grooms.
+              Khammaghani! Please log in or register your noble profile to run our matchmaking search and reveal compatible Rajput brides/grooms.
               <br><br>
               <a href="login.html" class="btn btn-primary" style="display: block; text-align: center; margin-top: 10px; text-decoration: none; padding: 8px;">Log In Now</a>
               <a href="register.html" class="btn btn-minimal" style="display: block; text-align: center; margin-top: 5px; text-decoration: none; padding: 8px;">Register Lineage</a>`;
@@ -352,7 +352,7 @@
     return `
       <div class="message-bubble ai-match-bubble" style="padding: 12px; border: 1.5px solid var(--gold-antique); background: var(--bg-card); border-radius: 12px; box-shadow: 0 4px 15px rgba(170, 124, 17, 0.15);">
         <div style="font-size: 0.85rem; font-weight: bold; color: var(--gold-antique); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-          ✨ AI Perfect Match: ${matchScore}% Compatible
+          ✨ Recommended Match: ${matchScore}% Compatible
         </div>
         <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
           <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, var(--maroon-royal), var(--maroon-light)); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.1rem; border: 1px solid var(--gold-antique);">
