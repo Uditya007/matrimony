@@ -1415,6 +1415,79 @@ window.handleSendInterest = function(id) {
 };
 
 // One-on-One chat window overlay handlers
+// Dynamic database fallback helpers for decentralized peer-to-peer chatting
+function getProfileChats(profile) {
+  let chats = {};
+  if (profile && profile.about) {
+    const chatsRegex = /\[Chats: (.*?)\]/;
+    const match = profile.about.match(chatsRegex);
+    if (match) {
+      try {
+        chats = JSON.parse(match[1].trim());
+      } catch (e) {
+        console.error("Failed to parse chats JSON from profile about:", e);
+      }
+    }
+  }
+  return chats;
+}
+
+function setProfileChatsInAbout(aboutText, chatsObj) {
+  let cleanAbout = aboutText || '';
+  cleanAbout = cleanAbout.replace(/\[Chats: .*?\]/g, '').trim();
+  return (cleanAbout + `\n[Chats: ${JSON.stringify(chatsObj)}]`).trim();
+}
+
+function getCombinedConversation(profileA, profileB) {
+  const chatsA = getProfileChats(profileA);
+  const chatsB = getProfileChats(profileB);
+  
+  const listA = chatsA[profileB.id] || [];
+  const listB = chatsB[profileA.id] || [];
+  
+  const combined = [...listA, ...listB];
+  
+  const unique = [];
+  const seen = new Set();
+  for (const msg of combined) {
+    const key = `${msg.s}_${msg.t}_${msg.time}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(msg);
+    }
+  }
+  
+  return unique.sort((a, b) => a.time - b.time);
+}
+
+let chatPollingInterval = null;
+
+function renderConversation(messagesContainer, conversation, profile) {
+  if (conversation.length === 0) {
+    messagesContainer.innerHTML = `
+      <div class="message bot-message" style="margin-bottom: 10px; align-self: flex-start;">
+        <div class="message-bubble" style="padding: 8px 12px; border-radius: 12px; max-width: 80%; background-color: #EDF2F7; color: #2D3748;">
+          Khammaghani! Thank you for sending interest. I have reviewed your Gotra compatibility and would love to connect. What are your thikanas?
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  messagesContainer.innerHTML = conversation.map(msg => {
+    const isMe = msg.s === currentUser.id;
+    return `
+      <div class="message ${isMe ? 'user-message' : 'bot-message'}" style="margin-bottom: 10px; align-self: ${isMe ? 'flex-end' : 'flex-start'};">
+        <div class="message-bubble" style="padding: 8px 12px; border-radius: 12px; max-width: 80%; word-break: break-word; background-color: ${isMe ? 'var(--primary-color)' : '#EDF2F7'}; color: ${isMe ? 'var(--text-white)' : '#2D3748'};">
+          ${msg.t}
+        </div>
+      </div>
+    `;
+  }).join('');
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
 window.openOneOnOneChat = function(profileId) {
   // Close any existing chatbot window first
   const chatbotWindow = document.getElementById('royalChatbotWindow');
@@ -1424,14 +1497,20 @@ window.openOneOnOneChat = function(profileId) {
   const profile = profiles.find(p => p.id === profileId);
   if (!profile) return;
 
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+    showToast('Please log in to chat with matches');
+    return;
+  }
+
   // Check if chat container already exists
   let chatBox = document.getElementById('oneOnOneChatWindow');
   if (!chatBox) {
     chatBox = document.createElement('div');
     chatBox.id = 'oneOnOneChatWindow';
-    chatBox.className = 'royal-chatbot-window'; // Reuse chatbot styles for aesthetic consistency!
+    chatBox.className = 'royal-chatbot-window'; 
     chatBox.style.background = '#FFFFFF';
-    chatBox.style.zIndex = '99999'; // Make sure it sits on top of everything
+    chatBox.style.zIndex = '99999';
     document.body.appendChild(chatBox);
   }
 
@@ -1459,11 +1538,7 @@ window.openOneOnOneChat = function(profileId) {
     </div>
     
     <div id="oneOnOneMessages" class="chat-messages" style="height: 280px; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px;">
-      <div class="message bot-message" style="margin-bottom: 10px;">
-        <div class="message-bubble" style="padding: 8px 12px; border-radius: 12px; max-width: 80%;">
-          Khammaghani! Thank you for sending interest. I have reviewed your Gotra compatibility and would love to connect. What are your thikanas?
-        </div>
-      </div>
+      <!-- Conversation loaded dynamically -->
     </div>
 
     <div class="chat-input-area" style="padding: 10px; display: flex; gap: 8px; border-top: 1px solid rgba(170,124,17,0.15); background-color: var(--bg-dark);">
@@ -1474,17 +1549,49 @@ window.openOneOnOneChat = function(profileId) {
     </div>
   `;
 
+  // Render conversation initially
+  const messagesContainer = document.getElementById('oneOnOneMessages');
+  const conversation = getCombinedConversation(currentUser, profile);
+  renderConversation(messagesContainer, conversation, profile);
+
   // Open the window
   chatBox.classList.add('active');
   
   // Focus input
   const inputEl = document.getElementById('oneOnOneInput');
   if (inputEl) inputEl.focus();
+
+  // Start polling for new messages from this candidate every 4 seconds
+  if (chatPollingInterval) clearInterval(chatPollingInterval);
+  chatPollingInterval = setInterval(async () => {
+    if (!chatBox.classList.contains('active')) {
+      clearInterval(chatPollingInterval);
+      return;
+    }
+    
+    if (window.supabaseActive) {
+      const { data: latestPartner, error } = await window.supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('id', profileId)
+        .single();
+        
+      if (!error && latestPartner) {
+        const latestUser = JSON.parse(localStorage.getItem('currentUser'));
+        const updatedConv = getCombinedConversation(latestUser, latestPartner);
+        renderConversation(messagesContainer, updatedConv, latestPartner);
+      }
+    }
+  }, 4000);
 };
 
 window.closeOneOnOneChat = function() {
   const chatBox = document.getElementById('oneOnOneChatWindow');
   if (chatBox) chatBox.classList.remove('active');
+  if (chatPollingInterval) {
+    clearInterval(chatPollingInterval);
+    chatPollingInterval = null;
+  }
 };
 
 window.handleOneOnOneKeyPress = function(e, profileId) {
@@ -1493,7 +1600,7 @@ window.handleOneOnOneKeyPress = function(e, profileId) {
   }
 };
 
-window.sendOneOnOneMessage = function(profileId) {
+window.sendOneOnOneMessage = async function(profileId) {
   const inputEl = document.getElementById('oneOnOneInput');
   if (!inputEl) return;
   const text = inputEl.value.trim();
@@ -1502,67 +1609,48 @@ window.sendOneOnOneMessage = function(profileId) {
   const messagesContainer = document.getElementById('oneOnOneMessages');
   if (!messagesContainer) return;
 
-  // 1. Add user message
-  const userMsgDiv = document.createElement('div');
-  userMsgDiv.className = 'message user-message';
-  userMsgDiv.style.alignSelf = 'flex-end';
-  userMsgDiv.style.marginBottom = '10px';
-  userMsgDiv.innerHTML = `
-    <div class="message-bubble" style="padding: 8px 12px; border-radius: 12px; max-width: 80%; word-break: break-word;">
-      ${text}
-    </div>
-  `;
-  messagesContainer.appendChild(userMsgDiv);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) return;
 
+  const profiles = getAllProfiles();
+  const profile = profiles.find(p => p.id === profileId);
+  if (!profile) return;
+
+  // Append new message to sender's own local conversation
+  const userChats = getProfileChats(currentUser);
+  const conversation = userChats[profileId] || [];
+  
+  const newMsg = {
+    s: currentUser.id,
+    t: text,
+    time: Date.now()
+  };
+  conversation.push(newMsg);
+  
+  userChats[profileId] = conversation;
+  currentUser.about = setProfileChatsInAbout(currentUser.about, userChats);
+  
+  // Save updated sender profile to local cache
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+  
+  // Render immediately
+  const combined = getCombinedConversation(currentUser, profile);
+  renderConversation(messagesContainer, combined, profile);
+  
   // Clear input
   inputEl.value = '';
 
-  // 2. Simulate response
-  const profiles = getAllProfiles();
-  const profile = profiles.find(p => p.id === profileId);
-  const matchName = profile ? profile.name.split(' ')[0] : 'Match';
-
-  // Add typing indicator
-  const typingDiv = document.createElement('div');
-  typingDiv.className = 'message bot-message typing-indicator';
-  typingDiv.style.marginBottom = '10px';
-  typingDiv.innerHTML = `
-    <div class="message-bubble" style="padding: 6px 12px; border-radius: 12px; max-width: 80%;">
-      ${matchName} is typing...
-    </div>
-  `;
-  messagesContainer.appendChild(typingDiv);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-  setTimeout(() => {
-    // Remove typing indicator
-    typingDiv.remove();
-
-    // Determine custom smart response
-    let responseText = '';
-    const query = text.toLowerCase();
-    if (query.includes('gotra') || query.includes('gothra')) {
-      responseText = `My father's gotra is ${profile.gotra.split(' (')[0]}. It is highly compatible with yours under traditional parameters!`;
-    } else if (query.includes('location') || query.includes('where') || query.includes('city') || query.includes('live')) {
-      responseText = `I reside in ${profile.location.split(',')[0]}. What about your family?`;
-    } else if (query.includes('education') || query.includes('job') || query.includes('occupation')) {
-      responseText = `I work as a ${profile.occupation}. Education and career are very important to our family.`;
-    } else {
-      responseText = `That sounds very promising. We should connect our parents next for gotra validation and family background discussion.`;
+  // Synchronize to Supabase profiles database row for currentUser
+  if (window.supabaseActive) {
+    const { error } = await window.supabaseClient
+      .from('profiles')
+      .update({ about: currentUser.about })
+      .eq('id', currentUser.id);
+      
+    if (error) {
+      console.error("Error syncing sent message to Supabase:", error);
     }
-
-    const botMsgDiv = document.createElement('div');
-    botMsgDiv.className = 'message bot-message';
-    botMsgDiv.style.marginBottom = '10px';
-    botMsgDiv.innerHTML = `
-      <div class="message-bubble" style="padding: 8px 12px; border-radius: 12px; max-width: 80%; word-break: break-word;">
-        ${responseText}
-      </div>
-    `;
-    messagesContainer.appendChild(botMsgDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  }, 1800);
+  }
 };
 
 // ==========================================
