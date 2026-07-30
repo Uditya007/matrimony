@@ -961,6 +961,18 @@ async function initDashboardPage() {
           console.error("Error loading Supabase profiles:", error);
         }
       });
+
+    // Start periodic background sync for profiles & incoming interests every 8 seconds
+    setInterval(() => {
+      window.supabaseClient.from('profiles').select('*')
+        .then(({ data, error }) => {
+          if (!error && data) {
+            window.firestoreUsers = data;
+            renderMatchesGrid();
+            updateDashboardStats();
+          }
+        });
+    }, 8000);
   }
 
   const userTier = currentUser.tier || 'Starter';
@@ -1112,6 +1124,9 @@ function renderMatchesGrid() {
   const container = document.getElementById('matchesGrid');
   if (!container) return;
 
+  // Scan and register any incoming interests from other users to unlock chats
+  checkIncomingInterests();
+
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   const profiles = getAllProfiles();
   const shortlists = JSON.parse(localStorage.getItem('shortlisted')) || [];
@@ -1183,13 +1198,87 @@ function getAvatarGradient(clan) {
   }
 }
 
+// Supabase-backed decentralized peer-to-peer interest helpers
+function getProfileInterests(profile) {
+  let interests = {};
+  if (profile && profile.about) {
+    const interestsRegex = /\[Interests: (.*?)\]/;
+    const match = profile.about.match(interestsRegex);
+    if (match) {
+      try {
+        interests = JSON.parse(match[1].trim());
+      } catch (e) {
+        console.error("Failed to parse interests JSON:", e);
+      }
+    }
+  }
+  return interests;
+}
+
+function setProfileInterestsInAbout(aboutText, interestsObj) {
+  let cleanAbout = aboutText || '';
+  cleanAbout = cleanAbout.replace(/\[Interests: .*?\]/g, '').trim();
+  return (cleanAbout + `\n[Interests: ${JSON.stringify(interestsObj)}]`).trim();
+}
+
+function areProfilesConnected(profileA, profileB) {
+  if (!profileA || !profileB) return false;
+  
+  const interestsA = getProfileInterests(profileA);
+  const interestsB = getProfileInterests(profileB);
+  
+  return (interestsA[profileB.id] === 'sent' || interestsA[profileB.id] === 'accepted' ||
+          interestsB[profileA.id] === 'sent' || interestsB[profileA.id] === 'accepted');
+}
+
+function checkIncomingInterests() {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) return;
+  
+  const profiles = getAllProfiles();
+  let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+  let updated = false;
+  
+  for (const p of profiles) {
+    if (p.id === currentUser.id) continue;
+    const incomingInterests = getProfileInterests(p);
+    
+    if ((incomingInterests[currentUser.id] === 'sent' || incomingInterests[currentUser.id] === 'accepted')) {
+      const notifKey = `interest_from_${p.id}`;
+      const alreadyNotified = notifications.some(n => n.notifKey === notifKey);
+      
+      if (!alreadyNotified) {
+        const newNotif = {
+          id: Date.now() + Math.random(),
+          notifKey: notifKey,
+          message: `${p.name} sent you a Match Interest! Chat is now unlocked.`,
+          profileId: p.id,
+          timestamp: 'Just now',
+          read: false
+        };
+        notifications.unshift(newNotif);
+        updated = true;
+      }
+    }
+  }
+  
+  if (updated) {
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+    if (typeof renderNotifications === 'function') {
+      renderNotifications();
+    }
+  }
+}
+
 // Generate Profile Card Markup
 function createProfileCardHtml(profile, isDashboard = true) {
   const shortlists = JSON.parse(localStorage.getItem('shortlisted')) || [];
-  const interests = JSON.parse(localStorage.getItem('interests')) || {};
   const isShortlisted = shortlists.includes(profile.id);
-  const hasSentInterest = !!interests[profile.id];
-  const isAccepted = interests[profile.id] === 'accepted';
+  
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  const mySentInterests = getProfileInterests(currentUser);
+  const hasSentInterest = mySentInterests[profile.id] === 'sent' || mySentInterests[profile.id] === 'accepted';
+  const isAccepted = areProfilesConnected(currentUser, profile);
   const isLoggedIn = !!localStorage.getItem('currentUser');
 
   // Business badges: Recently Active, Verified Shield, and AI score overlay
@@ -1316,25 +1405,29 @@ function createProfileCardHtml(profile, isDashboard = true) {
 }
 
 function updateDashboardStats() {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   const shortlists = JSON.parse(localStorage.getItem('shortlisted')) || [];
-  const interests = JSON.parse(localStorage.getItem('interests')) || {};
   
+  if (!currentUser) return;
+  const mySentInterests = getProfileInterests(currentUser);
+  const profiles = getAllProfiles();
+
   const shortCount = document.getElementById('statShortlistedCount');
   if (shortCount) shortCount.textContent = shortlists.length;
 
   const intCount = document.getElementById('statInterestsCount');
-  if (intCount) intCount.textContent = Object.keys(interests).length;
+  if (intCount) intCount.textContent = Object.keys(mySentInterests).length;
 
   // Sync new dashboard activity summary grid elements
   const actShort = document.getElementById('dashboardActivityShortlists');
   if (actShort) actShort.textContent = shortlists.length;
 
   const actInt = document.getElementById('dashboardActivityInterests');
-  if (actInt) actInt.textContent = Object.keys(interests).length;
+  if (actInt) actInt.textContent = Object.keys(mySentInterests).length;
 
   const actChats = document.getElementById('dashboardActivityChats');
   if (actChats) {
-    const acceptedCount = Object.values(interests).filter(val => val === 'accepted').length;
+    const acceptedCount = profiles.filter(p => areProfilesConnected(currentUser, p)).length;
     actChats.textContent = acceptedCount;
   }
 }
@@ -1358,60 +1451,61 @@ window.handleShortlist = function(id) {
 };
 
 // Interest Sender handler
-window.handleSendInterest = function(id) {
-  let interests = JSON.parse(localStorage.getItem('interests')) || {};
-  
-  if (interests[id]) {
+window.handleSendInterest = async function(id) {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+    showToast('Please log in to send interest');
+    return;
+  }
+
+  const mySentInterests = getProfileInterests(currentUser);
+  if (mySentInterests[id]) {
     showToast('Interest already sent to this noble profile');
     return;
   }
 
-  // 1. Mark as sent
-  interests[id] = 'sent';
-  localStorage.setItem('interests', JSON.stringify(interests));
-  showToast('Royal Match Interest dispatched successfully!', 'gold');
-  
-  updateDashboardStats();
-  renderMatchesGrid();
+  // 1. Mark as accepted immediately in currentUser's local interests mapping to unlock chat instantly
+  mySentInterests[id] = 'accepted';
+  currentUser.about = setProfileInterestsInAbout(currentUser.about, mySentInterests);
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
-  // 2. Fetch profile info
+  // Trigger standard toast notification
   const profiles = getAllProfiles();
   const targetProfile = profiles.find(p => p.id === id);
   const profileName = targetProfile ? targetProfile.name : 'Match';
+  showToast(`Royal Match Interest to ${profileName} sent! Chat is now unlocked!`, 'gold');
 
-  // 3. Simulate accepted status after 5 seconds
-  setTimeout(() => {
-    // Reload latest interests
-    let currentInterests = JSON.parse(localStorage.getItem('interests')) || {};
-    if (currentInterests[id] === 'sent') {
-      currentInterests[id] = 'accepted';
-      localStorage.setItem('interests', JSON.stringify(currentInterests));
+  // Save notification to localStorage (local to sender)
+  let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+  const newNotif = {
+    id: Date.now(),
+    message: `${profileName} accepted your Royal Interest! Click to chat.`,
+    profileId: id,
+    timestamp: 'Just now',
+    read: false
+  };
+  notifications.unshift(newNotif);
+  localStorage.setItem('notifications', JSON.stringify(notifications));
 
-      // Trigger standard toast notification
-      showToast(`Notification: ${profileName} accepted your Royal Interest! Chat is now unlocked!`, 'gold');
+  // Refresh notification badge & list
+  if (typeof renderNotifications === 'function') {
+    renderNotifications();
+  }
 
-      // Save notification to localStorage
-      let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
-      const newNotif = {
-        id: Date.now(),
-        message: `${profileName} accepted your Royal Interest! Click to chat.`,
-        profileId: id,
-        timestamp: 'Just now',
-        read: false
-      };
-      notifications.unshift(newNotif);
-      localStorage.setItem('notifications', JSON.stringify(notifications));
-
-      // Refresh notification badge & list
-      if (typeof renderNotifications === 'function') {
-        renderNotifications();
-      }
-
-      // Update dashboard stats and refresh matches grid to reveal "Chat Now 💬" button
-      updateDashboardStats();
-      renderMatchesGrid();
+  // Sync updated about field (containing new interest) to Supabase profiles database row for currentUser
+  if (window.supabaseActive) {
+    const { error } = await window.supabaseClient
+      .from('profiles')
+      .update({ about: currentUser.about })
+      .eq('id', currentUser.id);
+      
+    if (error) {
+      console.error("Error syncing sent interest to Supabase:", error);
     }
-  }, 5000);
+  }
+
+  updateDashboardStats();
+  renderMatchesGrid();
 };
 
 // One-on-One chat window overlay handlers
@@ -2576,10 +2670,10 @@ window.handleNotificationClick = function(notifId, profileId) {
 
 // Dynamic Modals for Chats Active and Interests Sent Click events
 window.openChatsModal = function() {
-  const interests = JSON.parse(localStorage.getItem('interests')) || {};
-  const acceptedIds = Object.keys(interests).filter(id => interests[id] === 'accepted');
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) return;
   const profiles = getAllProfiles();
-  const activeMatches = profiles.filter(p => acceptedIds.includes(p.id));
+  const activeMatches = profiles.filter(p => areProfilesConnected(currentUser, p));
 
   let listHtml = '';
   if (activeMatches.length === 0) {
@@ -2612,8 +2706,10 @@ window.openChatsModal = function() {
 };
 
 window.openInterestsModal = function() {
-  const interests = JSON.parse(localStorage.getItem('interests')) || {};
-  const sentIds = Object.keys(interests);
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) return;
+  const mySentInterests = getProfileInterests(currentUser);
+  const sentIds = Object.keys(mySentInterests);
   const profiles = getAllProfiles();
   const interestedMatches = profiles.filter(p => sentIds.includes(p.id));
 
@@ -2626,8 +2722,7 @@ window.openInterestsModal = function() {
     `;
   } else {
     listHtml = interestedMatches.map(p => {
-      const status = interests[p.id];
-      const isAccepted = status === 'accepted';
+      const isAccepted = areProfilesConnected(currentUser, p);
       return `
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid rgba(170,124,17,0.15); background: rgba(255,255,255,0.02); margin-bottom: 8px; border-radius: 4px;">
           <div style="display: flex; align-items: center; gap: 12px;">
