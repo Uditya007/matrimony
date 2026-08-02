@@ -103,11 +103,33 @@ header {
   width: 100%;
   z-index: 1000;
   background-color: rgba(255, 255, 255, 0.95); /* Pure white background with high legibility */
-  border-bottom: 1.5px solid rgba(201, 162, 39, 0.25); /* Subtle gold divider line */
   box-shadow: 0 4px 20px rgba(92, 6, 18, 0.04);
   backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
+}
+
+header::before {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 12px;
+  background-image: url('../images/header-border-pattern.jpg');
+  background-repeat: repeat-x;
+  background-size: auto 12px;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.25);
+}
+
+header::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 12px;
+  background-image: url('../images/header-border-pattern.jpg');
+  background-repeat: repeat-x;
+  background-size: auto 12px;
+  border-top: 1px solid rgba(201, 162, 39, 0.25);
+  border-bottom: 1px solid rgba(201, 162, 39, 0.15);
 }
 
 .nav-container {
@@ -1120,7 +1142,7 @@ footer {
 
 /* Interactive Dashboard Styles */
 .dashboard-layout {
-  padding-top: 85px;
+  padding-top: 109px;
   min-height: 100vh;
   background-color: var(--bg-warm);
 }
@@ -3496,7 +3518,7 @@ footer {
   border-bottom: 1px solid rgba(170, 124, 17, 0.25);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
   position: sticky;
-  top: 80px;
+  top: 104px;
   z-index: 100;
   display: flex;
   justify-content: center;
