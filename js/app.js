@@ -1202,7 +1202,7 @@ function getAvatarGradient(clan) {
 function getProfileInterests(profile) {
   let interests = {};
   if (profile && profile.about) {
-    const interestsRegex = /\[Interests: (.*?)\]/;
+    const interestsRegex = /\[Interests: ([^\n\r]*)\]/;
     const match = profile.about.match(interestsRegex);
     if (match) {
       try {
@@ -1217,7 +1217,7 @@ function getProfileInterests(profile) {
 
 function setProfileInterestsInAbout(aboutText, interestsObj) {
   let cleanAbout = aboutText || '';
-  cleanAbout = cleanAbout.replace(/\[Interests: .*?\]/g, '').trim();
+  cleanAbout = cleanAbout.replace(/\[Interests: [^\n\r]*\]/g, '').trim();
   return (cleanAbout + `\n[Interests: ${JSON.stringify(interestsObj)}]`).trim();
 }
 
@@ -1513,7 +1513,7 @@ window.handleSendInterest = async function(id) {
 function getProfileChats(profile) {
   let chats = {};
   if (profile && profile.about) {
-    const chatsRegex = /\[Chats: (.*?)\]/;
+    const chatsRegex = /\[Chats: ([^\n\r]*)\]/;
     const match = profile.about.match(chatsRegex);
     if (match) {
       try {
@@ -1528,7 +1528,7 @@ function getProfileChats(profile) {
 
 function setProfileChatsInAbout(aboutText, chatsObj) {
   let cleanAbout = aboutText || '';
-  cleanAbout = cleanAbout.replace(/\[Chats: .*?\]/g, '').trim();
+  cleanAbout = cleanAbout.replace(/\[Chats: [^\n\r]*\]/g, '').trim();
   return (cleanAbout + `\n[Chats: ${JSON.stringify(chatsObj)}]`).trim();
 }
 
@@ -1559,10 +1559,8 @@ let chatPollingInterval = null;
 function renderConversation(messagesContainer, conversation, profile) {
   if (conversation.length === 0) {
     messagesContainer.innerHTML = `
-      <div class="message bot-message" style="margin-bottom: 10px; align-self: flex-start;">
-        <div class="message-bubble" style="padding: 8px 12px; border-radius: 12px; max-width: 80%; background-color: #EDF2F7; color: #2D3748;">
-          Khammaghani! Thank you for sending interest. I have reviewed your Gotra compatibility and would love to connect. What are your thikanas?
-        </div>
+      <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 20px; width: 100%;">
+        This is the beginning of your connection with ${profile.name}.
       </div>
     `;
     return;
@@ -1754,11 +1752,11 @@ function getProfileSocials(profile) {
   let facebook = profile.facebook || '';
   
   if (profile.about) {
-    const socialRegex = /\[Social Links: (\{.*?\})\]/;
+    const socialRegex = /\[Social Links: ([^\]]*)\]/;
     const match = profile.about.match(socialRegex);
     if (match) {
       try {
-        const socialObj = JSON.parse(match[1]);
+        const socialObj = JSON.parse(match[1].trim());
         if (!instagram) instagram = socialObj.instagram || '';
         if (!facebook) facebook = socialObj.facebook || '';
       } catch (e) {
@@ -1773,7 +1771,7 @@ function getProfileBiodata(profile) {
   let biodataUrl = profile.biodataUrl || '';
   
   if (profile.about) {
-    const biodataRegex = /\[Biodata Link: (.*?)\]/;
+    const biodataRegex = /\[Biodata Link: ([^\]]*)\]/;
     const match = profile.about.match(biodataRegex);
     if (match) {
       biodataUrl = match[1].trim();
@@ -2370,9 +2368,9 @@ window.toggleEditProfileForm = function(show) {
     // Parse about block to strip fallback serialized data before rendering
     let cleanAboutText = currentUser.about || '';
     if (cleanAboutText) {
-      const socialRegex = /\[Social Links: (\{.*?\})\]/;
+      const socialRegex = /\[Social Links: ([^\]]*)\]/;
       cleanAboutText = cleanAboutText.replace(socialRegex, '').trim();
-      const biodataRegex = /\[Biodata Link: (.*?)\]/;
+      const biodataRegex = /\[Biodata Link: ([^\]]*)\]/;
       cleanAboutText = cleanAboutText.replace(biodataRegex, '').trim();
     }
     document.getElementById('editAbout').value = cleanAboutText;
