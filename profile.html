@@ -6,11 +6,32 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Edit Profile | Shree Rajput Sagai Sambandh</title>
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
   
   <style>
+    /* Jharokha styling guide inside cropper view box */
+    .cropper-view-box {
+      outline: 1px solid var(--gold-bright);
+      outline-color: rgba(232, 199, 102, 0.75);
+    }
+    .cropper-face {
+      background-color: transparent;
+      opacity: 1;
+    }
+    .cropper-face::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border: 2px dashed var(--gold-bright);
+      border-bottom: none;
+      border-radius: 50% 50% 0 0 / 25% 25% 0 0;
+      pointer-events: none;
+      opacity: 0.85;
+    }
+    
     /* Profile Page Custom Styles overrides */
     body {
       padding-top: 104px; /* Ensure space for fixed header and borders */
@@ -467,10 +488,30 @@
   <!-- Toast Notification element -->
   <div id="toast" class="toast"></div>
 
+  <!-- Gorgeous Royal Cropper Modal -->
+  <div class="profile-modal" id="cropperModal" style="display: none; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(26, 4, 8, 0.95); z-index: 10000; padding: 20px; box-sizing: border-box;">
+    <div style="background: var(--bg-deep); border: 2px solid var(--gold-antique); border-radius: 12px; width: 100%; max-width: 500px; padding: 25px; box-sizing: border-box; position: relative; text-align: center; box-shadow: var(--shadow-royal);">
+      <h3 style="color: var(--gold-bright); font-family: var(--font-royal); margin-top: 0; margin-bottom: 8px; font-size: 1.3rem;">Frame Your Portrait</h3>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 20px;">Adjust the crop box to center your face inside the traditional Jharokha arch shape.</p>
+      
+      <!-- Cropper Container -->
+      <div style="position: relative; width: 100%; height: 350px; background: #000; border-radius: 6px; overflow: hidden; margin-bottom: 20px; display: flex; justify-content: center; align-items: center;">
+        <img id="cropperSourceImage" style="max-width: 100%; max-height: 350px; display: block;">
+      </div>
+      
+      <!-- Actions -->
+      <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <button type="button" class="btn btn-minimal" onclick="closeCropperModal()" style="font-size: 0.85rem; padding: 8px 16px;">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="applyImageCrop()" style="font-size: 0.85rem; padding: 8px 20px; background: var(--gold-gradient); color: var(--primary-color); border: none; font-weight: bold;">Apply Frame</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Supabase JS Client SDK and Scripts -->
   <script src="js/data.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script src="js/app.js"></script>
   
   <script>
@@ -710,38 +751,90 @@
       });
     }
 
-    // Avatar preview file listener with client-side compression
-    async function handleProfilePicChange(event) {
+    let cropperInstance = null;
+    let cropperFile = null;
+
+    // Avatar preview file listener with client-side compression & cropping
+    function handleProfilePicChange(event) {
       const file = event.target.files[0];
       if (!file) return;
+      
+      cropperFile = file;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const modal = document.getElementById('cropperModal');
+        const cropperImg = document.getElementById('cropperSourceImage');
+        
+        cropperImg.src = e.target.result;
+        if (modal) modal.style.display = 'flex';
+        
+        // Initialize Cropper.js instance with 4:5 aspect ratio (matching vertical frame)
+        if (cropperInstance) cropperInstance.destroy();
+        
+        cropperInstance = new Cropper(cropperImg, {
+          aspectRatio: 4 / 5,
+          viewMode: 1,
+          dragMode: 'move',
+          autoCropArea: 0.85,
+          restore: false,
+          guides: true,
+          center: true,
+          highlight: false,
+          cropBoxMovable: true,
+          cropBoxResizable: true,
+          toggleDragModeOnDblclick: false
+        });
+      };
+      reader.readAsDataURL(file);
+    }
 
+    function closeCropperModal() {
+      const modal = document.getElementById('cropperModal');
+      if (modal) modal.style.display = 'none';
+      if (cropperInstance) {
+        cropperInstance.destroy();
+        cropperInstance = null;
+      }
+      // Reset input element value so same image can be reselected
+      const fileInput = document.getElementById('profilePicInput');
+      if (fileInput) fileInput.value = '';
+    }
+
+    function applyImageCrop() {
+      if (!cropperInstance) return;
+      
       const frame = document.getElementById('profileAvatarFrame');
       if (frame) {
-        frame.innerHTML = '<div style="font-size: 1rem; color: var(--gold-antique);">Compressing...</div>';
+        frame.innerHTML = '<div style="font-size: 1rem; color: var(--gold-antique);">Framing...</div>';
       }
-
-      try {
-        // Compress to maximum 400x400 at 0.75 quality (highly optimized size, approx 25-45KB)
-        const compressedData = await compressImage(file, 400, 400, 0.75);
+      
+      // Get cropped image canvas (cropped to exactly 4:5 aspect ratio, e.g., 400x500 pixels)
+      const canvas = cropperInstance.getCroppedCanvas({
+        width: 400,
+        height: 500,
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
+      });
+      
+      if (canvas) {
+        const croppedData = canvas.toDataURL('image/jpeg', 0.8);
         
         if (frame) {
-          frame.innerHTML = `<img src="${compressedData}" alt="Preview" />`;
+          frame.innerHTML = `<img src="${croppedData}" alt="Preview" />`;
         }
         
-        tempAvatarData = compressedData; // base64 cached
-        const blob = dataURLtoBlob(compressedData);
-        tempAvatarFile = new File([blob], file.name || "avatar.jpg", { type: "image/jpeg" }); // raw file cached
+        tempAvatarData = croppedData; // base64 cached
+        const blob = dataURLtoBlob(croppedData);
+        tempAvatarFile = new File([blob], cropperFile.name || "avatar.jpg", { type: "image/jpeg" }); // raw file cached
         isPhotoRemoved = false; // reset flag
         
         const removeBtnContainer = document.getElementById('removePhotoContainer');
         if (removeBtnContainer) removeBtnContainer.style.display = 'block';
-      } catch (err) {
-        console.error("Image compression failed:", err);
-        showToast("Failed to process image. Try another file.");
-        if (frame) {
-          frame.textContent = "U";
-        }
+        
+        showToast('Portrait framed successfully! Save to commit changes.', 'gold');
       }
+      
+      closeCropperModal();
     }
 
     function handleRemovePhoto() {
