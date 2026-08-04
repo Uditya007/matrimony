@@ -1861,7 +1861,14 @@ window.openProfileDetailModal = function(id) {
   document.getElementById('detailFamilyType').textContent = `${profile.familyType || 'Traditional'} Values`;
   
   // Custom summaries
-  document.getElementById('modalBio').textContent = profile.about;
+  let cleanBio = profile.about || '';
+  if (cleanBio) {
+    cleanBio = cleanBio.replace(/\[Social Links: [^\]]*\]/g, '').trim();
+    cleanBio = cleanBio.replace(/\[Biodata Link: [^\]]*\]/g, '').trim();
+    cleanBio = cleanBio.replace(/\[Interests: [^\]]*\]/g, '').trim();
+    cleanBio = cleanBio.replace(/\[Chats: [^\n\r]*\]/g, '').trim();
+  }
+  document.getElementById('modalBio').textContent = cleanBio;
   document.getElementById('modalFamily').textContent = profile.familyDetails || 'Descent from a highly respected Rajput family in Rajasthan preserving traditional gotra and ancestral parameters.';
   document.getElementById('modalExpectations').textContent = profile.expectations || 'Seeking a well-educated partner from a noble Rajput family who values heritage, gotra compatibility, and lineage preservation.';
 
@@ -1870,10 +1877,72 @@ window.openProfileDetailModal = function(id) {
 
   const unlockBox = document.getElementById('modalUnlockBox');
   const unlockedDetails = document.getElementById('modalUnlockedDetails');
-  if (unlockBox) unlockBox.style.display = 'block';
-  if (unlockedDetails) unlockedDetails.classList.remove('active');
   const socialsItem = document.getElementById('unlockedSocialsItem');
-  if (socialsItem) socialsItem.style.display = 'none';
+
+  const isOwnProfile = currentUser && currentUser.id === id;
+  const isConnected = currentUser && typeof areProfilesConnected === 'function' && areProfilesConnected(currentUser, profile);
+
+  if (isOwnProfile || isConnected) {
+    if (unlockBox) unlockBox.style.display = 'none';
+    if (unlockedDetails) unlockedDetails.classList.add('active');
+    
+    // Decrypt details directly
+    document.getElementById('unlockedPhone').textContent = profile.phone || 'Not Specified';
+    document.getElementById('unlockedEmail').textContent = profile.email || 'Not Specified';
+    document.getElementById('unlockedAddress').textContent = `${profile.location || 'Not Specified'}`;
+    
+    const socials = getProfileSocials(profile);
+    const biodataUrl = getProfileBiodata(profile);
+    const socialsContainer = document.getElementById('unlockedSocials');
+    
+    if (socialsItem && socialsContainer) {
+      if (socials.instagram || socials.facebook || biodataUrl) {
+        socialsItem.style.display = 'block';
+        const labelEl = socialsItem.querySelector('label');
+        if (labelEl) {
+          labelEl.textContent = (socials.instagram || socials.facebook) ? 'Socials & Documents' : 'Ancestral Documents';
+        }
+        
+        let html = '';
+        if (socials.instagram) {
+          let url = socials.instagram;
+          if (!url.startsWith('http')) {
+            url = 'https://instagram.com/' + url.replace('@', '').trim();
+          }
+          html += `
+            <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--gold-bright); display: flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; font-size: 0.85rem; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.25);">
+              Instagram
+            </a>
+          `;
+        }
+        if (socials.facebook) {
+          let url = socials.facebook;
+          if (!url.startsWith('http')) {
+            url = 'https://facebook.com/' + url.trim();
+          }
+          html += `
+            <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--gold-bright); display: flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; font-size: 0.85rem; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.25);">
+              Facebook
+            </a>
+          `;
+        }
+        if (biodataUrl) {
+          html += `
+            <a href="${biodataUrl}" target="_blank" download="Biodata_${profile.name.replace(/\s/g, '_')}.pdf" style="color: var(--gold-bright); display: flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; font-size: 0.85rem; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.25);">
+              View Biodata (PDF)
+            </a>
+          `;
+        }
+        socialsContainer.innerHTML = html;
+      } else {
+        socialsItem.style.display = 'none';
+      }
+    }
+  } else {
+    if (unlockBox) unlockBox.style.display = 'block';
+    if (unlockedDetails) unlockedDetails.classList.remove('active');
+    if (socialsItem) socialsItem.style.display = 'none';
+  }
 
   // Trigger click event for Unlock contact details
   const unlockBtn = document.getElementById('unlockContactBtn');
