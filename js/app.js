@@ -379,6 +379,8 @@ function getAllProfiles() {
   const formattedLocals = localUsers.map(user => ({
     id: user.id || `U_${user.email}`,
     name: user.name || "Noble Member",
+    img: user.profilePic || '',
+    profilePic: user.profilePic || '',
     gender: user.gender || "Groom",
     age: parseInt(user.age) || 25,
     dob: user.dob || "1998-06-15",
