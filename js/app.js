@@ -1303,7 +1303,7 @@ function createProfileCardHtml(profile, isDashboard = true) {
   const isPhotoLocked = !isLoggedIn && !isDashboard;
 
   let imageAreaHtml = `
-    <div class="jharokha-frame-container">
+    <div class="jharokha-frame-container" onclick="openProfileDetailModal('${profile.id}')" style="cursor: pointer;">
       <!-- Clipped frame block containing either profile image or locked blur, with velvet gradient background -->
       <div class="jharokha-frame" style="background: ${getAvatarGradient(profile.clan)}; width: 100%; height: 100%;">
         ${isPhotoLocked ? `
@@ -1363,7 +1363,7 @@ function createProfileCardHtml(profile, isDashboard = true) {
     <div class="profile-card" data-id="${profile.id}">
       ${imageAreaHtml}
       
-      <div class="profile-card-body" style="padding-bottom: 15px;">
+      <div class="profile-card-body" style="padding-bottom: 15px; cursor: pointer;" onclick="openProfileDetailModal('${profile.id}')">
         <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px;">
           ${recentlyActiveBadge}
           ${verifiedBadge}
@@ -1848,8 +1848,10 @@ window.openProfileDetailModal = function(id) {
   // Build the Partner Preferences side-by-side comparison tables dynamically
   renderPartnerPreferencesComparison(profile);
 
-  unlockBox.style.display = 'block';
-  unlockedDetails.classList.remove('active');
+  const unlockBox = document.getElementById('modalUnlockBox');
+  const unlockedDetails = document.getElementById('modalUnlockedDetails');
+  if (unlockBox) unlockBox.style.display = 'block';
+  if (unlockedDetails) unlockedDetails.classList.remove('active');
   const socialsItem = document.getElementById('unlockedSocialsItem');
   if (socialsItem) socialsItem.style.display = 'none';
 
