@@ -1905,11 +1905,11 @@ window.openProfileDetailModal = function(id) {
     <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
       <!-- Clipped frame block containing either the img or initials -->
       <div class="jharokha-frame" style="background: ${getAvatarGradient(profile.clan)}; width: 100%; height: 100%;">
-        ${profile.img ? `<img src="${profile.img}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="${profile.name}" />` : `<div class="profile-avatar-placeholder" style="font-size: 7rem; display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-white);">${profile.initials}</div>`}
+        ${profile.img ? `<img src="${profile.img}" onclick="window.viewFullImage('${profile.img}')" style="width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in;" title="Click to view full image" alt="${profile.name}" />` : `<div class="profile-avatar-placeholder" style="font-size: 7rem; display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-white);">${profile.initials}</div>`}
       </div>
       
       <!-- Jharokha absolute border outline SVG overlay -->
-      <svg class="jharokha-border" viewBox="0 0 100 125" preserveAspectRatio="none" style="z-index: 10; padding: 20px;">
+      <svg class="jharokha-border" viewBox="0 0 100 125" preserveAspectRatio="none" style="z-index: 10; padding: 20px; pointer-events: none;">
         <path d="M 50,2 C 65,14 85,17 90,32 C 95,47 98,57 98,98 L 2,98 C 2,57 5,47 10,32 C 15,17 35,14 50,2 Z" fill="none" stroke="var(--gold-antique)" stroke-width="2" />
       </svg>
     </div>
@@ -2989,6 +2989,24 @@ window.closePdfViewer = function() {
   const frame = document.getElementById('pdfViewerFrame');
   if (modal) modal.classList.remove('active');
   if (frame) frame.src = '';
+};
+
+window.viewFullImage = function(imgUrl) {
+  const modal = document.getElementById('imageLightboxModal');
+  const img = document.getElementById('lightboxImage');
+  if (img) img.src = imgUrl;
+  if (modal) modal.classList.add('active');
+};
+
+window.closeImageLightbox = function() {
+  const modal = document.getElementById('imageLightboxModal');
+  const img = document.getElementById('lightboxImage');
+  if (modal) modal.classList.remove('active');
+  if (img) {
+    setTimeout(() => {
+      if (modal && !modal.classList.contains('active')) img.src = '';
+    }, 400);
+  }
 };
 
 

@@ -629,6 +629,14 @@
     </div>
   </div>
 
+  <!-- Royal Image Lightbox Modal -->
+  <div class="profile-modal" id="imageLightboxModal" style="background: rgba(10, 2, 4, 0.96); z-index: 20000;" onclick="closeImageLightbox()">
+    <button type="button" onclick="closeImageLightbox()" style="position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: var(--gold-bright); font-size: 2.5rem; cursor: pointer; line-height: 1; z-index: 20001;">&times;</button>
+    <div style="max-width: 90%; max-height: 90%; position: relative; display: flex; justify-content: center; align-items: center;" onclick="event.stopPropagation()">
+      <img id="lightboxImage" src="" style="max-width: 100%; max-height: 85vh; border: 3px solid var(--gold-antique); border-radius: 8px; box-shadow: var(--shadow-royal); object-fit: contain; display: block;">
+    </div>
+  </div>
+
   <footer>
     <div class="footer-container">
       <div class="footer-col footer-about">
