@@ -606,6 +606,29 @@
     </div>
   </div>
 
+  <!-- Gorgeous Royal PDF Viewer Modal -->
+  <div class="profile-modal" id="pdfViewerModal" style="background: rgba(26, 4, 8, 0.95); z-index: 10000;">
+    <div style="background: var(--bg-deep); border: 2px solid var(--gold-antique); border-radius: 12px; width: 100%; max-width: 900px; height: 90vh; padding: 25px; box-sizing: border-box; position: relative; display: flex; flex-direction: column; box-shadow: var(--shadow-royal);">
+      
+      <!-- Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--gold-antique); padding-bottom: 12px; margin-bottom: 20px;">
+        <h3 id="pdfViewerTitle" style="color: var(--gold-bright); font-family: var(--font-royal); margin: 0; font-size: 1.25rem;">Ancestral Biodata Viewer</h3>
+        <button type="button" onclick="closePdfViewer()" style="background: transparent; border: none; color: var(--gold-bright); font-size: 2rem; cursor: pointer; line-height: 1; padding: 0 5px;">&times;</button>
+      </div>
+      
+      <!-- Frame -->
+      <div style="flex: 1; width: 100%; background: #fff; border-radius: 6px; overflow: hidden; position: relative; border: 1px solid rgba(170, 124, 17, 0.2);">
+        <iframe id="pdfViewerFrame" style="width: 100%; height: 100%; border: none;" src=""></iframe>
+      </div>
+      
+      <!-- Footer actions -->
+      <div style="display: flex; justify-content: flex-end; margin-top: 20px; gap: 12px;">
+        <a id="pdfDownloadLink" href="" download="" class="btn btn-royal" style="font-size: 0.8rem; padding: 8px 20px; text-decoration: none; font-weight: bold; background: var(--gold-gradient); color: var(--primary-color);">Download Copy</a>
+        <button type="button" class="btn btn-minimal" onclick="closePdfViewer()" style="font-size: 0.8rem; padding: 8px 16px;">Close</button>
+      </div>
+    </div>
+  </div>
+
   <footer>
     <div class="footer-container">
       <div class="footer-col footer-about">

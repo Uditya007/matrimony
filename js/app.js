@@ -1928,9 +1928,9 @@ window.openProfileDetailModal = function(id) {
         }
         if (biodataUrl) {
           html += `
-            <a href="${biodataUrl}" target="_blank" download="Biodata_${profile.name.replace(/\s/g, '_')}.pdf" style="color: var(--gold-bright); display: flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; font-size: 0.85rem; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.25);">
+            <button onclick="viewProfilePdf('${biodataUrl}', '${profile.name}')" class="btn btn-royal" style="color: var(--gold-bright); display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.25); cursor: pointer;">
               View Biodata (PDF)
-            </a>
+            </button>
           `;
         }
         socialsContainer.innerHTML = html;
@@ -2007,10 +2007,10 @@ window.openProfileDetailModal = function(id) {
           }
           if (biodataUrl) {
             html += `
-              <a href="${biodataUrl}" target="_blank" download="Biodata_${profile.name.replace(/\s/g, '_')}.pdf" style="color: var(--gold-bright); display: flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; font-size: 0.85rem; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.25);">
+              <button onclick="viewProfilePdf('${biodataUrl}', '${profile.name}')" class="btn btn-royal" style="color: var(--gold-bright); display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.25); cursor: pointer;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-antique);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 View Biodata (PDF)
-              </a>
+              </button>
             `;
           }
           socialsContainer.innerHTML = html;
@@ -2880,6 +2880,28 @@ window.showInterestsOrChatsModal = function(title, contentHtml) {
 window.closeInterestsOrChatsModal = function() {
   const modalOverlay = document.getElementById('interestsChatsModalOverlay');
   if (modalOverlay) modalOverlay.style.display = 'none';
+};
+
+window.viewProfilePdf = function(pdfUrl, profileName) {
+  const modal = document.getElementById('pdfViewerModal');
+  const frame = document.getElementById('pdfViewerFrame');
+  const title = document.getElementById('pdfViewerTitle');
+  const downloadLink = document.getElementById('pdfDownloadLink');
+
+  if (title) title.textContent = `${profileName}'s Ancestral Biodata`;
+  if (downloadLink) {
+    downloadLink.href = pdfUrl;
+    downloadLink.download = `Biodata_${profileName.replace(/\s/g, '_')}.pdf`;
+  }
+  if (frame) frame.src = pdfUrl;
+  if (modal) modal.classList.add('active');
+};
+
+window.closePdfViewer = function() {
+  const modal = document.getElementById('pdfViewerModal');
+  const frame = document.getElementById('pdfViewerFrame');
+  if (modal) modal.classList.remove('active');
+  if (frame) frame.src = '';
 };
 
 
