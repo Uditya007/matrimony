@@ -489,7 +489,7 @@
   <div id="toast" class="toast"></div>
 
   <!-- Gorgeous Royal Cropper Modal -->
-  <div class="profile-modal" id="cropperModal" style="display: none; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(26, 4, 8, 0.95); z-index: 10000; padding: 20px; box-sizing: border-box;">
+  <div class="profile-modal" id="cropperModal" style="background: rgba(26, 4, 8, 0.95); z-index: 10000;">
     <div style="background: var(--bg-deep); border: 2px solid var(--gold-antique); border-radius: 12px; width: 100%; max-width: 500px; padding: 25px; box-sizing: border-box; position: relative; text-align: center; box-shadow: var(--shadow-royal);">
       <h3 style="color: var(--gold-bright); font-family: var(--font-royal); margin-top: 0; margin-bottom: 8px; font-size: 1.3rem;">Frame Your Portrait</h3>
       <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 20px;">Adjust the crop box to center your face inside the traditional Jharokha arch shape.</p>
@@ -765,32 +765,37 @@
         const modal = document.getElementById('cropperModal');
         const cropperImg = document.getElementById('cropperSourceImage');
         
+        cropperImg.onload = function() {
+          // Initialize Cropper.js instance with 4:5 aspect ratio (matching vertical frame)
+          if (cropperInstance) {
+            cropperInstance.destroy();
+          }
+          
+          cropperInstance = new Cropper(cropperImg, {
+            aspectRatio: 4 / 5,
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 0.85,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false
+          });
+          cropperImg.onload = null; // reset
+        };
+        
         cropperImg.src = e.target.result;
-        if (modal) modal.style.display = 'flex';
-        
-        // Initialize Cropper.js instance with 4:5 aspect ratio (matching vertical frame)
-        if (cropperInstance) cropperInstance.destroy();
-        
-        cropperInstance = new Cropper(cropperImg, {
-          aspectRatio: 4 / 5,
-          viewMode: 1,
-          dragMode: 'move',
-          autoCropArea: 0.85,
-          restore: false,
-          guides: true,
-          center: true,
-          highlight: false,
-          cropBoxMovable: true,
-          cropBoxResizable: true,
-          toggleDragModeOnDblclick: false
-        });
+        if (modal) modal.classList.add('active');
       };
       reader.readAsDataURL(file);
     }
 
     function closeCropperModal() {
       const modal = document.getElementById('cropperModal');
-      if (modal) modal.style.display = 'none';
+      if (modal) modal.classList.remove('active');
       if (cropperInstance) {
         cropperInstance.destroy();
         cropperInstance = null;
