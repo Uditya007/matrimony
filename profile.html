@@ -192,6 +192,10 @@
         <input type="file" id="profilePicInput" accept="image/*" onchange="handleProfilePicChange(event)" style="display: none;">
       </label>
       
+      <div id="removePhotoContainer" style="display: none; margin-top: -10px; margin-bottom: 15px;">
+        <button type="button" onclick="handleRemovePhoto()" style="background: transparent; color: var(--gold-bright); border: none; font-size: 0.75rem; cursor: pointer; text-decoration: underline; font-weight: 500;">Remove Photo</button>
+      </div>
+      
       <h3 class="user-card-name" id="sideCardName" style="font-size: 1.4rem; margin-bottom: 5px;">Noble User</h3>
       <p class="user-card-id" id="sideCardId" style="font-size: 0.8rem; margin-bottom: 20px;">SRS-XXXXXX</p>
       
@@ -470,6 +474,7 @@
     let tempAvatarFile = null;
     let tempBiodataData = null;
     let tempBiodataFile = null;
+    let isPhotoRemoved = false;
 
     function parseAboutField(aboutText) {
       let cleanAbout = aboutText || '';
@@ -556,13 +561,16 @@
 
       // Left side avatar image
       const frame = document.getElementById('profileAvatarFrame');
+      const removeBtnContainer = document.getElementById('removePhotoContainer');
       if (frame) {
         if (user.profilePic && !user.profilePic.startsWith('mock_') && (user.profilePic.startsWith('http') || user.profilePic.startsWith('/') || user.profilePic.startsWith('data:'))) {
           frame.innerHTML = `<img src="${user.profilePic}" alt="Avatar" />`;
+          if (removeBtnContainer) removeBtnContainer.style.display = 'block';
         } else {
           const initials = (user.name || 'N M').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
           frame.textContent = initials;
           frame.style.background = getAvatarGradient(user.clan || 'Rathore');
+          if (removeBtnContainer) removeBtnContainer.style.display = 'none';
         }
       }
 
@@ -689,6 +697,10 @@
         tempAvatarData = compressedData; // base64 cached
         const blob = dataURLtoBlob(compressedData);
         tempAvatarFile = new File([blob], file.name || "avatar.jpg", { type: "image/jpeg" }); // raw file cached
+        isPhotoRemoved = false; // reset flag
+        
+        const removeBtnContainer = document.getElementById('removePhotoContainer');
+        if (removeBtnContainer) removeBtnContainer.style.display = 'block';
       } catch (err) {
         console.error("Image compression failed:", err);
         showToast("Failed to process image. Try another file.");
@@ -696,6 +708,29 @@
           frame.textContent = "U";
         }
       }
+    }
+
+    function handleRemovePhoto() {
+      isPhotoRemoved = true;
+      tempAvatarFile = null;
+      tempAvatarData = null;
+      
+      const frame = document.getElementById('profileAvatarFrame');
+      if (frame) {
+        const nameVal = document.getElementById('profName').value || 'Noble Member';
+        const initials = nameVal.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        frame.textContent = initials;
+        const clanVal = document.getElementById('profClan').value || 'Rathore';
+        frame.style.background = getAvatarGradient(clanVal);
+      }
+      
+      const removeBtnContainer = document.getElementById('removePhotoContainer');
+      if (removeBtnContainer) removeBtnContainer.style.display = 'none';
+      
+      const fileInput = document.getElementById('profilePicInput');
+      if (fileInput) fileInput.value = '';
+      
+      showToast('Profile picture marked for removal. Save to apply.', 'gold');
     }
 
     // Biodata PDF file listener
@@ -774,8 +809,9 @@
 
         let profilePicUrl = currentUser.profilePic || '';
 
-        // 1. Upload file to Supabase Storage if active
-        if (tempAvatarFile && window.supabaseActive) {
+        if (isPhotoRemoved) {
+          profilePicUrl = '';
+        } else if (tempAvatarFile && window.supabaseActive) {
           try {
             const file = tempAvatarFile;
             const fileExt = file.name.split('.').pop();
