@@ -366,10 +366,8 @@ function showToast(message, type = 'normal') {
   }, 3500);
 }
 
-// Get combined profiles (Pre-seeded + registered users)
+// Get combined profiles (Registered users from Supabase database)
 function getAllProfiles() {
-  const seeds = window.SEED_PROFILES || [];
-  
   // Fetch from Supabase database cache if active, otherwise fall back to LocalStorage
   let localUsers = [];
   if (window.supabaseActive && window.firestoreUsers) {
@@ -414,7 +412,7 @@ function getAllProfiles() {
     tier: user.tier || 'Starter'
   }));
 
-  return [...seeds, ...formattedLocals];
+  return formattedLocals;
 }
 
 // Check auth before loading dashboard
