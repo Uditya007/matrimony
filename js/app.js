@@ -699,6 +699,25 @@ function initRegisterPage() {
     });
   }
 
+  const regCasteSelect = document.getElementById('regCaste');
+  if (regCasteSelect) {
+    regCasteSelect.addEventListener('change', function() {
+      const otherGroup = document.getElementById('regCasteOtherGroup');
+      if (this.value === 'Other') {
+        if (otherGroup) otherGroup.style.display = 'block';
+        const otherInput = document.getElementById('regCasteOther');
+        if (otherInput) otherInput.required = true;
+      } else {
+        if (otherGroup) otherGroup.style.display = 'none';
+        const otherInput = document.getElementById('regCasteOther');
+        if (otherInput) {
+          otherInput.required = false;
+          otherInput.value = '';
+        }
+      }
+    });
+  }
+
   if (!registerForm) return;
 
   nextBtns.forEach(btn => {
@@ -740,7 +759,7 @@ function initRegisterPage() {
       dob: document.getElementById('regDOB').value,
       religion: document.getElementById('regReligion').value,
       caste: document.getElementById('regCasteType').value,
-      clan: document.getElementById('regCaste').value,
+      clan: document.getElementById('regCaste').value === 'Other' ? document.getElementById('regCasteOther').value.trim() : document.getElementById('regCaste').value,
       pob: document.getElementById('regPOB').value.trim(),
       gotra: document.getElementById('regGotra').value.trim(),
       motherGotra: document.getElementById('regMotherGotra').value.trim(),
@@ -850,7 +869,8 @@ function initRegisterPage() {
       }
       return true;
     } else if (stepIdx === 1) {
-      const clan = document.getElementById('regCaste').value;
+      const clanSelect = document.getElementById('regCaste').value;
+      const clan = clanSelect === 'Other' ? document.getElementById('regCasteOther').value.trim() : clanSelect;
       const gotra = document.getElementById('regGotra').value.trim();
       const age = document.getElementById('regAge').value;
       const religion = document.getElementById('regReligion').value;

@@ -240,7 +240,12 @@
               <option value="Shekhawat">Shekhawat</option>
               <option value="Panwar">Panwar</option>
               <option value="Tanwar">Tanwar</option>
+              <option value="Other">Other (Please Specify)</option>
             </select>
+            <div class="form-group" id="profClanOtherGroup" style="display: none; margin-top: 10px;">
+              <label for="profClanOther">Specify Rajput Clan</label>
+              <input type="text" id="profClanOther" placeholder="Enter custom Clan" style="background-color: rgba(255,255,255,0.05); color: var(--text-white); border: 1px solid rgba(170,124,17,0.3); padding: 8px 12px; border-radius: 4px; width: 100%; box-sizing: border-box;">
+            </div>
           </div>
           
           <div class="form-group">
@@ -513,6 +518,24 @@
       // 2. Load and render profile details
       populateFormFields(currentUser);
 
+      const profClanSelect = document.getElementById('profClan');
+      if (profClanSelect) {
+        profClanSelect.addEventListener('change', function() {
+          const otherGroup = document.getElementById('profClanOtherGroup');
+          const otherInput = document.getElementById('profClanOther');
+          if (this.value === 'Other') {
+            if (otherGroup) otherGroup.style.display = 'block';
+            if (otherInput) otherInput.required = true;
+          } else {
+            if (otherGroup) otherGroup.style.display = 'none';
+            if (otherInput) {
+              otherInput.required = false;
+              otherInput.value = '';
+            }
+          }
+        });
+      }
+
       // 3. Configure drag-and-drop listeners for Biodata PDF Upload
       const dropZone = document.getElementById('biodataUploadContainer');
       if (dropZone) {
@@ -576,7 +599,18 @@
 
       // Populate form fields
       document.getElementById('profName').value = user.name || '';
-      document.getElementById('profClan').value = user.clan || 'Rathore';
+      const standardClans = ['Rathore', 'Sisodia', 'Chauhan', 'Kachwaha', 'Bhati', 'Shekhawat', 'Panwar', 'Tanwar'];
+      if (user.clan && standardClans.includes(user.clan)) {
+        document.getElementById('profClan').value = user.clan;
+        document.getElementById('profClanOtherGroup').style.display = 'none';
+        document.getElementById('profClanOther').required = false;
+        document.getElementById('profClanOther').value = '';
+      } else {
+        document.getElementById('profClan').value = 'Other';
+        document.getElementById('profClanOtherGroup').style.display = 'block';
+        document.getElementById('profClanOther').required = true;
+        document.getElementById('profClanOther').value = user.clan || '';
+      }
       document.getElementById('profGotra').value = user.gotra || '';
       document.getElementById('profMotherGotra').value = user.motherGotra || '';
       document.getElementById('profThikana').value = user.thikana || '';
@@ -720,8 +754,9 @@
         const nameVal = document.getElementById('profName').value || 'Noble Member';
         const initials = nameVal.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         frame.textContent = initials;
-        const clanVal = document.getElementById('profClan').value || 'Rathore';
-        frame.style.background = getAvatarGradient(clanVal);
+        const clanValSelect = document.getElementById('profClan').value;
+        const clanVal = clanValSelect === 'Other' ? document.getElementById('profClanOther').value.trim() : clanValSelect;
+        frame.style.background = getAvatarGradient(clanVal || 'Rathore');
       }
       
       const removeBtnContainer = document.getElementById('removePhotoContainer');
@@ -870,11 +905,14 @@
           biodataPdfUrl = tempBiodataData;
         }
 
+        const clanSelectVal = document.getElementById('profClan').value;
+        const clanVal = clanSelectVal === 'Other' ? document.getElementById('profClanOther').value.trim() : clanSelectVal;
+
         // 2. Construct updated profile record
         const updatedUser = {
           ...currentUser,
           name: document.getElementById('profName').value.trim(),
-          clan: document.getElementById('profClan').value,
+          clan: clanVal,
           gotra: document.getElementById('profGotra').value.trim(),
           motherGotra: document.getElementById('profMotherGotra').value.trim(),
           thikana: document.getElementById('profThikana').value.trim(),
