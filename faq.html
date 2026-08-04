@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>FAQ & Guidelines | Shree Rajput Sagai Sambandh</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+  
+  <style>
+    body {
+      padding-top: 104px; /* Space for fixed header and patterns */
+    }
+    
+    .faq-page-container {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    
+    .faq-card-section {
+      background-color: var(--bg-card);
+      border: 1px solid rgba(170, 124, 17, 0.25);
+      border-radius: var(--border-radius-lg);
+      padding: 40px;
+      box-shadow: var(--shadow-royal);
+    }
+    
+    @media (max-width: 576px) {
+      .faq-card-section {
+        padding: 25px 15px;
+      }
+    }
+    
+    .guidelines-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      margin-top: 25px;
+    }
+    
+    @media (max-width: 768px) {
+      .guidelines-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+    }
+    
+    .guideline-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(170, 124, 17, 0.15);
+      padding: 20px;
+      border-radius: var(--border-radius);
+      transition: var(--transition);
+    }
+    
+    .guideline-card:hover {
+      border-color: var(--gold-bright);
+      background: rgba(255, 255, 255, 0.04);
+      transform: translateY(-2px);
+    }
+    
+    .guideline-card h4 {
+      font-family: var(--font-royal);
+      color: var(--gold-bright);
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Main Navigation Header -->
+  <header>
+    <div class="nav-container">
+      <a href="dashboard.html" class="logo" id="faqLogoLink">
+        <img src="images/logo.jpg" class="logo-img" alt="Sagai Sambaandh Logo" />
+        <div>
+          <span class="logo-text">Shree Rajput Sagai Sambandh</span>
+          <span class="logo-subtext">Rajput Matrimony</span>
+        </div>
+      </a>
+      
+      <div class="nav-auth-buttons" id="navAuthButtons">
+        <!-- Injected dynamically via app.js -->
+      </div>
+    </div>
+  </header>
+  
+  <!-- Sub-header Dashboard Navigation Tabs -->
+  <div class="dashboard-subnav">
+    <div class="subnav-container">
+      <a href="dashboard.html" class="subnav-tab" id="subnavDashboard">Dashboard</a>
+      <a href="profile.html" class="subnav-tab" id="subnavMyProfile">My Profile</a>
+      <a href="dashboard.html?shortlist=true" class="subnav-tab" id="subnavShortlists">Shortlisted Matches</a>
+      <a href="membership.html" class="subnav-tab" id="subnavMembership">Regal Plans</a>
+      <a href="faq.html" class="subnav-tab active" id="subnavGuide">FAQ & Guidelines</a>
+      <a href="#" class="subnav-tab" id="subnavLogout" onclick="handleLogout()">Logout</a>
+    </div>
+  </div>
+
+  <div class="faq-page-container">
+    <div class="faq-card-section">
+      
+      <!-- Section 1: Code of Conduct & Guidelines -->
+      <h2 style="font-family: var(--font-royal); color: var(--gold-bright); margin-top: 0; margin-bottom: 8px; font-size: 1.6rem; text-align: center;">👑 Code of Conduct & Guidelines</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; max-width: 650px; margin: 0 auto 30px auto; line-height: 1.5;">
+        As a premier platform serving noble Kshatriya lineages, we maintain strict code of conducts to safeguard the community's heritage and respect.
+      </p>
+      
+      <div class="guidelines-grid">
+        <div class="guideline-card">
+          <h4><span>🛡️</span> Verified Lineage Only</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.4;">All profiles are audited by our screening desk. Providing false gotra, ancestral native, or thikana details will lead to immediate profile suspension.</p>
+        </div>
+        
+        <div class="guideline-card">
+          <h4><span>🤝</span> Respect & Dignity</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.4;">Members must communicate with respect. Harassment, inappropriate language, or aggressive follow-ups on interest requests are strictly prohibited.</p>
+        </div>
+        
+        <div class="guideline-card">
+          <h4><span>🚫</span> Gotra Safeguards</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.4;">Traditional Sagotra (same-gotra) unions are blocked on the platform. Please check compatibility indices before initiating contact requests.</p>
+        </div>
+        
+        <div class="guideline-card">
+          <h4><span>🔒</span> Privacy First</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.4;">Contact details (phones, email, and social linkages) are encrypted and are only visible to upgraded plan members or accepted matches.</p>
+        </div>
+      </div>
+      
+      <!-- Divider -->
+      <div style="height: 1px; background: rgba(170, 124, 17, 0.2); margin: 40px 0;"></div>
+      
+      <!-- Section 2: Accordion FAQ -->
+      <h2 style="font-family: var(--font-royal); color: var(--gold-bright); margin-top: 0; margin-bottom: 25px; font-size: 1.5rem; text-align: center;">Frequently Asked Questions</h2>
+      
+      <div class="faq-accordion" style="max-width: 850px; margin: 0 auto;">
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>What is Shree Rajput Sagai Sambandh?</span>
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <p>Shree Rajput Sagai Sambandh is an elite matrimonial portal designed exclusively for the Rajput community. We prioritize lineage audits, background verification checks, and Gotra compatibility to match candidates of noble lineage.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>How does Gotra-sensitive matchmaking work?</span>
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <p>According to traditional Rajput custom, marriages within the same Gotra (Sagotra Union) are strictly prohibited. Our system scans database candidates and checks their paternal and maternal Gotras, rejecting overlapping candidates to guarantee lineage guidelines are maintained.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Is there a free trial option available?</span>
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <p>Yes! In celebration of our inaugural launch, we are offering the Starter Plan completely Free for 1 Month. This allows you to list your profile, search the Rajput directory, and explore potential alignments without any upfront fees.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>How are profiles screened and verified?</span>
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <p>Every profile undergoes manual validation by our dedicated family screening desk. We verify details such as clan heritage, native birthplace, and contacts to maintain a secure and trustworthy database of genuine Rajput matches.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>How do I connect to a customer relation agent?</span>
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <p>You can chat with our matchmaker desk advisor at any time by clicking the floating WhatsApp bubble at the bottom right. We are always happy to guide your Gotra compatibility searches or verify ancestral backgrounds.</p>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-container">
+      <div class="footer-col footer-about">
+        <h4 style="font-family: var(--font-royal); letter-spacing: 1px; color: var(--gold-bright);">Shree Rajput Sagai Sambandh</h4>
+        <p>Securing traditional unions and legacy preservation across the noble Rajput lineages. Built with absolute class and modern security parameters.</p>
+        <div class="footer-socials" style="margin-top: 18px; display: flex; gap: 18px;">
+          <a href="https://www.facebook.com/share/1CYZ9Mf4CF/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" style="color: var(--gold-bright);"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg></a>
+          <a href="https://www.instagram.com/shreerajputsagaisambaandh?igsh=MXc2cTkzb3FteHpjdg%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" style="color: var(--gold-bright);"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Noble Rajput Clans</h4>
+        <ul style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 15px;">
+          <li><a href="rathore.html">Rathore Matches</a></li>
+          <li><a href="sisodia.html">Sisodia Matches</a></li>
+          <li><a href="chauhan.html">Chauhan Matches</a></li>
+          <li><a href="bhati.html">Bhati Matches</a></li>
+          <li><a href="kachwaha.html">Kachwaha Matches</a></li>
+          <li><a href="shekhawat.html">Shekhawat Matches</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="register.html">Register Profile</a></li>
+          <li><a href="login.html">Member Log In</a></li>
+          <li><a href="membership.html">Regal Membership</a></li>
+          <li><a href="blog.html">Blog</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Regal Support Desk</h4>
+        <p style="font-size: 0.9rem; margin-bottom: 10px;">Contact our personal royal matchmaker desk:</p>
+        <p style="color: var(--gold-bright); font-weight: 600; font-size: 0.95rem;">support@shreerajputsagaisambandh.com</p>
+        <p style="font-size: 0.85rem; margin-top: 5px;">Call Desk: +91 96640 30758</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Kshatriya Sagai Sambandh. All Rights Reserved.</p>
+      <p style="font-size: 0.8rem; opacity: 0.7; margin-top: 5px; font-family: var(--font-body);">Udyam Registration No: UDYAM-RJ-17-0043905</p>
+      <p>Made with ❤️ in Rajasthan, India</p>
+    </div>
+  </footer>
+
+  <!-- Floating WhatsApp Chat Button -->
+  <a href="https://wa.me/919928592159" class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.417 9.864-9.848.002-2.63-1.023-5.101-2.887-6.968C16.621 1.936 14.15 1.087 11.996 1.087c-5.43 0-9.852 4.415-9.856 9.847-.001 1.765.467 3.487 1.355 5.027l-.988 3.606 3.693-.97.157.093zm12.338-7.536c-.328-.164-1.942-.959-2.242-1.069-.3-.11-.519-.164-.738.164-.219.328-.847 1.069-1.039 1.288-.192.219-.384.246-.712.083-1.826-.913-2.997-1.637-3.947-3.268-.252-.433.252-.401.72-1.332.077-.154.038-.288-.019-.397-.058-.11-.519-1.25-.712-1.713-.188-.452-.378-.39-.519-.398-.135-.007-.29-.009-.445-.009-.156 0-.409.058-.623.288-.214.23-.817.799-.817 1.95s.836 2.262.95 2.416c.115.154 1.645 2.512 3.985 3.522.556.24 1.053.404 1.409.518.572.181 1.092.155 1.503.094.458-.068 1.942-.795 2.215-1.528.272-.732.272-1.359.191-1.492-.081-.133-.298-.214-.626-.378z"/></svg>
+  </a>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
