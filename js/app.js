@@ -374,35 +374,84 @@ function showToast(message, type = 'normal') {
 // WhatsApp Notification trigger on profile registration
 async function notifyAdminNewRegistration(profile) {
   try {
-    const webhookUrl = localStorage.getItem('whatsapp_registration_webhook');
-    if (!webhookUrl) {
-      console.log("WhatsApp Webhook not configured. To receive WhatsApp notifications, set the webhook URL in your console:\nlocalStorage.setItem('whatsapp_registration_webhook', 'YOUR_WEBHOOK_URL')");
+    const openwaUrl = localStorage.getItem('openwa_api_url');
+    const openwaKey = localStorage.getItem('openwa_api_key');
+    const openwaSession = localStorage.getItem('openwa_session_id') || 'default';
+    const openwaPhone = localStorage.getItem('openwa_admin_phone');
+
+    if (openwaUrl && openwaKey && openwaPhone) {
+      // Format number to include @c.us if not present
+      let chatId = openwaPhone.trim();
+      if (!chatId.endsWith('@c.us') && !chatId.endsWith('@g.us')) {
+        chatId = `${chatId.replace(/[^0-9]/g, '')}@c.us`;
+      }
+
+      const text = `👑 *New Profile Registered* 👑\n\n` +
+                   `• *Name:* ${profile.name}\n` +
+                   `• *Gender:* ${profile.gender}\n` +
+                   `• *Clan:* ${profile.clan}\n` +
+                   `• *Gotra:* ${profile.gotra || 'Not specified'}\n` +
+                   `• *Location:* ${profile.location || 'Not specified'}\n` +
+                   `• *Phone:* ${profile.phone || 'Not specified'}\n` +
+                   `• *Email:* ${profile.email || 'Not specified'}\n\n` +
+                   `📅 _Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}_`;
+
+      const endpoint = `${openwaUrl.replace(/\/$/, '')}/api/sessions/${openwaSession}/messages/send-text`;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': openwaKey
+        },
+        body: JSON.stringify({
+          chatId: chatId,
+          text: text
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      console.log("WhatsApp registration notification sent via OpenWA successfully for:", profile.name);
       return;
     }
 
-    const payload = {
-      event: 'new_registration',
-      name: profile.name,
-      gender: profile.gender,
-      clan: profile.clan,
-      gotra: profile.gotra || 'Not specified',
-      location: profile.location || 'Not specified',
-      phone: profile.phone || 'Not specified',
-      email: profile.email || 'Not specified',
-      timestamp: new Date().toISOString()
-    };
+    // Fallback to webhook configuration
+    const webhookUrl = localStorage.getItem('whatsapp_registration_webhook');
+    if (webhookUrl) {
+      const payload = {
+        event: 'new_registration',
+        name: profile.name,
+        gender: profile.gender,
+        clan: profile.clan,
+        gotra: profile.gotra || 'Not specified',
+        location: profile.location || 'Not specified',
+        phone: profile.phone || 'Not specified',
+        email: profile.email || 'Not specified',
+        timestamp: new Date().toISOString()
+      };
 
-    await fetch(webhookUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    console.log("WhatsApp registration webhook notified successfully for:", profile.name);
+      await fetch(webhookUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      console.log("WhatsApp registration notification sent via Webhook successfully for:", profile.name);
+      return;
+    }
+
+    console.log("WhatsApp Notification: Neither OpenWA nor Webhook is configured.\n" +
+                "To use OpenWA, set the following keys in your browser console:\n" +
+                "localStorage.setItem('openwa_api_url', 'http://your-server-ip:2785');\n" +
+                "localStorage.setItem('openwa_api_key', 'YOUR-API-KEY');\n" +
+                "localStorage.setItem('openwa_session_id', 'YOUR-SESSION-ID');\n" +
+                "localStorage.setItem('openwa_admin_phone', 'YOUR-PHONE-NUMBER');");
   } catch (error) {
-    console.error("Failed to notify WhatsApp webhook:", error);
+    console.error("Failed to notify WhatsApp webhook/OpenWA gateway:", error);
   }
 }
 
