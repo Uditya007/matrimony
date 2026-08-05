@@ -377,7 +377,7 @@ async function notifyAdminNewRegistration(profile) {
     const openwaUrl = localStorage.getItem('openwa_api_url') || 'http://localhost:2785';
     const openwaKey = localStorage.getItem('openwa_api_key') || 'owa_k1_21f959a8005ca7d9941383be23e1dc8104fa8622c26c080b043b860d6bc7fb50';
     const openwaSession = localStorage.getItem('openwa_session_id') || 'default';
-    const openwaPhone = localStorage.getItem('openwa_admin_phone');
+    const openwaPhone = localStorage.getItem('openwa_admin_phone') || '917665941949';
 
     if (openwaUrl && openwaKey && openwaPhone) {
       // Format number to include @c.us if not present
