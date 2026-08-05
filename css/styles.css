@@ -1204,23 +1204,24 @@ body:has(.dashboard-subnav) {
 }
 
 .dashboard-hero-greeting {
-  background: linear-gradient(135deg, var(--bg-card) 0%, #F3ECDF 100%);
-  border: 1.5px solid rgba(170, 124, 17, 0.2);
+  background: #FFFFFF;
+  border: 1.5px solid var(--gold-antique);
   border-radius: var(--border-radius-lg);
   padding: 16px 22px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-royal);
 }
 
 .greeting-text h2 {
   font-size: 1.4rem;
   margin-bottom: 3px;
+  color: var(--primary-color);
 }
 
 .greeting-text p {
-  color: var(--text-muted);
+  color: #4A5568;
   font-size: 0.82rem;
 }
 
