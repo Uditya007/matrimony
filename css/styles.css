@@ -4621,3 +4621,101 @@ body:has(.dashboard-subnav) {
   }
 }
 
+/* ==========================================================================
+   WHITE-THEMED PROFILE CARDS OVERRIDES
+   ========================================================================== */
+.profile-card {
+  background-color: #FFFFFF !important;
+  border: 1.5px solid var(--gold-antique) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06) !important;
+}
+
+.profile-card:hover {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 12px 35px rgba(107, 18, 32, 0.12) !important;
+}
+
+/* Card details body & metadata */
+.profile-card .profile-card-body {
+  background-color: #FFFFFF !important;
+  color: #2D3748 !important;
+}
+
+.profile-card .profile-meta-item {
+  color: #4A5568 !important;
+}
+
+.profile-card .profile-meta-item svg {
+  fill: var(--primary-color) !important;
+}
+
+.profile-card .profile-meta-item strong {
+  color: var(--primary-color) !important;
+}
+
+.profile-card .profile-meta-item span {
+  color: #2D3748 !important;
+}
+
+/* Verified lineage badge label */
+.profile-card .wax-seal-label {
+  color: var(--primary-color) !important;
+  font-weight: 600 !important;
+}
+
+/* Active Heartbeat badge label color */
+.profile-card .badge-active {
+  background-color: #E2F0D9 !important;
+  border-color: #70AD47 !important;
+  color: #385723 !important;
+}
+
+/* Footer layout */
+.profile-card .profile-card-footer {
+  background-color: #FFFDF9 !important;
+  border-top: 1.5px solid rgba(170, 124, 17, 0.15) !important;
+}
+
+/* Primary Action Buttons (Royal: Send Interest / Chat Now) */
+.profile-card .btn-royal {
+  background: var(--primary-color) !important;
+  color: var(--gold-bright) !important;
+  border: 1.5px solid var(--gold-antique) !important;
+  box-shadow: 0 4px 10px rgba(107, 18, 32, 0.15) !important;
+  text-shadow: none !important;
+}
+
+.profile-card .btn-royal:hover {
+  background: var(--primary-light) !important;
+  color: var(--gold-light) !important;
+  border-color: var(--gold-bright) !important;
+  box-shadow: 0 6px 15px rgba(107, 18, 32, 0.3) !important;
+}
+
+/* Secondary Action Buttons (Primary: Details) */
+.profile-card .btn-primary {
+  background: #FFFFFF !important;
+  color: var(--primary-color) !important;
+  border: 1.5px solid var(--gold-antique) !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+}
+
+.profile-card .btn-primary:hover {
+  background: var(--gold-light) !important;
+  color: var(--primary-color) !important;
+  border-color: var(--gold-antique) !important;
+  box-shadow: 0 4px 10px rgba(170, 124, 17, 0.15) !important;
+}
+
+/* Shortlist/Like Button (Minimal: Heart Icon) */
+.profile-card .btn-minimal {
+  background-color: #FFFFFF !important;
+  border: 1.5px solid rgba(170, 124, 17, 0.25) !important;
+  box-shadow: none !important;
+}
+
+.profile-card .btn-minimal:hover {
+  background-color: var(--gold-light) !important;
+  border-color: var(--gold-antique) !important;
+}
