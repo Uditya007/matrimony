@@ -1387,9 +1387,8 @@ function createProfileCardHtml(profile, isDashboard = true) {
     <div class="wax-seal-container" title="Lineage, Gotra & Family Verified">
       <div class="wax-seal-badge">
         <svg viewBox="0 0 24 24">
-          <path d="M12 2L2 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5L12 2zm-1 15l-3-3 1.4-1.4 1.6 1.6 4.6-4.6 1.4 1.4-6 6z"/>
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
         </svg>
-        <div class="wax-seal-ribbons"></div>
       </div>
       <span class="wax-seal-label">Lineage Verified</span>
     </div>
