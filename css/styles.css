@@ -2807,15 +2807,11 @@ body:has(.dashboard-subnav) {
 
 /* Wax Seal stamping pop micro-animation */
 .wax-seal-badge {
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease !important;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
 }
 
 .profile-card:hover .wax-seal-badge {
-  transform: scale(1.15) rotate(-8deg) !important;
-  box-shadow: 
-    inset 0 1px 1px rgba(255,255,255,0.4),
-    inset 0 -2px 4px rgba(0,0,0,0.4),
-    0 8px 16px rgba(92, 6, 18, 0.35) !important;
+  transform: scale(1.15) !important;
 }
 
 /* Clans grid Card zoom banner scaling upgrade */
@@ -3677,28 +3673,7 @@ body:has(.dashboard-subnav) {
   font-weight: 600;
 }
 
-/* Wax Seal Lineage Audit Badge */
-.wax-seal-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-white);
-  background-color: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 6px 12px;
-  border-radius: var(--border-radius);
-  margin-top: 15px;
-  cursor: pointer;
-  transition: var(--transition);
-}
 
-.wax-seal-badge:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.35);
-}
 
 /* Center Activity Summary Grid */
 .activity-summary-section {
@@ -4485,13 +4460,13 @@ body:has(.dashboard-subnav) {
   }
   
   .wax-seal-badge {
-    width: 28px !important;
-    height: 28px !important;
+    width: 18px !important;
+    height: 18px !important;
   }
   
   .wax-seal-badge svg {
-    width: 14px !important;
-    height: 14px !important;
+    width: 11px !important;
+    height: 11px !important;
   }
   
   .wax-seal-label {
