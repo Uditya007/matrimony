@@ -93,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!insertError && newProfile) {
               localStorage.setItem('currentUser', JSON.stringify(newProfile));
+              notifyAdminNewRegistration(newProfile); // Notify admin on WhatsApp
               updateNavigationState();
               showToast('Khammaghani! Setting up your noble profile...', 'gold');
               setTimeout(() => {
@@ -369,6 +370,42 @@ function showToast(message, type = 'normal') {
     toast.classList.remove('active');
   }, 3500);
 }
+
+// WhatsApp Notification trigger on profile registration
+async function notifyAdminNewRegistration(profile) {
+  try {
+    const webhookUrl = localStorage.getItem('whatsapp_registration_webhook');
+    if (!webhookUrl) {
+      console.log("WhatsApp Webhook not configured. To receive WhatsApp notifications, set the webhook URL in your console:\nlocalStorage.setItem('whatsapp_registration_webhook', 'YOUR_WEBHOOK_URL')");
+      return;
+    }
+
+    const payload = {
+      event: 'new_registration',
+      name: profile.name,
+      gender: profile.gender,
+      clan: profile.clan,
+      gotra: profile.gotra || 'Not specified',
+      location: profile.location || 'Not specified',
+      phone: profile.phone || 'Not specified',
+      email: profile.email || 'Not specified',
+      timestamp: new Date().toISOString()
+    };
+
+    await fetch(webhookUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    console.log("WhatsApp registration webhook notified successfully for:", profile.name);
+  } catch (error) {
+    console.error("Failed to notify WhatsApp webhook:", error);
+  }
+}
+
 
 // Get combined profiles (Registered users from Supabase database)
 function getAllProfiles() {
@@ -803,6 +840,7 @@ function initRegisterPage() {
         }
 
         localStorage.setItem('currentUser', JSON.stringify(newUser));
+        notifyAdminNewRegistration(newUser); // Notify admin on WhatsApp
         showToast('Royal Profile Created successfully!', 'gold');
         setTimeout(() => {
           window.location.href = 'dashboard.html';
@@ -838,6 +876,7 @@ function initRegisterPage() {
     
     // Auto-login
     localStorage.setItem('currentUser', JSON.stringify(newUser));
+    notifyAdminNewRegistration(newUser); // Notify admin on WhatsApp
 
     showToast('Royal Profile Created successfully!', 'gold');
     setTimeout(() => {
