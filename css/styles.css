@@ -1038,7 +1038,7 @@ footer {
 .form-group label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -3548,7 +3548,7 @@ body:has(.dashboard-subnav) {
   font-family: var(--font-royal);
   font-size: 0.9rem;
   letter-spacing: 1px;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
   padding: 18px 5px;
   border-bottom: 3px solid transparent;
