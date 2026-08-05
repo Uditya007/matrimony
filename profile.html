@@ -198,6 +198,30 @@
       }
     }
 
+    /* ─── White form inputs with golden text ─── */
+    .profile-form-right .form-group input,
+    .profile-form-right .form-group select,
+    .profile-form-right .form-group textarea {
+      background-color: #ffffff !important;
+      color: #8B6914 !important;
+      border: 1.5px solid rgba(170, 124, 17, 0.45) !important;
+    }
+    .profile-form-right .form-group input::placeholder,
+    .profile-form-right .form-group textarea::placeholder {
+      color: rgba(139, 105, 20, 0.5) !important;
+    }
+    .profile-form-right .form-group select option {
+      background-color: #ffffff;
+      color: #8B6914;
+    }
+    .profile-form-right .form-group input:focus,
+    .profile-form-right .form-group select:focus,
+    .profile-form-right .form-group textarea:focus {
+      border-color: var(--gold-antique) !important;
+      box-shadow: 0 0 0 3px rgba(170, 124, 17, 0.12) !important;
+      outline: none;
+    }
+
     /* ─── White Cards ─── */
     .profile-card-left {
       background-color: #ffffff !important;
