@@ -371,9 +371,44 @@ function showToast(message, type = 'normal') {
   }, 3500);
 }
 
-// WhatsApp Notification trigger on profile registration
+// WhatsApp/Telegram Notification trigger on profile registration
 async function notifyAdminNewRegistration(profile) {
   try {
+    // 1. Prioritize Telegram Bot (100% free, serverless, works 24/7 with zero hosting/tunneling!)
+    const tgToken = localStorage.getItem('telegram_bot_token');
+    const tgChatId = localStorage.getItem('telegram_chat_id');
+
+    if (tgToken && tgChatId) {
+      const text = `👑 *New Profile Registered* 👑\n\n` +
+                   `• *Name:* ${profile.name}\n` +
+                   `• *Gender:* ${profile.gender}\n` +
+                   `• *Clan:* ${profile.clan}\n` +
+                   `• *Gotra:* ${profile.gotra || 'Not specified'}\n` +
+                   `• *Location:* ${profile.location || 'Not specified'}\n` +
+                   `• *Phone:* ${profile.phone || 'Not specified'}\n` +
+                   `• *Email:* ${profile.email || 'Not specified'}\n\n` +
+                   `📅 _Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}_`;
+
+      const response = await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          chat_id: tgChatId,
+          text: text,
+          parse_mode: 'Markdown'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Telegram API error! status: ${response.status}`);
+      }
+      console.log("Registration notification sent via Telegram successfully for:", profile.name);
+      return;
+    }
+
+    // 2. OpenWA Gateway integration fallback
     const openwaUrl = localStorage.getItem('openwa_api_url') || 'https://1d5905f1d44ce4.lhr.life';
     const openwaKey = localStorage.getItem('openwa_api_key') || 'owa_k1_21f959a8005ca7d9941383be23e1dc8104fa8622c26c080b043b860d6bc7fb50';
     const openwaSession = localStorage.getItem('openwa_session_id') || 'default';
@@ -444,12 +479,7 @@ async function notifyAdminNewRegistration(profile) {
       return;
     }
 
-    console.log("WhatsApp Notification: Neither OpenWA nor Webhook is configured.\n" +
-                "To use OpenWA, set the following keys in your browser console:\n" +
-                "localStorage.setItem('openwa_api_url', 'http://your-server-ip:2785');\n" +
-                "localStorage.setItem('openwa_api_key', 'YOUR-API-KEY');\n" +
-                "localStorage.setItem('openwa_session_id', 'YOUR-SESSION-ID');\n" +
-                "localStorage.setItem('openwa_admin_phone', 'YOUR-PHONE-NUMBER');");
+    console.log("Notification Alert: No active channel (Telegram, OpenWA, or Webhook) is configured.");
   } catch (error) {
     console.error("Failed to notify WhatsApp webhook/OpenWA gateway:", error);
   }
