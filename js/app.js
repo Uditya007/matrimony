@@ -374,7 +374,7 @@ function showToast(message, type = 'normal') {
 // WhatsApp Notification trigger on profile registration
 async function notifyAdminNewRegistration(profile) {
   try {
-    const openwaUrl = localStorage.getItem('openwa_api_url') || 'http://localhost:2785';
+    const openwaUrl = localStorage.getItem('openwa_api_url') || 'https://1d5905f1d44ce4.lhr.life';
     const openwaKey = localStorage.getItem('openwa_api_key') || 'owa_k1_21f959a8005ca7d9941383be23e1dc8104fa8622c26c080b043b860d6bc7fb50';
     const openwaSession = localStorage.getItem('openwa_session_id') || 'default';
     const openwaPhone = localStorage.getItem('openwa_admin_phone') || '917665941949';
