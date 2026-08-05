@@ -4697,3 +4697,43 @@ body:has(.dashboard-subnav) {
   background-color: var(--gold-light) !important;
   border-color: var(--gold-antique) !important;
 }
+
+/* ═══════════════════════════════════════════
+   Dashboard User Card — White Theme
+   ═══════════════════════════════════════════ */
+.dashboard-user-card {
+  background: #ffffff !important;
+  border: 2px solid var(--gold-antique) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
+}
+
+.dashboard-user-card .user-card-name {
+  color: #2D3748 !important;
+}
+
+.dashboard-user-card .user-card-id {
+  color: var(--primary-color) !important;
+}
+
+.dashboard-user-card .user-card-details {
+  border-top: 1px solid rgba(170, 124, 17, 0.25) !important;
+  color: #2D3748 !important;
+  background: transparent !important;
+}
+
+.dashboard-user-card .user-card-detail-item label {
+  color: #8B6914 !important;
+  font-weight: 600;
+}
+
+.dashboard-user-card .user-card-detail-item span {
+  color: #2D3748 !important;
+  font-weight: 700;
+}
+
+/* Get Wax Seal / verification button on white card */
+.dashboard-user-card .get-wax-seal-btn {
+  background: var(--primary-color) !important;
+  color: var(--gold-bright) !important;
+  border: 1px solid var(--gold-antique) !important;
+}
