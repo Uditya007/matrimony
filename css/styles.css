@@ -3527,7 +3527,7 @@ footer {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
   position: sticky;
   top: 104px;
-  z-index: 100;
+  z-index: 999;
   display: flex;
   justify-content: center;
   padding: 0 20px;
@@ -4195,6 +4195,9 @@ footer {
   
   /* Enable smooth horizontal swiping on mobile for subnav tabs */
   .dashboard-subnav {
+    position: sticky !important;
+    top: 71px !important;
+    z-index: 999 !important;
     padding: 0 !important;
     border-bottom: 1.5px solid rgba(170, 124, 17, 0.2) !important;
     background-color: var(--bg-card);
@@ -4559,14 +4562,47 @@ footer {
 }
 
 @media (max-width: 900px) {
+  #dashboardSidebarFilters {
+    padding: 12px 15px !important;
+    margin-bottom: 15px !important;
+  }
+  #dashboardSidebarFilters .sidebar-title {
+    font-size: 0.95rem !important;
+    margin-bottom: 10px !important;
+    padding-bottom: 6px !important;
+  }
   #dashboardSidebarFilters .filters-grid {
     grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px 12px !important;
+  }
+  #dashboardSidebarFilters .form-group {
+    margin-bottom: 0 !important;
+  }
+  #dashboardSidebarFilters .form-group label {
+    font-size: 0.7rem !important;
+    margin-bottom: 3px !important;
+  }
+  #dashboardSidebarFilters .form-group input,
+  #dashboardSidebarFilters .form-group select {
+    font-size: 0.75rem !important;
+    padding: 6px 10px !important;
+    height: 32px !important;
+  }
+  #shortlistToggleBtn {
+    margin-top: 10px !important;
+    padding: 6px 12px !important;
+    font-size: 0.75rem !important;
   }
 }
 
 @media (max-width: 480px) {
+  #dashboardSidebarFilters {
+    padding: 10px 12px !important;
+    margin-bottom: 12px !important;
+  }
   #dashboardSidebarFilters .filters-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px 10px !important;
   }
 }
 
