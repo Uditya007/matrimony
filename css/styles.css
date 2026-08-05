@@ -2016,8 +2016,8 @@ body:has(.dashboard-subnav) {
 }
 
 .pricing-card {
-  background-color: var(--bg-card);
-  border: 1px solid rgba(170, 124, 17, 0.2);
+  background-color: #ffffff !important;
+  border: 1.5px solid rgba(170, 124, 17, 0.35);
   border-radius: var(--border-radius-lg);
   padding: 45px 30px;
   transition: var(--transition);
@@ -2026,6 +2026,7 @@ body:has(.dashboard-subnav) {
   display: flex;
   flex-direction: column;
   text-align: left;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
 }
 
 .pricing-card.popular {
@@ -2050,7 +2051,7 @@ body:has(.dashboard-subnav) {
 
 .pricing-card.elite {
   border: 2px solid var(--primary-color);
-  background: linear-gradient(180deg, var(--bg-card) 0%, #F5ECDD 100%);
+  background: #ffffff !important;
   transform: scale(1.01);
 }
 
@@ -2072,44 +2073,44 @@ body:has(.dashboard-subnav) {
   font-size: 1.6rem;
   margin-bottom: 5px;
   font-family: var(--font-royal);
-  color: #FFFFFF; /* High contrast White */
+  color: var(--primary-color);
 }
 
 .plan-desc {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: #6B7280;
   margin-bottom: 20px;
 }
 
 .plan-price {
   font-size: 2.2rem;
   font-family: var(--font-royal);
-  color: #FFFFFF; /* White price as requested */
+  color: #8B6914;
   margin-bottom: 5px;
 }
 
 .plan-price span {
   font-size: 1rem;
   font-family: var(--font-body);
-  color: var(--text-muted);
+  color: #9CA3AF;
 }
 
-/* Pricing Card specific minimal button styles for dark backgrounds */
+/* Pricing Card button styles for white card backgrounds */
 .pricing-card .btn-minimal {
-  color: var(--text-dark); /* Sandstone Ivory */
-  border: 1px solid rgba(245, 237, 224, 0.35);
+  color: var(--primary-color);
+  border: 1.5px solid rgba(92, 6, 18, 0.35);
   background: transparent;
 }
 
 .pricing-card .btn-minimal:hover {
-  border-color: var(--gold-bright);
-  background-color: rgba(245, 237, 224, 0.08);
-  color: var(--gold-bright) !important;
+  border-color: var(--primary-color);
+  background-color: rgba(92, 6, 18, 0.06);
+  color: var(--primary-color) !important;
 }
 
 .plan-billing-options {
   font-size: 0.75rem;
-  color: var(--gold-antique);
+  color: var(--primary-color);
   margin-bottom: 25px;
   font-weight: 700;
   text-transform: uppercase;
@@ -2126,7 +2127,7 @@ body:has(.dashboard-subnav) {
 
 .plan-features li {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: #374151;
   display: flex;
   align-items: flex-start;
   gap: 10px;
