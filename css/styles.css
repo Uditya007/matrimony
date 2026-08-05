@@ -2529,18 +2529,20 @@ body:has(.dashboard-subnav) {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  clip-path: url(#jharokhaClip);
+  clip-path: none !important;
   transition: var(--transition);
 }
 
 .jharokha-border {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 5;
+  display: none !important;
+}
+
+/* Gold border for rectangular detailed modal photo area */
+.modal-photo-area .jharokha-frame {
+  border-radius: 12px !important;
+  border: 2px solid var(--gold-antique) !important;
+  box-shadow: var(--shadow-royal) !important;
+  overflow: hidden !important;
 }
 
 /* Wax Seal Verification Badge */
