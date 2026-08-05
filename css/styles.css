@@ -657,6 +657,19 @@ header::after {
   border-bottom: 1px solid rgba(170, 124, 17, 0.1);
 }
 
+/* Make headings visible over the dark peacock wallpaper */
+.featured-section .section-title,
+.trust-section .section-title {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+.featured-section .section-subtitle,
+.trust-section .section-subtitle {
+  color: var(--gold-bright, #f5c842) !important;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.6);
+}
+
 .featured-wrapper {
   max-width: 1300px;
   margin: 0 auto;
