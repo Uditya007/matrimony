@@ -371,10 +371,28 @@ function showToast(message, type = 'normal') {
   }, 3500);
 }
 
-// WhatsApp/Telegram Notification trigger on profile registration
+// ─── Shared Telegram notification helper ───────────────────────────────────
+async function sendTelegramNotification(text) {
+  try {
+    const tgToken = localStorage.getItem('telegram_bot_token');
+    const tgChatId = localStorage.getItem('telegram_chat_id');
+    if (!tgToken || !tgChatId) return false;
+
+    const response = await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: tgChatId, text, parse_mode: 'Markdown' })
+    });
+    return response.ok;
+  } catch (e) {
+    console.error('Telegram notification failed:', e);
+    return false;
+  }
+}
+
+// ─── 1. New Profile Registration Alert ─────────────────────────────────────
 async function notifyAdminNewRegistration(profile) {
   try {
-    // 1. Prioritize Telegram Bot (100% free, serverless, works 24/7 with zero hosting/tunneling!)
     const tgToken = localStorage.getItem('telegram_bot_token');
     const tgChatId = localStorage.getItem('telegram_chat_id');
 
@@ -388,100 +406,56 @@ async function notifyAdminNewRegistration(profile) {
                    `• *Phone:* ${profile.phone || 'Not specified'}\n` +
                    `• *Email:* ${profile.email || 'Not specified'}\n\n` +
                    `📅 _Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}_`;
-
-      const response = await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          chat_id: tgChatId,
-          text: text,
-          parse_mode: 'Markdown'
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Telegram API error! status: ${response.status}`);
-      }
-      console.log("Registration notification sent via Telegram successfully for:", profile.name);
-      return;
+      const ok = await sendTelegramNotification(text);
+      if (ok) { console.log('Registration notification sent via Telegram for:', profile.name); return; }
     }
 
-    // 2. OpenWA Gateway integration fallback
+    // OpenWA Gateway fallback
     const openwaUrl = localStorage.getItem('openwa_api_url') || 'https://1d5905f1d44ce4.lhr.life';
     const openwaKey = localStorage.getItem('openwa_api_key') || 'owa_k1_21f959a8005ca7d9941383be23e1dc8104fa8622c26c080b043b860d6bc7fb50';
     const openwaSession = localStorage.getItem('openwa_session_id') || 'default';
     const openwaPhone = localStorage.getItem('openwa_admin_phone') || '917665941949';
-
     if (openwaUrl && openwaKey && openwaPhone) {
-      // Format number to include @c.us if not present
       let chatId = openwaPhone.trim();
-      if (!chatId.endsWith('@c.us') && !chatId.endsWith('@g.us')) {
-        chatId = `${chatId.replace(/[^0-9]/g, '')}@c.us`;
-      }
-
-      const text = `👑 *New Profile Registered* 👑\n\n` +
-                   `• *Name:* ${profile.name}\n` +
-                   `• *Gender:* ${profile.gender}\n` +
-                   `• *Clan:* ${profile.clan}\n` +
-                   `• *Gotra:* ${profile.gotra || 'Not specified'}\n` +
-                   `• *Location:* ${profile.location || 'Not specified'}\n` +
-                   `• *Phone:* ${profile.phone || 'Not specified'}\n` +
-                   `• *Email:* ${profile.email || 'Not specified'}\n\n` +
-                   `📅 _Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}_`;
-
+      if (!chatId.endsWith('@c.us') && !chatId.endsWith('@g.us')) chatId = `${chatId.replace(/[^0-9]/g, '')}@c.us`;
+      const text = `👑 *New Profile Registered* 👑\n\n• *Name:* ${profile.name}\n• *Gender:* ${profile.gender}\n• *Clan:* ${profile.clan}\n• *Phone:* ${profile.phone || 'Not specified'}\n• *Email:* ${profile.email || 'Not specified'}\n\n📅 _${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}_`;
       const endpoint = `${openwaUrl.replace(/\/$/, '')}/api/sessions/${openwaSession}/messages/send-text`;
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': openwaKey
-        },
-        body: JSON.stringify({
-          chatId: chatId,
-          text: text
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      console.log("WhatsApp registration notification sent via OpenWA successfully for:", profile.name);
+      await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': openwaKey }, body: JSON.stringify({ chatId, text }) });
       return;
     }
 
-    // Fallback to webhook configuration
     const webhookUrl = localStorage.getItem('whatsapp_registration_webhook');
     if (webhookUrl) {
-      const payload = {
-        event: 'new_registration',
-        name: profile.name,
-        gender: profile.gender,
-        clan: profile.clan,
-        gotra: profile.gotra || 'Not specified',
-        location: profile.location || 'Not specified',
-        phone: profile.phone || 'Not specified',
-        email: profile.email || 'Not specified',
-        timestamp: new Date().toISOString()
-      };
-
-      await fetch(webhookUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      console.log("WhatsApp registration notification sent via Webhook successfully for:", profile.name);
-      return;
+      await fetch(webhookUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event: 'new_registration', name: profile.name, gender: profile.gender, clan: profile.clan, phone: profile.phone || 'Not specified', email: profile.email || 'Not specified', timestamp: new Date().toISOString() }) });
     }
-
-    console.log("Notification Alert: No active channel (Telegram, OpenWA, or Webhook) is configured.");
   } catch (error) {
-    console.error("Failed to notify WhatsApp webhook/OpenWA gateway:", error);
+    console.error('Failed to send registration notification:', error);
+  }
+}
+
+// ─── 2. Matchmaker Bot / Chat Opened Alert ──────────────────────────────────
+async function notifyAdminChatOpened(user, targetProfile) {
+  try {
+    const text = `💬 *Chat Opened* 💬\n\n` +
+                 `• *From:* ${user.name || 'A user'} _(${user.clan || 'Unknown Clan'})_\n` +
+                 `• *To:* ${targetProfile ? targetProfile.name : 'Matchmaker Bot'} _(${targetProfile ? targetProfile.clan : ''})_\n\n` +
+                 `📅 _Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}_`;
+    await sendTelegramNotification(text);
+  } catch (e) {
+    console.error('Failed to send chat opened notification:', e);
+  }
+}
+
+// ─── 3. Interest Request Sent Alert ────────────────────────────────────────
+async function notifyAdminInterestSent(fromUser, toProfile) {
+  try {
+    const text = `💌 *Interest Request Sent* 💌\n\n` +
+                 `• *From:* ${fromUser.name || 'A user'} _(${fromUser.clan || 'Unknown Clan'})_\n` +
+                 `• *To:* ${toProfile ? toProfile.name : 'Unknown'} _(${toProfile ? toProfile.clan : ''})_\n\n` +
+                 `📅 _Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}_`;
+    await sendTelegramNotification(text);
+  } catch (e) {
+    console.error('Failed to send interest notification:', e);
   }
 }
 
@@ -1690,6 +1664,9 @@ window.handleSendInterest = async function(id) {
   const profileName = targetProfile ? targetProfile.name : 'Match';
   showToast(`Royal Match Interest to ${profileName} sent! Chat is now unlocked!`, 'gold');
 
+  // Notify admin on Telegram
+  notifyAdminInterestSent(currentUser, targetProfile);
+
   // Save notification to localStorage (local to sender)
   let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
   const newNotif = {
@@ -1809,6 +1786,9 @@ window.openOneOnOneChat = function(profileId) {
     showToast('Please log in to chat with matches');
     return;
   }
+
+  // Notify admin on Telegram about chat open
+  notifyAdminChatOpened(currentUser, profile);
 
   // Check if chat container already exists
   let chatBox = document.getElementById('oneOnOneChatWindow');
