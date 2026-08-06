@@ -6,9 +6,13 @@ class SagaiSessionManager: ObservableObject {
     @Published var profiles: [Profile] = MockData.profiles
     @Published var shortlistedIds: Set<String> = []
     @Published var unlockedIds: Set<String> = []
+    @Published var isNewlyRegistered: Bool = false
     
     @Published var searchGender: String = "Bride"
     @Published var searchClan: String = "All Clans"
+    
+    @Published var notificationsList: [RoyalNotification] = []
+    private var connectionTimer: Timer? = nil
     
     init() {
         if let data = UserDefaults.standard.data(forKey: "saved_user_session"),
@@ -27,14 +31,21 @@ class SagaiSessionManager: ObservableObject {
                             !liveProfiles.contains { $0.id == mock.id }
                         }
                     }
+                    if self.currentUser != nil {
+                        self.startConnectionPolling()
+                    }
                 case .failure(let error):
                     print("Supabase profile loading failed: \(error.localizedDescription)")
+                    if self.currentUser != nil {
+                        self.startConnectionPolling()
+                    }
                 }
             }
         }
     }
     
-    func login(user: User) {
+    func login(user: User, isNew: Bool = false) {
+        self.isNewlyRegistered = isNew
         self.currentUser = user
         self.shortlistedIds = Set(user.shortlistedIds)
         self.unlockedIds = Set(user.unlockedIds)
@@ -42,13 +53,15 @@ class SagaiSessionManager: ObservableObject {
         if let data = try? JSONEncoder().encode(user) {
             UserDefaults.standard.set(data, forKey: "saved_user_session")
         }
+        startConnectionPolling()
     }
     
     func logout() {
         self.currentUser = nil
         self.shortlistedIds = []
         self.unlockedIds = []
-        
+        self.notificationsList = []
+        stopConnectionPolling()
         UserDefaults.standard.removeObject(forKey: "saved_user_session")
     }
     
@@ -83,6 +96,71 @@ class SagaiSessionManager: ObservableObject {
             UserDefaults.standard.set(data, forKey: "saved_user_session")
         }
     }
+    
+    func startConnectionPolling() {
+        connectionTimer?.invalidate()
+        connectionTimer = Timer.scheduledTimer(withTimeInterval: 6.0, repeats: true) { [weak self] _ in
+            self?.fetchConnectionsAndGenerateNotifications()
+        }
+        // Initial fetch
+        fetchConnectionsAndGenerateNotifications()
+    }
+    
+    func stopConnectionPolling() {
+        connectionTimer?.invalidate()
+        connectionTimer = nil
+    }
+    
+    func fetchConnectionsAndGenerateNotifications() {
+        guard let currentUserId = currentUser?.id else { return }
+        
+        let urlString = "\(SupabaseClient.shared.supabaseURL)/rest/v1/connections?or=(sender_id.eq.\(currentUserId),receiver_id.eq.\(currentUserId))"
+        guard let url = URL(string: urlString) else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue(SupabaseClient.shared.apiKey, forHTTPHeaderField: "apikey")
+        request.addValue("Bearer \(SupabaseClient.shared.apiKey)", forHTTPHeaderField: "Authorization")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            guard let data = data,
+                  let records = try? JSONDecoder().decode([ConnectionRecord].self, from: data) else {
+                return
+            }
+            
+            // Build notifications list
+            var list: [RoyalNotification] = []
+            for record in records {
+                if record.receiver_id == currentUserId {
+                    let senderProfile = self.profiles.firstOrNull { $0.id == record.sender_id }
+                    let senderName = senderProfile?.name ?? "Noble Member"
+                    list.append(RoyalNotification(
+                        id: record.sender_id + "_" + record.status,
+                        notifKey: "interest_from_\(record.sender_id)",
+                        message: "\(senderName) sent you a Match Interest! Chat is now unlocked.",
+                        profileId: record.sender_id,
+                        timestamp: "Just now",
+                        read: false
+                    ))
+                } else if record.sender_id == currentUserId && record.status == "accepted" {
+                    let receiverProfile = self.profiles.firstOrNull { $0.id == record.receiver_id }
+                    let receiverName = receiverProfile?.name ?? "Noble Member"
+                    list.append(RoyalNotification(
+                        id: record.receiver_id + "_accepted",
+                        notifKey: "accepted_from_\(record.receiver_id)",
+                        message: "\(receiverName) accepted your Royal Interest! Click to chat.",
+                        profileId: record.receiver_id,
+                        timestamp: "Just now",
+                        read: false
+                    ))
+                }
+            }
+            
+            DispatchQueue.main.async {
+                self.notificationsList = list
+            }
+        }.resume()
+    }
 }
 
 struct ContentView: View {
@@ -94,9 +172,11 @@ struct ContentView: View {
     @State private var isSideMenuOpen: Bool = false
     @State private var showingMyProfileSheet: Bool = false
     @State private var showingBiodataSheet: Bool = false
+    @State private var showingNotificationsSheet: Bool = false
     
     private var isOnboardingRequired: Bool {
         guard let user = session.currentUser else { return false }
+        guard session.isNewlyRegistered else { return false }
         return user.gotra.isEmpty || user.motherGotra.isEmpty || user.thikana.isEmpty || user.phone.isEmpty
     }
     
@@ -134,6 +214,42 @@ struct ContentView: View {
                             NavigationView {
                                 HomeView(selectedTab: $selectedTab, showingRegister: $showingRegister, isSideMenuOpen: $isSideMenuOpen)
                                     .environmentObject(session)
+                                    .navigationBarTitleDisplayMode(.inline)
+                                    .toolbar {
+                                        ToolbarItem(placement: .navigationBarLeading) {
+                                            Button(action: {
+                                                withAnimation {
+                                                    isSideMenuOpen = true
+                                                }
+                                            }) {
+                                                Image(systemName: "line.horizontal.3")
+                                                    .foregroundColor(.lightGold)
+                                                    .font(.title2)
+                                            }
+                                        }
+                                        ToolbarItem(placement: .principal) {
+                                            Text("Sagai Sambaandh")
+                                                .font(BrandFonts.displayBold(size: 18))
+                                                .foregroundColor(.lightGold)
+                                        }
+                                        ToolbarItem(placement: .navigationBarTrailing) {
+                                            Button(action: {
+                                                showingNotificationsSheet = true
+                                            }) {
+                                                ZStack {
+                                                    Image(systemName: "bell.fill")
+                                                        .foregroundColor(.lightGold)
+                                                        .font(.title2)
+                                                    if !session.notificationsList.isEmpty {
+                                                        Circle()
+                                                            .fill(Color.red)
+                                                            .frame(width: 8, height: 8)
+                                                            .offset(x: 8, y: -8)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                             }
                             .tabItem {
                                 Label("Home", systemImage: "house.fill")
@@ -144,6 +260,42 @@ struct ContentView: View {
                             NavigationView {
                                 MatchesView(selectedTab: $selectedTab, showingRegister: $showingRegister, isSideMenuOpen: $isSideMenuOpen)
                                     .environmentObject(session)
+                                    .navigationBarTitleDisplayMode(.inline)
+                                    .toolbar {
+                                        ToolbarItem(placement: .navigationBarLeading) {
+                                            Button(action: {
+                                                withAnimation {
+                                                    isSideMenuOpen = true
+                                                }
+                                            }) {
+                                                Image(systemName: "line.horizontal.3")
+                                                    .foregroundColor(.lightGold)
+                                                    .font(.title2)
+                                            }
+                                        }
+                                        ToolbarItem(placement: .principal) {
+                                            Text("Matches")
+                                                .font(BrandFonts.displayBold(size: 18))
+                                                .foregroundColor(.lightGold)
+                                        }
+                                        ToolbarItem(placement: .navigationBarTrailing) {
+                                            Button(action: {
+                                                showingNotificationsSheet = true
+                                            }) {
+                                                ZStack {
+                                                    Image(systemName: "bell.fill")
+                                                        .foregroundColor(.lightGold)
+                                                        .font(.title2)
+                                                    if !session.notificationsList.isEmpty {
+                                                        Circle()
+                                                            .fill(Color.red)
+                                                            .frame(width: 8, height: 8)
+                                                            .offset(x: 8, y: -8)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                             }
                             .tabItem {
                                 Label("Matches", systemImage: "heart.fill")
@@ -171,6 +323,23 @@ struct ContentView: View {
                                             Text("Inbox")
                                                 .font(BrandFonts.displayBold(size: 18))
                                                 .foregroundColor(.lightGold)
+                                        }
+                                        ToolbarItem(placement: .navigationBarTrailing) {
+                                            Button(action: {
+                                                showingNotificationsSheet = true
+                                            }) {
+                                                ZStack {
+                                                    Image(systemName: "bell.fill")
+                                                        .foregroundColor(.lightGold)
+                                                        .font(.title2)
+                                                    if !session.notificationsList.isEmpty {
+                                                        Circle()
+                                                            .fill(Color.red)
+                                                            .frame(width: 8, height: 8)
+                                                            .offset(x: 8, y: -8)
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                             }
@@ -273,6 +442,10 @@ struct ContentView: View {
                     }
                     .sheet(isPresented: $showingBiodataSheet) {
                         BiodataCardView()
+                            .environmentObject(session)
+                    }
+                    .sheet(isPresented: $showingNotificationsSheet) {
+                        NotificationsView()
                             .environmentObject(session)
                     }
                     .onAppear {
@@ -387,3 +560,13 @@ struct ContentView: View {
         }
     }
 }
+
+struct RoyalNotification: Identifiable, Codable, Hashable {
+    let id: String
+    let notifKey: String
+    let message: String
+    let profileId: String
+    let timestamp: String
+    var read: Bool
+}
+

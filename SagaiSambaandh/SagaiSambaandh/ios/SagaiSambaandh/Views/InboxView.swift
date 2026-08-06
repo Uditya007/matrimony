@@ -148,14 +148,41 @@ struct InboxView: View {
     
     private func connectionRow(for record: ConnectionRecord, profile: Profile) -> some View {
         HStack(spacing: 16) {
-            Circle()
-                .fill(Color.royalGold)
-                .frame(width: 54, height: 54)
-                .overlay(
-                    Text(String(profile.name.prefix(1)))
-                        .font(BrandFonts.displayBold(size: 22))
-                        .foregroundColor(.deepMaroon)
-                )
+            Group {
+                if let imgName = profile.img, !imgName.isEmpty {
+                    if imgName.hasPrefix("http") {
+                        AsyncImage(url: URL(string: imgName)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                        }
+                    } else {
+                        let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
+                        AsyncImage(url: URL(string: localUrl)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                        }
+                    }
+                } else {
+                    Circle()
+                        .fill(Color.royalGold)
+                        .overlay(
+                            Text(String(profile.name.prefix(1)))
+                                .font(BrandFonts.displayBold(size: 22))
+                                .foregroundColor(.deepMaroon)
+                        )
+                }
+            }
+            .frame(width: 54, height: 54)
+            .clipShape(Circle())
+            .overlay(Circle().stroke(Color.royalGold.opacity(0.4), lineWidth: 1))
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(profile.name)
@@ -185,7 +212,7 @@ struct InboxView: View {
                     }
                 }
             } else if selectedSubTab == 1 {
-                NavigationLink(destination: ChatDetailView(profile: profile)) {
+                NavigationLink(destination: ChatDetailView(profile: profile, currentUser: session.currentUser)) {
                     HStack(spacing: 4) {
                         Image(systemName: "bubble.left.and.bubble.right.fill")
                         Text("Chat")
@@ -213,7 +240,6 @@ struct InboxView: View {
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.royalGold.opacity(0.25), lineWidth: 1))
     }
     
-    @ViewBuilder
     private var emptyState: some View {
         Spacer()
         VStack(spacing: 20) {
@@ -241,22 +267,59 @@ struct InboxView: View {
     }
 }
 
+struct SupabaseMessage: Hashable {
+    var id: String
+    var senderId: String
+    var text: String
+    var time: Double
+}
+
 struct ChatDetailView: View {
     let profile: Profile
+    let currentUser: User?
+    @EnvironmentObject var session: SagaiSessionManager
     @State private var messageText: String = ""
-    @State private var messages: [String] = []
+    @State private var messages: [SupabaseMessage] = []
+    @State private var timer: Timer? = nil
     
     var body: some View {
         VStack {
             HStack {
-                Circle()
-                    .fill(Color.royalGold)
-                    .frame(width: 36, height: 36)
-                    .overlay(
-                        Text(String(profile.name.prefix(1)))
-                            .font(BrandFonts.displayBold(size: 16))
-                            .foregroundColor(.deepMaroon)
-                    )
+            Group {
+                if let imgName = profile.img, !imgName.isEmpty {
+                    if imgName.hasPrefix("http") {
+                        AsyncImage(url: URL(string: imgName)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                        }
+                    } else {
+                        let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
+                        AsyncImage(url: URL(string: localUrl)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                        }
+                    }
+                } else {
+                    Circle()
+                        .fill(Color.royalGold)
+                        .overlay(
+                            Text(String(profile.name.prefix(1)))
+                                .font(BrandFonts.displayBold(size: 16))
+                                .foregroundColor(.deepMaroon)
+                        )
+                }
+            }
+            .frame(width: 36, height: 36)
+            .clipShape(Circle())
+            .overlay(Circle().stroke(Color.royalGold.opacity(0.4), lineWidth: 1))
                 
                 VStack(alignment: .leading) {
                     Text(profile.name)
@@ -271,32 +334,52 @@ struct ChatDetailView: View {
             .padding()
             .background(Color.deepMaroon)
             
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("Lineage check verified! You are now connected with \(profile.name). Say hello!")
-                            .font(BrandFonts.body(size: 12))
-                            .foregroundColor(.royalGold)
-                            .padding()
-                            .background(Color.royalGold.opacity(0.08))
-                            .cornerRadius(10)
-                        Spacer()
-                    }
-                    
-                    ForEach(messages, id: \.self) { msg in
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
                         HStack {
+                            Text("Lineage check verified! You are now connected with \(profile.name). Say hello!")
+                                .font(BrandFonts.body(size: 12))
+                                .foregroundColor(.royalGold)
+                                .padding()
+                                .background(Color.royalGold.opacity(0.08))
+                                .cornerRadius(10)
                             Spacer()
-                            Text(msg)
-                                .font(BrandFonts.body(size: 14))
-                                .foregroundColor(.deepMaroon)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(Color.royalGold)
-                                .cornerRadius(16)
+                        }
+                        
+                        ForEach(messages, id: \.id) { msg in
+                            HStack {
+                                if msg.senderId == currentUser?.id {
+                                    Spacer()
+                                    Text(msg.text)
+                                        .font(BrandFonts.body(size: 14))
+                                        .foregroundColor(.deepMaroon)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(Color.royalGold)
+                                        .cornerRadius(16)
+                                } else {
+                                    Text(msg.text)
+                                        .font(BrandFonts.body(size: 14))
+                                        .foregroundColor(.sandstoneIvory)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(Color.white.opacity(0.1))
+                                        .cornerRadius(16)
+                                    Spacer()
+                                }
+                            }
+                        }
+                    }
+                    .padding()
+                }
+                .onChange(of: messages.count) { _ in
+                    if let last = messages.last {
+                        withAnimation {
+                            proxy.scrollTo(last.id, anchor: .bottom)
                         }
                     }
                 }
-                .padding()
             }
             
             Spacer()
@@ -319,11 +402,72 @@ struct ChatDetailView: View {
             .background(Color.deepMaroon)
         }
         .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
+        .onAppear {
+            if let user = currentUser {
+                SupabaseClient.shared.notifyAdminChatOpened(fromUser: user, toProfile: profile)
+                loadMessages()
+                startPolling()
+            }
+        }
+        .onDisappear {
+            timer?.invalidate()
+        }
+    }
+    
+    private func loadMessages() {
+        guard let user = currentUser else { return }
+        let combinedDicts = SupabaseClient.shared.getCombinedConversation(profileA: user, profileB: profile)
+        self.messages = combinedDicts.map { dict -> SupabaseMessage in
+            let s = dict["s"] as? String ?? ""
+            let t = dict["t"] as? String ?? ""
+            let time = dict["time"] as? Double ?? 0.0
+            return SupabaseMessage(id: "\(s)_\(time)", senderId: s, text: t, time: time)
+        }
+    }
+    
+    private func startPolling() {
+        timer = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: true) { _ in
+            SupabaseClient.shared.fetchProfileAbout(profileId: profile.id) { updatedAbout in
+                DispatchQueue.main.async {
+                    guard let updatedAbout = updatedAbout else { return }
+                    // Update this profile's about in local state profiles list
+                    if let index = session.profiles.firstIndex(where: { $0.id == profile.id }) {
+                        session.profiles[index].about = updatedAbout
+                    }
+                    loadMessages()
+                }
+            }
+        }
     }
     
     private func sendMessage() {
-        guard !messageText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        messages.append(messageText)
+        guard let user = currentUser, !messageText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        
+        let textToSend = messageText
         messageText = ""
+        
+        let timestamp = Date().timeIntervalSince1970 * 1000
+        let newMsgDict: [String: Any] = ["s": user.id, "t": textToSend, "time": timestamp]
+        
+        var chats = SupabaseClient.shared.getProfileChats(aboutText: user.about)
+        var conversationList = chats[profile.id] ?? []
+        conversationList.append(newMsgDict)
+        chats[profile.id] = conversationList
+        
+        let newAbout = SupabaseClient.shared.setProfileChatsInAbout(aboutText: user.about, chatsObj: chats)
+        
+        var updatedUser = user
+        updatedUser.about = newAbout
+        session.updateCurrentUser(updated: updatedUser)
+        
+        SupabaseClient.shared.updateProfile(user: updatedUser) { success in
+            if success {
+                print("Message synced to Supabase successfully!")
+            } else {
+                print("Failed to sync message to Supabase.")
+            }
+        }
+        
+        loadMessages()
     }
 }

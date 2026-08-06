@@ -27,8 +27,9 @@ struct MatchesView: View {
                         onConnect: { profile in
                             successProfileName = profile.name
                             showingConnectionSuccess = true
-                            if let senderId = session.currentUser?.id {
-                                SupabaseClient.shared.sendConnection(senderId: senderId, receiverId: profile.id) { _ in }
+                            if let currentUser = session.currentUser {
+                                SupabaseClient.shared.sendConnection(senderId: currentUser.id, receiverId: profile.id) { _ in }
+                                SupabaseClient.shared.notifyAdminInterestSent(fromUser: currentUser, toProfile: profile)
                             }
                         }
                     )
@@ -149,11 +150,12 @@ struct MatchesView: View {
                     Text("Connect Now")
                         .font(BrandFonts.bodyBold(size: 14))
                 }
-                .foregroundColor(.white)
+                .foregroundColor(.lightGold)
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
-                .background(Color.green)
+                .background(Color.royalMaroon)
                 .cornerRadius(22)
+                .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.royalGold, lineWidth: 1))
             }
         }
         .padding()
@@ -203,8 +205,9 @@ struct MatchesView: View {
         } else {
             successProfileName = profile.name
             showingConnectionSuccess = true
-            if let senderId = session.currentUser?.id {
-                SupabaseClient.shared.sendConnection(senderId: senderId, receiverId: profile.id) { _ in }
+            if let currentUser = session.currentUser {
+                SupabaseClient.shared.sendConnection(senderId: currentUser.id, receiverId: profile.id) { _ in }
+                SupabaseClient.shared.notifyAdminInterestSent(fromUser: currentUser, toProfile: profile)
             }
         }
     }
@@ -453,14 +456,42 @@ struct ProfileSummaryCard: View {
                             .foregroundColor(.royalGold)
                             .font(.title2)
                     } else {
-                        // Initials Monogram
-                        Circle()
-                            .fill(Color.royalGold)
-                            .frame(width: 80, height: 80)
-                        
-                        Text(String(profile.name.prefix(1)))
-                            .font(BrandFonts.displayBold(size: 32))
-                            .foregroundColor(.deepMaroon)
+                        // Unlocked State Photo or Initials Monogram
+                        Group {
+                            if let imgName = profile.img, !imgName.isEmpty {
+                                if imgName.hasPrefix("http") {
+                                    AsyncImage(url: URL(string: imgName)) { image in
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                    } placeholder: {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                                    }
+                                } else {
+                                    let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
+                                    AsyncImage(url: URL(string: localUrl)) { image in
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                    } placeholder: {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                                    }
+                                }
+                            } else {
+                                Circle()
+                                    .fill(Color.royalGold)
+                                    .overlay(
+                                        Text(String(profile.name.prefix(1)))
+                                            .font(BrandFonts.displayBold(size: 32))
+                                            .foregroundColor(.deepMaroon)
+                                    )
+                            }
+                        }
+                        .frame(width: 80, height: 80)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.royalGold.opacity(0.4), lineWidth: 1))
                     }
                 }
                 

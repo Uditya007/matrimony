@@ -49,9 +49,32 @@ struct ProfileDetailView: View {
                     // Profile Photo Frame
                     ZStack {
                         if let imgName = profile.img {
-                            Image(imgName)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
+                            if imgName.hasPrefix("http") {
+                                AsyncImage(url: URL(string: imgName)) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                } placeholder: {
+                                    ZStack {
+                                        Color.deepMaroon
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                                    }
+                                }
+                            } else {
+                                let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
+                                AsyncImage(url: URL(string: localUrl)) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                } placeholder: {
+                                    ZStack {
+                                        Color.deepMaroon
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                                    }
+                                }
+                            }
                         } else {
                             LinearGradient(colors: [.royalMaroon, .deepMaroon], startPoint: .topLeading, endPoint: .bottomTrailing)
                                 .overlay(
@@ -75,7 +98,7 @@ struct ProfileDetailView: View {
                             
                             if profile.isVerified {
                                 Image(systemName: "checkmark.seal.fill")
-                                    .foregroundColor(.royalGold)
+                                    .foregroundColor(Color(hex: "#2ecc71"))
                                     .font(.system(size: 18))
                             }
                         }
@@ -155,7 +178,7 @@ struct ProfileDetailView: View {
                                 HStack {
                                     Image(systemName: "envelope.fill")
                                         .foregroundColor(.royalMaroon)
-                                    Text("\(profile.name.lowercased().replacingOccurrences(of: " ", with: "."))@sagaisambaandh-member.com")
+                                    Text("\(profile.name.lowercased().replacingOccurrences(of: " ", with: "."))@shreerajputsagaisambandh-member.com")
                                         .font(BrandFonts.body(size: 14, weight: .bold))
                                 }
                                 HStack {
