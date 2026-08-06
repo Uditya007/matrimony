@@ -34,8 +34,8 @@ struct User: Identifiable, Codable, Hashable {
     var gender: String // "Groom" or "Bride"
     var clan: String
     var tier: String // "Starter", "Silver", or "Gold"
-    var shortlistedIds: [String]
-    var unlockedIds: [String]
+    var shortlistedIds: [String] = []
+    var unlockedIds: [String] = []
     var gotra: String = ""
     var motherGotra: String = ""
     var thikana: String = ""

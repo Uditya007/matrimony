@@ -234,7 +234,9 @@ class SupabaseClient {
                         email: email,
                         gender: "Groom",
                         clan: "Rathore",
-                        tier: "Starter"
+                        tier: "Starter",
+                        shortlistedIds: [],
+                        unlockedIds: []
                     )
                     completion(.success(mockUser))
                 }
