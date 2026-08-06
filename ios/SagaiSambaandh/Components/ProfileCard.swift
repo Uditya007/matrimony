@@ -189,20 +189,14 @@ struct ProfileCard: View {
 struct WaxSealBadgeView: View {
     var body: some View {
         ZStack {
-            // Seal outer stamp
             Circle()
-                .fill(Color(hex: "#6B1220"))
-                .frame(width: 32, height: 32)
-                .overlay(
-                    Circle()
-                        .stroke(Color(hex: "#E8C766").opacity(0.5), lineWidth: 1)
-                )
-                .shadow(color: Color(hex: "#6B1220").opacity(0.4), radius: 3, x: 0, y: 2)
+                .fill(Color(hex: "#2ecc71"))
+                .frame(width: 22, height: 22)
+                .shadow(color: Color.black.opacity(0.15), radius: 2, x: 0, y: 1)
             
-            // Inner seal mark
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 15))
-                .foregroundColor(Color(hex: "#E8C766"))
+            Image(systemName: "checkmark")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(.white)
         }
     }
 }

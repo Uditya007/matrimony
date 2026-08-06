@@ -185,7 +185,7 @@ struct InboxView: View {
                     }
                 }
             } else if selectedSubTab == 1 {
-                NavigationLink(destination: ChatDetailView(profile: profile)) {
+                NavigationLink(destination: ChatDetailView(profile: profile, currentUser: session.currentUser)) {
                     HStack(spacing: 4) {
                         Image(systemName: "bubble.left.and.bubble.right.fill")
                         Text("Chat")
@@ -242,6 +242,7 @@ struct InboxView: View {
 
 struct ChatDetailView: View {
     let profile: Profile
+    let currentUser: User?
     @State private var messageText: String = ""
     @State private var messages: [String] = []
     
@@ -318,6 +319,11 @@ struct ChatDetailView: View {
             .background(Color.deepMaroon)
         }
         .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
+        .onAppear {
+            if let user = currentUser {
+                SupabaseClient.shared.notifyAdminChatOpened(fromUser: user, toProfile: profile)
+            }
+        }
     }
     
     private func sendMessage() {

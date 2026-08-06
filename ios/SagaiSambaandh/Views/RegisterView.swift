@@ -18,6 +18,7 @@ struct RegisterView: View {
     
     // Step 2: Lineage Details
     @State private var selectedClan: String = "Rathore"
+    @State private var customClanInput: String = ""
     @State private var gotraInput: String = ""
     @State private var motherGotraInput: String = ""
     @State private var kulInput: String = ""
@@ -30,7 +31,7 @@ struct RegisterView: View {
     @State private var heightInput: String = ""
     @State private var maritalStatusInput: String = "Never Married"
     
-    private let clansOptions = ["Rathore", "Sisodia", "Chauhan", "Kachwaha", "Bhati", "Shekhawat", "Panwar", "Tanwar", "Hada", "Sodha"]
+    private let clansOptions = ["Rathore", "Sisodia", "Chauhan", "Kachwaha", "Bhati", "Shekhawat", "Panwar", "Tanwar", "Hada", "Sodha", "Other (Please Specify)"]
     
     var body: some View {
         VStack(spacing: 0) {
@@ -256,6 +257,21 @@ struct RegisterView: View {
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.2), lineWidth: 1))
                 }
                 
+                if selectedClan == "Other (Please Specify)" {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("SPECIFY CLAN")
+                            .font(BrandFonts.label(size: 8))
+                            .foregroundColor(.gray)
+                        TextField("Enter your Rajput Clan", text: $customClanInput)
+                            .font(BrandFonts.body(size: 14))
+                            .foregroundColor(.inkBrown)
+                            .padding(12)
+                            .background(Color.cardBackground)
+                            .cornerRadius(8)
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.2), lineWidth: 1))
+                    }
+                }
+                
                 // Gotra
                 // Gotra
                 VStack(alignment: .leading, spacing: 6) {
@@ -427,7 +443,7 @@ struct RegisterView: View {
             name: nameInput.isEmpty ? "Kunwar" : nameInput,
             email: emailInput.isEmpty ? "noble@clan.com" : emailInput,
             gender: genderInput == "Bride" ? "Bride" : "Groom",
-            clan: selectedClan,
+            clan: selectedClan == "Other (Please Specify)" ? customClanInput : selectedClan,
             tier: "Starter",
             shortlistedIds: [],
             unlockedIds: [],

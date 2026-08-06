@@ -104,7 +104,7 @@ struct LoginView: View {
                                     .fontWeight(.bold)
                                     .tracking(0.5)
                                 
-                                TextField("e.g. royal@sagaisambaandh.com", text: $emailInput)
+                                TextField("e.g. royal@shreerajputsagaisambandh.com", text: $emailInput)
                                     .keyboardType(.emailAddress)
                                     .autocapitalization(.none)
                                     .font(BrandFonts.body(size: 14))

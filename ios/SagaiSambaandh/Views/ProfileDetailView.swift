@@ -75,7 +75,7 @@ struct ProfileDetailView: View {
                             
                             if profile.isVerified {
                                 Image(systemName: "checkmark.seal.fill")
-                                    .foregroundColor(.royalGold)
+                                    .foregroundColor(Color(hex: "#2ecc71"))
                                     .font(.system(size: 18))
                             }
                         }
@@ -155,7 +155,7 @@ struct ProfileDetailView: View {
                                 HStack {
                                     Image(systemName: "envelope.fill")
                                         .foregroundColor(.royalMaroon)
-                                    Text("\(profile.name.lowercased().replacingOccurrences(of: " ", with: "."))@sagaisambaandh-member.com")
+                                    Text("\(profile.name.lowercased().replacingOccurrences(of: " ", with: "."))@shreerajputsagaisambandh-member.com")
                                         .font(BrandFonts.body(size: 14, weight: .bold))
                                 }
                                 HStack {

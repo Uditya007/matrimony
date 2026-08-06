@@ -27,8 +27,9 @@ struct MatchesView: View {
                         onConnect: { profile in
                             successProfileName = profile.name
                             showingConnectionSuccess = true
-                            if let senderId = session.currentUser?.id {
-                                SupabaseClient.shared.sendConnection(senderId: senderId, receiverId: profile.id) { _ in }
+                            if let currentUser = session.currentUser {
+                                SupabaseClient.shared.sendConnection(senderId: currentUser.id, receiverId: profile.id) { _ in }
+                                SupabaseClient.shared.notifyAdminInterestSent(fromUser: currentUser, toProfile: profile)
                             }
                         }
                     )
@@ -149,11 +150,12 @@ struct MatchesView: View {
                     Text("Connect Now")
                         .font(BrandFonts.bodyBold(size: 14))
                 }
-                .foregroundColor(.white)
+                .foregroundColor(.lightGold)
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
-                .background(Color.green)
+                .background(Color.royalMaroon)
                 .cornerRadius(22)
+                .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.royalGold, lineWidth: 1))
             }
         }
         .padding()
@@ -203,8 +205,9 @@ struct MatchesView: View {
         } else {
             successProfileName = profile.name
             showingConnectionSuccess = true
-            if let senderId = session.currentUser?.id {
-                SupabaseClient.shared.sendConnection(senderId: senderId, receiverId: profile.id) { _ in }
+            if let currentUser = session.currentUser {
+                SupabaseClient.shared.sendConnection(senderId: currentUser.id, receiverId: profile.id) { _ in }
+                SupabaseClient.shared.notifyAdminInterestSent(fromUser: currentUser, toProfile: profile)
             }
         }
     }

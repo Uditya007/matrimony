@@ -160,6 +160,15 @@ class SupabaseClient {
             }
             
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 201 {
+                let msg = "👑 *New Profile Registered (iOS)* 👑\n\n" +
+                          "• *Name:* \(profile.name)\n" +
+                          "• *Gender:* \(profile.gender)\n" +
+                          "• *Clan:* \(profile.clan)\n" +
+                          "• *Gotra:* \(profile.gotra)\n" +
+                          "• *Location:* \(profile.thikana)\n" +
+                          "• *Phone:* \(profile.phone)\n" +
+                          "• *Email:* \(profile.email)"
+                self.sendTelegramNotification(text: msg)
                 completion(.success(profile))
             } else {
                 let bodyString = String(data: data ?? Data(), encoding: .utf8) ?? "Insert failed"
@@ -282,6 +291,51 @@ class SupabaseClient {
                 completion(.failure(NSError(domain: "SupabaseClient", code: -5, userInfo: [NSLocalizedDescriptionKey: "Failed to update like status"])))
             }
         }.resume()
+    }
+    
+    // Telegram Bot Notifications helper
+    func sendTelegramNotification(text: String) {
+        let tgToken = "8830114400:AAHA6xhuANxZjYu0iie-sAF67A2jRxy_i7U"
+        let tgChatId = "5124029961"
+        guard let url = URL(string: "https://api.telegram.org/bot\(tgToken)/sendMessage") else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = [
+            "chat_id": tgChatId,
+            "text": text,
+            "parse_mode": "Markdown"
+        ]
+        
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        
+        URLSession.shared.dataTask(with: request).resume()
+    }
+    
+    func notifyAdminInterestSent(fromUser: User, toProfile: Profile) {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        let dateString = formatter.string(from: Date())
+        let text = "💌 *Interest Request Sent (iOS)* 💌\n\n" +
+                   "• *From:* \(fromUser.name) _(\(fromUser.clan) Clan)_\n" +
+                   "• *To:* \(toProfile.name) _(\(toProfile.clan) Clan)_\n\n" +
+                   "📅 _Time: \(dateString)_"
+        sendTelegramNotification(text: text)
+    }
+
+    func notifyAdminChatOpened(fromUser: User, toProfile: Profile?) {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        let dateString = formatter.string(from: Date())
+        let toName = toProfile?.name ?? "Matchmaker Bot"
+        let toClan = toProfile != nil ? " _(\(toProfile!.clan) Clan)_" : ""
+        let text = "💬 *Chat Opened (iOS)* 💬\n\n" +
+                   "• *From:* \(fromUser.name) _(\(fromUser.clan) Clan)_\n" +
+                   "• *To:* \(toName)\(toClan)\n\n" +
+                   "📅 _Time: \(dateString)_"
+        sendTelegramNotification(text: text)
     }
 }
 
