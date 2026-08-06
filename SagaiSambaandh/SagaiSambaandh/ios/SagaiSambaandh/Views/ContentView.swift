@@ -12,6 +12,7 @@ class SagaiSessionManager: ObservableObject {
     @Published var searchClan: String = "All Clans"
     
     @Published var notificationsList: [RoyalNotification] = []
+    @Published var connections: [ConnectionRecord] = []
     private var connectionTimer: Timer? = nil
     
     init() {
@@ -44,6 +45,21 @@ class SagaiSessionManager: ObservableObject {
         }
     }
     
+    func getConnection(with profileId: String) -> ConnectionRecord? {
+        guard let currentUserId = currentUser?.id else { return nil }
+        return connections.first(where: {
+            ($0.sender_id == currentUserId && $0.receiver_id == profileId) ||
+            ($0.sender_id == profileId && $0.receiver_id == currentUserId)
+        })
+    }
+    
+    func areConnected(profileId: String) -> Bool {
+        if let conn = getConnection(with: profileId) {
+            return conn.status == "accepted"
+        }
+        return false
+    }
+    
     func login(user: User, isNew: Bool = false) {
         self.isNewlyRegistered = isNew
         self.currentUser = user
@@ -61,6 +77,7 @@ class SagaiSessionManager: ObservableObject {
         self.shortlistedIds = []
         self.unlockedIds = []
         self.notificationsList = []
+        self.connections = []
         stopConnectionPolling()
         UserDefaults.standard.removeObject(forKey: "saved_user_session")
     }
@@ -157,6 +174,7 @@ class SagaiSessionManager: ObservableObject {
             }
             
             DispatchQueue.main.async {
+                self.connections = records
                 self.notificationsList = list
             }
         }.resume()

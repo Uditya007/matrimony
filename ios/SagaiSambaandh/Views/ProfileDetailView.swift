@@ -1,4 +1,15 @@
 import SwiftUI
+import SafariServices
+
+struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+    
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        return SFSafariViewController(url: url)
+    }
+    
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
+}
 
 struct ProfileDetailView: View {
     let profile: Profile
@@ -8,6 +19,8 @@ struct ProfileDetailView: View {
     @State private var isUnlocked: Bool = false
     @State private var showingUnlockProgress: Bool = false
     @State private var unlockSuccess: Bool = false
+    @State private var showingPdfSafari: Bool = false
+    @State private var selectedPdfUrl: URL? = nil
     
     private var isGoldUser: Bool {
         session.currentUser?.tier == "Gold"
@@ -19,6 +32,29 @@ struct ProfileDetailView: View {
     
     private var hasDirectAccess: Bool {
         isGoldUser || isSilverUser
+    }
+    
+    private var cleanAboutText: String {
+        guard var bio = profile.about else { return "" }
+        // Strip [Social Links: ...], [Biodata Link: ...], [Interests: ...], [Chats: ...]
+        let patterns = [
+            "\\[Social Links: [^\\]]*\\]",
+            "\\[Biodata Link: [^\\]]*\\]",
+            "\\[Interests: [^\\]]*\\]",
+            "\\[Chats: [^\n\r]*\\]"
+        ]
+        for pattern in patterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
+                let nsRange = NSRange(bio.startIndex..<bio.endIndex, in: bio)
+                bio = regex.stringByReplacingMatches(in: bio, options: [], range: nsRange, withTemplate: "")
+            }
+        }
+        return bio.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    private var isUnlockedOrOwn: Bool {
+        guard let currentUser = session.currentUser else { return false }
+        return currentUser.id == profile.id || session.isUnlocked(id: profile.id) || session.areConnected(profileId: profile.id) || unlockSuccess
     }
     
     var body: some View {
@@ -36,7 +72,6 @@ struct ProfileDetailView: View {
                     .foregroundColor(.royalMaroon)
                     .fontWeight(.bold)
                 Spacer()
-                // Placeholder spacer to center text
                 Color.clear.frame(width: 26, height: 26)
             }
             .padding(.horizontal, 20)
@@ -48,7 +83,7 @@ struct ProfileDetailView: View {
                 VStack(spacing: 20) {
                     // Profile Photo Frame
                     ZStack {
-                        if let imgName = profile.img {
+                        if let imgName = profile.img, !imgName.isEmpty {
                             if imgName.hasPrefix("http") {
                                 AsyncImage(url: URL(string: imgName)) { image in
                                     image
@@ -103,7 +138,7 @@ struct ProfileDetailView: View {
                             }
                         }
                         
-                        Text("\(profile.age) yrs • \(profile.height) • \(profile.location)")
+                        Text("\(profile.age) Yrs • \(profile.height) • \(profile.location)")
                             .font(BrandFonts.body(size: 13))
                             .foregroundColor(.gray)
                     }
@@ -117,12 +152,37 @@ struct ProfileDetailView: View {
                         
                         HStack(spacing: 20) {
                             LineageTag(label: "Rajput Clan", value: profile.clan)
-                            LineageTag(label: "Gotra", value: profile.gotra)
+                            LineageTag(label: "Paternal Gotra", value: profile.gotra)
                         }
                         
                         HStack(spacing: 20) {
-                            LineageTag(label: "Kul / Vansha", value: profile.kul)
                             LineageTag(label: "Thikana (Estate)", value: profile.thikana)
+                            LineageTag(label: "Maternal Gotra", value: profile.motherGotra ?? "Not Specified")
+                        }
+                    }
+                    .padding(20)
+                    .background(Color.cardBackground)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.royalGold.opacity(0.15), lineWidth: 1)
+                    )
+                    
+                    // Astro & Specifications
+                    VStack(alignment: .leading, spacing: 15) {
+                        Text("SPECIFICATIONS & ASTROLOGICS")
+                            .font(BrandFonts.label(size: 10))
+                            .foregroundColor(.gray)
+                            .tracking(1.5)
+                        
+                        HStack(spacing: 20) {
+                            LineageTag(label: "Date of Birth", value: profile.dob ?? "Not Specified")
+                            LineageTag(label: "Zodiac / Rashi", value: profile.rashi ?? "Not Specified")
+                        }
+                        
+                        HStack(spacing: 20) {
+                            LineageTag(label: "Manglik Status", value: profile.manglik ?? "Non-Manglik")
+                            LineageTag(label: "Marital Status", value: profile.maritalStatus ?? "Never Married")
                         }
                     }
                     .padding(20)
@@ -143,7 +203,42 @@ struct ProfileDetailView: View {
                         
                         InfoRow(label: "Occupation", value: profile.occupation)
                         InfoRow(label: "Education", value: profile.education)
-                        InfoRow(label: "Income Tier", value: profile.income)
+                        InfoRow(label: "Annual Income", value: profile.income)
+                    }
+                    .padding(20)
+                    .background(Color.cardBackground)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.royalGold.opacity(0.15), lineWidth: 1)
+                    )
+                    
+                    // Biography & Partner Expectations
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("BIOGRAPHY & ALIGNMENT EXPECTATIONS")
+                            .font(BrandFonts.label(size: 10))
+                            .foregroundColor(.gray)
+                            .tracking(1.5)
+                            .padding(.bottom, 4)
+                        
+                        if !cleanAboutText.isEmpty {
+                            Text("About Me")
+                                .font(BrandFonts.bodyBold(size: 12))
+                                .foregroundColor(.royalMaroon)
+                            Text(cleanAboutText)
+                                .font(BrandFonts.body(size: 13))
+                                .foregroundColor(.inkBrown)
+                                .padding(.bottom, 8)
+                        }
+                        
+                        if let expectations = profile.expectations, !expectations.isEmpty {
+                            Text("Partner Expectations")
+                                .font(BrandFonts.bodyBold(size: 12))
+                                .foregroundColor(.royalMaroon)
+                            Text(expectations)
+                                .font(BrandFonts.body(size: 13))
+                                .foregroundColor(.inkBrown)
+                        }
                     }
                     .padding(20)
                     .background(Color.cardBackground)
@@ -166,26 +261,110 @@ struct ProfileDetailView: View {
                             Spacer()
                         }
                         
-                        if session.isUnlocked(id: profile.id) || unlockSuccess {
+                        if isUnlockedOrOwn {
                             // Unlocked Details display
                             VStack(alignment: .leading, spacing: 10) {
                                 HStack {
                                     Image(systemName: "phone.fill")
                                         .foregroundColor(.royalMaroon)
-                                    Text("+91 91168 \(Int.random(in: 10000...99999))")
+                                    Text(profile.phone ?? "Not Specified")
                                         .font(BrandFonts.body(size: 14, weight: .bold))
                                 }
                                 HStack {
                                     Image(systemName: "envelope.fill")
                                         .foregroundColor(.royalMaroon)
-                                    Text("\(profile.name.lowercased().replacingOccurrences(of: " ", with: "."))@shreerajputsagaisambandh-member.com")
+                                    Text(profile.id.contains("-") ? "\(profile.name.lowercased().replacingOccurrences(of: " ", with: "."))@shreerajputsagaisambandh-member.com" : "Not Specified")
                                         .font(BrandFonts.body(size: 14, weight: .bold))
                                 }
                                 HStack {
                                     Image(systemName: "mappin.and.ellipse")
                                         .foregroundColor(.royalMaroon)
-                                    Text("\(profile.location), India")
+                                    Text(profile.location)
                                         .font(BrandFonts.body(size: 14))
+                                }
+                                
+                                // Social links if present
+                                let ig = profile.instagram ?? ""
+                                let fb = profile.facebook ?? ""
+                                let pdf = profile.biodataUrl ?? ""
+                                
+                                if !ig.isEmpty || !fb.isEmpty || !pdf.isEmpty {
+                                    Divider().padding(.vertical, 8)
+                                    
+                                    Text("SOCIALS & DOCUMENTS")
+                                        .font(BrandFonts.label(size: 9))
+                                        .foregroundColor(.gray)
+                                        .tracking(1)
+                                        .padding(.bottom, 4)
+                                    
+                                    HStack(spacing: 10) {
+                                        if !ig.isEmpty {
+                                            Button(action: {
+                                                var urlStr = ig
+                                                if !urlStr.hasPrefix("http") {
+                                                    urlStr = "https://instagram.com/\(urlStr.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespaces))"
+                                                }
+                                                if let url = URL(string: urlStr) {
+                                                    UIApplication.shared.open(url)
+                                                }
+                                            }) {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "camera.fill")
+                                                    Text("Instagram")
+                                                }
+                                                .font(BrandFonts.bodyBold(size: 11))
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 12)
+                                                .padding(.vertical, 6)
+                                                .background(Color.pink.opacity(0.8))
+                                                .cornerRadius(6)
+                                            }
+                                        }
+                                        
+                                        if !fb.isEmpty {
+                                            Button(action: {
+                                                var urlStr = fb
+                                                if !urlStr.hasPrefix("http") {
+                                                    urlStr = "https://facebook.com/\(urlStr.trimmingCharacters(in: .whitespaces))"
+                                                }
+                                                if let url = URL(string: urlStr) {
+                                                    UIApplication.shared.open(url)
+                                                }
+                                            }) {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "link")
+                                                    Text("Facebook")
+                                                }
+                                                .font(BrandFonts.bodyBold(size: 11))
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 12)
+                                                .padding(.vertical, 6)
+                                                .background(Color.blue.opacity(0.8))
+                                                .cornerRadius(6)
+                                            }
+                                        }
+                                    }
+                                    
+                                    if !pdf.isEmpty {
+                                        Button(action: {
+                                            if let url = URL(string: pdf) {
+                                                selectedPdfUrl = url
+                                                showingPdfSafari = true
+                                            }
+                                        }) {
+                                            HStack {
+                                                Image(systemName: "doc.plaintext.fill")
+                                                Text("View Ancestral Biodata (PDF)")
+                                            }
+                                            .font(BrandFonts.bodyBold(size: 12))
+                                            .foregroundColor(.deepMaroon)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 8)
+                                            .background(Color.royalGold)
+                                            .cornerRadius(6)
+                                            .padding(.top, 4)
+                                        }
+                                    }
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -199,7 +378,7 @@ struct ProfileDetailView: View {
                         } else {
                             // Locked State details box
                             VStack(spacing: 12) {
-                                Text("Lineage contact details are secured. Upgrade to direct communication.")
+                                Text("Lineage contact details are secured. Upgrade or build connection to unlock direct communication.")
                                     .font(BrandFonts.body(size: 12))
                                     .foregroundColor(.gray)
                                     .multilineTextAlignment(.center)
@@ -237,13 +416,16 @@ struct ProfileDetailView: View {
             }
         }
         .background(Color.sandstoneIvory.edgesIgnoringSafeArea(.all))
+        .sheet(isPresented: $showingPdfSafari) {
+            if let url = selectedPdfUrl {
+                SafariView(url: url)
+            }
+        }
     }
     
     private func performUnlock() {
         if !hasDirectAccess {
-            // Trigger alert or direct to plans view
             presentationMode.wrappedValue.dismiss()
-            // We could redirect user to tab 2 (Plans)
             return
         }
         
