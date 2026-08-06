@@ -28,6 +28,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.MediaType.Companion.toMediaType
+import org.json.JSONObject
+import org.json.JSONArray
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sagaisambaandh.data.SagaiSessionManager
@@ -375,7 +384,16 @@ fun LoginView(
                             )
                             session.login(demoUser)
                         } else {
-                            errorMessage = "Invalid credentials. Please use the demo credentials provided."
+                            errorMessage = null
+                            loginUserWithSupabase(emailInput, passwordInput) { success, errorMsg, user ->
+                                if (success && user != null) {
+                                    CoroutineScope(Dispatchers.Main).launch {
+                                        session.login(user)
+                                    }
+                                } else {
+                                    errorMessage = errorMsg
+                                }
+                            }
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -450,5 +468,110 @@ fun LoginView(
                 }
             }
         }
+        }
     }
 }
+
+fun loginUserWithSupabase(emailVal: String, passwordVal: String, onComplete: (Boolean, String, User?) -> Unit) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val client = OkHttpClient()
+            val mediaType = "application/json; charset=utf-8".toMediaType()
+            val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
+            val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+
+            val json = JSONObject().apply {
+                put("email", emailVal)
+                put("password", passwordVal)
+            }
+            val loginRequest = Request.Builder()
+                .url("$url/auth/v1/token?grant_type=password")
+                .addHeader("apikey", apiKey)
+                .post(json.toString().toRequestBody(mediaType))
+                .build()
+
+            val loginResponse = client.newCall(loginRequest).execute()
+            val loginBody = loginResponse.body?.string() ?: ""
+            if (!loginResponse.isSuccessful) {
+                val errObj = JSONObject(loginBody)
+                val errMsg = errObj.optString("error_description", "Login failed")
+                onComplete(false, errMsg, null)
+                return@launch
+            }
+
+            val authObj = JSONObject(loginBody)
+            val userObj = authObj.optJSONObject("user")
+            val uid = userObj?.optString("id") ?: ""
+
+            // Login succeeded! Now fetch their profile data from the profiles table.
+            val profileRequest = Request.Builder()
+                .url("$url/rest/v1/profiles?id=eq.$uid&select=*")
+                .addHeader("apikey", apiKey)
+                .addHeader("Authorization", "Bearer $apiKey")
+                .build()
+
+            val profileResponse = client.newCall(profileRequest).execute()
+            val profileBody = profileResponse.body?.string() ?: ""
+            if (profileResponse.isSuccessful && profileBody.isNotEmpty()) {
+                val rows = JSONArray(profileBody)
+                if (rows.length() > 0) {
+                    val first = rows.getJSONObject(0)
+                    val name = first.optString("name", "Member")
+                    val gender = first.optString("gender", "Groom")
+                    val clan = first.optString("clan", "Rathore")
+                    val tier = first.optString("tier", "Starter")
+                    val gotra = first.optString("gotra", "")
+                    val motherGotra = first.optString("motherGotra", "")
+                    val thikana = first.optString("thikana", "")
+                    val phone = first.optString("phone", "")
+                    val dob = first.optString("dob", "")
+                    val education = first.optString("education", "")
+                    val occupation = first.optString("occupation", "")
+                    val income = first.optString("income", "")
+                    val height = first.optString("height", "")
+                    val maritalStatus = first.optString("maritalStatus", "Never Married")
+                    val profilePic = first.optString("profilePic", "")
+
+                    val loggedUser = User(
+                        id = uid,
+                        name = name,
+                        email = emailVal,
+                        gender = gender,
+                        clan = clan,
+                        tier = tier,
+                        shortlistedIds = emptySet(),
+                        unlockedIds = emptySet(),
+                        gotra = gotra,
+                        motherGotra = motherGotra,
+                        thikana = thikana,
+                        phone = phone,
+                        dob = dob,
+                        education = education,
+                        occupation = occupation,
+                        income = income,
+                        height = height,
+                        maritalStatus = maritalStatus,
+                        profilePic = profilePic.takeIf { it.isNotEmpty() }
+                    )
+                    onComplete(true, "", loggedUser)
+                } else {
+                    val fallbackUser = User(
+                        id = uid,
+                        name = "Noble Member",
+                        email = emailVal,
+                        gender = "Groom",
+                        clan = "Rathore",
+                        tier = "Starter"
+                    )
+                    onComplete(true, "", fallbackUser)
+                }
+            } else {
+                onComplete(false, "Profile retrieval failed", null)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            onComplete(false, e.localizedMessage ?: "Network error", null)
+        }
+    }
+}
+

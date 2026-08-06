@@ -119,6 +119,127 @@ class SupabaseClient {
         }.resume()
     }
     
+    
+    // Auth SignIn / Login
+    func signIn(email: String, password: String, completion: @escaping (Result<User, Error>) -> Void) {
+        guard let url = URL(string: "\(supabaseURL)/auth/v1/token?grant_type=password") else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue(apiKey, forHTTPHeaderField: "apikey")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body = [
+            "email": email,
+            "password": password
+        ]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            guard let data = data else {
+                completion(.failure(NSError(domain: "SupabaseClient", code: -1, userInfo: [NSLocalizedDescriptionKey: "No login data returned"])))
+                return
+            }
+            
+            do {
+                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let userObj = json["user"] as? [String: Any],
+                   let uid = userObj["id"] as? String {
+                    
+                    // Login succeeded! Now fetch their profile data from the profiles table.
+                    self.fetchUserProfile(uid: uid, email: email, completion: completion)
+                } else {
+                    let errMsg = String(data: data, encoding: .utf8) ?? "Auth sign in failed"
+                    completion(.failure(NSError(domain: "SupabaseClient", code: -2, userInfo: [NSLocalizedDescriptionKey: errMsg])))
+                }
+            } catch {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+    
+    // Fetch individual profile matching UID
+    func fetchUserProfile(uid: String, email: String, completion: @escaping (Result<User, Error>) -> Void) {
+        guard let url = URL(string: "\(supabaseURL)/rest/v1/profiles?id=eq.\(uid)&select=*") else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue(apiKey, forHTTPHeaderField: "apikey")
+        request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            guard let data = data else {
+                completion(.failure(NSError(domain: "SupabaseClient", code: -3)))
+                return
+            }
+            do {
+                if let rows = try JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+                   let first = rows.first {
+                    
+                    let name = first["name"] as? String ?? "Noble User"
+                    let gender = first["gender"] as? String ?? "Groom"
+                    let clan = first["clan"] as? String ?? "Rathore"
+                    let tier = first["tier"] as? String ?? "Starter"
+                    let gotra = first["gotra"] as? String ?? ""
+                    let motherGotra = first["motherGotra"] as? String ?? ""
+                    let thikana = first["thikana"] as? String ?? ""
+                    let phone = first["phone"] as? String ?? ""
+                    let dob = first["dob"] as? String ?? ""
+                    let education = first["education"] as? String ?? ""
+                    let occupation = first["occupation"] as? String ?? ""
+                    let income = first["income"] as? String ?? ""
+                    let height = first["height"] as? String ?? ""
+                    let maritalStatus = first["maritalStatus"] as? String ?? "Never Married"
+                    let profilePic = first["profilePic"] as? String
+                    
+                    let loggedUser = User(
+                        id: uid,
+                        name: name,
+                        email: email,
+                        gender: gender,
+                        clan: clan,
+                        tier: tier,
+                        shortlistedIds: [],
+                        unlockedIds: [],
+                        gotra: gotra,
+                        motherGotra: motherGotra,
+                        thikana: thikana,
+                        phone: phone,
+                        dob: dob,
+                        education: education,
+                        occupation: occupation,
+                        income: income,
+                        height: height,
+                        maritalStatus: maritalStatus,
+                        profilePic: profilePic
+                    )
+                    completion(.success(loggedUser))
+                } else {
+                    // Profile row doesn't exist, create a baseline mock profile
+                    let mockUser = User(
+                        id: uid,
+                        name: "Noble Member",
+                        email: email,
+                        gender: "Groom",
+                        clan: "Rathore",
+                        tier: "Starter"
+                    )
+                    completion(.success(mockUser))
+                }
+            } catch {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+
     // Insert a new profile record
     func insertProfile(profile: User, completion: @escaping (Result<User, Error>) -> Void) {
         guard let url = URL(string: "\(supabaseURL)/rest/v1/profiles") else { return }
