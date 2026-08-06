@@ -62,9 +62,18 @@ struct ProfileDetailView: View {
                                     }
                                 }
                             } else {
-                                Image(imgName)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
+                                let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
+                                AsyncImage(url: URL(string: localUrl)) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                } placeholder: {
+                                    ZStack {
+                                        Color.deepMaroon
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                                    }
+                                }
                             }
                         } else {
                             LinearGradient(colors: [.royalMaroon, .deepMaroon], startPoint: .topLeading, endPoint: .bottomTrailing)
