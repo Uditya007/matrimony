@@ -466,14 +466,14 @@ struct RegisterView: View {
                 switch result {
                 case .success(let registeredUser):
                     withAnimation(.easeOut(duration: 0.4)) {
-                        session.login(user: registeredUser)
+                        session.login(user: registeredUser, isNew: true)
                         isGuestBypassed = true
                     }
                 case .failure(let error):
                     print("Supabase register error: \(error.localizedDescription)")
                     // fallback to keep app running during offline testing
                     withAnimation(.easeOut(duration: 0.4)) {
-                        session.login(user: newUser)
+                        session.login(user: newUser, isNew: true)
                         isGuestBypassed = true
                     }
                 }

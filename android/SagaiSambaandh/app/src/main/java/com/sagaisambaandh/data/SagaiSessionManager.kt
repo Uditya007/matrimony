@@ -28,6 +28,8 @@ class SagaiSessionManager(private val context: Context) {
     private val _unlockedIds = mutableStateOf<Set<String>>(emptySet())
     val unlockedIds: State<Set<String>> = _unlockedIds
 
+    var isNewlyRegistered = mutableStateOf(false)
+
     init {
         // Load persisted user session from SharedPreferences
         val savedUserJson = sharedPrefs.getString("saved_user", null)
@@ -45,7 +47,8 @@ class SagaiSessionManager(private val context: Context) {
         fetchSupabaseProfiles()
     }
 
-    fun login(user: User) {
+    fun login(user: User, isNew: Boolean = false) {
+        this.isNewlyRegistered.value = isNew
         _currentUser.value = user
         _shortlistedIds.value = user.shortlistedIds
         _unlockedIds.value = user.unlockedIds

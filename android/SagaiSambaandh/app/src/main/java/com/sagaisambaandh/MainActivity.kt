@@ -62,7 +62,9 @@ fun MainScreen(session: SagaiSessionManager) {
 
     val currentUser by session.currentUser
     
-    val isOnboardingRequired = false
+    val isOnboardingRequired = currentUser?.let {
+        session.isNewlyRegistered.value && (it.gotra.isEmpty() || it.motherGotra.isEmpty() || it.thikana.isEmpty() || it.phone.isEmpty())
+    } ?: false
 
     if (isSplashActive) {
         SplashView(onTimeout = { isSplashActive = false })

@@ -670,7 +670,7 @@ fun RegisterView(
                                     )
                                     registerUserInSupabase(newUser, passwordInput.ifEmpty { "12345" }) { success, registeredUser ->
                                         CoroutineScope(Dispatchers.Main).launch {
-                                            session.login(registeredUser)
+                                            session.login(registeredUser, isNew = true)
                                         }
                                     }
                                 },

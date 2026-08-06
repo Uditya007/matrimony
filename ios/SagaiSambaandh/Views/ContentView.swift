@@ -6,6 +6,7 @@ class SagaiSessionManager: ObservableObject {
     @Published var profiles: [Profile] = MockData.profiles
     @Published var shortlistedIds: Set<String> = []
     @Published var unlockedIds: Set<String> = []
+    @Published var isNewlyRegistered: Bool = false
     
     @Published var searchGender: String = "Bride"
     @Published var searchClan: String = "All Clans"
@@ -34,7 +35,8 @@ class SagaiSessionManager: ObservableObject {
         }
     }
     
-    func login(user: User) {
+    func login(user: User, isNew: Bool = false) {
+        self.isNewlyRegistered = isNew
         self.currentUser = user
         self.shortlistedIds = Set(user.shortlistedIds)
         self.unlockedIds = Set(user.unlockedIds)
@@ -96,7 +98,9 @@ struct ContentView: View {
     @State private var showingBiodataSheet: Bool = false
     
     private var isOnboardingRequired: Bool {
-        return false
+        guard let user = session.currentUser else { return false }
+        guard session.isNewlyRegistered else { return false }
+        return user.gotra.isEmpty || user.motherGotra.isEmpty || user.thikana.isEmpty || user.phone.isEmpty
     }
     
     var body: some View {
