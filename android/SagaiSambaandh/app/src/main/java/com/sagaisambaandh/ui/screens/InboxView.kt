@@ -39,6 +39,8 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 data class ConnectionRecord(
     val sender_id: String,
@@ -324,14 +326,29 @@ fun InboxView(
                                     contentAlignment = Alignment.Center,
                                     modifier = Modifier
                                         .size(54.dp)
-                                        .background(RoyalGold, shape = CircleShape)
+                                        .clip(CircleShape)
+                                        .background(RoyalGold)
                                 ) {
-                                    Text(
-                                        text = matchProfile.name.take(1),
-                                        color = DeepMaroon,
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    if (!matchProfile.img.isNullOrEmpty()) {
+                                        val imageUrl = if (matchProfile.img.startsWith("http")) {
+                                            matchProfile.img
+                                        } else {
+                                            "https://shreerajputsagaisambandh.com/images/${matchProfile.img}.png"
+                                        }
+                                        AsyncImage(
+                                            model = imageUrl,
+                                            contentDescription = "Profile Picture",
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                    } else {
+                                        Text(
+                                            text = matchProfile.name.take(1),
+                                            color = DeepMaroon,
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Column(modifier = Modifier.weight(1f)) {
@@ -466,14 +483,29 @@ fun ChatDetailModal(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(36.dp)
-                    .background(RoyalGold, shape = CircleShape)
+                    .clip(CircleShape)
+                    .background(RoyalGold)
             ) {
-                Text(
-                    text = profile.name.take(1),
-                    color = DeepMaroon,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                if (!profile.img.isNullOrEmpty()) {
+                    val imageUrl = if (profile.img.startsWith("http")) {
+                        profile.img
+                    } else {
+                        "https://shreerajputsagaisambandh.com/images/${profile.img}.png"
+                    }
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = "Profile Picture",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Text(
+                        text = profile.name.take(1),
+                        color = DeepMaroon,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column {

@@ -48,6 +48,8 @@ import com.sagaisambaandh.data.Profile
 import com.sagaisambaandh.data.SagaiSessionManager
 import com.sagaisambaandh.ui.components.ProfileCard
 import com.sagaisambaandh.ui.theme.*
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -386,24 +388,38 @@ fun SwipeDeckDeck(
                         )
                     }
                 } else {
-                    // Profile Monogram representation
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(120.dp)
-                                .background(LightGold, shape = CircleShape)
+                    // Unlocked State Image or Monogram fallback
+                    if (!profile.img.isNullOrEmpty()) {
+                        val imageUrl = if (profile.img.startsWith("http")) {
+                            profile.img
+                        } else {
+                            "https://shreerajputsagaisambandh.com/images/${profile.img}.png"
+                        }
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = "Profile Picture",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                text = profile.name.take(1),
-                                color = DeepMaroon,
-                                fontSize = 48.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .background(LightGold, shape = CircleShape)
+                            ) {
+                                Text(
+                                    text = profile.name.take(1),
+                                    color = DeepMaroon,
+                                    fontSize = 48.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }

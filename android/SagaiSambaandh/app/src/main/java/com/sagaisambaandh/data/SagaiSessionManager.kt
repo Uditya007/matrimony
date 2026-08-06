@@ -30,6 +30,11 @@ class SagaiSessionManager(private val context: Context) {
 
     var isNewlyRegistered = mutableStateOf(false)
 
+    private val _notificationsList = mutableStateOf<List<RoyalNotification>>(emptyList())
+    val notificationsList: State<List<RoyalNotification>> = _notificationsList
+
+    private var connectionPollingJob: kotlinx.coroutines.Job? = null
+
     init {
         // Load persisted user session from SharedPreferences
         val savedUserJson = sharedPrefs.getString("saved_user", null)
@@ -45,6 +50,9 @@ class SagaiSessionManager(private val context: Context) {
         }
         
         fetchSupabaseProfiles()
+        _currentUser.value?.let {
+            startConnectionPolling()
+        }
     }
 
     fun login(user: User, isNew: Boolean = false) {
@@ -59,13 +67,15 @@ class SagaiSessionManager(private val context: Context) {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+        startConnectionPolling()
     }
 
     fun logout() {
         _currentUser.value = null
         _shortlistedIds.value = emptySet()
         _unlockedIds.value = emptySet()
-        
+        _notificationsList.value = emptyList()
+        stopConnectionPolling()
         sharedPrefs.edit().remove("saved_user").apply()
     }
 
@@ -482,4 +492,86 @@ class SagaiSessionManager(private val context: Context) {
             }
         }
     }
+
+    fun startConnectionPolling() {
+        connectionPollingJob?.cancel()
+        val userId = _currentUser.value?.id ?: return
+        connectionPollingJob = CoroutineScope(Dispatchers.IO).launch {
+            while (true) {
+                fetchConnectionsAndGenerateNotifications(userId)
+                kotlinx.coroutines.delay(6000)
+            }
+        }
+    }
+
+    fun stopConnectionPolling() {
+        connectionPollingJob?.cancel()
+        connectionPollingJob = null
+    }
+
+    private fun fetchConnectionsAndGenerateNotifications(userId: String) {
+        try {
+            val client = OkHttpClient()
+            val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
+            val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+            
+            val request = Request.Builder()
+                .url("$url/rest/v1/connections?or=(sender_id.eq.$userId,receiver_id.eq.$userId)")
+                .addHeader("apikey", apiKey)
+                .addHeader("Authorization", "Bearer $apiKey")
+                .build()
+            
+            val response = client.newCall(request).execute()
+            val body = response.body?.string() ?: ""
+            if (response.isSuccessful && body.isNotEmpty()) {
+                val records = JSONArray(body)
+                val list = mutableListOf<RoyalNotification>()
+                for (i in 0 until records.length()) {
+                    val record = records.getJSONObject(i)
+                    val senderId = record.optString("sender_id", "")
+                    val receiverId = record.optString("receiver_id", "")
+                    val status = record.optString("status", "")
+                    
+                    if (receiverId == userId) {
+                        val senderProfile = profiles.value.firstOrNull { it.id == senderId }
+                        val senderName = senderProfile?.name ?: "Noble Member"
+                        list.add(RoyalNotification(
+                            id = "${senderId}_${status}",
+                            notifKey = "interest_from_$senderId",
+                            message = "$senderName sent you a Match Interest! Chat is now unlocked.",
+                            profileId = senderId,
+                            timestamp = "Just now",
+                            read = false
+                        ))
+                    } else if (senderId == userId && status == "accepted") {
+                        val receiverProfile = profiles.value.firstOrNull { it.id == receiverId }
+                        val receiverName = receiverProfile?.name ?: "Noble Member"
+                        list.add(RoyalNotification(
+                            id = "${receiverId}_accepted",
+                            notifKey = "accepted_from_$receiverId",
+                            message = "$receiverName accepted your Royal Interest! Click to chat.",
+                            profileId = receiverId,
+                            timestamp = "Just now",
+                            read = false
+                        ))
+                    }
+                }
+                
+                CoroutineScope(Dispatchers.Main).launch {
+                    _notificationsList.value = list
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }
+
+data class RoyalNotification(
+    val id: String,
+    val notifKey: String,
+    val message: String,
+    val profileId: String,
+    val timestamp: String,
+    val read: Boolean
+)

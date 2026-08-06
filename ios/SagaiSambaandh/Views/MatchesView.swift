@@ -456,14 +456,42 @@ struct ProfileSummaryCard: View {
                             .foregroundColor(.royalGold)
                             .font(.title2)
                     } else {
-                        // Initials Monogram
-                        Circle()
-                            .fill(Color.royalGold)
-                            .frame(width: 80, height: 80)
-                        
-                        Text(String(profile.name.prefix(1)))
-                            .font(BrandFonts.displayBold(size: 32))
-                            .foregroundColor(.deepMaroon)
+                        // Unlocked State Photo or Initials Monogram
+                        Group {
+                            if let imgName = profile.img, !imgName.isEmpty {
+                                if imgName.hasPrefix("http") {
+                                    AsyncImage(url: URL(string: imgName)) { image in
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                    } placeholder: {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                                    }
+                                } else {
+                                    let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
+                                    AsyncImage(url: URL(string: localUrl)) { image in
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                    } placeholder: {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                                    }
+                                }
+                            } else {
+                                Circle()
+                                    .fill(Color.royalGold)
+                                    .overlay(
+                                        Text(String(profile.name.prefix(1)))
+                                            .font(BrandFonts.displayBold(size: 32))
+                                            .foregroundColor(.deepMaroon)
+                                    )
+                            }
+                        }
+                        .frame(width: 80, height: 80)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.royalGold.opacity(0.4), lineWidth: 1))
                     }
                 }
                 

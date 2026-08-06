@@ -148,14 +148,41 @@ struct InboxView: View {
     
     private func connectionRow(for record: ConnectionRecord, profile: Profile) -> some View {
         HStack(spacing: 16) {
-            Circle()
-                .fill(Color.royalGold)
-                .frame(width: 54, height: 54)
-                .overlay(
-                    Text(String(profile.name.prefix(1)))
-                        .font(BrandFonts.displayBold(size: 22))
-                        .foregroundColor(.deepMaroon)
-                )
+            Group {
+                if let imgName = profile.img, !imgName.isEmpty {
+                    if imgName.hasPrefix("http") {
+                        AsyncImage(url: URL(string: imgName)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                        }
+                    } else {
+                        let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
+                        AsyncImage(url: URL(string: localUrl)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                        }
+                    }
+                } else {
+                    Circle()
+                        .fill(Color.royalGold)
+                        .overlay(
+                            Text(String(profile.name.prefix(1)))
+                                .font(BrandFonts.displayBold(size: 22))
+                                .foregroundColor(.deepMaroon)
+                        )
+                }
+            }
+            .frame(width: 54, height: 54)
+            .clipShape(Circle())
+            .overlay(Circle().stroke(Color.royalGold.opacity(0.4), lineWidth: 1))
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(profile.name)
@@ -258,14 +285,41 @@ struct ChatDetailView: View {
     var body: some View {
         VStack {
             HStack {
-                Circle()
-                    .fill(Color.royalGold)
-                    .frame(width: 36, height: 36)
-                    .overlay(
-                        Text(String(profile.name.prefix(1)))
-                            .font(BrandFonts.displayBold(size: 16))
-                            .foregroundColor(.deepMaroon)
-                    )
+            Group {
+                if let imgName = profile.img, !imgName.isEmpty {
+                    if imgName.hasPrefix("http") {
+                        AsyncImage(url: URL(string: imgName)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                        }
+                    } else {
+                        let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
+                        AsyncImage(url: URL(string: localUrl)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                        }
+                    }
+                } else {
+                    Circle()
+                        .fill(Color.royalGold)
+                        .overlay(
+                            Text(String(profile.name.prefix(1)))
+                                .font(BrandFonts.displayBold(size: 16))
+                                .foregroundColor(.deepMaroon)
+                        )
+                }
+            }
+            .frame(width: 36, height: 36)
+            .clipShape(Circle())
+            .overlay(Circle().stroke(Color.royalGold.opacity(0.4), lineWidth: 1))
                 
                 VStack(alignment: .leading) {
                     Text(profile.name)

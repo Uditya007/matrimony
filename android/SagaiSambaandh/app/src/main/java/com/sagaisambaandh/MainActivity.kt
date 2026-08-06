@@ -88,6 +88,7 @@ fun MainScreen(session: SagaiSessionManager) {
         val scope = rememberCoroutineScope()
         var showMyProfileSheet by remember { mutableStateOf(false) }
         var showBiodataSheet by remember { mutableStateOf(false) }
+        var showNotificationsSheet by remember { mutableStateOf(false) }
 
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -343,6 +344,24 @@ fun MainScreen(session: SagaiSessionManager) {
                             }
                         },
                         actions = {
+                            val notifs by session.notificationsList
+                            Box(contentAlignment = Alignment.TopEnd) {
+                                IconButton(onClick = { showNotificationsSheet = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Notifications,
+                                        contentDescription = "Notifications",
+                                        tint = LightGold
+                                    )
+                                }
+                                if (notifs.isNotEmpty()) {
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(top = 10.dp, end = 10.dp)
+                                            .size(8.dp)
+                                            .background(Color.Red, shape = CircleShape)
+                                    )
+                                }
+                            }
                             IconButton(onClick = { showMyProfileSheet = true }) {
                                 Icon(
                                     imageVector = Icons.Default.AccountCircle,
@@ -485,6 +504,141 @@ fun MainScreen(session: SagaiSessionManager) {
                         session = session,
                         onDismiss = { showBiodataSheet = false }
                     )
+                }
+
+                // Royal Notifications list sheet popup
+                if (showNotificationsSheet) {
+                    NotificationsDialog(
+                        session = session,
+                        onDismiss = { showNotificationsSheet = false }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun NotificationsDialog(
+    session: SagaiSessionManager,
+    onDismiss: () -> Unit
+) {
+    val notifs by session.notificationsList
+    
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = DeepMaroon,
+            border = BorderStroke(1.dp, RoyalGold.copy(alpha = 0.4f)),
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.7f)
+                .padding(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Royal Notifications",
+                        color = LightGold,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Serif
+                    )
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = LightGold
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                if (notifs.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.NotificationsOff,
+                                contentDescription = "None",
+                                tint = RoyalGold.copy(alpha = 0.5f),
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Text(
+                                text = "No notifications yet",
+                                color = LightGold,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = "Updates about match interests and connection responses will appear here.",
+                                color = SandstoneIvory.copy(alpha = 0.7f),
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
+                    }
+                } else {
+                    androidx.compose.foundation.lazy.LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(notifs.size) { index ->
+                            val notification = notifs[index]
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(CardBackground.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                                    .border(1.dp, RoyalGold.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .background(RoyalGold.copy(alpha = 0.15f), shape = CircleShape)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Notifications,
+                                        contentDescription = "Bell",
+                                        tint = RoyalGold,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = notification.message,
+                                        color = SandstoneIvory,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = notification.timestamp,
+                                        color = SandstoneIvory.copy(alpha = 0.5f),
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
