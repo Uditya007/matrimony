@@ -96,8 +96,7 @@ struct ContentView: View {
     @State private var showingBiodataSheet: Bool = false
     
     private var isOnboardingRequired: Bool {
-        guard let user = session.currentUser else { return false }
-        return user.gotra.isEmpty || user.motherGotra.isEmpty || user.thikana.isEmpty || user.phone.isEmpty
+        return false
     }
     
     var body: some View {
