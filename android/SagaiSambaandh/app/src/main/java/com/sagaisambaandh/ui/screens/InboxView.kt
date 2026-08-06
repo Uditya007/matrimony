@@ -414,11 +414,29 @@ fun ChatDetailModal(
     onBack: () -> Unit
 ) {
     var messageText by remember { mutableStateOf("") }
-    val messages = remember { mutableStateListOf<String>() }
+    val messagesList = remember { mutableStateListOf<JSONObject>() }
+    val user = session.currentUser.value
 
     LaunchedEffect(profile) {
-        session.currentUser.value?.let { user ->
-            session.notifyAdminChatOpened(user, profile)
+        val currentUserVal = session.currentUser.value ?: return@LaunchedEffect
+        session.notifyAdminChatOpened(currentUserVal, profile)
+        
+        // Initial load
+        messagesList.clear()
+        messagesList.addAll(session.getCombinedConversation(currentUserVal, profile))
+        
+        // Polling loop
+        while (true) {
+            kotlinx.coroutines.delay(4000)
+            session.fetchProfileAbout(profile.id) { updatedAbout ->
+                if (updatedAbout != null) {
+                    val freshConv = session.getCombinedConversation(currentUserVal, profile.copy(about = updatedAbout))
+                    CoroutineScope(Dispatchers.Main).launch {
+                        messagesList.clear()
+                        messagesList.addAll(freshConv)
+                    }
+                }
+            }
         }
     }
 
@@ -496,19 +514,23 @@ fun ChatDetailModal(
                 )
             }
 
-            messages.forEach { msg ->
+            messagesList.forEach { msg ->
+                val isMe = msg.optString("s") == user?.id
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = if (isMe) Arrangement.End else Arrangement.Start
                 ) {
                     Box(
                         modifier = Modifier
-                            .background(RoyalGold, RoundedCornerShape(16.dp))
+                            .background(
+                                if (isMe) RoyalGold else Color.White.copy(alpha = 0.1f),
+                                RoundedCornerShape(16.dp)
+                            )
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         Text(
-                            text = msg,
-                            color = DeepMaroon,
+                            text = msg.optString("t"),
+                            color = if (isMe) DeepMaroon else SandstoneIvory,
                             fontSize = 14.sp
                         )
                     }
@@ -540,9 +562,34 @@ fun ChatDetailModal(
             Spacer(modifier = Modifier.width(12.dp))
             IconButton(
                 onClick = {
-                    if (messageText.trim().isNotEmpty()) {
-                        messages.add(messageText)
+                    if (user != null && messageText.trim().isNotEmpty()) {
+                        val textToSend = messageText
                         messageText = ""
+                        val timestamp = System.currentTimeMillis().toDouble()
+                        val newMsg = JSONObject().apply {
+                            put("s", user.id)
+                            put("t", textToSend)
+                            put("time", timestamp)
+                        }
+                        
+                        val chats = session.getProfileChats(user.about)
+                        val conversationList = chats.optJSONArray(profile.id) ?: JSONArray()
+                        conversationList.put(newMsg)
+                        chats.put(profile.id, conversationList)
+                        
+                        val newAbout = session.setProfileChatsInAbout(user.about, chats)
+                        val updatedUser = user.copy(about = newAbout)
+                        session.updateCurrentUser(updatedUser)
+                        
+                        session.updateProfile(updatedUser) { success ->
+                            if (success) {
+                                println("Message synced successfully!")
+                            }
+                        }
+                        
+                        val freshConv = session.getCombinedConversation(updatedUser, profile)
+                        messagesList.clear()
+                        messagesList.addAll(freshConv)
                     }
                 }
             ) {

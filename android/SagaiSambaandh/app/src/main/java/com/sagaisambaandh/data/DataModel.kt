@@ -15,7 +15,8 @@ data class Profile(
     val education: String,
     val income: String,
     val isVerified: Boolean,
-    val img: String? = null // local resource identifier
+    val img: String? = null, // local resource identifier or URL
+    val about: String? = null
 )
 
 data class Clan(
@@ -44,5 +45,6 @@ data class User(
     val income: String = "",
     val height: String = "",
     val maritalStatus: String = "Never Married",
-    val profilePic: String? = null
+    val profilePic: String? = null,
+    val about: String? = null
 )

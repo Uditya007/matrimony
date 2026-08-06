@@ -37,6 +37,7 @@ class SupabaseClient {
                         let occupation = dict["occupation"] as? String ?? ""
                         let income = dict["income"] as? String ?? ""
                         let profilePic = dict["profilePic"] as? String ?? ""
+                        let about = dict["about"] as? String ?? ""
                         
                         var ageVal = 25
                         if let dobStr = dict["dob"] as? String, !dobStr.isEmpty {
@@ -61,7 +62,8 @@ class SupabaseClient {
                             education: education,
                             income: income,
                             isVerified: true,
-                            img: profilePic.isEmpty ? nil : profilePic
+                            img: profilePic.isEmpty ? nil : profilePic,
+                            about: about
                         )
                     }
                     completion(.success(parsedProfiles))
@@ -199,6 +201,7 @@ class SupabaseClient {
                     let height = first["height"] as? String ?? ""
                     let maritalStatus = first["maritalStatus"] as? String ?? "Never Married"
                     let profilePic = first["profilePic"] as? String
+                    let about = first["about"] as? String ?? ""
                     
                     let loggedUser = User(
                         id: uid,
@@ -219,7 +222,8 @@ class SupabaseClient {
                         income: income,
                         height: height,
                         maritalStatus: maritalStatus,
-                        profilePic: profilePic
+                        profilePic: profilePic,
+                        about: about
                     )
                     completion(.success(loggedUser))
                 } else {
@@ -457,6 +461,96 @@ class SupabaseClient {
                    "• *To:* \(toName)\(toClan)\n\n" +
                    "📅 _Time: \(dateString)_"
         sendTelegramNotification(text: text)
+    }
+
+    // Parse Chats from profile about string
+    func getProfileChats(aboutText: String?) -> [String: [[String: Any]]] {
+        guard let about = aboutText, !about.isEmpty else { return [:] }
+        
+        let pattern = "\\[Chats: ([^\n\r]*)\\]"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return [:] }
+        
+        let nsRange = NSRange(about.startIndex..<about.endIndex, in: about)
+        if let match = regex.firstMatch(in: about, options: [], range: nsRange),
+           let range = Range(match.range(at: 1), in: about) {
+            let jsonString = String(about[range]).trimmingCharacters(in: .whitespacesAndNewlines)
+            if let data = jsonString.data(using: .utf8),
+               let dict = try? JSONSerialization.jsonObject(with: data) as? [String: [[String: Any]]] {
+                return dict
+            }
+        }
+        return [:]
+    }
+    
+    // Serialize and embed Chats into profile about string
+    func setProfileChatsInAbout(aboutText: String?, chatsObj: [String: [[String: Any]]]) -> String {
+        var cleanAbout = aboutText ?? ""
+        
+        // Remove existing [Chats: ...] blocks
+        let pattern = "\\[Chats: [^\n\r]*\\]"
+        if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
+            let nsRange = NSRange(cleanAbout.startIndex..<cleanAbout.endIndex, in: cleanAbout)
+            cleanAbout = regex.stringByReplacingMatches(in: cleanAbout, options: [], range: nsRange, withTemplate: "")
+        }
+        cleanAbout = cleanAbout.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if let data = try? JSONSerialization.data(withJSONObject: chatsObj, options: []),
+           let jsonString = String(data: data, encoding: .utf8) {
+            return (cleanAbout + "\n[Chats: \(jsonString)]").trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return cleanAbout
+    }
+    
+    // Merge two conversations and sort chronologically
+    func getCombinedConversation(profileA: User, profileB: Profile) -> [[String: Any]] {
+        let chatsA = getProfileChats(aboutText: profileA.about)
+        let chatsB = getProfileChats(aboutText: profileB.about)
+        
+        let listA = chatsA[profileB.id] ?? []
+        let listB = chatsB[profileA.id] ?? []
+        
+        let combined = listA + listB
+        
+        var unique: [[String: Any]] = []
+        var seen = Set<String>()
+        
+        for msg in combined {
+            let s = msg["s"] as? String ?? ""
+            let t = msg["t"] as? String ?? ""
+            let time = msg["time"] as? Double ?? 0.0
+            let key = "\(s)_\(t)_\(time)"
+            
+            if !seen.contains(key) {
+                seen.insert(key)
+                unique.append(msg)
+            }
+        }
+        
+        return unique.sorted { ($0["time"] as? Double ?? 0.0) < ($1["time"] as? Double ?? 0.0) }
+    }
+    
+    // Fetch individual profile's about field to read their sent messages
+    func fetchProfileAbout(profileId: String, completion: @escaping (String?) -> Void) {
+        guard let url = URL(string: "\(supabaseURL)/rest/v1/profiles?id=eq.\(profileId)&select=about") else {
+            completion(nil)
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue(apiKey, forHTTPHeaderField: "apikey")
+        request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            guard let data = data,
+                  let rows = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+                  let first = rows.first else {
+                completion(nil)
+                return
+            }
+            let about = first["about"] as? String
+            completion(about)
+        }.resume()
     }
 }
 

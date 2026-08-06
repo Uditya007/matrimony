@@ -49,9 +49,23 @@ struct ProfileDetailView: View {
                     // Profile Photo Frame
                     ZStack {
                         if let imgName = profile.img {
-                            Image(imgName)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
+                            if imgName.hasPrefix("http") {
+                                AsyncImage(url: URL(string: imgName)) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                } placeholder: {
+                                    ZStack {
+                                        Color.deepMaroon
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                                    }
+                                }
+                            } else {
+                                Image(imgName)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            }
                         } else {
                             LinearGradient(colors: [.royalMaroon, .deepMaroon], startPoint: .topLeading, endPoint: .bottomTrailing)
                                 .overlay(

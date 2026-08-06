@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sagaisambaandh.data.Profile
 import com.sagaisambaandh.ui.theme.*
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun ProfileCard(
@@ -112,18 +114,32 @@ fun ProfileCard(
                         }
                     }
                 } else {
-                    // Unlocked State Monogram Initial Avatar
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Text(
-                            text = profile.name.split(" ").map { it.firstOrNull() ?: "" }.joinToString(""),
-                            color = SandstoneIvory,
-                            fontSize = 44.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Serif
+                    // Unlocked State Image or Monogram
+                    if (!profile.img.isNullOrEmpty()) {
+                        val imageUrl = if (profile.img.startsWith("http")) {
+                            profile.img
+                        } else {
+                            "https://shreerajputsagaisambandh.com/images/${profile.img}.png"
+                        }
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = "Profile Picture",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
                         )
+                    } else {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Text(
+                                text = profile.name.split(" ").map { it.firstOrNull() ?: "" }.joinToString(""),
+                                color = SandstoneIvory,
+                                fontSize = 44.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Serif
+                            )
+                        }
                     }
 
                     // Red Wax seal verification badge

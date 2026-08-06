@@ -166,6 +166,7 @@ class SagaiSessionManager(private val context: Context) {
         obj.put("height", user.height)
         obj.put("maritalStatus", user.maritalStatus)
         obj.put("profilePic", user.profilePic ?: "")
+        obj.put("about", user.about ?: "")
         
         val shortArray = JSONArray(user.shortlistedIds.toList())
         val unlockArray = JSONArray(user.unlockedIds.toList())
@@ -211,7 +212,8 @@ class SagaiSessionManager(private val context: Context) {
             income = obj.optString("income", ""),
             height = obj.optString("height", ""),
             maritalStatus = obj.optString("maritalStatus", "Never Married"),
-            profilePic = obj.optString("profilePic", "").takeIf { it.isNotEmpty() }
+            profilePic = obj.optString("profilePic", "").takeIf { it.isNotEmpty() },
+            about = obj.optString("about", "")
         )
     }
 
@@ -245,6 +247,7 @@ class SagaiSessionManager(private val context: Context) {
                         val occupation = obj.optString("occupation", "")
                         val income = obj.optString("income", "")
                         val profilePic = obj.optString("profilePic", "")
+                        val about = obj.optString("about", "")
                         
                         var ageVal = 25
                         val dobStr = obj.optString("dob", "")
@@ -273,7 +276,8 @@ class SagaiSessionManager(private val context: Context) {
                                 education = education,
                                 income = income,
                                 isVerified = true,
-                                img = profilePic.ifEmpty { "groom_ranveer" }
+                                img = profilePic.ifEmpty { "groom_ranveer" },
+                                about = about
                             )
                         )
                     }
@@ -341,7 +345,7 @@ class SagaiSessionManager(private val context: Context) {
     }
 
     fun notifyAdminChatOpened(fromUser: User, toProfile: Profile?) {
-        val formatter = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+        val formatter = java.util.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
         val dateString = formatter.format(java.util.Date())
         val toName = toProfile?.name ?: "Matchmaker Bot"
         val toClan = toProfile?.let { " _(${it.clan} Clan)_" } ?: ""
@@ -350,5 +354,132 @@ class SagaiSessionManager(private val context: Context) {
                    "• *To:* $toName$toClan\n\n" +
                    "📅 _Time: $dateString_"
         sendTelegramNotification(text)
+    }
+
+    // Parse Chats from profile about string
+    fun getProfileChats(aboutText: String?): JSONObject {
+        if (aboutText.isNullOrEmpty()) return JSONObject()
+        val pattern = java.util.regex.Pattern.compile("\\[Chats: ([^\n\r]*)\\]")
+        val matcher = pattern.matcher(aboutText)
+        if (matcher.find()) {
+            val jsonString = matcher.group(1)?.trim() ?: ""
+            try {
+                return JSONObject(jsonString)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        return JSONObject()
+    }
+
+    // Serialize and embed Chats into profile about string
+    fun setProfileChatsInAbout(aboutText: String?, chatsObj: JSONObject): String {
+        var cleanAbout = aboutText ?: ""
+        cleanAbout = cleanAbout.replace(Regex("\\[Chats: [^\n\r]*\\]"), "").trim()
+        val jsonString = chatsObj.toString()
+        return if (cleanAbout.isEmpty()) {
+            "[Chats: $jsonString]"
+        } else {
+            "$cleanAbout\n[Chats: $jsonString]"
+        }
+    }
+
+    // Merge two conversations and sort chronologically
+    fun getCombinedConversation(user: User, profile: Profile): List<JSONObject> {
+        val chatsA = getProfileChats(user.about)
+        val chatsB = getProfileChats(profile.about)
+        
+        val listA = chatsA.optJSONArray(profile.id) ?: JSONArray()
+        val listB = chatsB.optJSONArray(user.id) ?: JSONArray()
+        
+        val combined = mutableListOf<JSONObject>()
+        for (i in 0 until listA.length()) {
+            combined.add(listA.getJSONObject(i))
+        }
+        for (i in 0 until listB.length()) {
+            combined.add(listB.getJSONObject(i))
+        }
+        
+        val unique = mutableListOf<JSONObject>()
+        val seen = mutableSetOf<String>()
+        for (msg in combined) {
+            val s = msg.optString("s")
+            val t = msg.optString("t")
+            val time = msg.optDouble("time", 0.0)
+            val key = "${s}_${t}_${time}"
+            if (!seen.contains(key)) {
+                seen.add(key)
+                unique.add(msg)
+            }
+        }
+        
+        unique.sortBy { it.optDouble("time", 0.0) }
+        return unique
+    }
+
+    fun fetchProfileAbout(profileId: String, onComplete: (String?) -> Unit) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = OkHttpClient()
+                val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
+                val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+                val request = Request.Builder()
+                    .url("$url/rest/v1/profiles?id=eq.$profileId&select=about")
+                    .addHeader("apikey", apiKey)
+                    .addHeader("Authorization", "Bearer $apiKey")
+                    .build()
+                
+                val response = client.newCall(request).execute()
+                val body = response.body?.string() ?: ""
+                if (response.isSuccessful && body.isNotEmpty()) {
+                    val rows = JSONArray(body)
+                    if (rows.length() > 0) {
+                        val first = rows.getJSONObject(0)
+                        val about = first.optString("about", "")
+                        onComplete(about)
+                        return@launch
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            onComplete(null)
+        }
+    }
+
+    fun updateProfile(user: User, onComplete: (Boolean) -> Unit) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = OkHttpClient()
+                val mediaType = "application/json; charset=utf-8".toMediaType()
+                val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
+                val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+                
+                val fields = JSONObject().apply {
+                    put("name", user.name)
+                    put("clan", user.clan)
+                    put("gotra", user.gotra)
+                    put("motherGotra", user.motherGotra)
+                    put("thikana", user.thikana)
+                    put("phone", user.phone)
+                    put("dob", user.dob)
+                    put("profilePic", user.profilePic ?: "")
+                    put("about", user.about ?: "")
+                }
+                
+                val request = Request.Builder()
+                    .url("$url/rest/v1/profiles?id=eq.${user.id}")
+                    .addHeader("apikey", apiKey)
+                    .addHeader("Authorization", "Bearer $apiKey")
+                    .patch(fields.toString().toRequestBody(mediaType))
+                    .build()
+                
+                val response = client.newCall(request).execute()
+                onComplete(response.isSuccessful)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onComplete(false)
+            }
+        }
     }
 }

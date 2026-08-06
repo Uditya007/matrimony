@@ -28,6 +28,8 @@ import com.sagaisambaandh.ui.components.JharokhaBorder
 import com.sagaisambaandh.ui.components.JharokhaShape
 import com.sagaisambaandh.ui.components.jharokhaBorder
 import com.sagaisambaandh.ui.theme.*
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -100,13 +102,27 @@ fun ProfileDetailView(
                     .jharokhaBorder(3f)
                     .background(clanGradient)
             ) {
-                Text(
-                    text = profile.name.split(" ").map { it.firstOrNull() ?: "" }.joinToString(""),
-                    color = SandstoneIvory,
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Serif
-                )
+                if (!profile.img.isNullOrEmpty()) {
+                    val imageUrl = if (profile.img.startsWith("http")) {
+                        profile.img
+                    } else {
+                        "https://shreerajputsagaisambandh.com/images/${profile.img}.png"
+                    }
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = "Profile Picture",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Text(
+                        text = profile.name.split(" ").map { it.firstOrNull() ?: "" }.joinToString(""),
+                        color = SandstoneIvory,
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Serif
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

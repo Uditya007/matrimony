@@ -16,6 +16,7 @@ struct Profile: Identifiable, Codable, Hashable {
     var income: String
     var isVerified: Bool
     var img: String? // Image file reference
+    var about: String? // Serialized chats/bios from Supabase
 }
 
 struct Clan: Identifiable, Codable, Hashable {
@@ -47,4 +48,5 @@ struct User: Identifiable, Codable, Hashable {
     var maritalStatus: String = "Never Married"
     var profilePic: String? = nil
     var isNewUser: Bool? = false
+    var about: String? = nil
 }
