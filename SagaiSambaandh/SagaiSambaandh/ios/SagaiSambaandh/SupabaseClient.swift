@@ -39,8 +39,20 @@ class SupabaseClient {
                         let profilePic = dict["profilePic"] as? String ?? ""
                         let about = dict["about"] as? String ?? ""
                         
+                        let motherGotra = dict["motherGotra"] as? String ?? ""
+                        let dobStr = dict["dob"] as? String ?? ""
+                        let phone = dict["phone"] as? String ?? ""
+                        let maritalStatus = dict["maritalStatus"] as? String ?? "Never Married"
+                        let rashi = dict["rashi"] as? String ?? ""
+                        let manglik = dict["manglik"] as? String ?? "Non-Manglik"
+                        let expectations = dict["expectations"] as? String ?? ""
+                        let instagram = dict["instagram"] as? String ?? ""
+                        let facebook = dict["facebook"] as? String ?? ""
+                        let biodataUrl = dict["biodataUrl"] as? String ?? ""
+                        let locationVal = dict["location"] as? String ?? thikana
+                        
                         var ageVal = 25
-                        if let dobStr = dict["dob"] as? String, !dobStr.isEmpty {
+                        if !dobStr.isEmpty {
                             let parts = dobStr.components(separatedBy: "-")
                             if parts.count >= 3, let year = Int(parts[2]) {
                                 ageVal = 2026 - year
@@ -56,14 +68,24 @@ class SupabaseClient {
                             gotra: gotra,
                             kul: clan,
                             thikana: thikana,
-                            location: thikana,
+                            location: locationVal,
                             height: height,
                             occupation: occupation,
                             education: education,
                             income: income,
                             isVerified: true,
                             img: profilePic.isEmpty ? nil : profilePic,
-                            about: about
+                            about: about,
+                            motherGotra: motherGotra,
+                            dob: dobStr,
+                            phone: phone,
+                            maritalStatus: maritalStatus,
+                            rashi: rashi,
+                            manglik: manglik,
+                            expectations: expectations,
+                            instagram: instagram,
+                            facebook: facebook,
+                            biodataUrl: biodataUrl
                         )
                     }
                     completion(.success(parsedProfiles))
@@ -203,6 +225,14 @@ class SupabaseClient {
                     let profilePic = first["profilePic"] as? String
                     let about = first["about"] as? String ?? ""
                     
+                    let location = first["location"] as? String ?? ""
+                    let rashi = first["rashi"] as? String ?? ""
+                    let manglik = first["manglik"] as? String ?? "Non-Manglik"
+                    let expectations = first["expectations"] as? String ?? ""
+                    let instagram = first["instagram"] as? String ?? ""
+                    let facebook = first["facebook"] as? String ?? ""
+                    let biodataUrl = first["biodataUrl"] as? String ?? ""
+                    
                     let loggedUser = User(
                         id: uid,
                         name: name,
@@ -223,7 +253,14 @@ class SupabaseClient {
                         height: height,
                         maritalStatus: maritalStatus,
                         profilePic: profilePic,
-                        about: about
+                        about: about,
+                        location: location,
+                        rashi: rashi,
+                        manglik: manglik,
+                        expectations: expectations,
+                        instagram: instagram,
+                        facebook: facebook,
+                        biodataUrl: biodataUrl
                     )
                     completion(.success(loggedUser))
                 } else {
@@ -275,7 +312,14 @@ class SupabaseClient {
             "income": profile.income,
             "height": profile.height,
             "maritalStatus": profile.maritalStatus,
-            "profilePic": profile.profilePic ?? ""
+            "profilePic": profile.profilePic ?? "",
+            "location": profile.location,
+            "rashi": profile.rashi,
+            "manglik": profile.manglik,
+            "expectations": profile.expectations,
+            "instagram": profile.instagram,
+            "facebook": profile.facebook,
+            "biodataUrl": profile.biodataUrl
         ]
         
         request.httpBody = try? JSONSerialization.data(withJSONObject: fields)
@@ -322,7 +366,20 @@ class SupabaseClient {
             "thikana": user.thikana,
             "phone": user.phone,
             "dob": user.dob,
-            "profilePic": user.profilePic ?? ""
+            "education": user.education,
+            "occupation": user.occupation,
+            "income": user.income,
+            "height": user.height,
+            "maritalStatus": user.maritalStatus,
+            "profilePic": user.profilePic ?? "",
+            "about": user.about ?? "",
+            "location": user.location,
+            "rashi": user.rashi,
+            "manglik": user.manglik,
+            "expectations": user.expectations,
+            "instagram": user.instagram,
+            "facebook": user.facebook,
+            "biodataUrl": user.biodataUrl
         ]
         
         request.httpBody = try? JSONSerialization.data(withJSONObject: fields)

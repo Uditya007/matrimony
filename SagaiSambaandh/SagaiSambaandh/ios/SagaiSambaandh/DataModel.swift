@@ -17,6 +17,18 @@ struct Profile: Identifiable, Codable, Hashable {
     var isVerified: Bool
     var img: String? // Image file reference
     var about: String? // Serialized chats/bios from Supabase
+    
+    // Additional fields for mobile-website parity
+    var motherGotra: String? = ""
+    var dob: String? = ""
+    var phone: String? = ""
+    var maritalStatus: String? = "Never Married"
+    var rashi: String? = ""
+    var manglik: String? = "Non-Manglik"
+    var expectations: String? = ""
+    var instagram: String? = ""
+    var facebook: String? = ""
+    var biodataUrl: String? = ""
 }
 
 struct Clan: Identifiable, Codable, Hashable {
@@ -49,4 +61,13 @@ struct User: Identifiable, Codable, Hashable {
     var profilePic: String? = nil
     var isNewUser: Bool? = false
     var about: String? = nil
+    
+    // Additional fields for mobile-website parity
+    var location: String = ""
+    var rashi: String = ""
+    var manglik: String = "Non-Manglik"
+    var expectations: String = ""
+    var instagram: String = ""
+    var facebook: String = ""
+    var biodataUrl: String = ""
 }
