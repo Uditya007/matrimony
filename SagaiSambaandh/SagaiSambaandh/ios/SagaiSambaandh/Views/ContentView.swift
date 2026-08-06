@@ -132,7 +132,7 @@ class SagaiSessionManager: ObservableObject {
             var list: [RoyalNotification] = []
             for record in records {
                 if record.receiver_id == currentUserId {
-                    let senderProfile = self.profiles.firstOrNull { $0.id == record.sender_id }
+                    let senderProfile = self.profiles.first(where: { $0.id == record.sender_id })
                     let senderName = senderProfile?.name ?? "Noble Member"
                     list.append(RoyalNotification(
                         id: record.sender_id + "_" + record.status,
@@ -143,7 +143,7 @@ class SagaiSessionManager: ObservableObject {
                         read: false
                     ))
                 } else if record.sender_id == currentUserId && record.status == "accepted" {
-                    let receiverProfile = self.profiles.firstOrNull { $0.id == record.receiver_id }
+                    let receiverProfile = self.profiles.first(where: { $0.id == record.receiver_id })
                     let receiverName = receiverProfile?.name ?? "Noble Member"
                     list.append(RoyalNotification(
                         id: record.receiver_id + "_accepted",
