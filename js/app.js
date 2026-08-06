@@ -458,7 +458,19 @@ async function notifyAdminInterestSent(fromUser, toProfile) {
     console.error('Failed to send interest notification:', e);
   }
 }
-
+// Resolve profile image URL helper
+function resolveProfileImageUrl(url) {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:') || trimmed.startsWith('/') || trimmed.startsWith('images/')) {
+    return trimmed;
+  }
+  // If it's a local mock avatar string, resolve it to images/avatar.png
+  if (!trimmed.includes('.') && !trimmed.includes('/')) {
+    return `images/${trimmed}.png`;
+  }
+  return trimmed;
+}
 
 // Get combined profiles (Registered users from Supabase database)
 function getAllProfiles() {
@@ -470,47 +482,63 @@ function getAllProfiles() {
     localUsers = JSON.parse(localStorage.getItem('users')) || [];
   }
   
-  const formattedLocals = localUsers.map(user => ({
-    id: user.id || `U_${user.email}`,
-    name: user.name || "Noble Member",
-    img: user.profilePic || '',
-    profilePic: user.profilePic || '',
-    gender: user.gender || "Groom",
-    age: parseInt(user.age) || 25,
-    dob: user.dob || "1998-06-15",
-    religion: user.religion || "Hindu",
-    caste: user.caste || "Rajput",
-    height: user.height || "5'6\"",
-    clan: user.clan || "Rathore",
-    gotra: `${user.gotra || 'Not Specified'} (Father) / ${user.motherGotra || 'Not Specified'} (Mother)`,
-    native: user.pob || user.native || 'Rajasthan',
-    rashi: user.rashi || 'Not Specified',
-    nakshatra: user.nakshatra || 'Not Specified',
-    manglik: user.manglik || 'Non-Manglik',
-    education: user.education || 'Graduate',
-    occupation: user.occupation || 'Professional',
-    income: user.income ? (user.income.includes('Lakhs') ? user.income : `₹${user.income} Lakhs PA`) : '₹12 Lakhs PA',
-    location: user.location || 'Jaipur, Rajasthan',
-    familyType: user.familyType || 'Traditional',
-    familyDetails: user.familyDetails || 'Respectable family based in Rajasthan.',
-    about: user.about || 'A simple and career-oriented individual.',
-    expectations: user.expectations || 'An understanding partner.',
-    prefMinAge: user.prefMinAge || 21,
-    prefMaxAge: user.prefMaxAge || 29,
-    prefCaste: user.prefCaste || 'Any',
-    prefLocation: user.prefLocation || 'Any',
-    initials: user.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'NM',
-    isRegisteredUser: true,
-    email: user.email,
-    isRecentlyActive: true,
-    isVerified: true,
-    aiScore: 92,
-    tier: user.tier || 'Starter'
-  }));
+  // Merge database/localStorage users with SEED_PROFILES
+  const seedProfiles = window.SEED_PROFILES || [];
+  
+  // Combine them, ensuring we don't have duplicate IDs
+  const combined = [...localUsers];
+  seedProfiles.forEach(seed => {
+    // If database already has a profile with the same ID, don't duplicate
+    if (!combined.some(u => u.id === seed.id || u.email === seed.email)) {
+      combined.push(seed);
+    }
+  });
+  
+  const formattedLocals = combined.map(user => {
+    const rawPic = user.profilePic || user.img || '';
+    const resolvedPic = resolveProfileImageUrl(rawPic);
+    
+    return {
+      id: user.id || `U_${user.email}`,
+      name: user.name || "Noble Member",
+      img: resolvedPic,
+      profilePic: resolvedPic,
+      gender: user.gender || "Groom",
+      age: parseInt(user.age) || 25,
+      dob: user.dob || "1998-06-15",
+      religion: user.religion || "Hindu",
+      caste: user.caste || "Rajput",
+      height: user.height || "5'6\"",
+      clan: user.clan || "Rathore",
+      gotra: user.gotra && user.gotra.includes('(Father)') ? user.gotra : `${user.gotra || 'Not Specified'} (Father) / ${user.motherGotra || 'Not Specified'} (Mother)`,
+      native: user.pob || user.native || user.location || 'Rajasthan',
+      rashi: user.rashi || 'Not Specified',
+      nakshatra: user.nakshatra || 'Not Specified',
+      manglik: user.manglik || 'Non-Manglik',
+      education: user.education || 'Graduate',
+      occupation: user.occupation || 'Professional',
+      income: user.income ? (user.income.includes('Lakhs') || user.income.includes('Crore') ? user.income : `₹${user.income} Lakhs PA`) : '₹12 Lakhs PA',
+      location: user.location || 'Jaipur, Rajasthan',
+      familyType: user.familyType || 'Traditional',
+      familyDetails: user.familyDetails || 'Respectable family based in Rajasthan.',
+      about: user.about || 'A simple and career-oriented individual.',
+      expectations: user.expectations || 'An understanding partner.',
+      prefMinAge: user.prefMinAge || 21,
+      prefMaxAge: user.prefMaxAge || 29,
+      prefCaste: user.prefCaste || 'Any',
+      prefLocation: user.prefLocation || 'Any',
+      initials: user.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'NM',
+      isRegisteredUser: true,
+      email: user.email,
+      isRecentlyActive: user.isRecentlyActive !== undefined ? user.isRecentlyActive : true,
+      isVerified: user.isVerified !== undefined ? user.isVerified : true,
+      aiScore: user.aiScore || 92,
+      tier: user.tier || 'Starter'
+    };
+  });
 
   return formattedLocals;
 }
-
 // Check auth before loading dashboard
 function checkAuth() {
   const currentUser = localStorage.getItem('currentUser');
@@ -2269,8 +2297,9 @@ function populateLeftUserCard(user) {
   if (thikana) thikana.textContent = user.thikana || 'Jodhpur';
 
   if (avatar) {
-    if (user.profilePic && !user.profilePic.startsWith('mock_') && (user.profilePic.startsWith('http') || user.profilePic.startsWith('/') || user.profilePic.startsWith('data:'))) {
-      avatar.innerHTML = `<img src="${user.profilePic}" class="user-card-avatar-img" alt="Avatar" />`;
+    const resolvedUrl = resolveProfileImageUrl(user.profilePic);
+    if (resolvedUrl && !user.profilePic.startsWith('mock_')) {
+      avatar.innerHTML = `<img src="${resolvedUrl}" class="user-card-avatar-img" alt="Avatar" />`;
     } else {
       // Fallback to initials
       const initials = (user.name || 'N M').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();

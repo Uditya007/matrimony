@@ -768,8 +768,9 @@
       const frame = document.getElementById('profileAvatarFrame');
       const removeBtnContainer = document.getElementById('removePhotoContainer');
       if (frame) {
-        if (user.profilePic && !user.profilePic.startsWith('mock_') && (user.profilePic.startsWith('http') || user.profilePic.startsWith('/') || user.profilePic.startsWith('data:'))) {
-          frame.innerHTML = `<img src="${user.profilePic}" alt="Avatar" />`;
+        const resolvedUrl = resolveProfileImageUrl(user.profilePic);
+        if (resolvedUrl && !user.profilePic.startsWith('mock_')) {
+          frame.innerHTML = `<img src="${resolvedUrl}" alt="Avatar" />`;
           if (removeBtnContainer) removeBtnContainer.style.display = 'block';
         } else {
           const initials = (user.name || 'N M').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
