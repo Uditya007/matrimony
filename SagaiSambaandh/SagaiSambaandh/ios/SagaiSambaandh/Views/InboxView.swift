@@ -241,29 +241,31 @@ struct InboxView: View {
     }
     
     private var emptyState: some View {
-        Spacer()
-        VStack(spacing: 20) {
-            ZStack {
-                Circle()
-                    .fill(Color.deepMaroon)
-                    .frame(width: 100, height: 100)
+        VStack {
+            Spacer()
+            VStack(spacing: 20) {
+                ZStack {
+                    Circle()
+                        .fill(Color.deepMaroon)
+                        .frame(width: 100, height: 100)
+                    
+                    Image(systemName: "envelope.open.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(.lightGold)
+                }
                 
-                Image(systemName: "envelope.open.fill")
-                    .font(.system(size: 40))
+                Text(selectedSubTab == 0 ? "No Pending Requests" : (selectedSubTab == 1 ? "No Active Connections" : "No Sent Requests"))
+                    .font(BrandFonts.displayBold(size: 18))
                     .foregroundColor(.lightGold)
+                
+                Text("Lineage compatibility checks are run in real-time. Invite other members to connect and establish family trust.")
+                    .font(BrandFonts.body(size: 13))
+                    .foregroundColor(.sandstoneIvory.opacity(0.7))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
             }
-            
-            Text(selectedSubTab == 0 ? "No Pending Requests" : (selectedSubTab == 1 ? "No Active Connections" : "No Sent Requests"))
-                .font(BrandFonts.displayBold(size: 18))
-                .foregroundColor(.lightGold)
-            
-            Text("Lineage compatibility checks are run in real-time. Invite other members to connect and establish family trust.")
-                .font(BrandFonts.body(size: 13))
-                .foregroundColor(.sandstoneIvory.opacity(0.7))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+            Spacer()
         }
-        Spacer()
     }
 }
 
