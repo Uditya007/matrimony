@@ -193,6 +193,7 @@ fun InboxView(
     if (activeChatProfile != null) {
         ChatDetailModal(
             profile = activeChatProfile!!,
+            session = session,
             onBack = { activeChatProfile = null }
         )
     } else {
@@ -409,10 +410,17 @@ fun InboxView(
 @Composable
 fun ChatDetailModal(
     profile: Profile,
+    session: SagaiSessionManager,
     onBack: () -> Unit
 ) {
     var messageText by remember { mutableStateOf("") }
     val messages = remember { mutableStateListOf<String>() }
+
+    LaunchedEffect(profile) {
+        session.currentUser.value?.let { user ->
+            session.notifyAdminChatOpened(user, profile)
+        }
+    }
 
     Column(
         modifier = Modifier

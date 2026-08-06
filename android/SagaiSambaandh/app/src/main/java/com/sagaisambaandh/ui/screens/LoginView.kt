@@ -301,7 +301,7 @@ fun LoginView(
                         OutlinedTextField(
                             value = emailInput,
                             onValueChange = { emailInput = it },
-                            placeholder = { Text("e.g. royal@sagaisambaandh.com") },
+                            placeholder = { Text("e.g. royal@shreerajputsagaisambandh.com") },
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedTextColor = Color.Black,

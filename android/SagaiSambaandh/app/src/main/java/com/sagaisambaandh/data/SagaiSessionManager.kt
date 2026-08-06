@@ -7,6 +7,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -285,5 +287,65 @@ class SagaiSessionManager(private val context: Context) {
                 e.printStackTrace()
             }
         }
+    }
+
+    fun sendTelegramNotification(text: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = OkHttpClient()
+                val mediaType = "application/json; charset=utf-8".toMediaType()
+                val tgToken = "8830114400:AAHA6xhuANxZjYu0iie-sAF67A2jRxy_i7U"
+                val tgChatId = "5124029961"
+                
+                val json = JSONObject().apply {
+                    put("chat_id", tgChatId)
+                    put("text", text)
+                    put("parse_mode", "Markdown")
+                }
+                
+                val request = Request.Builder()
+                    .url("https://api.telegram.org/bot$tgToken/sendMessage")
+                    .post(json.toString().toRequestBody(mediaType))
+                    .build()
+                    
+                client.newCall(request).execute()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun notifyAdminNewRegistration(profile: User) {
+        val text = "👑 *New Profile Registered (Android)* 👑\n\n" +
+                   "• *Name:* ${profile.name}\n" +
+                   "• *Gender:* ${profile.gender}\n" +
+                   "• *Clan:* ${profile.clan}\n" +
+                   "• *Gotra:* ${profile.gotra}\n" +
+                   "• *Location:* ${profile.thikana}\n" +
+                   "• *Phone:* ${profile.phone}\n" +
+                   "• *Email:* ${profile.email}"
+        sendTelegramNotification(text)
+    }
+
+    fun notifyAdminInterestSent(fromUser: User, toProfile: Profile) {
+        val formatter = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+        val dateString = formatter.format(java.util.Date())
+        val text = "💌 *Interest Request Sent (Android)* 💌\n\n" +
+                   "• *From:* ${fromUser.name} _(${fromUser.clan} Clan)_\n" +
+                   "• *To:* ${toProfile.name} _(${toProfile.clan} Clan)_\n\n" +
+                   "📅 _Time: $dateString_"
+        sendTelegramNotification(text)
+    }
+
+    fun notifyAdminChatOpened(fromUser: User, toProfile: Profile?) {
+        val formatter = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+        val dateString = formatter.format(java.util.Date())
+        val toName = toProfile?.name ?: "Matchmaker Bot"
+        val toClan = toProfile?.let { " _(${it.clan} Clan)_" } ?: ""
+        val text = "💬 *Chat Opened (Android)* 💬\n\n" +
+                   "• *From:* ${fromUser.name} _(${fromUser.clan} Clan)_\n" +
+                   "• *To:* $toName$toClan\n\n" +
+                   "📅 _Time: $dateString_"
+        sendTelegramNotification(text)
     }
 }

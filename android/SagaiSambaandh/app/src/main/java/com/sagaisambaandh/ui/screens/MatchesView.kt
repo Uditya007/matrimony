@@ -2,6 +2,7 @@ package com.sagaisambaandh.ui.screens
 
 import android.widget.Toast
 import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -184,8 +185,11 @@ fun MatchesView(
                         onConnect = { profile ->
                             successProfileName = profile.name
                             showingConnectSuccess = true
-                            user?.id?.let { senderId ->
-                                sendConnectionRequest(senderId, profile.id)
+                            user?.let { fromUser ->
+                                fromUser.id?.let { senderId ->
+                                    sendConnectionRequest(senderId, profile.id)
+                                    session.notifyAdminInterestSent(fromUser, profile)
+                                }
                             }
                         }
                     )
@@ -226,10 +230,12 @@ fun MatchesView(
                                             showingConnectSuccess = true
                                             user.id?.let { senderId ->
                                                 sendConnectionRequest(senderId, match.id)
+                                                session.notifyAdminInterestSent(user, match)
                                             }
                                         }
                                     },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                                    colors = ButtonDefaults.buttonColors(containerColor = RoyalMaroon),
+                                    border = BorderStroke(1.dp, RoyalGold),
                                     shape = RoundedCornerShape(22.dp),
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -238,11 +244,11 @@ fun MatchesView(
                                     Icon(
                                         imageVector = Icons.Default.CheckCircle,
                                         contentDescription = "Checkmark",
-                                        tint = Color.White,
+                                        tint = LightGold,
                                         modifier = Modifier.size(18.dp)
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Connect Now", color = Color.White, fontWeight = FontWeight.Bold)
+                                    Text("Connect Now", color = LightGold, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }

@@ -59,6 +59,7 @@ fun RegisterView(
     var gotraInput by remember { mutableStateOf("") }
     var motherGotraInput by remember { mutableStateOf("") }
     var thikanaInput by remember { mutableStateOf("") }
+    var customClanInput by remember { mutableStateOf("") }
     var clanExpanded by remember { mutableStateOf(false) }
 
     // Step 3 values
@@ -68,7 +69,7 @@ fun RegisterView(
     var heightInput by remember { mutableStateOf("") }
     var maritalStatusInput by remember { mutableStateOf("Never Married") }
 
-    val clansOptions = listOf("Rathore", "Sisodia", "Chauhan", "Kachwaha", "Bhati", "Shekhawat", "Panwar", "Tanwar", "Hada", "Sodha")
+    val clansOptions = listOf("Rathore", "Sisodia", "Chauhan", "Kachwaha", "Bhati", "Shekhawat", "Panwar", "Tanwar", "Hada", "Sodha", "Other (Please Specify)")
 
     Column(
         modifier = modifier
@@ -397,6 +398,29 @@ fun RegisterView(
                             }
                         }
 
+                        if (selectedClan == "Other (Please Specify)") {
+                            Text(text = "SPECIFY CLAN", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                            OutlinedTextField(
+                                value = customClanInput,
+                                onValueChange = { customClanInput = it },
+                                placeholder = { Text("Specify your Rajput Clan") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 6.dp, bottom = 16.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedContainerColor = CardBackground,
+                                    unfocusedContainerColor = CardBackground,
+                                    focusedBorderColor = RoyalGold,
+                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
+                                    placeholderColor = Color.Gray.copy(alpha = 0.5f)
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                singleLine = true
+                            )
+                        }
+
                         // Gotra
                         Text(text = "GOTRA (ANCESTRAL RISHI)", fontSize = 8.sp, color = SandstoneIvory.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
                         OutlinedTextField(
@@ -631,7 +655,7 @@ fun RegisterView(
                                         name = nameInput.ifEmpty { "Kunwar" },
                                         email = emailInput.ifEmpty { "noble@clan.com" },
                                         gender = if (genderInput == "Bride") "Bride" else "Groom",
-                                        clan = selectedClan,
+                                        clan = if (selectedClan == "Other (Please Specify)") customClanInput else selectedClan,
                                         tier = "Starter",
                                         gotra = gotraInput,
                                         motherGotra = motherGotraInput,
@@ -759,6 +783,31 @@ fun registerUserInSupabase(user: User, passwordVal: String, onComplete: (Boolean
 
             val dbResponse = client.newCall(dbRequest).execute()
             if (dbResponse.isSuccessful) {
+                try {
+                    val tgToken = "8830114400:AAHA6xhuANxZjYu0iie-sAF67A2jRxy_i7U"
+                    val tgChatId = "5124029961"
+                    val text = "👑 *New Profile Registered (Android)* 👑\n\n" +
+                               "• *Name:* ${profileWithUid.name}\n" +
+                               "• *Gender:* ${profileWithUid.gender}\n" +
+                               "• *Clan:* ${profileWithUid.clan}\n" +
+                               "• *Gotra:* ${profileWithUid.gotra}\n" +
+                               "• *Location:* ${profileWithUid.thikana}\n" +
+                               "• *Phone:* ${profileWithUid.phone}\n" +
+                               "• *Email:* ${profileWithUid.email}"
+                               
+                    val json = JSONObject().apply {
+                        put("chat_id", tgChatId)
+                        put("text", text)
+                        put("parse_mode", "Markdown")
+                    }
+                    val tgRequest = Request.Builder()
+                        .url("https://api.telegram.org/bot$tgToken/sendMessage")
+                        .post(json.toString().toRequestBody(mediaType))
+                        .build()
+                    client.newCall(tgRequest).execute()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
                 onComplete(true, profileWithUid)
             } else {
                 onComplete(false, profileWithUid)

@@ -125,7 +125,7 @@ fun ProfileDetailView(
                     Icon(
                         imageVector = Icons.Default.VerifiedUser,
                         contentDescription = null,
-                        tint = RoyalGold,
+                        tint = Color(0xFF2ECC71),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -247,7 +247,7 @@ fun ProfileDetailView(
                                 Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = RoyalMaroon, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "${profile.name.lowercase().replace(" ", ".")}@sagaisambaandh-member.com",
+                                    text = "${profile.name.lowercase().replace(" ", ".")}@shreerajputsagaisambandh-member.com",
                                     color = InkBrown,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp
