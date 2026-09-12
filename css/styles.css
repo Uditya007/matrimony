@@ -3932,10 +3932,16 @@ body:has(.dashboard-subnav) {
 .online-indicator-dot {
   width: 8px;
   height: 8px;
-  background-color: #2b8a3e;
+  background-color: #2ecc71;
   border-radius: 50%;
   display: inline-block;
-  box-shadow: 0 0 6px #2b8a3e;
+  box-shadow: 0 0 6px #2ecc71;
+  transition: all 0.3s ease;
+}
+
+.online-indicator-dot.offline {
+  background-color: #cbd5e0;
+  box-shadow: none;
 }
 
 .online-matches-list {
@@ -4003,11 +4009,30 @@ body:has(.dashboard-subnav) {
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 9px;
-  height: 9px;
-  background-color: #2b8a3e;
-  border: 2px solid var(--bg-card);
+  width: 10px;
+  height: 10px;
+  border: 2px solid #FFFFFF;
   border-radius: 50%;
+  display: none;
+  transition: all 0.2s ease;
+}
+
+.online-match-avatar.status-online::after {
+  display: block;
+  background-color: #2ecc71;
+  box-shadow: 0 0 6px rgba(46, 204, 113, 0.8);
+}
+
+.online-match-avatar.status-recent::after {
+  display: block;
+  background-color: #f39c12;
+  box-shadow: none;
+}
+
+.online-match-avatar.status-offline::after {
+  display: block;
+  background-color: #cbd5e0;
+  box-shadow: none;
 }
 
 .online-match-info {
@@ -4032,6 +4057,56 @@ body:has(.dashboard-subnav) {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.online-match-status {
+  font-size: 0.7rem;
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.online-match-status.status-online {
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.online-match-status.status-recent {
+  color: #d68910;
+}
+
+.online-match-status.status-offline {
+  color: #718096;
+}
+
+.status-dot-mini {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.status-dot-mini.status-online {
+  background-color: #2ecc71;
+  box-shadow: 0 0 4px #2ecc71;
+  animation: pulseGreenDot 2s infinite ease-in-out;
+}
+
+.status-dot-mini.status-recent {
+  background-color: #f39c12;
+}
+
+.status-dot-mini.status-offline {
+  background-color: #cbd5e0;
+}
+
+@keyframes pulseGreenDot {
+  0% { transform: scale(0.9); opacity: 0.85; }
+  50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 6px #2ecc71; }
+  100% { transform: scale(0.9); opacity: 0.85; }
 }
 
 /* Modal Inner Tab Switchers */
@@ -4373,6 +4448,21 @@ body:has(.dashboard-subnav) {
 
 .dashboard-online-sidebar .online-match-avatar::after {
   border: 2px solid #FFFFFF !important;
+}
+
+.dashboard-online-sidebar .online-match-avatar.status-online::after {
+  background-color: #2ecc71 !important;
+  box-shadow: 0 0 6px rgba(46, 204, 113, 0.8) !important;
+}
+
+.dashboard-online-sidebar .online-match-avatar.status-recent::after {
+  background-color: #f39c12 !important;
+  box-shadow: none !important;
+}
+
+.dashboard-online-sidebar .online-match-avatar.status-offline::after {
+  background-color: #cbd5e0 !important;
+  box-shadow: none !important;
 }
 
 /* White-themed Activity Summary overrides */

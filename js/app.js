@@ -1114,6 +1114,7 @@ async function initDashboardPage() {
             window.firestoreUsers = data;
             renderMatchesGrid();
             updateDashboardStats();
+            populateOnlineSidebar(currentUser);
           }
         });
     }, 8000);
@@ -1367,66 +1368,169 @@ function setProfileInterestsInAbout(aboutText, interestsObj) {
 
 function getProfileLastSeen(profile) {
   if (!profile) return null;
+
+  // 1. Direct last_seen / lastSeen properties if present
+  if (profile.last_seen) return profile.last_seen;
+  if (profile.lastSeen) return profile.lastSeen;
+
+  // 2. Check metadata tag in about field: [Last Seen: ISOString]
   if (profile.about) {
     const match = profile.about.match(/\[Last Seen: ([^\]]*)\]/);
-    if (match) return match[1];
+    if (match && match[1]) {
+      const parsed = new Date(match[1].trim());
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toISOString();
+      }
+    }
   }
-  // Generate a realistic stable timestamp based on the profile's ID
-  const hash = profile.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const minutesAgo = (hash % 120) + 15; // stable value between 15 and 135 minutes ago
-  const date = new Date(Date.now() - minutesAgo * 60 * 1000);
-  return date.toISOString();
+
+  // 3. Fallback to updated_at if available
+  if (profile.updated_at) {
+    const updateVal = new Date(profile.updated_at);
+    if (!isNaN(updateVal.getTime())) return updateVal.toISOString();
+  }
+
+  // 4. If this is the current active session user, they are online right now
+  try {
+    const currentLogged = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    if (currentLogged && (currentLogged.id === profile.id || (currentLogged.email && currentLogged.email === profile.email))) {
+      return new Date().toISOString();
+    }
+  } catch (e) {}
+
+  // Real, not fake: if no activity recorded, return null
+  return null;
 }
 
 function formatLastSeen(isoString) {
   if (!isoString) return 'Offline';
   const lastSeenDate = new Date(isoString);
+  if (isNaN(lastSeenDate.getTime())) return 'Offline';
+
   const now = new Date();
-  const diffMs = now - lastSeenDate;
+  const diffMs = now.getTime() - lastSeenDate.getTime();
   const diffMins = Math.floor(diffMs / 1000 / 60);
-  
-  if (diffMins < 2) {
+
+  // Active within 5 minutes or slight future clock skew -> Online now
+  if (diffMins < 5) {
     return 'Online now';
   } else if (diffMins < 60) {
-    return `${diffMins} minutes ago`;
+    return `${diffMins}m ago`;
   } else {
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) {
-      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+      return `${diffHours}h ago`;
     } else {
       const diffDays = Math.floor(diffHours / 24);
-      return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays}d ago`;
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+      return 'Offline';
     }
+  }
+}
+
+function getProfileOnlineStatus(profile) {
+  const lastSeenIso = getProfileLastSeen(profile);
+  if (!lastSeenIso) {
+    return {
+      isOnline: false,
+      statusClass: 'status-offline',
+      text: 'Offline',
+      formattedText: 'Offline',
+      rawDate: null,
+      timestamp: 0
+    };
+  }
+
+  const lastSeenDate = new Date(lastSeenIso);
+  const time = isNaN(lastSeenDate.getTime()) ? 0 : lastSeenDate.getTime();
+  const diffMs = Date.now() - time;
+  const diffMins = Math.floor(diffMs / 1000 / 60);
+
+  if (diffMins < 5) {
+    return {
+      isOnline: true,
+      statusClass: 'status-online',
+      text: 'Online now',
+      formattedText: 'Online now',
+      rawDate: lastSeenDate,
+      timestamp: time
+    };
+  } else if (diffMins < 1440) { // Active within 24 hours
+    const relText = formatLastSeen(lastSeenIso);
+    return {
+      isOnline: false,
+      statusClass: 'status-recent',
+      text: relText,
+      formattedText: `Active ${relText}`,
+      rawDate: lastSeenDate,
+      timestamp: time
+    };
+  } else {
+    const relText = formatLastSeen(lastSeenIso);
+    return {
+      isOnline: false,
+      statusClass: 'status-offline',
+      text: relText,
+      formattedText: relText === 'Offline' ? 'Offline' : `Active ${relText}`,
+      rawDate: lastSeenDate,
+      timestamp: time
+    };
   }
 }
 
 async function updateMyLastSeen() {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-  if (!currentUser || !window.supabaseClient) return;
+  if (!currentUser) return;
   
-  try {
-    const { data: profile, error } = await window.supabaseClient
-      .from('profiles')
-      .select('about')
-      .eq('id', currentUser.id)
-      .maybeSingle();
-      
-    if (profile) {
-      let about = profile.about || '';
-      const nowIso = new Date().toISOString();
-      if (about.includes('[Last Seen:')) {
-        about = about.replace(/\[Last Seen: [^\]]*\]/g, `[Last Seen: ${nowIso}]`);
-      } else {
-        about = `${about} [Last Seen: ${nowIso}]`.trim();
-      }
-      
-      await window.supabaseClient
-        .from('profiles')
-        .update({ about })
-        .eq('id', currentUser.id);
+  const nowIso = new Date().toISOString();
+  
+  // 1. Update in localStorage currentUser immediately
+  let about = currentUser.about || '';
+  if (about.includes('[Last Seen:')) {
+    about = about.replace(/\[Last Seen: [^\]]*\]/g, `[Last Seen: ${nowIso}]`);
+  } else {
+    about = `${about} [Last Seen: ${nowIso}]`.trim();
+  }
+  currentUser.about = about;
+  currentUser.last_seen = nowIso;
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+  
+  // 2. Also update firestoreUsers in-memory cache if active
+  if (window.firestoreUsers && Array.isArray(window.firestoreUsers)) {
+    const userIndex = window.firestoreUsers.findIndex(u => u.id === currentUser.id || u.email === currentUser.email);
+    if (userIndex !== -1) {
+      window.firestoreUsers[userIndex].about = about;
+      window.firestoreUsers[userIndex].last_seen = nowIso;
     }
-  } catch (err) {
-    console.error("Last seen update error:", err);
+  }
+
+  // 3. Sync to Supabase profiles table
+  if (window.supabaseClient && window.supabaseActive) {
+    try {
+      const { data: profile } = await window.supabaseClient
+        .from('profiles')
+        .select('about')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+        
+      if (profile) {
+        let dbAbout = profile.about || '';
+        if (dbAbout.includes('[Last Seen:')) {
+          dbAbout = dbAbout.replace(/\[Last Seen: [^\]]*\]/g, `[Last Seen: ${nowIso}]`);
+        } else {
+          dbAbout = `${dbAbout} [Last Seen: ${nowIso}]`.trim();
+        }
+        
+        await window.supabaseClient
+          .from('profiles')
+          .update({ about: dbAbout })
+          .eq('id', currentUser.id);
+      }
+    } catch (err) {
+      console.warn("Last seen sync error:", err);
+    }
   }
 }
 
@@ -1490,15 +1594,15 @@ function createProfileCardHtml(profile, isDashboard = true) {
   const isAccepted = areProfilesConnected(currentUser, profile);
   const isLoggedIn = !!localStorage.getItem('currentUser');
 
-  // Business badges: Dynamic Last Seen status with green/amber pulse indicators
-  const lastSeenIso = getProfileLastSeen(profile);
-  const lastSeenText = formatLastSeen(lastSeenIso);
-  const isOnline = lastSeenText === 'Online now';
+  // Business badges: Dynamic Last Seen status with real indicators
+  const onlineStatus = getProfileOnlineStatus(profile);
+  const badgeDotColor = onlineStatus.isOnline ? '#2ecc71' : (onlineStatus.statusClass === 'status-recent' ? '#f39c12' : '#a0aec0');
+  const badgeDotClass = onlineStatus.isOnline ? 'pulse-green' : (onlineStatus.statusClass === 'status-recent' ? 'pulse-amber' : '');
   
   const recentlyActiveBadge = `
     <div class="badge-active" style="margin-top: 10px; display: inline-flex; align-items: center; gap: 5px;">
-      <span class="${isOnline ? 'pulse-green' : 'pulse-amber'}" style="background-color: ${isOnline ? '#2ecc71' : '#f39c12'}; width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span>
-      Active ${lastSeenText}
+      <span class="${badgeDotClass}" style="background-color: ${badgeDotColor}; width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span>
+      ${onlineStatus.formattedText}
     </div>
   `;
   
@@ -2041,14 +2145,16 @@ window.openProfileDetailModal = function(id) {
   `;
   document.getElementById('modalName').textContent = profile.name;
   document.getElementById('modalCaste').textContent = `${profile.clan} Clan`;
-  const modalLastSeenIso = getProfileLastSeen(profile);
-  const modalLastSeenText = formatLastSeen(modalLastSeenIso);
-  const modalIsOnline = modalLastSeenText === 'Online now';
+  const modalStatus = getProfileOnlineStatus(profile);
+  const modalBadgeColor = modalStatus.isOnline ? '#2ecc71' : (modalStatus.statusClass === 'status-recent' ? '#f39c12' : '#718096');
+  const modalBadgeBg = modalStatus.isOnline ? 'rgba(46,204,113,0.15)' : (modalStatus.statusClass === 'status-recent' ? 'rgba(243,156,18,0.15)' : 'rgba(160,174,192,0.15)');
+  const modalDotClass = modalStatus.isOnline ? 'pulse-green' : (modalStatus.statusClass === 'status-recent' ? 'pulse-amber' : '');
+  
   document.getElementById('modalSubline').innerHTML = `
     ${profile.age} Yrs • ${profile.height} • ${profile.location.split(',')[0]}
-    <span style="margin-left: 10px; display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; background: rgba(${modalIsOnline ? '46,204,113' : '243,156,18'}, 0.15); color: ${modalIsOnline ? '#2ecc71' : '#f39c12'}; padding: 2px 8px; border-radius: 20px; font-weight: 600;">
-      <span class="${modalIsOnline ? 'pulse-green' : 'pulse-amber'}" style="background-color: ${modalIsOnline ? '#2ecc71' : '#f39c12'}; width: 6px; height: 6px; border-radius: 50%; display: inline-block;"></span>
-      Active ${modalLastSeenText}
+    <span style="margin-left: 10px; display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; background: ${modalBadgeBg}; color: ${modalBadgeColor}; padding: 2px 8px; border-radius: 20px; font-weight: 600;">
+      <span class="${modalDotClass}" style="background-color: ${modalBadgeColor}; width: 6px; height: 6px; border-radius: 50%; display: inline-block;"></span>
+      ${modalStatus.formattedText}
     </span>
   `;
   
@@ -2079,6 +2185,7 @@ window.openProfileDetailModal = function(id) {
     cleanBio = cleanBio.replace(/\[Biodata Link: [^\]]*\]/g, '').trim();
     cleanBio = cleanBio.replace(/\[Interests: [^\]]*\]/g, '').trim();
     cleanBio = cleanBio.replace(/\[Chats: [^\n\r]*\]/g, '').trim();
+    cleanBio = cleanBio.replace(/\[Last Seen: [^\]]*\]/g, '').trim();
   }
   document.getElementById('modalBio').textContent = cleanBio;
   document.getElementById('modalFamily').textContent = profile.familyDetails || 'Descent from a highly respected Rajput family in Rajasthan preserving traditional gotra and ancestral parameters.';
@@ -2309,7 +2416,7 @@ function populateLeftUserCard(user) {
   }
 }
 
-// Populate right-side sidebar with online matches of opposite gender
+// Populate right-side sidebar with real active & recently active matches of opposite gender
 function populateOnlineSidebar(currentUser) {
   const onlineList = document.getElementById('onlineMatchesList');
   if (!onlineList) return;
@@ -2319,28 +2426,68 @@ function populateOnlineSidebar(currentUser) {
   const oppositeGender = getOppositeGender(currentUser.gender);
   const matches = allProfiles.filter(p => normalizeGender(p.gender) === oppositeGender && p.id !== currentUser.id);
 
-  // Take 6 random candidates
-  const shuffled = [...matches].sort(() => 0.5 - Math.random());
-  const selected = shuffled.slice(0, 6);
+  // Compute real status for each match
+  const matchesWithStatus = matches.map(p => ({
+    profile: p,
+    status: getProfileOnlineStatus(p)
+  }));
 
-  onlineList.innerHTML = selected.map(p => {
+  // Sort candidates by real activity:
+  // 1. Members currently "Online now" come first
+  // 2. Members with real recent activity come next (ordered by latest timestamp descending)
+  // 3. Members without recorded activity come last
+  matchesWithStatus.sort((a, b) => {
+    if (a.status.isOnline !== b.status.isOnline) {
+      return a.status.isOnline ? -1 : 1;
+    }
+    return b.status.timestamp - a.status.timestamp;
+  });
+
+  // Update header count and active indicator dot
+  const onlineCount = matchesWithStatus.filter(m => m.status.isOnline).length;
+  const headerDot = document.querySelector('.online-sidebar-header .online-indicator-dot');
+  if (headerDot) {
+    if (onlineCount > 0) {
+      headerDot.classList.remove('offline');
+      headerDot.title = `${onlineCount} member${onlineCount === 1 ? '' : 's'} online now`;
+    } else {
+      headerDot.classList.add('offline');
+      headerDot.title = 'No members currently online';
+    }
+  }
+
+  // Display top 6 candidates
+  const selected = matchesWithStatus.slice(0, 6);
+
+  if (selected.length === 0) {
+    onlineList.innerHTML = `<div style="padding: 16px; text-align: center; color: #718096; font-size: 0.85rem;">No matching members found.</div>`;
+    return;
+  }
+
+  onlineList.innerHTML = selected.map(({ profile: p, status }) => {
     let avatarHtml = '';
     if (p.profilePic && !p.profilePic.startsWith('mock_')) {
       avatarHtml = `<img src="${p.profilePic}" alt="${p.name}" />`;
     } else if (p.img) {
       avatarHtml = `<img src="${p.img}" alt="${p.name}" />`;
     } else {
-      avatarHtml = p.initials || p.name[0];
+      avatarHtml = p.initials || (p.name ? p.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase() : 'NM');
     }
+
+    const locationCity = p.location ? p.location.split(',')[0].trim() : 'Rajasthan';
 
     return `
       <div class="online-match-item" onclick="openProfileDetailModal('${p.id}')">
-        <div class="online-match-avatar" style="background: ${getAvatarGradient(p.clan)}">
+        <div class="online-match-avatar ${status.statusClass}" style="background: ${getAvatarGradient(p.clan)}">
           ${avatarHtml}
         </div>
         <div class="online-match-info">
           <div class="online-match-name">${p.name}</div>
-          <div class="online-match-meta">${p.clan} • ${p.age || '24'} Yrs • ${p.location ? p.location.split(',')[0] : 'Rajasthan'}</div>
+          <div class="online-match-meta">${p.clan || 'Rajput'} • ${p.age || '24'} Yrs • ${locationCity}</div>
+          <div class="online-match-status ${status.statusClass}">
+            <span class="status-dot-mini ${status.statusClass}"></span>
+            <span>${status.formattedText}</span>
+          </div>
         </div>
       </div>
     `;
