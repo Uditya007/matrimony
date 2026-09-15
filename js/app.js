@@ -126,6 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
   updateMyLastSeen();
   setInterval(updateMyLastSeen, 60000);
 
+  // Initialize global real-time interest watcher & notification poller (runs on all pages)
+  initGlobalInterestWatcher();
+
   // Configure drag-and-drop listeners for edit profile Biodata PDF Upload
   const editDropZone = document.getElementById('editBiodataUploadContainer');
   if (editDropZone) {
@@ -251,6 +254,10 @@ function updateNavigationState() {
         let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
         notifications = notifications.map(n => ({ ...n, read: true }));
         localStorage.setItem('notifications', JSON.stringify(notifications));
+      });
+
+      dropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
       });
 
       document.addEventListener('click', () => {
@@ -1540,8 +1547,8 @@ function areProfilesConnected(profileA, profileB) {
   const interestsA = getProfileInterests(profileA);
   const interestsB = getProfileInterests(profileB);
   
-  return (interestsA[profileB.id] === 'sent' || interestsA[profileB.id] === 'accepted' ||
-          interestsB[profileA.id] === 'sent' || interestsB[profileA.id] === 'accepted');
+  // Real security rule: profiles are connected ONLY if accepted by either party
+  return (interestsA[profileB.id] === 'accepted' || interestsB[profileA.id] === 'accepted');
 }
 
 function checkIncomingInterests() {
@@ -1549,6 +1556,7 @@ function checkIncomingInterests() {
   if (!currentUser) return;
   
   const profiles = getAllProfiles();
+  const myInterests = getProfileInterests(currentUser);
   let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
   let updated = false;
   
@@ -1556,20 +1564,53 @@ function checkIncomingInterests() {
     if (p.id === currentUser.id) continue;
     const incomingInterests = getProfileInterests(p);
     
-    if ((incomingInterests[currentUser.id] === 'sent' || incomingInterests[currentUser.id] === 'accepted')) {
+    // Check if member p sent an interest to currentUser that is not yet accepted or declined
+    if (incomingInterests[currentUser.id] === 'sent' && myInterests[p.id] !== 'accepted' && myInterests[p.id] !== 'declined') {
       const notifKey = `interest_from_${p.id}`;
-      const alreadyNotified = notifications.some(n => n.notifKey === notifKey);
+      const existingIdx = notifications.findIndex(n => n.notifKey === notifKey);
       
-      if (!alreadyNotified) {
+      if (existingIdx === -1) {
         const newNotif = {
           id: Date.now() + Math.random(),
           notifKey: notifKey,
-          message: `${p.name} sent you a Match Interest! Chat is now unlocked.`,
+          type: 'interest_request',
+          senderId: p.id,
+          senderName: p.name,
+          message: `${p.name} (${p.clan || 'Rajput'} Clan, ${p.age || '25'} Yrs) sent you a Royal Match Interest! Review profile to accept or decline.`,
+          profileId: p.id,
+          timestamp: 'Just now',
+          read: false,
+          status: 'pending'
+        };
+        notifications.unshift(newNotif);
+        updated = true;
+      }
+      
+      // Trigger floating alert banner on ANY page if not dismissed in this session
+      const dismissedKey = `dismissed_alert_${p.id}`;
+      if (!sessionStorage.getItem(dismissedKey) && !document.getElementById(`royalInterestAlert_${p.id}`)) {
+        showFloatingInterestAlert(p);
+      }
+    } else if (incomingInterests[currentUser.id] === 'accepted' && myInterests[p.id] === 'sent') {
+      // The other user accepted our sent interest!
+      myInterests[p.id] = 'accepted';
+      currentUser.about = setProfileInterestsInAbout(currentUser.about, myInterests);
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      
+      const notifKey = `interest_accepted_${p.id}`;
+      const existingIdx = notifications.findIndex(n => n.notifKey === notifKey);
+      if (existingIdx === -1) {
+        notifications.unshift({
+          id: Date.now() + Math.random(),
+          notifKey: notifKey,
+          type: 'interest_accepted',
+          senderId: p.id,
+          senderName: p.name,
+          message: `${p.name} accepted your Royal Match Interest! Contact details and chat are now unlocked.`,
           profileId: p.id,
           timestamp: 'Just now',
           read: false
-        };
-        notifications.unshift(newNotif);
+        });
         updated = true;
       }
     }
@@ -1590,8 +1631,11 @@ function createProfileCardHtml(profile, isDashboard = true) {
   
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   const mySentInterests = getProfileInterests(currentUser);
-  const hasSentInterest = mySentInterests[profile.id] === 'sent' || mySentInterests[profile.id] === 'accepted';
+  const theirInterests = getProfileInterests(profile);
+  
+  const hasSentInterest = mySentInterests[profile.id] === 'sent';
   const isAccepted = areProfilesConnected(currentUser, profile);
+  const isIncomingPending = currentUser && theirInterests[currentUser.id] === 'sent' && mySentInterests[profile.id] !== 'accepted' && mySentInterests[profile.id] !== 'declined';
   const isLoggedIn = !!localStorage.getItem('currentUser');
 
   // Business badges: Dynamic Last Seen status with real indicators
@@ -1618,7 +1662,9 @@ function createProfileCardHtml(profile, isDashboard = true) {
     </div>
   ` : '';
 
-  const aiScoreBadge = `<div class="ai-score-badge">✨ ${profile.aiScore || 92}% Match</div>`;
+  const aiScoreBadge = isIncomingPending ? 
+    `<div class="ai-score-badge" style="background: rgba(39, 174, 96, 0.9); color: #FFFFFF; border: 1.5px solid #2ECC71; font-weight: bold;">👑 Interest Received</div>` : 
+    `<div class="ai-score-badge">✨ ${profile.aiScore || 92}% Match</div>`;
 
   // Privacy-first photo state (blurred/locked for non-logged-in homepage visitors)
   const isPhotoLocked = !isLoggedIn && !isDashboard;
@@ -1666,10 +1712,16 @@ function createProfileCardHtml(profile, isDashboard = true) {
         Chat Now 💬
       </button>
     `;
+  } else if (isIncomingPending) {
+    interestBtnHtml = `
+      <button onclick="handleAcceptInterest('${profile.id}')" class="btn btn-royal" style="font-size: 0.8rem; background: #27ae60; border-color: #27ae60; color: #FFFFFF;" title="Accept Match Interest">
+        Accept 👑
+      </button>
+    `;
   } else if (hasSentInterest) {
     interestBtnHtml = `
-      <button class="btn btn-royal" style="font-size: 0.8rem; opacity: 0.7; pointer-events: none;" disabled>
-        Interest Sent ✓
+      <button class="btn btn-royal" style="font-size: 0.8rem; opacity: 0.75; pointer-events: none;" disabled>
+        Pending ⏳
       </button>
     `;
   } else {
@@ -1780,56 +1832,310 @@ window.handleSendInterest = async function(id) {
   }
 
   const mySentInterests = getProfileInterests(currentUser);
-  if (mySentInterests[id]) {
-    showToast('Interest already sent to this noble profile');
+  if (mySentInterests[id] === 'accepted') {
+    showToast('You are already connected with this noble profile!');
+    return;
+  }
+  if (mySentInterests[id] === 'sent') {
+    showToast('Match interest already sent. Awaiting acceptance.');
     return;
   }
 
-  // 1. Mark as accepted immediately in currentUser's local interests mapping to unlock chat instantly
-  mySentInterests[id] = 'accepted';
+  // 1. Mark as 'sent' in currentUser's local interests mapping (PENDING, NOT accepted yet!)
+  mySentInterests[id] = 'sent';
   currentUser.about = setProfileInterestsInAbout(currentUser.about, mySentInterests);
   localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
-  // Trigger standard toast notification
+  // Update in-memory firestoreUsers cache
+  if (window.firestoreUsers && Array.isArray(window.firestoreUsers)) {
+    const idx = window.firestoreUsers.findIndex(u => u.id === currentUser.id);
+    if (idx !== -1) window.firestoreUsers[idx].about = currentUser.about;
+  }
+
+  // Find target profile name
   const profiles = getAllProfiles();
   const targetProfile = profiles.find(p => p.id === id);
   const profileName = targetProfile ? targetProfile.name : 'Match';
-  showToast(`Royal Match Interest to ${profileName} sent! Chat is now unlocked!`, 'gold');
+  
+  // Real toast: Contact details unlock ONLY once accepted!
+  showToast(`Royal Match Interest sent to ${profileName}! Contact details will be unlocked upon acceptance.`, 'gold');
 
-  // Notify admin on Telegram
+  // Notify admin
   notifyAdminInterestSent(currentUser, targetProfile);
 
-  // Save notification to localStorage (local to sender)
+  // Save notification to sender
   let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
-  const newNotif = {
-    id: Date.now(),
-    message: `${profileName} accepted your Royal Interest! Click to chat.`,
+  notifications.unshift({
+    id: Date.now() + Math.random(),
+    type: 'interest_sent',
+    message: `You sent a Match Interest to ${profileName}. Awaiting their response.`,
     profileId: id,
     timestamp: 'Just now',
     read: false
-  };
-  notifications.unshift(newNotif);
+  });
   localStorage.setItem('notifications', JSON.stringify(notifications));
 
-  // Refresh notification badge & list
   if (typeof renderNotifications === 'function') {
     renderNotifications();
   }
 
-  // Sync updated about field (containing new interest) to Supabase profiles database row for currentUser
-  if (window.supabaseActive) {
-    const { error } = await window.supabaseClient
-      .from('profiles')
-      .update({ about: currentUser.about })
-      .eq('id', currentUser.id);
-      
-    if (error) {
-      console.error("Error syncing sent interest to Supabase:", error);
+  // Sync updated about field to Supabase profiles database row for currentUser
+  if (window.supabaseActive && window.supabaseClient) {
+    try {
+      const { error } = await window.supabaseClient
+        .from('profiles')
+        .update({ about: currentUser.about })
+        .eq('id', currentUser.id);
+        
+      if (error) {
+        console.error("Error syncing sent interest to Supabase:", error);
+      }
+    } catch (e) {
+      console.warn("Supabase interest sync error:", e);
     }
   }
 
-  updateDashboardStats();
-  renderMatchesGrid();
+  if (typeof updateDashboardStats === 'function') updateDashboardStats();
+  if (typeof renderMatchesGrid === 'function') renderMatchesGrid();
+
+  // If detailed modal is open for this profile, refresh modal to update lock box to "Pending"
+  const modal = document.getElementById('profileDetailModal');
+  if (modal && modal.classList.contains('active')) {
+    openProfileDetailModal(id);
+  }
+};
+
+// Real-time Accept Interest Handler
+window.handleAcceptInterest = async function(senderId) {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+    showToast('Please log in to accept interest');
+    return;
+  }
+
+  const profiles = getAllProfiles();
+  const senderProfile = profiles.find(p => p.id === senderId);
+  const senderName = senderProfile ? senderProfile.name : 'Noble Member';
+
+  // 1. Mark as 'accepted' in currentUser's local interests mapping
+  const myInterests = getProfileInterests(currentUser);
+  myInterests[senderId] = 'accepted';
+  currentUser.about = setProfileInterestsInAbout(currentUser.about, myInterests);
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+  // Update in-memory firestoreUsers cache
+  if (window.firestoreUsers && Array.isArray(window.firestoreUsers)) {
+    const idx = window.firestoreUsers.findIndex(u => u.id === currentUser.id);
+    if (idx !== -1) window.firestoreUsers[idx].about = currentUser.about;
+  }
+
+  // 2. Dismiss floating banner alert if visible
+  dismissInterestAlert(senderId);
+
+  // 3. Update notifications
+  let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+  notifications = notifications.map(n => {
+    if (n.profileId === senderId) {
+      return {
+        ...n,
+        read: true,
+        type: 'interest_accepted',
+        message: `You accepted match interest from ${senderName}! Contact details and chat are now unlocked.`
+      };
+    }
+    return n;
+  });
+  localStorage.setItem('notifications', JSON.stringify(notifications));
+  if (typeof renderNotifications === 'function') {
+    renderNotifications();
+  }
+
+  // 4. Sync acceptance to Supabase profiles database
+  if (window.supabaseActive && window.supabaseClient) {
+    try {
+      await window.supabaseClient
+        .from('profiles')
+        .update({ about: currentUser.about })
+        .eq('id', currentUser.id);
+    } catch (e) {
+      console.warn("Supabase accept sync error:", e);
+    }
+  }
+
+  // 5. Celebratory toast
+  showToast(`Khammaghani! You accepted ${senderName}'s Match Interest. Phone, email, and chat are now unlocked!`, 'gold');
+
+  // 6. Refresh UI components
+  if (typeof updateDashboardStats === 'function') updateDashboardStats();
+  if (typeof renderMatchesGrid === 'function') renderMatchesGrid();
+
+  // If detailed modal is open for this profile, refresh modal immediately to show decrypted contact info!
+  const modal = document.getElementById('profileDetailModal');
+  if (modal && modal.classList.contains('active')) {
+    openProfileDetailModal(senderId);
+  }
+};
+
+// Real-time Decline Interest Handler
+window.handleDeclineInterest = async function(senderId) {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) return;
+
+  const profiles = getAllProfiles();
+  const senderProfile = profiles.find(p => p.id === senderId);
+  const senderName = senderProfile ? senderProfile.name : 'Member';
+
+  // 1. Mark as 'declined' in currentUser's local interests mapping
+  const myInterests = getProfileInterests(currentUser);
+  myInterests[senderId] = 'declined';
+  currentUser.about = setProfileInterestsInAbout(currentUser.about, myInterests);
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+  // Update in-memory firestoreUsers cache
+  if (window.firestoreUsers && Array.isArray(window.firestoreUsers)) {
+    const idx = window.firestoreUsers.findIndex(u => u.id === currentUser.id);
+    if (idx !== -1) window.firestoreUsers[idx].about = currentUser.about;
+  }
+
+  // 2. Dismiss floating banner alert
+  dismissInterestAlert(senderId);
+
+  // 3. Update notifications
+  let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+  notifications = notifications.map(n => {
+    if (n.profileId === senderId) {
+      return {
+        ...n,
+        read: true,
+        type: 'interest_declined',
+        message: `Match interest from ${senderName} was declined.`
+      };
+    }
+    return n;
+  });
+  localStorage.setItem('notifications', JSON.stringify(notifications));
+  if (typeof renderNotifications === 'function') {
+    renderNotifications();
+  }
+
+  // 4. Sync decline to Supabase profiles database
+  if (window.supabaseActive && window.supabaseClient) {
+    try {
+      await window.supabaseClient
+        .from('profiles')
+        .update({ about: currentUser.about })
+        .eq('id', currentUser.id);
+    } catch (e) {
+      console.warn("Supabase decline sync error:", e);
+    }
+  }
+
+  showToast(`Match interest from ${senderName} declined.`);
+
+  if (typeof updateDashboardStats === 'function') updateDashboardStats();
+  if (typeof renderMatchesGrid === 'function') renderMatchesGrid();
+
+  // If detailed modal is open for this profile, refresh modal
+  const modal = document.getElementById('profileDetailModal');
+  if (modal && modal.classList.contains('active')) {
+    openProfileDetailModal(senderId);
+  }
+};
+
+// Real-time floating alert banner renderer
+window.showFloatingInterestAlert = function(p) {
+  if (document.getElementById(`royalInterestAlert_${p.id}`)) return;
+
+  const container = document.createElement('div');
+  container.id = `royalInterestAlert_${p.id}`;
+  container.className = 'royal-interest-alert-banner';
+
+  const existingAlerts = document.querySelectorAll('.royal-interest-alert-banner');
+  if (existingAlerts.length > 0) {
+    const topOffset = 24 + (existingAlerts.length * 190);
+    container.style.top = `${topOffset}px`;
+  }
+  
+  let avatarHtml = '';
+  if (p.profilePic && !p.profilePic.startsWith('mock_')) {
+    avatarHtml = `<img src="${p.profilePic}" alt="${p.name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />`;
+  } else if (p.img) {
+    avatarHtml = `<img src="${p.img}" alt="${p.name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />`;
+  } else {
+    const initials = p.initials || (p.name ? p.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase() : 'NM');
+    avatarHtml = `<span style="color:var(--gold-bright); font-weight:bold; font-size:1.1rem;">${initials}</span>`;
+  }
+
+  const locationCity = p.location ? p.location.split(',')[0].trim() : 'Rajasthan';
+
+  container.innerHTML = `
+    <div class="royal-alert-header">
+      <div class="royal-alert-badge">👑 Royal Match Interest</div>
+      <button class="royal-alert-close" onclick="dismissInterestAlert('${p.id}')" title="Dismiss for now">&times;</button>
+    </div>
+    <div class="royal-alert-body">
+      <div class="royal-alert-avatar" style="background: ${getAvatarGradient(p.clan)}">
+        ${avatarHtml}
+      </div>
+      <div class="royal-alert-info">
+        <div class="royal-alert-name">${p.name}</div>
+        <div class="royal-alert-sub">${p.clan || 'Rajput'} • ${p.age || '25'} Yrs • ${locationCity}</div>
+        <div class="royal-alert-msg">Has expressed royal match interest with your profile. Review their noble background before accepting.</div>
+        <div class="royal-alert-privacy-note">🔒 Contact details (Phone & Email) protected until accepted</div>
+      </div>
+    </div>
+    <div class="royal-alert-actions">
+      <button type="button" class="btn btn-outline btn-alert-action" onclick="openProfileDetailModal('${p.id}')">
+        👁️ View Profile
+      </button>
+      <button type="button" class="btn btn-royal btn-alert-action" style="background: #27ae60; border-color: #27ae60;" onclick="handleAcceptInterest('${p.id}')">
+        👑 Accept
+      </button>
+      <button type="button" class="btn btn-minimal btn-alert-action btn-alert-decline" onclick="handleDeclineInterest('${p.id}')">
+        ✕ Decline
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(container);
+};
+
+window.dismissInterestAlert = function(id) {
+  const el = document.getElementById(`royalInterestAlert_${id}`);
+  if (el) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-15px)';
+    setTimeout(() => el.remove(), 300);
+  }
+  sessionStorage.setItem(`dismissed_alert_${id}`, 'true');
+};
+
+// Global interest watcher that polls across all pages
+window.initGlobalInterestWatcher = function() {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) return;
+
+  // Run immediately on page load
+  checkIncomingInterests();
+
+  // Poll Supabase & check incoming interests every 7 seconds
+  setInterval(async () => {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    if (window.supabaseActive && window.supabaseClient) {
+      try {
+        const { data, error } = await window.supabaseClient.from('profiles').select('*');
+        if (!error && data) {
+          window.firestoreUsers = data;
+          if (typeof renderMatchesGrid === 'function') renderMatchesGrid();
+          if (typeof populateOnlineSidebar === 'function') populateOnlineSidebar(user);
+        }
+      } catch (e) {}
+    }
+
+    checkIncomingInterests();
+  }, 7000);
 };
 
 // One-on-One chat window overlay handlers
@@ -2107,7 +2413,177 @@ function getProfileBiodata(profile) {
   return biodataUrl;
 }
 
+window.closeProfileDetailModal = function() {
+  const modal = document.getElementById('profileDetailModal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+};
+
+window.ensureProfileDetailModalExists = function() {
+  if (document.getElementById('profileDetailModal')) return;
+
+  const modal = document.createElement('div');
+  modal.className = 'profile-modal';
+  modal.id = 'profileDetailModal';
+  modal.innerHTML = `
+    <div class="modal-content" id="modalCard" style="max-height: 90vh; overflow-y: auto;">
+      <button class="modal-close-btn" onclick="closeProfileDetailModal()" aria-label="Close detailed profile">&times;</button>
+      
+      <!-- Edit Profile Action Button (Only visible on user's own profile) -->
+      <button type="button" class="btn btn-royal" id="modalEditProfileBtn" onclick="if (typeof toggleEditProfileForm === 'function') toggleEditProfileForm(true)" style="position: absolute; top: 20px; right: 80px; font-size: 0.8rem; padding: 10px 18px; display: none; z-index: 10;">Edit Profile</button>
+      
+      <!-- Dynamic Read-Only Profile View Container -->
+      <div id="modalViewContainer">
+        <!-- Hero Header inside Modal -->
+        <div class="modal-hero">
+          <div class="modal-photo-area" id="modalInitials">
+            <!-- Populated Dynamically -->
+          </div>
+          
+          <div class="modal-header-info">
+            <div class="modal-headline">
+              <h2 id="modalName">Name Placeholder</h2>
+              <span class="modal-caste-badge" id="modalCaste">Clan</span>
+            </div>
+            <p class="modal-subline" id="modalSubline">Age • Height • Location</p>
+            
+            <div class="modal-quick-stats" style="grid-template-columns: repeat(4, 1fr);">
+              <div class="modal-stat-box">
+                <label>Income Index</label>
+                <span id="statIncome">Income</span>
+              </div>
+              <div class="modal-stat-box">
+                <label>Zodiac / Rashi</label>
+                <span id="statRashi">Rashi</span>
+              </div>
+              <div class="modal-stat-box">
+                <label>Horoscope Check</label>
+                <span id="statManglik">Manglik</span>
+              </div>
+              <div class="modal-stat-box" style="background: rgba(201, 162, 39, 0.08); border-color: rgba(201, 162, 39, 0.35);">
+                <label style="color: var(--gold-bright); font-weight: bold;">Match Score</label>
+                <span id="statAiMatch" style="color: var(--gold-bright); font-weight: bold;">96%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Inner Subnav Tabs -->
+        <div class="modal-tabs" style="display: flex; border-bottom: 1.5px solid rgba(170, 124, 17, 0.2); padding: 0 40px; gap: 25px;">
+          <button class="modal-tab-btn active" id="modalBtnDetailedProfile" onclick="switchModalTab('detailed')">Detailed Profile</button>
+          <button class="modal-tab-btn" id="modalBtnPartnerPreferences" onclick="switchModalTab('preferences')">Partner Preferences</button>
+        </div>
+
+        <!-- Modal Body Details -->
+        <div class="modal-body" style="padding: 30px 40px;">
+          
+          <!-- Tab 1: Detailed Profile View -->
+          <div id="modalTabDetailedProfile" class="modal-tab-pane">
+            
+            <!-- About Section -->
+            <div style="margin-bottom: 25px;">
+              <h3 class="modal-section-title">Royal Persona</h3>
+              <p class="modal-bio" id="modalBio">Biography details will be shown here...</p>
+            </div>
+
+            <!-- Ancestral Lineage & Cultural Details -->
+            <div style="margin-bottom: 25px;">
+              <h3 class="modal-section-title">Heritage & Lineage Info</h3>
+              <div class="details-grid">
+                <div class="detail-item"><label>Religion</label><span id="detailReligion">Religion</span></div>
+                <div class="detail-item"><label>Caste / Clan</label><span id="detailCaste">Caste</span></div>
+                <div class="detail-item"><label>Date of Birth</label><span id="detailDOB">DOB</span></div>
+                <div class="detail-item"><label>Place of Birth</label><span id="detailPOB">POB</span></div>
+                <div class="detail-item"><label>Father's Gotra</label><span id="detailGotra">Gotra</span></div>
+                <div class="detail-item"><label>Ancestral Native</label><span id="detailNative">Native</span></div>
+                <div class="detail-item"><label>Professional Degree</label><span id="detailEducation">Education</span></div>
+                <div class="detail-item"><label>Current Profession</label><span id="detailOccupation">Occupation</span></div>
+                <div class="detail-item"><label>Astro Nakshatra</label><span id="detailNakshatra">Nakshatra</span></div>
+                <div class="detail-item"><label>Ancestral Values</label><span id="detailFamilyType">Family Background</span></div>
+              </div>
+            </div>
+
+            <!-- Family Background Summary -->
+            <div style="margin-bottom: 25px;">
+              <h3 class="modal-section-title">Family & Lineage Background</h3>
+              <p class="modal-bio" id="modalFamily">Family descriptions...</p>
+            </div>
+
+            <!-- Expectations -->
+            <div style="margin-bottom: 25px;">
+              <h3 class="modal-section-title">Alignment Expectations</h3>
+              <p class="modal-bio" id="modalExpectations">Lineage preferences and expectations...</p>
+            </div>
+
+            <!-- Dynamic Unlock Contact Details Section -->
+            <div>
+              <h3 class="modal-section-title">Regal Connection Desk</h3>
+              
+              <div class="unlock-box" id="modalUnlockBox"></div>
+
+              <div class="unlocked-details" id="modalUnlockedDetails">
+                <div class="details-grid" style="background-color: rgba(170, 124, 17, 0.05); padding: 25px; border-radius: var(--border-radius); border: 1.5px solid var(--gold-antique);">
+                  <div class="detail-item">
+                    <label>Direct Phone Line</label>
+                    <span id="unlockedPhone" style="color: var(--gold-bright); font-weight: 700;">+91 ••••• ••••• (Locked)</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Regal Email Desk</label>
+                    <span id="unlockedEmail" style="color: var(--gold-bright); font-weight: 700;">••••••••@•••••.com (Locked)</span>
+                  </div>
+                  <div class="detail-item" style="grid-column: span 2; border-bottom: none; padding-top: 10px;">
+                    <label>Ancestral Residence</label>
+                    <span id="unlockedAddress" style="font-weight: 700;">Ancestral Residence Protected</span>
+                  </div>
+                  <div class="detail-item" id="unlockedSocialsItem" style="grid-column: span 2; border-top: 1px solid rgba(170, 124, 17, 0.15); padding-top: 12px; display: none;">
+                    <label>Social Accounts</label>
+                    <div id="unlockedSocials" style="display: flex; gap: 20px; align-items: center; margin-top: 8px;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Partner Preferences Side-by-Side View -->
+          <div id="modalTabPartnerPreferences" class="modal-tab-pane" style="display: none;">
+            <div class="pref-compatibility-header" style="display: flex; align-items: center; justify-content: center; gap: 10px; background-color: var(--gold-light); border: 1px solid var(--gold-antique); padding: 12px; border-radius: var(--border-radius); margin-bottom: 25px;">
+              <span style="font-size: 1.5rem;">👑</span>
+              <strong style="color: var(--primary-color); font-size: 0.95rem;" id="prefCompatibilitySummaryText">Partner Preferences Compatibility</strong>
+            </div>
+
+            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; font-weight: bold; font-family: var(--font-royal); font-size: 0.85rem; padding: 0 10px; color: var(--gold-bright); letter-spacing: 0.5px;">
+              <span style="width: 160px;">Preference Rule</span>
+              <span style="flex-grow: 1; min-width: 0; padding-left: 15px;">Requirement</span>
+              <span style="flex-grow: 1; min-width: 0; padding-left: 15px;">Your Value</span>
+              <span style="width: 60px; text-align: center;">Matches?</span>
+            </div>
+
+            <div class="pref-comparison-table" style="display: flex; flex-direction: column; gap: 12px;" id="prefComparisonTable"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.classList.remove('active');
+    }
+  });
+
+  document.body.appendChild(modal);
+};
+
+// Global escape key listener to dismiss detailed modal
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeProfileDetailModal();
+  }
+});
+
 window.openProfileDetailModal = function(id) {
+  ensureProfileDetailModalExists();
   const modal = document.getElementById('profileDetailModal');
   if (!modal) return;
 
@@ -2202,13 +2678,16 @@ window.openProfileDetailModal = function(id) {
   const isConnected = currentUser && typeof areProfilesConnected === 'function' && areProfilesConnected(currentUser, profile);
 
   if (isOwnProfile || isConnected) {
-    if (unlockBox) unlockBox.style.display = 'none';
+    if (unlockBox) {
+      unlockBox.style.display = 'none';
+      unlockBox.innerHTML = '';
+    }
     if (unlockedDetails) unlockedDetails.classList.add('active');
     
     // Decrypt details directly
     document.getElementById('unlockedPhone').textContent = profile.phone || 'Not Specified';
     document.getElementById('unlockedEmail').textContent = profile.email || 'Not Specified';
-    document.getElementById('unlockedAddress').textContent = `${profile.location || 'Not Specified'}`;
+    document.getElementById('unlockedAddress').textContent = profile.location ? `${profile.location}, India` : 'Rajasthan, India';
     
     const socials = getProfileSocials(profile);
     const biodataUrl = getProfileBiodata(profile);
@@ -2258,89 +2737,97 @@ window.openProfileDetailModal = function(id) {
       }
     }
   } else {
-    if (unlockBox) unlockBox.style.display = 'block';
+    // Strictly protect contact details before mutual acceptance
     if (unlockedDetails) unlockedDetails.classList.remove('active');
     if (socialsItem) socialsItem.style.display = 'none';
-  }
 
-  // Trigger click event for Unlock contact details
-  const unlockBtn = document.getElementById('unlockContactBtn');
-  unlockBtn.onclick = function() {
-    // Intercept contact access for Starter Plan users to enforce royal paywall!
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    const userTier = currentUser ? currentUser.tier || 'Starter' : 'Starter';
+    // Mask phone, email, and address in DOM so inspection never leaks personal info
+    const phoneEl = document.getElementById('unlockedPhone');
+    if (phoneEl) phoneEl.textContent = '+91 ••••• ••••• (Locked)';
+    const emailEl = document.getElementById('unlockedEmail');
+    if (emailEl) emailEl.textContent = '••••••••@•••••.com (Locked)';
+    const addrEl = document.getElementById('unlockedAddress');
+    if (addrEl) addrEl.textContent = 'Ancestral Residence Protected';
 
-    if (userTier === 'Starter') {
-      document.getElementById('paywallModal').classList.add('active');
-      showToast('Starter plan does not permit contact details access!', 'gold');
-      return;
-    }
+    if (unlockBox) {
+      unlockBox.style.display = 'block';
 
-    unlockBtn.innerHTML = 'Securing Lineage...';
-    setTimeout(() => {
-      unlockBox.style.display = 'none';
-      unlockedDetails.classList.add('active');
-      
-      // Simulate authentic details based on seed data
-      document.getElementById('unlockedPhone').textContent = profile.phone || `+91 9116${Math.floor(100000 + Math.random() * 900000)}`;
-      document.getElementById('unlockedEmail').textContent = profile.email || `${profile.name.toLowerCase().replace(/\s/g, '.')}@sagaisambaandh-member.com`;
-      document.getElementById('unlockedAddress').textContent = `${profile.location}, India`;
-      
-      // Render socials and biodata documents if profile has them
-      const socials = getProfileSocials(profile);
-      const biodataUrl = getProfileBiodata(profile);
-      const socialsContainer = document.getElementById('unlockedSocials');
-      if (socialsItem && socialsContainer) {
-        if (socials.instagram || socials.facebook || biodataUrl) {
-          socialsItem.style.display = 'block';
-          // Update the label dynamically
-          const labelEl = socialsItem.querySelector('label');
-          if (labelEl) {
-            labelEl.textContent = (socials.instagram || socials.facebook) ? 'Socials & Documents' : 'Ancestral Documents';
-          }
-          
-          let html = '';
-          if (socials.instagram) {
-            let url = socials.instagram;
-            if (!url.startsWith('http')) {
-              url = 'https://instagram.com/' + url.replace('@', '').trim();
-            }
-            html += `
-              <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--gold-bright); display: flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; font-size: 0.85rem; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.25);">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="color: var(--gold-antique);"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
-                Instagram
-              </a>
-            `;
-          }
-          if (socials.facebook) {
-            let url = socials.facebook;
-            if (!url.startsWith('http')) {
-              url = 'https://facebook.com/' + url.trim();
-            }
-            html += `
-              <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--gold-bright); display: flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; font-size: 0.85rem; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.25);">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="color: var(--gold-antique);"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg>
-                Facebook
-              </a>
-            `;
-          }
-          if (biodataUrl) {
-            html += `
-              <button onclick="viewProfilePdf('${biodataUrl}', '${profile.name}')" class="btn btn-royal" style="color: var(--gold-bright); display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.25); cursor: pointer;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-antique);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                View Biodata (PDF)
+      if (!currentUser) {
+        unlockBox.innerHTML = `
+          <div style="text-align: center; padding: 20px 15px;">
+            <div style="font-size: 1.6rem; margin-bottom: 6px;">🔒</div>
+            <h4 style="color: var(--gold-bright); font-family: var(--font-royal); margin-bottom: 6px; font-size: 1.05rem;">Heritage Privacy Protected</h4>
+            <p style="color: var(--text-muted); font-size: 0.84rem; max-width: 480px; margin: 0 auto 14px; line-height: 1.45;">
+              Direct contact details (mobile phone and email) are strictly confidential. Log in to your royal account to express interest and connect.
+            </p>
+            <a href="login.html" class="btn btn-royal" style="display: inline-block; padding: 8px 22px; font-size: 0.84rem; font-weight: 600;">
+              Login to Connect
+            </a>
+          </div>
+        `;
+      } else {
+        const myInterests = getProfileInterests(currentUser);
+        const theirInterests = getProfileInterests(profile);
+        const isIncomingPending = theirInterests[currentUser.id] === 'sent' && myInterests[profile.id] !== 'accepted' && myInterests[profile.id] !== 'declined';
+        const isOutgoingPending = myInterests[profile.id] === 'sent';
+
+        if (isIncomingPending) {
+          unlockBox.innerHTML = `
+            <div style="text-align: center; padding: 18px 20px; background: rgba(39, 174, 96, 0.08); border: 1.5px solid rgba(39, 174, 96, 0.35); border-radius: 8px;">
+              <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
+                <span style="font-size: 1.3rem;">👑</span>
+                <h4 style="color: #2ecc71; font-family: var(--font-royal); margin: 0; font-size: 1.05rem;">Match Interest Received!</h4>
+              </div>
+              <p style="color: var(--text-white); font-size: 0.84rem; max-width: 500px; margin: 0 auto 10px; line-height: 1.45;">
+                <strong>${profile.name}</strong> has expressed noble match interest with your profile. Review their pedigree and background above.
+              </p>
+              <div style="font-size: 0.76rem; color: var(--gold-bright); margin-bottom: 12px;">
+                🔒 Mobile number, email, and direct chat will unlock immediately upon acceptance.
+              </div>
+              <div style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn-royal" onclick="handleAcceptInterest('${profile.id}')" style="background: #27ae60; border-color: #27ae60; font-weight: 700; padding: 9px 22px; font-size: 0.85rem;">
+                  👑 Accept Interest & Unlock Contact
+                </button>
+                <button type="button" class="btn btn-minimal" onclick="handleDeclineInterest('${profile.id}')" style="color: #fc8181; padding: 9px 18px; font-size: 0.85rem; border: 1px solid rgba(252, 129, 129, 0.35);">
+                  ✕ Decline
+                </button>
+              </div>
+            </div>
+          `;
+        } else if (isOutgoingPending) {
+          unlockBox.innerHTML = `
+            <div style="text-align: center; padding: 18px 20px; background: rgba(201, 162, 39, 0.08); border: 1.5px solid rgba(201, 162, 39, 0.3); border-radius: 8px;">
+              <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
+                <span style="font-size: 1.3rem;">⏳</span>
+                <h4 style="color: var(--gold-bright); font-family: var(--font-royal); margin: 0; font-size: 1.05rem;">Match Interest Sent — Awaiting Response</h4>
+              </div>
+              <p style="color: var(--text-muted); font-size: 0.84rem; max-width: 500px; margin: 0 auto 10px; line-height: 1.45;">
+                You have expressed match interest in connecting with <strong>${profile.name}</strong>. In compliance with privacy standards, their phone number and email will be securely revealed as soon as they accept your request.
+              </p>
+              <button type="button" class="btn btn-minimal" disabled style="opacity: 0.75; cursor: default; font-size: 0.82rem; padding: 8px 18px; border: 1px solid rgba(170,124,17,0.3);">
+                ⏳ Awaiting Acceptance...
               </button>
-            `;
-          }
-          socialsContainer.innerHTML = html;
+            </div>
+          `;
         } else {
-          socialsItem.style.display = 'none';
+          unlockBox.innerHTML = `
+            <div style="text-align: center; padding: 18px 20px; background: rgba(0, 0, 0, 0.25); border: 1.5px solid rgba(170, 124, 17, 0.3); border-radius: 8px;">
+              <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
+                <span style="font-size: 1.3rem;">🔒</span>
+                <h4 style="color: var(--gold-bright); font-family: var(--font-royal); margin: 0; font-size: 1.05rem;">Lineage Privacy Protected</h4>
+              </div>
+              <p style="color: var(--text-muted); font-size: 0.84rem; max-width: 500px; margin: 0 auto 12px; line-height: 1.45;">
+                Contact information (mobile phone, email, and direct chat) is confidential and protected until mutual match interest is accepted.
+              </p>
+              <button type="button" class="btn btn-royal" onclick="handleSendInterest('${profile.id}')" style="padding: 9px 24px; font-size: 0.85rem; font-weight: 700;">
+                👑 Send Royal Interest to Connect
+              </button>
+            </div>
+          `;
         }
       }
-      
-      showToast('Lineage details decrypted successfully!', 'gold');
-    }, 1200);
-  };
+    }
+  }
 
   // Open modal
   modal.classList.add('active');
@@ -3092,17 +3579,51 @@ window.renderNotifications = function() {
     return;
   }
 
-  listContainer.innerHTML = notifications.map(n => `
-    <div onclick="handleNotificationClick(${n.id}, '${n.profileId}')" style="padding: 10px 15px; border-bottom: 1px solid rgba(170,124,17,0.1); cursor: pointer; background: ${n.read ? 'transparent' : 'rgba(170,124,17,0.06)'}; transition: background 0.2s; text-align: left;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='${n.read ? 'transparent' : 'rgba(170,124,17,0.06)'}'">
-      <div style="color: var(--text-white); font-size: 0.82rem; line-height: 1.3; margin-bottom: 3px;">${n.message}</div>
-      <div style="color: var(--text-muted); font-size: 0.7rem;">${n.timestamp}</div>
-    </div>
-  `).join('');
+  listContainer.innerHTML = notifications.map(n => {
+    const isInterestReq = n.type === 'interest_request';
+    const targetId = n.profileId || n.senderId;
+
+    if (isInterestReq) {
+      return `
+        <div style="padding: 12px 14px; border-bottom: 1px solid rgba(170,124,17,0.18); background: ${n.read ? 'rgba(0,0,0,0.2)' : 'rgba(170,124,17,0.1)'}; text-align: left;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <span style="color: var(--gold-bright); font-size: 0.76rem; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+              👑 Match Interest Received
+            </span>
+            <span style="color: var(--text-muted); font-size: 0.68rem;">${n.timestamp || 'Just now'}</span>
+          </div>
+          <div style="color: var(--text-white); font-size: 0.8rem; line-height: 1.35; margin-bottom: 8px;">
+            ${n.message}
+          </div>
+          <div style="font-size: 0.7rem; color: #CBD5E0; margin-bottom: 8px;">🔒 Contact info protected until accepted</div>
+          <div style="display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
+            <button type="button" class="btn btn-outline" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 4px;" onclick="openProfileDetailModal('${targetId}'); const dd=document.getElementById('navNotificationDropdown'); if(dd) dd.style.display='none';">
+              👁️ View Profile
+            </button>
+            <button type="button" class="btn btn-royal" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 4px; background: #27ae60; border-color: #27ae60; color: #fff;" onclick="handleAcceptInterest('${targetId}'); const dd=document.getElementById('navNotificationDropdown'); if(dd) dd.style.display='none';">
+              👑 Accept
+            </button>
+            <button type="button" class="btn btn-minimal" style="font-size: 0.72rem; padding: 4px 8px; color: #fc8181;" onclick="handleDeclineInterest('${targetId}'); const dd=document.getElementById('navNotificationDropdown'); if(dd) dd.style.display='none';">
+              ✕ Decline
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div onclick="handleNotificationClick(${n.id}, '${targetId}')" style="padding: 10px 15px; border-bottom: 1px solid rgba(170,124,17,0.1); cursor: pointer; background: ${n.read ? 'transparent' : 'rgba(170,124,17,0.06)'}; transition: background 0.2s; text-align: left;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='${n.read ? 'transparent' : 'rgba(170,124,17,0.06)'}'">
+        <div style="color: var(--text-white); font-size: 0.82rem; line-height: 1.3; margin-bottom: 3px;">${n.message}</div>
+        <div style="color: var(--text-muted); font-size: 0.7rem;">${n.timestamp}</div>
+      </div>
+    `;
+  }).join('');
 };
 
 window.handleNotificationClick = function(notifId, profileId) {
   // Mark as read
   let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+  const notif = notifications.find(n => n.id === notifId);
   notifications = notifications.map(n => n.id === notifId ? { ...n, read: true } : n);
   localStorage.setItem('notifications', JSON.stringify(notifications));
   
@@ -3113,8 +3634,21 @@ window.handleNotificationClick = function(notifId, profileId) {
   const dropdown = document.getElementById('navNotificationDropdown');
   if (dropdown) dropdown.style.display = 'none';
 
-  // Open chat!
-  openOneOnOneChat(profileId);
+  if (!profileId) return;
+
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  const profiles = getAllProfiles();
+  const target = profiles.find(p => p.id === profileId);
+
+  if (notif && notif.type === 'interest_request') {
+    // Open profile modal so they can review profile before accepting
+    openProfileDetailModal(profileId);
+  } else if (currentUser && target && areProfilesConnected(currentUser, target)) {
+    // If connected, open chat
+    openOneOnOneChat(profileId);
+  } else {
+    openProfileDetailModal(profileId);
+  }
 };
 
 // Dynamic Modals for Chats Active and Interests Sent Click events
