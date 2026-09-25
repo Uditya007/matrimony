@@ -33,6 +33,8 @@
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
   <link rel="stylesheet" href="css/styles.css">
+  <!-- Razorpay Standard Web Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
 
@@ -371,54 +373,309 @@
       });
     });
 
-    // Handle plan subscription selection
-    function handleSubscribe(planName) {
+    // Helper to get plan pricing in paise
+    function getPlanPricingInPaise(planName, period) {
+      const pricingTable = {
+        monthly: { Starter: 0, Silver: 1199900, Gold: 2499900 },
+        quarterly: { Starter: 1199900, Silver: 2879900, Gold: 5999900 },
+        halfyearly: { Starter: 1999900, Silver: 4999900, Gold: 9999900 }
+      };
+      return (pricingTable[period] && pricingTable[period][planName]) || 0;
+    }
+
+    // Helper to get add-on pricing in paise
+    function getAddonPricingInPaise(addonName) {
+      const addonTable = {
+        'Verification': 149900,       // ₹1,499
+        'Astrology': 199900,          // ₹1,999
+        'AI Matchmaking': 249900,     // ₹2,499
+        'Wedding Ecosystem': 499900   // ₹4,999
+      };
+      return addonTable[addonName] || 10000;
+    }
+
+    // Handle plan subscription selection with Razorpay Standard Checkout
+    async function handleSubscribe(planName) {
       const activeTab = document.querySelector('#billingPeriodTabs button.active');
+      const period = activeTab ? activeTab.dataset.period : 'monthly';
       const periodLabel = activeTab ? activeTab.textContent.split(' (')[0] : '1 Month';
       
       const currentUser = localStorage.getItem('currentUser');
       if (!currentUser) {
-        alert('Please register or log in first to purchase membership plans!');
+        if (typeof showToast === 'function') {
+          showToast('Please log in first to purchase membership plans', 'normal');
+        } else {
+          alert('Please register or log in first to purchase membership plans!');
+        }
         window.location.href = 'login.html';
         return;
       }
 
       const user = JSON.parse(currentUser);
-      user.tier = planName; // Upgrade user tier in storage
-      localStorage.setItem('currentUser', JSON.stringify(user));
 
-      // Sync registered users list
-      const users = JSON.parse(localStorage.getItem('users')) || [];
-      const updatedUsers = users.map(u => u.email.toLowerCase() === user.email.toLowerCase() ? { ...u, tier: planName } : u);
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-
-      // Sync with Supabase Profiles Table if Active
-      if (window.supabaseActive && window.supabaseClient) {
-        window.supabaseClient
-          .from('profiles')
-          .update({ tier: planName })
-          .eq('email', user.email)
-          .then(({ error }) => {
-            if (error) {
-              console.error("Error syncing subscription tier to Supabase:", error);
-            }
-          });
+      // Handle Free Starter Trial without Razorpay
+      const amountInPaise = getPlanPricingInPaise(planName, period);
+      if (amountInPaise === 0) {
+        user.tier = planName;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const updatedUsers = users.map(u => u.email.toLowerCase() === user.email.toLowerCase() ? { ...u, tier: planName } : u);
+        localStorage.setItem('users', JSON.stringify(updatedUsers));
+        if (window.supabaseActive && window.supabaseClient) {
+          window.supabaseClient
+            .from('profiles')
+            .update({ tier: planName })
+            .eq('email', user.email)
+            .then();
+        }
+        alert(`Khammaghani! You have activated the Shree Rajput Sagai Sambandh Free ${planName} Plan (${periodLabel}). Enjoy exploring noble matches!`);
+        window.location.href = 'dashboard.html';
+        return;
       }
 
-      // Notify user
-      alert(`Khammaghani! You have successfully upgraded to the Shree Rajput Sagai Sambandh ${planName} Plan (${periodLabel}). Enjoy premium matchmaking standards!`);
-      window.location.href = 'dashboard.html';
+      // Check Razorpay SDK is loaded
+      if (typeof Razorpay === 'undefined') {
+        alert('Payment Gateway SDK is loading. Please check your internet connection and try again.');
+        return;
+      }
+
+      const planBtn = event?.currentTarget || document.activeElement;
+      const originalBtnText = planBtn ? planBtn.textContent : '';
+      if (planBtn && planBtn.tagName === 'BUTTON') {
+        planBtn.disabled = true;
+        planBtn.textContent = 'Preparing Payment...';
+      }
+
+      try {
+        // STEP 1: Call Backend to Create Order
+        const orderResponse = await fetch('/api/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: amountInPaise,
+            currency: 'INR',
+            receipt: `rcpt_${planName.toLowerCase()}_${Date.now()}`,
+            notes: {
+              plan: planName,
+              period: periodLabel,
+              email: user.email,
+              name: user.name || 'Noble Member'
+            }
+          })
+        });
+
+        const orderData = await orderResponse.json();
+
+        if (!orderResponse.ok || !orderData.success) {
+          throw new Error(orderData.error || 'Failed to create payment order on server.');
+        }
+
+        // STEP 2: Configure & Open Razorpay Modal
+        const options = {
+          key: orderData.key_id,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          name: 'Shree Rajput Sagai Sambandh',
+          description: `Rajputana ${planName} Plan (${periodLabel})`,
+          image: 'images/logo.jpg',
+          order_id: orderData.order_id,
+          prefill: {
+            name: user.name || '',
+            email: user.email || '',
+            contact: user.phone || ''
+          },
+          theme: {
+            color: '#8B1E3F' // Royal Rajput Maroon
+          },
+          modal: {
+            ondismiss: function() {
+              if (typeof showToast === 'function') {
+                showToast('Payment window dismissed by user.', 'normal');
+              } else {
+                console.log('Payment modal dismissed by user.');
+              }
+              if (planBtn && planBtn.tagName === 'BUTTON') {
+                planBtn.disabled = false;
+                planBtn.textContent = originalBtnText;
+              }
+            }
+          },
+          // STEP 3: On Payment Success -> Send to Backend to Verify Signature
+          handler: async function(paymentResult) {
+            try {
+              if (typeof showToast === 'function') {
+                showToast('Verifying payment signature with royal gateway...', 'gold');
+              }
+
+              const verifyResponse = await fetch('/api/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: paymentResult.razorpay_order_id,
+                  razorpay_payment_id: paymentResult.razorpay_payment_id,
+                  razorpay_signature: paymentResult.razorpay_signature
+                })
+              });
+
+              const verifyResult = await verifyResponse.json();
+
+              if (verifyResponse.ok && verifyResult.success) {
+                // Successful Payment! Upgrade user tier
+                user.tier = planName;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+
+                const users = JSON.parse(localStorage.getItem('users')) || [];
+                const updatedUsers = users.map(u => u.email.toLowerCase() === user.email.toLowerCase() ? { ...u, tier: planName } : u);
+                localStorage.setItem('users', JSON.stringify(updatedUsers));
+
+                // Sync with Supabase Profiles Table if Active
+                if (window.supabaseActive && window.supabaseClient) {
+                  window.supabaseClient
+                    .from('profiles')
+                    .update({ tier: planName })
+                    .eq('email', user.email)
+                    .then(({ error }) => {
+                      if (error) console.warn("Supabase tier sync warning:", error);
+                    });
+                }
+
+                alert(`👑 Khammaghani!\n\nPayment Verified Successfully!\nPayment ID: ${paymentResult.razorpay_payment_id}\nOrder ID: ${paymentResult.razorpay_order_id}\n\nYou have officially upgraded to the Shree Rajput Sagai Sambandh ${planName} Plan (${periodLabel}).`);
+                window.location.href = 'dashboard.html';
+              } else {
+                alert(`⚠️ Payment Verification Failed: ${verifyResult.message || 'Signature mismatch'}.\nIf your account was debited, please contact royal support with Payment ID: ${paymentResult.razorpay_payment_id}`);
+              }
+            } catch (vErr) {
+              console.error('Verification error:', vErr);
+              alert(`Network error verifying payment. Please contact support with Payment ID: ${paymentResult.razorpay_payment_id}`);
+            } finally {
+              if (planBtn && planBtn.tagName === 'BUTTON') {
+                planBtn.disabled = false;
+                planBtn.textContent = originalBtnText;
+              }
+            }
+          }
+        };
+
+        const rzp = new Razorpay(options);
+
+        // Handle payment failure event
+        rzp.on('payment.failed', function(failureResponse) {
+          console.error('Razorpay payment failed:', failureResponse.error);
+          alert(`Payment Failed: ${failureResponse.error.description || failureResponse.error.reason} (Code: ${failureResponse.error.code})`);
+          if (planBtn && planBtn.tagName === 'BUTTON') {
+            planBtn.disabled = false;
+            planBtn.textContent = originalBtnText;
+          }
+        });
+
+        rzp.open();
+
+      } catch (err) {
+        console.error('Checkout error:', err);
+        alert(`Could not initiate payment: ${err.message}`);
+        if (planBtn && planBtn.tagName === 'BUTTON') {
+          planBtn.disabled = false;
+          planBtn.textContent = originalBtnText;
+        }
+      }
     }
 
-    // Purchase addon handler
-    function purchaseAddon(addonName) {
+    // Purchase Addon handler with Razorpay integration
+    async function purchaseAddon(addonName) {
       const currentUser = localStorage.getItem('currentUser');
       if (!currentUser) {
         alert('Please log in first to unlock add-on services!');
         window.location.href = 'login.html';
         return;
       }
-      alert(`Your request for the "${addonName}" upgrade package has been logged. Our royal concierge desk will contact you within 24 hours. Khammaghani!`);
+
+      const user = JSON.parse(currentUser);
+      const amountInPaise = getAddonPricingInPaise(addonName);
+
+      if (typeof Razorpay === 'undefined') {
+        alert('Payment Gateway SDK is loading. Please check your internet connection.');
+        return;
+      }
+
+      try {
+        const orderResponse = await fetch('/api/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: amountInPaise,
+            currency: 'INR',
+            receipt: `rcpt_addon_${Date.now()}`,
+            notes: {
+              addon: addonName,
+              email: user.email,
+              name: user.name || 'Noble Member'
+            }
+          })
+        });
+
+        const orderData = await orderResponse.json();
+        if (!orderResponse.ok || !orderData.success) {
+          throw new Error(orderData.error || 'Failed to create add-on order.');
+        }
+
+        const options = {
+          key: orderData.key_id,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          name: 'Shree Rajput Sagai Sambandh',
+          description: `Ancestral Add-On: ${addonName}`,
+          image: 'images/logo.jpg',
+          order_id: orderData.order_id,
+          prefill: {
+            name: user.name || '',
+            email: user.email || '',
+            contact: user.phone || ''
+          },
+          theme: {
+            color: '#8B1E3F'
+          },
+          modal: {
+            ondismiss: function() {
+              if (typeof showToast === 'function') {
+                showToast('Add-on checkout closed.', 'normal');
+              }
+            }
+          },
+          handler: async function(paymentResult) {
+            try {
+              const verifyResponse = await fetch('/api/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: paymentResult.razorpay_order_id,
+                  razorpay_payment_id: paymentResult.razorpay_payment_id,
+                  razorpay_signature: paymentResult.razorpay_signature
+                })
+              });
+
+              const verifyResult = await verifyResponse.json();
+              if (verifyResponse.ok && verifyResult.success) {
+                alert(`👑 Khammaghani!\n\nYour "${addonName}" package has been successfully acquired.\nPayment ID: ${paymentResult.razorpay_payment_id}\n\nOur royal concierge desk has registered your audit request and will contact you within 24 hours.`);
+              } else {
+                alert(`Payment verification issue: ${verifyResult.message}`);
+              }
+            } catch (err) {
+              console.error('Addon verification error:', err);
+              alert('Error verifying payment. Please contact our concierge desk.');
+            }
+          }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function(failureResponse) {
+          alert(`Payment Failed: ${failureResponse.error.description || failureResponse.error.reason}`);
+        });
+        rzp.open();
+
+      } catch (err) {
+        console.error('Addon checkout error:', err);
+        alert(`Could not initiate add-on checkout: ${err.message}`);
+      }
     }
   </script>
 </body>
