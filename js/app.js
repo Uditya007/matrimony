@@ -303,9 +303,9 @@ function updateNavigationState() {
         dropdown.style.display = 'none';
       });
       
-      // Ensure real incoming requests and render notifications
-      if (typeof ensureRealIncomingRequests === 'function') {
-        ensureRealIncomingRequests(currentUser);
+      // Clean up any stale/mock notifications and render real notifications
+      if (typeof cleanupMockNotifications === 'function') {
+        cleanupMockNotifications(currentUser);
       }
       setTimeout(() => {
         if (typeof renderNotifications === 'function') {
@@ -1593,88 +1593,31 @@ function areProfilesConnected(profileA, profileB) {
   return (interestsA[profileB.id] === 'accepted' || interestsB[profileA.id] === 'accepted');
 }
 
-// Automatically ensure active registered users have real compatible match requests to review
-function ensureRealIncomingRequests(currentUser) {
+// Clean up any previously auto-seeded mock notifications so requests strictly come ONLY when genuinely sent
+function cleanupMockNotifications(currentUser) {
   if (!currentUser) return;
-
   let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
-  const myInterests = getProfileInterests(currentUser);
+  const profiles = getAllProfiles();
 
-  // Check how many active pending interest requests currentUser has
-  const pendingIncoming = notifications.filter(n => 
-    n.type === 'interest_request' && 
-    myInterests[n.senderId || n.profileId] !== 'accepted' && 
-    myInterests[n.senderId || n.profileId] !== 'declined'
-  );
+  const filtered = notifications.filter(n => {
+    // Purge fake auto-seeded likes
+    if (n.notifKey && n.notifKey.startsWith('like_from_')) return false;
 
-  // If currentUser has less than 2 pending requests, auto-seed realistic compatible royal requests!
-  if (pendingIncoming.length < 2) {
-    const allProfiles = getAllProfiles();
-    const myGender = normalizeGender(currentUser.gender || 'Bride');
-    const targetGender = getOppositeGender(myGender);
-
-    // Filter compatible opposite gender profiles that have not been accepted or declined yet
-    const candidates = allProfiles.filter(p => {
-      if (!p || p.id === currentUser.id) return false;
-      const pGender = normalizeGender(p.gender || '');
-      if (pGender !== targetGender) return false;
-      if (myInterests[p.id] === 'accepted' || myInterests[p.id] === 'declined') return false;
-      const existing = notifications.find(n => (n.senderId === p.id || n.profileId === p.id) && n.type === 'interest_request');
-      return !existing;
-    });
-
-    const needCount = 2 - pendingIncoming.length;
-    const toAdd = candidates.slice(0, needCount);
-    let updated = false;
-
-    toAdd.forEach((cand, idx) => {
-      // Mark interest sent in candidate's about metadata
-      const candInterests = getProfileInterests(cand);
-      candInterests[currentUser.id] = 'sent';
-      cand.about = setProfileInterestsInAbout(cand.about, candInterests);
-
-      if (window.firestoreUsers && Array.isArray(window.firestoreUsers)) {
-        const cIdx = window.firestoreUsers.findIndex(u => u.id === cand.id);
-        if (cIdx !== -1) window.firestoreUsers[cIdx].about = cand.about;
-        else window.firestoreUsers.push(cand);
-      }
-
-      notifications.unshift({
-        id: Date.now() + Math.random() + (idx * 100),
-        notifKey: `interest_from_${cand.id}`,
-        type: 'interest_request',
-        senderId: cand.id,
-        senderName: cand.name,
-        message: `${cand.name} (${cand.clan || 'Rajput'} Clan, ${cand.age || '28'} Yrs • ${cand.location ? cand.location.split(',')[0] : 'Rajasthan'}) sent you a Royal Match Interest!`,
-        profileId: cand.id,
-        timestamp: idx === 0 ? 'Just now' : '15m ago',
-        read: false,
-        status: 'pending'
-      });
-      updated = true;
-    });
-
-    // Also ensure at least 1 noble profile like / shortlist notification exists
-    const hasLikeNotif = notifications.some(n => n.type === 'profile_like');
-    if (!hasLikeNotif && candidates.length > toAdd.length) {
-      const liker = candidates[toAdd.length];
-      notifications.push({
-        id: Date.now() + Math.random() + 500,
-        notifKey: `like_from_${liker.id}`,
-        type: 'profile_like',
-        senderId: liker.id,
-        senderName: liker.name,
-        message: `${liker.name} (${liker.clan || 'Rajput'} Clan) shortlisted and liked your royal profile ❤️`,
-        profileId: liker.id,
-        timestamp: '1h ago',
-        read: false
-      });
-      updated = true;
+    // Purge mock requests where the sender did not actually send an interest to currentUser
+    if (n.type === 'interest_request') {
+      const senderId = n.senderId || n.profileId;
+      const sender = profiles.find(p => p.id === senderId);
+      if (!sender) return false;
+      const senderInterests = getProfileInterests(sender);
+      // Strictly keep only if the sender's profile ACTUALLY has currentUser marked as 'sent'
+      return senderInterests[currentUser.id] === 'sent';
     }
 
-    if (updated) {
-      localStorage.setItem('notifications', JSON.stringify(notifications));
-    }
+    return true;
+  });
+
+  if (filtered.length !== notifications.length) {
+    localStorage.setItem('notifications', JSON.stringify(filtered));
   }
 }
 
@@ -1682,8 +1625,8 @@ function checkIncomingInterests() {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   if (!currentUser) return;
 
-  // Ensure active user has real incoming requests to review
-  ensureRealIncomingRequests(currentUser);
+  // Clean up any mock/stale notifications
+  cleanupMockNotifications(currentUser);
   
   const profiles = getAllProfiles();
   const myInterests = getProfileInterests(currentUser);
@@ -1976,6 +1919,14 @@ window.handleSendInterest = async function(id) {
   currentUser.about = setProfileInterestsInAbout(currentUser.about, mySentInterests);
   localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
+  // Also update this user in LocalStorage 'users' list
+  let localUsersList = JSON.parse(localStorage.getItem('users')) || [];
+  const uIdx = localUsersList.findIndex(u => u.id === currentUser.id || u.email === currentUser.email);
+  if (uIdx !== -1) {
+    localUsersList[uIdx].about = currentUser.about;
+    localStorage.setItem('users', JSON.stringify(localUsersList));
+  }
+
   // Update in-memory firestoreUsers cache
   if (window.firestoreUsers && Array.isArray(window.firestoreUsers)) {
     const idx = window.firestoreUsers.findIndex(u => u.id === currentUser.id);
@@ -1993,15 +1944,29 @@ window.handleSendInterest = async function(id) {
   // Notify admin
   notifyAdminInterestSent(currentUser, targetProfile);
 
-  // Save notification to sender
+  // Save notification to sender and queue for recipient
   let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
   notifications.unshift({
     id: Date.now() + Math.random(),
+    recipientId: currentUser.id,
     type: 'interest_sent',
     message: `You sent a Match Interest to ${profileName}. Awaiting their response.`,
     profileId: id,
     timestamp: 'Just now',
     read: false
+  });
+  notifications.unshift({
+    id: Date.now() + Math.random() + 1,
+    notifKey: `interest_from_${currentUser.id}_to_${id}`,
+    recipientId: id,
+    type: 'interest_request',
+    senderId: currentUser.id,
+    senderName: currentUser.name,
+    message: `${currentUser.name} (${currentUser.clan || 'Rajput'} Clan, ${currentUser.age || '25'} Yrs) sent you a Royal Match Interest! Review profile to accept or decline.`,
+    profileId: currentUser.id,
+    timestamp: 'Just now',
+    read: false,
+    status: 'pending'
   });
   localStorage.setItem('notifications', JSON.stringify(notifications));
 
@@ -3689,7 +3654,6 @@ window.handleProfileUpdateSubmit = async function(event) {
 // Royal Notifications List rendering
 window.renderNotifications = function() {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-  const notifications = JSON.parse(localStorage.getItem('notifications')) || [];
   const listContainer = document.getElementById('notificationList');
   const badge = document.getElementById('navNotificationBadge');
   const bellContainer = document.getElementById('navNotificationBell');
@@ -3701,17 +3665,30 @@ window.renderNotifications = function() {
     return;
   }
 
-  const myInterests = getProfileInterests(currentUser);
+  // Ensure any previously seeded fake requests are cleaned up
+  if (typeof cleanupMockNotifications === 'function') {
+    cleanupMockNotifications(currentUser);
+  }
 
-  // Active pending requests (require user action: Accept or Decline)
-  const pendingRequests = notifications.filter(n => 
-    n.type === 'interest_request' && 
-    myInterests[n.senderId || n.profileId] !== 'accepted' && 
-    myInterests[n.senderId || n.profileId] !== 'declined'
-  );
+  const allNotifications = JSON.parse(localStorage.getItem('notifications')) || [];
+  // Scope notifications to current user
+  const userNotifications = allNotifications.filter(n => !n.recipientId || n.recipientId === currentUser.id);
+  const myInterests = getProfileInterests(currentUser);
+  const allProfiles = getAllProfiles();
+
+  // Active pending requests: strictly valid ONLY if sender genuinely sent an interest to currentUser
+  const pendingRequests = userNotifications.filter(n => {
+    if (n.type !== 'interest_request') return false;
+    const targetId = n.senderId || n.profileId;
+    if (myInterests[targetId] === 'accepted' || myInterests[targetId] === 'declined') return false;
+    const sender = allProfiles.find(p => p.id === targetId);
+    if (!sender) return false;
+    const sInterests = getProfileInterests(sender);
+    return sInterests[currentUser.id] === 'sent';
+  });
 
   // Other unread notifications (likes, shortlists, acceptances)
-  const unreadOthers = notifications.filter(n => 
+  const unreadOthers = userNotifications.filter(n => 
     n.type !== 'interest_request' && !n.read
   );
 
@@ -3740,7 +3717,20 @@ window.renderNotifications = function() {
 
   if (!listContainer) return;
 
-  if (notifications.length === 0) {
+  // Filter valid items for list display
+  const displayNotifications = userNotifications.filter(n => {
+    if (n.type === 'interest_request') {
+      const targetId = n.senderId || n.profileId;
+      if (myInterests[targetId] === 'accepted' || myInterests[targetId] === 'declined') return true;
+      const sender = allProfiles.find(p => p.id === targetId);
+      if (!sender) return false;
+      const sInterests = getProfileInterests(sender);
+      return sInterests[currentUser.id] === 'sent';
+    }
+    return true;
+  });
+
+  if (displayNotifications.length === 0) {
     listContainer.innerHTML = `
       <div style="padding: 28px 15px; text-align: center; color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">
         <span style="font-size: 1.6rem; display: block; margin-bottom: 6px;">👑</span>
@@ -3751,9 +3741,7 @@ window.renderNotifications = function() {
     return;
   }
 
-  const allProfiles = getAllProfiles();
-
-  listContainer.innerHTML = notifications.map(n => {
+  listContainer.innerHTML = displayNotifications.map(n => {
     const isInterestReq = n.type === 'interest_request';
     const isPending = isInterestReq && myInterests[n.senderId || n.profileId] !== 'accepted' && myInterests[n.senderId || n.profileId] !== 'declined';
     const targetId = n.profileId || n.senderId;
@@ -3919,18 +3907,34 @@ window.showPageEntryNotificationAlert = function(force = false) {
   const oldBanner = document.getElementById('royalPageAlertBanner');
   if (oldBanner) oldBanner.remove();
 
-  let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+  // Ensure mock notifications are purged
+  if (typeof cleanupMockNotifications === 'function') {
+    cleanupMockNotifications(currentUser);
+  }
+
+  let allNotifications = JSON.parse(localStorage.getItem('notifications')) || [];
+  const userNotifs = allNotifications.filter(n => !n.recipientId || n.recipientId === currentUser.id);
   const myInterests = getProfileInterests(currentUser);
+  const allProfiles = getAllProfiles();
   
-  const pendingRequests = notifications.filter(n => 
-    n.type === 'interest_request' && 
-    myInterests[n.senderId || n.profileId] !== 'accepted' && 
-    myInterests[n.senderId || n.profileId] !== 'declined'
-  );
+  // Real pending requests only
+  const pendingRequests = userNotifs.filter(n => {
+    if (n.type !== 'interest_request') return false;
+    const targetId = n.senderId || n.profileId;
+    if (myInterests[targetId] === 'accepted' || myInterests[targetId] === 'declined') return false;
+    const sender = allProfiles.find(p => p.id === targetId);
+    if (!sender) return false;
+    const sInterests = getProfileInterests(sender);
+    return sInterests[currentUser.id] === 'sent';
+  });
   
-  const likesCount = notifications.filter(n => n.type === 'profile_like').length || 3;
-  const shortlists = JSON.parse(localStorage.getItem('shortlisted')) || [];
+  const likesCount = userNotifs.filter(n => n.type === 'profile_like').length;
   const userName = currentUser.name ? currentUser.name.split(' ')[0] : 'Noble Member';
+
+  // Do NOT pop up alert banner if there are NO pending requests and NO likes unless explicitly forced
+  if (pendingRequests.length === 0 && likesCount === 0 && !force) {
+    return;
+  }
 
   const banner = document.createElement('div');
   banner.id = 'royalPageAlertBanner';
@@ -3940,14 +3944,24 @@ window.showPageEntryNotificationAlert = function(force = false) {
   let actionBtn = '';
 
   if (pendingRequests.length > 0) {
-    alertBodyText = `Khammaghani, <strong>${userName}</strong>! You have <strong style="color:var(--gold-bright);">${pendingRequests.length} Royal Match ${pendingRequests.length === 1 ? 'Request' : 'Requests'}</strong> awaiting your response, and <strong>${likesCount}</strong> noble members recently shortlisted your profile.`;
+    alertBodyText = `Khammaghani, <strong>${userName}</strong>! You have <strong style="color:var(--gold-bright);">${pendingRequests.length} Royal Match ${pendingRequests.length === 1 ? 'Request' : 'Requests'}</strong> awaiting your response.`;
+    if (likesCount > 0) {
+      alertBodyText += ` You also have <strong>${likesCount}</strong> profile ${likesCount === 1 ? 'like' : 'likes'}.`;
+    }
     actionBtn = `
       <button type="button" class="btn btn-royal" style="font-size: 0.78rem; padding: 6px 14px; background: #27ae60; border-color: #27ae60; font-weight: bold;" onclick="openNotificationDropdownDirectly()">
         🔔 View Requests (${pendingRequests.length})
       </button>
     `;
+  } else if (likesCount > 0) {
+    alertBodyText = `Khammaghani, <strong>${userName}</strong>! You have <strong>${likesCount}</strong> noble ${likesCount === 1 ? 'member' : 'members'} who shortlisted your royal profile.`;
+    actionBtn = `
+      <button type="button" class="btn btn-royal" style="font-size: 0.78rem; padding: 6px 14px;" onclick="openNotificationDropdownDirectly()">
+        🔔 View Likes
+      </button>
+    `;
   } else {
-    alertBodyText = `Khammaghani, <strong>${userName}</strong>! Your noble profile is active and verified. You have <strong>${likesCount}</strong> profile likes and <strong>${shortlists.length}</strong> shortlisted matches.`;
+    alertBodyText = `Khammaghani, <strong>${userName}</strong>! Your noble profile is active and verified. No pending match requests at this moment.`;
     actionBtn = `
       <button type="button" class="btn btn-royal" style="font-size: 0.78rem; padding: 6px 14px;" onclick="window.location.href='dashboard.html#matchesGrid'; dismissPageAlertBanner();">
         👑 Explore Matches
