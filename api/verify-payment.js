@@ -20,7 +20,13 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body || {};
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {}
+    }
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body || {};
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({
@@ -29,7 +35,10 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+    // Use environment secret or fallback to provided Test Mode secret
+    const DEFAULT_TEST_KEY_SECRET = '0z5pUxdjR0UIGAfpEVeRqAWB';
+    const key_secret = process.env.RAZORPAY_KEY_SECRET || DEFAULT_TEST_KEY_SECRET;
+
     if (!key_secret) {
       return res.status(500).json({
         success: false,

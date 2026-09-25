@@ -20,7 +20,13 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { amount, currency = 'INR', receipt, notes } = req.body || {};
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {}
+    }
+    const { amount, currency = 'INR', receipt, notes } = body || {};
 
     if (!amount || isNaN(amount) || Number(amount) < 100) {
       return res.status(400).json({
@@ -29,8 +35,12 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const key_id = process.env.RAZORPAY_KEY_ID;
-    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+    // Use environment variables or fallback to provided Test Mode credentials
+    const DEFAULT_TEST_KEY_ID = 'rzp_test_TgASFu87ziLFNM';
+    const DEFAULT_TEST_KEY_SECRET = '0z5pUxdjR0UIGAfpEVeRqAWB';
+
+    const key_id = process.env.RAZORPAY_KEY_ID || DEFAULT_TEST_KEY_ID;
+    const key_secret = process.env.RAZORPAY_KEY_SECRET || DEFAULT_TEST_KEY_SECRET;
 
     if (!key_id || !key_secret) {
       return res.status(401).json({

@@ -19,18 +19,17 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static frontend files
 app.use(express.static(path.join(__dirname)));
 
-// Validate Razorpay credentials
-const KEY_ID = process.env.RAZORPAY_KEY_ID;
-const KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+// Validate Razorpay credentials with Test Mode fallback
+const DEFAULT_TEST_KEY_ID = 'rzp_test_TgASFu87ziLFNM';
+const DEFAULT_TEST_KEY_SECRET = '0z5pUxdjR0UIGAfpEVeRqAWB';
 
-if (!KEY_ID || !KEY_SECRET) {
-  console.warn('⚠️ WARNING: RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET is missing in .env file!');
-}
+const KEY_ID = process.env.RAZORPAY_KEY_ID || DEFAULT_TEST_KEY_ID;
+const KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || DEFAULT_TEST_KEY_SECRET;
 
 // Initialize Razorpay client
 const razorpay = new Razorpay({
-  key_id: KEY_ID || '',
-  key_secret: KEY_SECRET || ''
+  key_id: KEY_ID,
+  key_secret: KEY_SECRET
 });
 
 /**
