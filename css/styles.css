@@ -4975,3 +4975,275 @@ body:has(.dashboard-subnav) {
 .btn-alert-decline:hover {
   background: rgba(229, 62, 62, 0.12) !important;
 }
+
+/* ==========================================================================
+   Royal Notification Bar, Animated Bell & Page Change Alert Banner
+   ========================================================================== */
+
+/* Enhanced Notification Bell Container in Navbar (Bigger & Regal) */
+.notification-bell-container {
+  position: relative;
+  margin-right: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(30, 8, 14, 0.75);
+  border: 1.5px solid var(--gold-antique);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35), inset 0 0 10px rgba(201, 162, 39, 0.15);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.notification-bell-container:hover {
+  background: rgba(170, 124, 17, 0.25);
+  border-color: var(--gold-bright);
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(201, 162, 39, 0.35);
+}
+
+.notification-bell-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--gold-bright);
+  transition: transform 0.3s ease;
+  transform-origin: top center;
+  display: block;
+}
+
+/* Bell Alert Ringing Animation */
+.notification-bell-container.has-unread .notification-bell-icon,
+.notification-bell-icon.bell-ringing {
+  animation: royalBellSwing 2.6s infinite ease-in-out;
+}
+
+@keyframes royalBellSwing {
+  0% { transform: rotate(0deg); }
+  4% { transform: rotate(18deg); }
+  8% { transform: rotate(-16deg); }
+  12% { transform: rotate(14deg); }
+  16% { transform: rotate(-12deg); }
+  20% { transform: rotate(8deg); }
+  24% { transform: rotate(-6deg); }
+  28% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Number Badge on Notification Bell (Clear & Prominent) */
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: #FFFFFF;
+  border-radius: 12px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--gold-bright);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 10px rgba(231, 76, 60, 0.6);
+  font-family: var(--font-body);
+  line-height: 1;
+  pointer-events: none;
+  animation: royalBadgePulse 2.2s infinite ease-in-out;
+  z-index: 2;
+}
+
+@keyframes royalBadgePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 8px rgba(231, 76, 60, 0.6);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7), 0 0 16px rgba(201, 162, 39, 0.85);
+  }
+}
+
+/* Bigger Royal Notification Dropdown */
+.notification-dropdown {
+  position: absolute;
+  top: 54px;
+  right: 0;
+  width: 380px;
+  max-width: calc(100vw - 30px);
+  background: rgba(26, 7, 12, 0.98);
+  border: 1.5px solid var(--gold-antique);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 25px rgba(201, 162, 39, 0.25);
+  backdrop-filter: blur(16px);
+  z-index: 12000;
+  max-height: 480px;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideDownRoyalNotifs 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDownRoyalNotifs {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.notification-dropdown-header {
+  padding: 14px 18px;
+  background: rgba(0, 0, 0, 0.4);
+  border-bottom: 1.5px solid rgba(170, 124, 17, 0.3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notif-header-title {
+  font-family: var(--font-royal);
+  color: var(--gold-bright);
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notif-header-count-pill {
+  background: rgba(201, 162, 39, 0.15);
+  color: var(--gold-bright);
+  font-size: 0.72rem;
+  padding: 3px 9px;
+  border-radius: 12px;
+  border: 1px solid rgba(201, 162, 39, 0.4);
+  font-family: var(--font-body);
+  font-weight: 700;
+}
+
+.notification-dropdown-list {
+  padding: 6px 0;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.notif-card-item {
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(170, 124, 17, 0.15);
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.notif-card-item:last-child {
+  border-bottom: none;
+}
+
+.notif-card-item.unread {
+  background: rgba(170, 124, 17, 0.09);
+  border-left: 3.5px solid var(--gold-bright);
+}
+
+.notif-card-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Page Change & Opening Royal Notification Banner */
+.royal-page-alert-banner {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  width: 410px;
+  max-width: calc(100vw - 32px);
+  background: rgba(28, 8, 14, 0.97);
+  border: 1.5px solid var(--gold-antique);
+  border-radius: 12px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7), 0 0 22px rgba(201, 162, 39, 0.35);
+  backdrop-filter: blur(16px);
+  z-index: 10600;
+  padding: 16px 20px;
+  color: var(--text-white);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideInPageAlert 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: var(--font-body);
+}
+
+@keyframes slideInPageAlert {
+  from {
+    opacity: 0;
+    transform: translateX(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.royal-page-alert-banner.hide-anim {
+  opacity: 0;
+  transform: translateX(40px) scale(0.95);
+}
+
+.royal-page-alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(170, 124, 17, 0.25);
+  padding-bottom: 6px;
+}
+
+.royal-page-alert-title {
+  font-family: var(--font-royal);
+  color: var(--gold-bright);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.royal-page-alert-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+  transition: color 0.2s;
+}
+
+.royal-page-alert-close:hover {
+  color: var(--text-white);
+}
+
+.royal-page-alert-body {
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: #E2E8F0;
+  margin-bottom: 12px;
+}
+
+.royal-page-alert-body strong {
+  color: var(--gold-bright);
+}
+
+.royal-page-alert-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: center;
+}
+
