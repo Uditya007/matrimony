@@ -925,6 +925,7 @@ function initRegisterPage() {
       name: document.getElementById('regName').value.trim(),
       gender: document.getElementById('regGender').value,
       email: email,
+      phone: document.getElementById('regPhone')?.value.trim() || '',
       password: document.getElementById('regPassword').value,
       age: parseInt(document.getElementById('regAge').value) || 25,
       dob: document.getElementById('regDOB').value,
@@ -1031,9 +1032,11 @@ function initRegisterPage() {
       const email = document.getElementById('regEmail').value.trim();
       const pass = document.getElementById('regPassword').value;
       const gender = document.getElementById('regGender').value;
+      const phoneInput = document.getElementById('regPhone');
+      const phone = phoneInput ? phoneInput.value.trim() : '';
 
-      if (!name || !email || !pass || !gender) {
-        showToast('Please fill all credentials');
+      if (!name || !email || !pass || !gender || (phoneInput && !phone)) {
+        showToast('Please fill all credentials including mobile number');
         return false;
       }
       if (pass.length < 6) {
@@ -2771,10 +2774,11 @@ window.openProfileDetailModal = function(id) {
   const unlockedDetails = document.getElementById('modalUnlockedDetails');
   const socialsItem = document.getElementById('unlockedSocialsItem');
 
+  const isAdmin = (currentUser && (currentUser.role === 'admin' || currentUser.isAdmin)) || sessionStorage.getItem('royal_admin_auth') === 'true' || localStorage.getItem('royal_admin_auth') === 'true';
   const isOwnProfile = currentUser && currentUser.id === id;
   const isConnected = currentUser && typeof areProfilesConnected === 'function' && areProfilesConnected(currentUser, profile);
 
-  if (isOwnProfile || isConnected) {
+  if (isAdmin || isOwnProfile || isConnected) {
     if (unlockBox) {
       unlockBox.style.display = 'none';
       unlockBox.innerHTML = '';

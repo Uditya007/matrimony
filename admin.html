@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin & Owner Desk — Shree Rajput Sagai Sambandh</title>
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    :root {
+      --admin-bg: #0F0408;
+      --admin-card: rgba(30, 8, 14, 0.85);
+      --admin-border: rgba(170, 124, 17, 0.35);
+      --gold-bright: #D4AF37;
+      --gold-antique: #C5A059;
+      --accent-green: #27ae60;
+      --accent-blue: #2980b9;
+    }
+
+    body.admin-body {
+      background: radial-gradient(circle at 50% 15%, #2A0913 0%, #0F0408 100%);
+      color: #E2E8F0;
+      min-height: 100vh;
+      font-family: var(--font-body, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+      margin: 0;
+      padding: 0;
+    }
+
+    .admin-header {
+      background: rgba(15, 4, 8, 0.95);
+      border-bottom: 1.5px solid var(--admin-border);
+      padding: 16px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    .admin-logo-area {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+    }
+
+    .admin-logo-area img {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1.5px solid var(--gold-bright);
+    }
+
+    .admin-title-box h1 {
+      font-family: var(--font-royal, 'Cinzel', serif);
+      font-size: 1.25rem;
+      margin: 0;
+      color: var(--gold-bright);
+      letter-spacing: 0.5px;
+    }
+
+    .admin-title-box span {
+      font-size: 0.75rem;
+      color: var(--gold-antique);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .admin-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .admin-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .admin-btn-gold {
+      background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%);
+      color: #1A050B;
+      border-color: #D4AF37;
+    }
+    .admin-btn-gold:hover {
+      filter: brightness(1.15);
+      transform: translateY(-1px);
+    }
+
+    .admin-btn-outline {
+      background: rgba(255, 255, 255, 0.05);
+      color: #E2E8F0;
+      border-color: var(--admin-border);
+    }
+    .admin-btn-outline:hover {
+      background: rgba(212, 175, 55, 0.15);
+      border-color: var(--gold-bright);
+    }
+
+    .admin-btn-danger {
+      background: rgba(231, 76, 60, 0.15);
+      color: #fc8181;
+      border-color: rgba(231, 76, 60, 0.35);
+    }
+    .admin-btn-danger:hover {
+      background: rgba(231, 76, 60, 0.3);
+    }
+
+    /* Auth Gate Screen */
+    .admin-gate-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 2, 5, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .admin-gate-box {
+      background: #1C070D;
+      border: 1.5px solid var(--gold-bright);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(212, 175, 55, 0.2);
+      border-radius: 12px;
+      padding: 36px 32px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .admin-gate-box h2 {
+      font-family: var(--font-royal, 'Cinzel', serif);
+      color: var(--gold-bright);
+      margin: 12px 0 6px;
+      font-size: 1.4rem;
+    }
+
+    .admin-gate-box p {
+      font-size: 0.85rem;
+      color: #A0AEC0;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .admin-pin-input {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1.5px solid var(--admin-border);
+      background: rgba(0, 0, 0, 0.4);
+      color: #FFFFFF;
+      font-size: 1.1rem;
+      text-align: center;
+      letter-spacing: 4px;
+      margin-bottom: 18px;
+      box-sizing: border-box;
+      outline: none;
+    }
+    .admin-pin-input:focus {
+      border-color: var(--gold-bright);
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+    }
+
+    /* Main Container */
+    .admin-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+
+    /* Stats Grid */
+    .admin-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .stat-info .stat-num {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--gold-bright);
+      font-family: var(--font-royal, 'Cinzel', serif);
+      line-height: 1.1;
+    }
+
+    .stat-info .stat-label {
+      font-size: 0.78rem;
+      color: #CBD5E0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    /* Controls Bar */
+    .admin-controls-card {
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .admin-search-box {
+      flex: 1;
+      min-width: 260px;
+      position: relative;
+    }
+
+    .admin-search-input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      border-radius: 6px;
+      border: 1px solid var(--admin-border);
+      background: rgba(0, 0, 0, 0.35);
+      color: #FFFFFF;
+      font-size: 0.88rem;
+      box-sizing: border-box;
+      outline: none;
+    }
+    .admin-search-input:focus {
+      border-color: var(--gold-bright);
+    }
+
+    .admin-search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gold-antique);
+      font-size: 0.95rem;
+    }
+
+    .admin-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .admin-select {
+      background: rgba(15, 4, 8, 0.9);
+      border: 1px solid var(--admin-border);
+      color: #E2E8F0;
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-size: 0.84rem;
+      outline: none;
+      cursor: pointer;
+    }
+    .admin-select:focus {
+      border-color: var(--gold-bright);
+    }
+
+    /* Table & Cards Section */
+    .admin-table-container {
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border);
+      border-radius: 10px;
+      overflow-x: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    table.admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.86rem;
+    }
+
+    table.admin-table th {
+      background: rgba(10, 2, 5, 0.75);
+      color: var(--gold-bright);
+      font-family: var(--font-royal, 'Cinzel', serif);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      padding: 14px 16px;
+      border-bottom: 1.5px solid var(--admin-border);
+      white-space: nowrap;
+    }
+
+    table.admin-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(170, 124, 17, 0.15);
+      vertical-align: middle;
+    }
+
+    table.admin-table tr:hover {
+      background: rgba(212, 175, 55, 0.04);
+    }
+
+    .user-avatar-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar-cell img {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid var(--gold-bright);
+      background: #1A050B;
+    }
+
+    .user-avatar-cell .initials-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8B1E3F 0%, #3D0C1A 100%);
+      border: 1.5px solid var(--gold-bright);
+      color: var(--gold-bright);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .user-meta-name {
+      font-weight: 700;
+      color: #FFFFFF;
+      font-size: 0.92rem;
+    }
+
+    .user-meta-sub {
+      font-size: 0.74rem;
+      color: #A0AEC0;
+      margin-top: 2px;
+    }
+
+    /* Phone & WhatsApp Action Pill */
+    .phone-contact-box {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .phone-number-display {
+      font-weight: 700;
+      color: var(--gold-bright);
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+    }
+
+    .contact-action-links {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .contact-action-btn {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-wa {
+      background: rgba(39, 174, 96, 0.2);
+      color: #2ecc71;
+      border: 1px solid rgba(39, 174, 96, 0.4);
+    }
+    .btn-wa:hover {
+      background: #27ae60;
+      color: #FFFFFF;
+    }
+
+    .btn-call {
+      background: rgba(52, 152, 219, 0.2);
+      color: #3498db;
+      border: 1px solid rgba(52, 152, 219, 0.4);
+    }
+    .btn-call:hover {
+      background: #2980b9;
+      color: #FFFFFF;
+    }
+
+    .btn-mail {
+      background: rgba(243, 156, 18, 0.2);
+      color: #f39c12;
+      border: 1px solid rgba(243, 156, 18, 0.4);
+    }
+    .btn-mail:hover {
+      background: #f39c12;
+      color: #1A050B;
+    }
+
+    .tier-badge {
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-block;
+    }
+    .tier-gold {
+      background: rgba(212, 175, 55, 0.2);
+      color: #F1C40F;
+      border: 1px solid #D4AF37;
+    }
+    .tier-silver {
+      background: rgba(189, 195, 199, 0.2);
+      color: #E2E8F0;
+      border: 1px solid #BDC3C7;
+    }
+    .tier-starter {
+      background: rgba(149, 165, 166, 0.15);
+      color: #95A5A6;
+      border: 1px solid rgba(149, 165, 166, 0.3);
+    }
+
+    .empty-state {
+      padding: 40px;
+      text-align: center;
+      color: #A0AEC0;
+    }
+
+    /* Modal Styling for Biodata */
+    .admin-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+    .admin-modal-overlay.active {
+      display: flex;
+    }
+
+    .admin-modal-card {
+      background: #1A050B;
+      border: 1.5px solid var(--gold-bright);
+      border-radius: 12px;
+      max-width: 650px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 28px;
+      position: relative;
+    }
+
+    .modal-close-x {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      background: transparent;
+      border: none;
+      color: var(--gold-bright);
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .admin-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .admin-nav-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- SECURITY PIN GATE OVERLAY -->
+  <div class="admin-gate-overlay" id="adminGateModal">
+    <div class="admin-gate-box">
+      <div style="font-size: 2.5rem; margin-bottom: 5px;">👑</div>
+      <h2>Royal Admin Desk</h2>
+      <p>Please enter your private owner PIN to view confidential member directory & contact details.</p>
+      
+      <form id="adminPinForm" onsubmit="handlePinSubmit(event)">
+        <input type="password" id="adminPinInput" class="admin-pin-input" placeholder="••••" maxlength="8" autofocus required>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <button type="submit" class="admin-btn admin-btn-gold" style="width: 100%; justify-content: center; padding: 12px;">
+            🛡️ Unlock Admin Desk
+          </button>
+        </div>
+      </form>
+      <div id="pinErrorMsg" style="color: #fc8181; font-size: 0.8rem; margin-top: 10px; display: none;">
+        Invalid PIN. Please try again.
+      </div>
+      <div style="margin-top: 18px;">
+        <a href="index.html" style="color: var(--gold-antique); font-size: 0.8rem; text-decoration: none;">← Return to Public Website</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN HEADER -->
+  <header class="admin-header">
+    <a href="index.html" class="admin-logo-area">
+      <img src="images/logo.jpg" alt="Logo">
+      <div class="admin-title-box">
+        <h1>Shree Rajput Sagai Sambandh</h1>
+        <span>Owner & Admin Control Desk</span>
+      </div>
+    </a>
+
+    <div class="admin-nav-actions">
+      <button class="admin-btn admin-btn-gold" onclick="exportUsersToCSV()">
+        📥 Export to Excel (CSV)
+      </button>
+      <a href="dashboard.html" class="admin-btn admin-btn-outline">
+        👤 Suitor Dashboard
+      </a>
+      <a href="index.html" class="admin-btn admin-btn-outline">
+        🏠 Home
+      </a>
+      <button class="admin-btn admin-btn-danger" onclick="handleAdminLogout()">
+        🔒 Lock Desk
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN ADMIN CONTENT -->
+  <div class="admin-container" id="adminMainContainer" style="display: none;">
+
+    <!-- TOP STATS CARDS -->
+    <div class="admin-stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+          <div class="stat-num" id="statTotalUsers">0</div>
+          <div class="stat-label">Total Registered</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⚔️</div>
+        <div class="stat-info">
+          <div class="stat-num" id="statGrooms">0</div>
+          <div class="stat-label">Grooms (Banna)</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🌸</div>
+        <div class="stat-info">
+          <div class="stat-num" id="statBrides">0</div>
+          <div class="stat-label">Brides (Ladi)</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">👑</div>
+        <div class="stat-info">
+          <div class="stat-num" id="statPaidTiers">0</div>
+          <div class="stat-label">Silver & Gold Tiers</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📱</div>
+        <div class="stat-info">
+          <div class="stat-num" id="statWithPhone">0</div>
+          <div class="stat-label">Phones On Record</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEARCH & FILTERS CONTROLS -->
+    <div class="admin-controls-card">
+      <div class="admin-search-box">
+        <span class="admin-search-icon">🔍</span>
+        <input type="text" id="adminSearchInput" class="admin-search-input" placeholder="Search by name, mobile, email, clan, gotra, city..." oninput="handleFilterChange()">
+      </div>
+
+      <div class="admin-filters">
+        <select id="filterGender" class="admin-select" onchange="handleFilterChange()">
+          <option value="">All Genders</option>
+          <option value="Groom">Grooms (Banna)</option>
+          <option value="Bride">Brides (Ladi)</option>
+        </select>
+
+        <select id="filterClan" class="admin-select" onchange="handleFilterChange()">
+          <option value="">All Rajput Clans</option>
+          <option value="Rathore">Rathore</option>
+          <option value="Sisodia">Sisodia</option>
+          <option value="Chauhan">Chauhan</option>
+          <option value="Kachwaha">Kachwaha</option>
+          <option value="Bhati">Bhati</option>
+          <option value="Shekhawat">Shekhawat</option>
+          <option value="Panwar">Panwar</option>
+          <option value="Tanwar">Tanwar</option>
+        </select>
+
+        <select id="filterTier" class="admin-select" onchange="handleFilterChange()">
+          <option value="">All Tiers</option>
+          <option value="Starter">Starter</option>
+          <option value="Silver">Silver</option>
+          <option value="Gold">Gold</option>
+        </select>
+
+        <button class="admin-btn admin-btn-outline" onclick="loadAllProfiles(true)">
+          🔄 Refresh Live
+        </button>
+      </div>
+    </div>
+
+    <!-- MASTER DIRECTORY TABLE -->
+    <div class="admin-table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Member Details</th>
+            <th>Gender & Age</th>
+            <th>Clan & Gotra</th>
+            <th>Mobile Number (Direct Connect)</th>
+            <th>Email Address</th>
+            <th>Native / Location</th>
+            <th>Education & Profession</th>
+            <th>Tier</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="adminTableBody">
+          <!-- Rows injected via JavaScript -->
+        </tbody>
+      </table>
+      <div id="adminEmptyMsg" class="empty-state" style="display: none;">
+        No members found matching the specified search parameters.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BIODATA DETAIL MODAL -->
+  <div class="admin-modal-overlay" id="adminBioModal" onclick="if(event.target === this) closeBioModal()">
+    <div class="admin-modal-card">
+      <button class="modal-close-x" onclick="closeBioModal()">✕</button>
+      <div id="adminBioModalContent">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="js/data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script>
+    // Security PIN configuration (Default: 7665, owner can change anytime)
+    const ADMIN_PIN = '7665';
+
+    let allProfilesList = [];
+    let filteredProfilesList = [];
+
+    // Check existing authentication
+    window.addEventListener('DOMContentLoaded', () => {
+      const isAuth = sessionStorage.getItem('royal_admin_auth') === 'true';
+      if (isAuth) {
+        unlockAdminView();
+      } else {
+        document.getElementById('adminGateModal').style.display = 'flex';
+        document.getElementById('adminMainContainer').style.display = 'none';
+      }
+    });
+
+    function handlePinSubmit(e) {
+      e.preventDefault();
+      const enteredPin = document.getElementById('adminPinInput').value.trim();
+      const errorEl = document.getElementById('pinErrorMsg');
+
+      if (enteredPin === ADMIN_PIN) {
+        sessionStorage.setItem('royal_admin_auth', 'true');
+        localStorage.setItem('royal_admin_auth', 'true');
+        errorEl.style.display = 'none';
+        unlockAdminView();
+      } else {
+        errorEl.style.display = 'block';
+        document.getElementById('adminPinInput').value = '';
+        document.getElementById('adminPinInput').focus();
+      }
+    }
+
+    function unlockAdminView() {
+      document.getElementById('adminGateModal').style.display = 'none';
+      document.getElementById('adminMainContainer').style.display = 'block';
+      loadAllProfiles();
+    }
+
+    function handleAdminLogout() {
+      sessionStorage.removeItem('royal_admin_auth');
+      localStorage.removeItem('royal_admin_auth');
+      window.location.reload();
+    }
+
+    // Load profiles from Supabase and LocalStorage
+    async function loadAllProfiles(isManualRefresh = false) {
+      const tbody = document.getElementById('adminTableBody');
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 30px; color: var(--gold-antique);">👑 Fetching royal member directory from cloud database...</td></tr>`;
+
+      let dbProfiles = [];
+
+      // 1. Fetch from Supabase if active
+      if (window.supabaseActive && window.supabaseClient) {
+        try {
+          const { data, error } = await window.supabaseClient.from('profiles').select('*');
+          if (!error && Array.isArray(data)) {
+            dbProfiles = data;
+          }
+        } catch (err) {
+          console.warn('Supabase fetch failed:', err);
+        }
+      }
+
+      // 2. Fetch from LocalStorage
+      const localUsers = JSON.parse(localStorage.getItem('users')) || [];
+
+      // 3. Fallback to SEED_PROFILES
+      const seeds = typeof SEED_PROFILES !== 'undefined' ? SEED_PROFILES : [];
+
+      // Combine and deduplicate by email or id
+      const profileMap = new Map();
+
+      // Seed profiles first
+      seeds.forEach(s => {
+        profileMap.set(s.id, {
+          ...s,
+          phone: s.phone || '+91 99285 92159',
+          email: s.email || `${s.name.toLowerCase().replace(/[^a-z]/g, '')}@shreerajput.in`,
+          tier: s.tier || 'Gold',
+          created_at: s.created_at || 'Heritage Verified'
+        });
+      });
+
+      // Overlay Local Users
+      localUsers.forEach(u => {
+        const key = u.email ? u.email.toLowerCase() : u.id;
+        profileMap.set(key, { ...profileMap.get(key), ...u });
+      });
+
+      // Overlay Live Supabase Profiles
+      dbProfiles.forEach(p => {
+        const key = p.email ? p.email.toLowerCase() : p.id;
+        profileMap.set(key, { ...profileMap.get(key), ...p });
+      });
+
+      allProfilesList = Array.from(profileMap.values());
+      filteredProfilesList = [...allProfilesList];
+
+      updateStatsCounters();
+      renderProfilesTable();
+
+      if (isManualRefresh) {
+        alert('👑 Member directory refreshed live successfully!');
+      }
+    }
+
+    function updateStatsCounters() {
+      const total = allProfilesList.length;
+      const grooms = allProfilesList.filter(p => (p.gender || '').toLowerCase() === 'groom').length;
+      const brides = allProfilesList.filter(p => (p.gender || '').toLowerCase() === 'bride').length;
+      const paid = allProfilesList.filter(p => p.tier === 'Silver' || p.tier === 'Gold').length;
+      const withPhone = allProfilesList.filter(p => p.phone && p.phone.trim().length > 5).length;
+
+      document.getElementById('statTotalUsers').textContent = total;
+      document.getElementById('statGrooms').textContent = grooms;
+      document.getElementById('statBrides').textContent = brides;
+      document.getElementById('statPaidTiers').textContent = paid;
+      document.getElementById('statWithPhone').textContent = withPhone;
+    }
+
+    function handleFilterChange() {
+      const query = (document.getElementById('adminSearchInput').value || '').trim().toLowerCase();
+      const gender = document.getElementById('filterGender').value;
+      const clan = document.getElementById('filterClan').value;
+      const tier = document.getElementById('filterTier').value;
+
+      filteredProfilesList = allProfilesList.filter(p => {
+        const matchesQuery = !query || 
+          (p.name && p.name.toLowerCase().includes(query)) ||
+          (p.phone && p.phone.toLowerCase().includes(query)) ||
+          (p.email && p.email.toLowerCase().includes(query)) ||
+          (p.clan && p.clan.toLowerCase().includes(query)) ||
+          (p.gotra && p.gotra.toLowerCase().includes(query)) ||
+          (p.location && p.location.toLowerCase().includes(query)) ||
+          (p.native && p.native.toLowerCase().includes(query));
+
+        const matchesGender = !gender || (p.gender && p.gender.toLowerCase() === gender.toLowerCase());
+        const matchesClan = !clan || (p.clan && p.clan.toLowerCase() === clan.toLowerCase());
+        const matchesTier = !tier || (p.tier && p.tier.toLowerCase() === tier.toLowerCase());
+
+        return matchesQuery && matchesGender && matchesClan && matchesTier;
+      });
+
+      renderProfilesTable();
+    }
+
+    function renderProfilesTable() {
+      const tbody = document.getElementById('adminTableBody');
+      const emptyMsg = document.getElementById('adminEmptyMsg');
+      tbody.innerHTML = '';
+
+      if (filteredProfilesList.length === 0) {
+        emptyMsg.style.display = 'block';
+        return;
+      }
+      emptyMsg.style.display = 'none';
+
+      filteredProfilesList.forEach((profile, idx) => {
+        const cleanPhone = (profile.phone || '').replace(/[^0-9+]/g, '');
+        const waPhone = cleanPhone.replace(/^0+/, '').replace(/^\+/, '');
+        const initials = profile.initials || (profile.name ? profile.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'SR');
+        const tierClass = profile.tier === 'Gold' ? 'tier-gold' : (profile.tier === 'Silver' ? 'tier-silver' : 'tier-starter');
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <div class="user-avatar-cell">
+              ${profile.img ? `<img src="${profile.img}" alt="${profile.name}" onerror="this.outerHTML='<div class=\\'initials-avatar\\'>${initials}</div>'">` : `<div class="initials-avatar">${initials}</div>`}
+              <div>
+                <div class="user-meta-name">${profile.name || 'Noble Member'}</div>
+                <div class="user-meta-sub">ID: ${profile.id || `SRS-${1000 + idx}`}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div style="font-weight: 600; color: ${profile.gender === 'Bride' ? '#F472B6' : '#60A5FA'};">
+              ${profile.gender === 'Bride' ? '🌸 Bride' : '⚔️ Groom'}
+            </div>
+            <div style="font-size: 0.76rem; color: #A0AEC0;">${profile.age ? `${profile.age} Yrs` : 'Age N/A'}</div>
+          </td>
+          <td>
+            <div style="color: var(--gold-bright); font-weight: 600;">${profile.clan || 'Rajput'}</div>
+            <div style="font-size: 0.76rem; color: #CBD5E0;">Gotra: ${profile.gotra || 'Not specified'}</div>
+          </td>
+          <td>
+            <div class="phone-contact-box">
+              <span class="phone-number-display">${profile.phone || '<span style="color:#718096; font-size:0.8rem;">No Phone Added</span>'}</span>
+              ${profile.phone ? `
+                <div class="contact-action-links">
+                  <a href="https://wa.me/${waPhone}" target="_blank" class="contact-action-btn btn-wa" title="Open WhatsApp Chat">
+                    💬 WhatsApp
+                  </a>
+                  <a href="tel:${cleanPhone}" class="contact-action-btn btn-call" title="Call directly">
+                    📞 Call
+                  </a>
+                </div>
+              ` : ''}
+            </div>
+          </td>
+          <td>
+            <div>${profile.email || '<span style="color:#718096;">N/A</span>'}</div>
+            ${profile.email ? `
+              <div style="margin-top: 4px;">
+                <a href="mailto:${profile.email}" class="contact-action-btn btn-mail">
+                  ✉️ Send Email
+                </a>
+              </div>
+            ` : ''}
+          </td>
+          <td>
+            <div>${profile.location || profile.native || 'Rajasthan, India'}</div>
+            <div style="font-size: 0.74rem; color: #A0AEC0;">${profile.pob ? `POB: ${profile.pob}` : ''}</div>
+          </td>
+          <td>
+            <div style="font-weight: 500;">${profile.occupation || 'Professional'}</div>
+            <div style="font-size: 0.74rem; color: #A0AEC0;">${profile.education || 'Graduate'}</div>
+          </td>
+          <td>
+            <span class="tier-badge ${tierClass}">${profile.tier || 'Starter'}</span>
+          </td>
+          <td>
+            <button class="admin-btn admin-btn-outline" style="padding: 5px 10px; font-size: 0.76rem;" onclick="viewBiodataModal('${profile.id}')">
+              👁️ View Bio
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function viewBiodataModal(profileId) {
+      const p = allProfilesList.find(item => item.id === profileId);
+      if (!p) return;
+
+      const modalContent = document.getElementById('adminBioModalContent');
+      const cleanPhone = (p.phone || '').replace(/[^0-9+]/g, '');
+      const waPhone = cleanPhone.replace(/^0+/, '').replace(/^\+/, '');
+
+      modalContent.innerHTML = `
+        <div style="display: flex; gap: 16px; align-items: center; border-bottom: 1.5px solid var(--admin-border); padding-bottom: 16px; margin-bottom: 20px;">
+          ${p.img ? `<img src="${p.img}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold-bright);">` : `<div style="width: 70px; height: 70px; border-radius: 50%; background: #8B1E3F; color: #D4AF37; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700;">${p.initials || 'SR'}</div>`}
+          <div>
+            <h2 style="margin: 0; color: var(--gold-bright); font-family: var(--font-royal); font-size: 1.35rem;">${p.name}</h2>
+            <div style="color: #CBD5E0; font-size: 0.85rem; margin-top: 4px;">
+              ${p.gender} • ${p.age} Yrs • ${p.clan} (${p.gotra || 'Gotra N/A'})
+            </div>
+            <div style="margin-top: 6px;">
+              <span class="tier-badge ${p.tier === 'Gold' ? 'tier-gold' : (p.tier === 'Silver' ? 'tier-silver' : 'tier-starter')}">${p.tier || 'Starter'} Plan</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Box for Owner -->
+        <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid var(--gold-bright); border-radius: 8px; padding: 14px; margin-bottom: 20px;">
+          <h4 style="margin: 0 0 8px; color: var(--gold-bright); font-size: 0.95rem;">👑 Owner Direct Contact Access:</h4>
+          <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+            <div><strong>Mobile Phone:</strong> <span style="color: #68D391; font-weight: 700;">${p.phone || 'Not Specified'}</span></div>
+            <div><strong>Email:</strong> <span style="color: #63B3ED;">${p.email || 'Not Specified'}</span></div>
+          </div>
+          ${p.phone ? `
+            <div style="margin-top: 12px; display: flex; gap: 10px;">
+              <a href="https://wa.me/${waPhone}" target="_blank" class="admin-btn btn-wa" style="padding: 6px 14px;">💬 Open WhatsApp</a>
+              <a href="tel:${cleanPhone}" class="admin-btn btn-call" style="padding: 6px 14px;">📞 Call Member</a>
+              <a href="mailto:${p.email}" class="admin-btn btn-mail" style="padding: 6px 14px;">✉️ Send Email</a>
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Lineage & Details Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.85rem; margin-bottom: 20px;">
+          <div><strong>Date of Birth:</strong> ${p.dob || 'N/A'}</div>
+          <div><strong>Place of Birth:</strong> ${p.pob || p.native || 'N/A'}</div>
+          <div><strong>Mother Gotra:</strong> ${p.motherGotra || 'N/A'}</div>
+          <div><strong>Kul / Branch:</strong> ${p.kul || 'N/A'}</div>
+          <div><strong>Thikana:</strong> ${p.thikana || 'N/A'}</div>
+          <div><strong>Manglik Status:</strong> ${p.manglik || 'Non-Manglik'}</div>
+          <div><strong>Rashi / Nakshatra:</strong> ${p.rashi || 'N/A'} • ${p.nakshatra || 'N/A'}</div>
+          <div><strong>Family Type:</strong> ${p.familyType || 'Traditional Values'}</div>
+          <div><strong>Education:</strong> ${p.education || 'N/A'}</div>
+          <div><strong>Occupation:</strong> ${p.occupation || 'N/A'}</div>
+          <div><strong>Annual Income:</strong> ${p.income || 'N/A'}</div>
+          <div><strong>Current Location:</strong> ${p.location || 'Rajasthan'}</div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <strong style="color: var(--gold-bright); font-size: 0.88rem;">About / Heritage Biodata:</strong>
+          <p style="font-size: 0.85rem; color: #CBD5E0; line-height: 1.5; margin: 4px 0 0;">${p.about || 'Ancestral background preserved.'}</p>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <strong style="color: var(--gold-bright); font-size: 0.88rem;">Family Background:</strong>
+          <p style="font-size: 0.85rem; color: #CBD5E0; line-height: 1.5; margin: 4px 0 0;">${p.familyDetails || 'Descent from a respected Rajput family in Rajasthan.'}</p>
+        </div>
+
+        <div>
+          <strong style="color: var(--gold-bright); font-size: 0.88rem;">Partner Expectations:</strong>
+          <p style="font-size: 0.85rem; color: #CBD5E0; line-height: 1.5; margin: 4px 0 0;">${p.expectations || 'Seeking a compatible suitor from a noble Rajput family.'}</p>
+        </div>
+      `;
+
+      document.getElementById('adminBioModal').classList.add('active');
+    }
+
+    function closeBioModal() {
+      document.getElementById('adminBioModal').classList.remove('active');
+    }
+
+    // Export all members to CSV for Excel / Google Sheets
+    function exportUsersToCSV() {
+      if (!allProfilesList || allProfilesList.length === 0) {
+        alert('No profiles available to export.');
+        return;
+      }
+
+      const headers = [
+        'ID', 'Name', 'Gender', 'Mobile Phone', 'Email', 'Clan', 'Gotra',
+        'Age', 'DOB', 'Location', 'Native', 'Education', 'Occupation',
+        'Income', 'Family Type', 'Tier'
+      ];
+
+      const rows = allProfilesList.map(p => [
+        `"${(p.id || '').replace(/"/g, '""')}"`,
+        `"${(p.name || '').replace(/"/g, '""')}"`,
+        `"${(p.gender || '').replace(/"/g, '""')}"`,
+        `"${(p.phone || '').replace(/"/g, '""')}"`,
+        `"${(p.email || '').replace(/"/g, '""')}"`,
+        `"${(p.clan || '').replace(/"/g, '""')}"`,
+        `"${(p.gotra || '').replace(/"/g, '""')}"`,
+        `"${(p.age || '').toString().replace(/"/g, '""')}"`,
+        `"${(p.dob || '').replace(/"/g, '""')}"`,
+        `"${(p.location || '').replace(/"/g, '""')}"`,
+        `"${(p.native || '').replace(/"/g, '""')}"`,
+        `"${(p.education || '').replace(/"/g, '""')}"`,
+        `"${(p.occupation || '').replace(/"/g, '""')}"`,
+        `"${(p.income || '').replace(/"/g, '""')}"`,
+        `"${(p.familyType || '').replace(/"/g, '""')}"`,
+        `"${(p.tier || 'Starter').replace(/"/g, '""')}"`
+      ]);
+
+      const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `shree_rajput_members_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
