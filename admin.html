@@ -623,6 +623,12 @@
       </div>
 
       <div class="admin-filters">
+        <select id="filterMemberType" class="admin-select" onchange="handleFilterChange()" style="border-color: var(--gold-bright); font-weight: 600;">
+          <option value="">All Profiles (Real & Demo)</option>
+          <option value="real" selected>👤 Real Registered Members Only</option>
+          <option value="demo">🛡️ Demo Showcase Profiles Only</option>
+        </select>
+
         <select id="filterGender" class="admin-select" onchange="handleFilterChange()">
           <option value="">All Genders</option>
           <option value="Groom">Grooms (Banna)</option>
@@ -770,34 +776,33 @@
       // Combine and deduplicate by email or id
       const profileMap = new Map();
 
-      // Seed profiles first
+      // Seed profiles first (Marked clearly as Demo Showcase)
       seeds.forEach(s => {
         profileMap.set(s.id, {
           ...s,
-          phone: s.phone || '+91 99285 92159',
-          email: s.email || `${s.name.toLowerCase().replace(/[^a-z]/g, '')}@shreerajput.in`,
+          isRealMember: false,
+          phone: '', // No fake demo phone!
+          email: `${s.name.toLowerCase().replace(/[^a-z]/g, '')}@shreerajput.in`,
           tier: s.tier || 'Gold',
-          created_at: s.created_at || 'Heritage Verified'
+          created_at: 'Showcase Demo Profile'
         });
       });
 
       // Overlay Local Users
       localUsers.forEach(u => {
         const key = u.email ? u.email.toLowerCase() : u.id;
-        profileMap.set(key, { ...profileMap.get(key), ...u });
+        profileMap.set(key, { ...profileMap.get(key), ...u, isRealMember: true });
       });
 
       // Overlay Live Supabase Profiles
       dbProfiles.forEach(p => {
         const key = p.email ? p.email.toLowerCase() : p.id;
-        profileMap.set(key, { ...profileMap.get(key), ...p });
+        profileMap.set(key, { ...profileMap.get(key), ...p, isRealMember: true });
       });
 
       allProfilesList = Array.from(profileMap.values());
-      filteredProfilesList = [...allProfilesList];
-
       updateStatsCounters();
-      renderProfilesTable();
+      handleFilterChange();
 
       if (isManualRefresh) {
         alert('👑 Member directory refreshed live successfully!');
@@ -806,12 +811,13 @@
 
     function updateStatsCounters() {
       const total = allProfilesList.length;
+      const realMembers = allProfilesList.filter(p => p.isRealMember).length;
       const grooms = allProfilesList.filter(p => (p.gender || '').toLowerCase() === 'groom').length;
       const brides = allProfilesList.filter(p => (p.gender || '').toLowerCase() === 'bride').length;
       const paid = allProfilesList.filter(p => p.tier === 'Silver' || p.tier === 'Gold').length;
       const withPhone = allProfilesList.filter(p => p.phone && p.phone.trim().length > 5).length;
 
-      document.getElementById('statTotalUsers').textContent = total;
+      document.getElementById('statTotalUsers').textContent = realMembers > 0 ? `${realMembers} Real` : total;
       document.getElementById('statGrooms').textContent = grooms;
       document.getElementById('statBrides').textContent = brides;
       document.getElementById('statPaidTiers').textContent = paid;
@@ -820,11 +826,16 @@
 
     function handleFilterChange() {
       const query = (document.getElementById('adminSearchInput').value || '').trim().toLowerCase();
+      const memberType = document.getElementById('filterMemberType')?.value || '';
       const gender = document.getElementById('filterGender').value;
       const clan = document.getElementById('filterClan').value;
       const tier = document.getElementById('filterTier').value;
 
       filteredProfilesList = allProfilesList.filter(p => {
+        const matchesType = !memberType ||
+          (memberType === 'real' && p.isRealMember) ||
+          (memberType === 'demo' && !p.isRealMember);
+
         const matchesQuery = !query || 
           (p.name && p.name.toLowerCase().includes(query)) ||
           (p.phone && p.phone.toLowerCase().includes(query)) ||
@@ -838,7 +849,7 @@
         const matchesClan = !clan || (p.clan && p.clan.toLowerCase() === clan.toLowerCase());
         const matchesTier = !tier || (p.tier && p.tier.toLowerCase() === tier.toLowerCase());
 
-        return matchesQuery && matchesGender && matchesClan && matchesTier;
+        return matchesType && matchesQuery && matchesGender && matchesClan && matchesTier;
       });
 
       renderProfilesTable();
@@ -868,7 +879,13 @@
               ${profile.img ? `<img src="${profile.img}" alt="${profile.name}" onerror="this.outerHTML='<div class=\\'initials-avatar\\'>${initials}</div>'">` : `<div class="initials-avatar">${initials}</div>`}
               <div>
                 <div class="user-meta-name">${profile.name || 'Noble Member'}</div>
-                <div class="user-meta-sub">ID: ${profile.id || `SRS-${1000 + idx}`}</div>
+                <div style="display: flex; gap: 6px; align-items: center; margin-top: 3px;">
+                  <span class="user-meta-sub">ID: ${profile.id || `SRS-${1000 + idx}`}</span>
+                  ${profile.isRealMember
+                    ? `<span style="background: rgba(39, 174, 96, 0.2); color: #2ecc71; border: 1px solid rgba(39, 174, 96, 0.4); padding: 1px 6px; border-radius: 4px; font-size: 0.68rem; font-weight: 700;">👤 Real Member</span>`
+                    : `<span style="background: rgba(201, 162, 39, 0.15); color: var(--gold-bright); border: 1px solid rgba(201, 162, 39, 0.3); padding: 1px 6px; border-radius: 4px; font-size: 0.68rem;">🛡️ Demo Profile</span>`
+                  }
+                </div>
               </div>
             </div>
           </td>
@@ -884,8 +901,8 @@
           </td>
           <td>
             <div class="phone-contact-box">
-              <span class="phone-number-display">${profile.phone || '<span style="color:#718096; font-size:0.8rem;">No Phone Added</span>'}</span>
               ${profile.phone ? `
+                <span class="phone-number-display">${profile.phone}</span>
                 <div class="contact-action-links">
                   <a href="https://wa.me/${waPhone}" target="_blank" class="contact-action-btn btn-wa" title="Open WhatsApp Chat">
                     💬 WhatsApp
@@ -894,7 +911,11 @@
                     📞 Call
                   </a>
                 </div>
-              ` : ''}
+              ` : `
+                <div style="color: #A0AEC0; font-style: italic; font-size: 0.8rem;">
+                  ${profile.isRealMember ? '<span style="color:#fc8181; font-style:normal; font-size:0.75rem;">⚠️ Phone Not Verified</span>' : 'Showcase Sample (No Phone)'}
+                </div>
+              `}
             </div>
           </td>
           <td>

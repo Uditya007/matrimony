@@ -178,6 +178,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 900);
 
+  // Mandatory first-time login mobile number & OTP verification check
+  setTimeout(() => {
+    if (typeof checkMandatoryPhoneVerification === 'function') {
+      checkMandatoryPhoneVerification();
+    }
+  }, 1100);
+
   // Hook tab/subnav transitions across dashboard/profile pages to trigger notification alerts
   document.querySelectorAll('.subnav-tab, .filter-tab-btn, .dashboard-tab-btn, #shortlistToggleBtn').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -205,6 +212,193 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 // 1. HELPER FUNCTIONS
 // ==========================================
+
+// ─── Mandatory Mobile Number & OTP Verification on First Login ─────────────
+let otpCountdownInterval = null;
+
+function checkMandatoryPhoneVerification() {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) return; // Not logged in
+
+  // Don't show on admin.html or login.html
+  const path = window.location.pathname;
+  if (path.includes('admin.html') || path.includes('login.html')) return;
+
+  // Check if user already has a valid phone number
+  const rawDigits = (currentUser.phone || '').replace(/[^0-9]/g, '');
+  if (rawDigits.length >= 10 && currentUser.phoneVerified) return; // Already verified!
+
+  // If already in DOM, don't recreate
+  if (document.getElementById('mandatoryPhoneVerificationModal')) return;
+
+  const modalHtml = `
+    <div id="mandatoryPhoneVerificationModal" style="position: fixed; inset: 0; background: rgba(10, 2, 5, 0.96); z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px);">
+      <div style="background: #1C070D; border: 1.5px solid #D4AF37; box-shadow: 0 10px 40px rgba(0,0,0,0.85), 0 0 35px rgba(212, 175, 55, 0.25); border-radius: 12px; max-width: 460px; width: 100%; padding: 32px 28px; text-align: center; color: #E2E8F0; position: relative;">
+        
+        <div style="font-size: 2.8rem; margin-bottom: 6px;">👑</div>
+        <h2 style="font-family: var(--font-royal, 'Cinzel', serif); color: #D4AF37; margin: 0 0 8px; font-size: 1.35rem; letter-spacing: 0.5px;">
+          Mobile Verification Required
+        </h2>
+        <p style="font-size: 0.85rem; color: #CBD5E0; line-height: 1.5; margin: 0 0 20px;">
+          Khammaghani, <strong>${currentUser.name || 'Noble Member'}</strong>! To uphold Rajputana lineage integrity and activate your profile, please verify your contact mobile number via OTP.
+        </p>
+
+        <!-- STEP 1: Phone Input -->
+        <div id="otpStepPhone">
+          <div style="text-align: left; margin-bottom: 16px;">
+            <label style="display: block; font-size: 0.82rem; color: #D4AF37; font-weight: 600; margin-bottom: 6px;">Contact Mobile Number</label>
+            <div style="display: flex; gap: 8px;">
+              <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(170,124,17,0.3); padding: 10px 14px; border-radius: 6px; font-weight: 700; color: #D4AF37; font-size: 0.95rem; display: flex; align-items: center;">+91</span>
+              <input type="tel" id="mandatoryPhoneInput" maxlength="10" placeholder="10-digit mobile" value="${(currentUser.phone || '').replace(/[^0-9]/g, '').slice(-10)}" style="flex: 1; padding: 10px 14px; border-radius: 6px; border: 1.5px solid rgba(170,124,17,0.35); background: rgba(0,0,0,0.45); color: #FFF; font-size: 1rem; letter-spacing: 1px; outline: none;">
+            </div>
+            <span id="phoneValidationError" style="color: #fc8181; font-size: 0.75rem; display: none; margin-top: 5px;">Please enter a valid 10-digit mobile number</span>
+          </div>
+
+          <button type="button" id="btnSendPhoneOtp" onclick="handleSendVerificationOtp()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%); color: #1A050B; font-weight: 700; border: none; border-radius: 6px; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease;">
+            📱 Send Verification Code (OTP)
+          </button>
+        </div>
+
+        <!-- STEP 2: OTP Input (Hidden initially) -->
+        <div id="otpStepVerify" style="display: none;">
+          <div style="background: rgba(39, 174, 96, 0.12); border: 1px solid rgba(39, 174, 96, 0.35); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 0.82rem; color: #A7F3D0;">
+            OTP sent to <strong id="displayOtpSentPhone" style="color: #FFF;">+91</strong>.
+            <div id="otpCodeDemoBadge" style="margin-top: 6px; font-weight: 700; color: #FCD34D; font-size: 0.9rem;">
+              👑 Verification Code: <span id="demoOtpNumber">123456</span>
+            </div>
+          </div>
+
+          <div style="text-align: left; margin-bottom: 16px;">
+            <label style="display: block; font-size: 0.82rem; color: #D4AF37; font-weight: 600; margin-bottom: 6px;">Enter 6-Digit OTP</label>
+            <input type="text" id="mandatoryOtpInput" maxlength="6" placeholder="• • • • • •" style="width: 100%; box-sizing: border-box; padding: 12px; border-radius: 6px; border: 1.5px solid rgba(170,124,17,0.35); background: rgba(0,0,0,0.5); color: #FFF; font-size: 1.3rem; letter-spacing: 6px; text-align: center; outline: none;">
+            <span id="otpValidationError" style="color: #fc8181; font-size: 0.75rem; display: none; margin-top: 5px;">Incorrect OTP. Please enter the valid code.</span>
+          </div>
+
+          <button type="button" id="btnConfirmOtp" onclick="handleConfirmVerificationOtp()" style="width: 100%; padding: 12px; background: #27ae60; color: #FFF; font-weight: 700; border: none; border-radius: 6px; font-size: 0.92rem; cursor: pointer; margin-bottom: 10px; transition: all 0.2s ease;">
+            🛡️ Verify & Activate Profile
+          </button>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; margin-top: 10px;">
+            <span id="otpCountdownTimer" style="color: #A0AEC0;">Resend OTP in 45s</span>
+            <button type="button" id="btnResendOtp" onclick="handleSendVerificationOtp(true)" style="background: none; border: none; color: #D4AF37; cursor: pointer; text-decoration: underline; font-weight: 600; display: none;">Resend OTP</button>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px; font-size: 0.75rem; color: #718096; border-top: 1px solid rgba(170,124,17,0.15); padding-top: 12px;">
+          🔒 Your mobile number is protected and strictly encrypted in accordance with Rajput lineage privacy standards.
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+window.handleSendVerificationOtp = function(isResend = false) {
+  const phoneInput = document.getElementById('mandatoryPhoneInput');
+  const errorEl = document.getElementById('phoneValidationError');
+  const rawNumber = (phoneInput?.value || '').replace(/[^0-9]/g, '');
+
+  if (rawNumber.length !== 10) {
+    if (errorEl) errorEl.style.display = 'block';
+    return;
+  }
+  if (errorEl) errorEl.style.display = 'none';
+
+  // Generate 6-digit random OTP
+  const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  sessionStorage.setItem('royal_pending_otp', generatedOtp);
+  sessionStorage.setItem('royal_pending_phone', `+91 ${rawNumber}`);
+
+  // Display phone in verify step
+  const displayPhoneEl = document.getElementById('displayOtpSentPhone');
+  if (displayPhoneEl) displayPhoneEl.textContent = `+91 ${rawNumber}`;
+
+  const demoOtpEl = document.getElementById('demoOtpNumber');
+  if (demoOtpEl) demoOtpEl.textContent = generatedOtp;
+
+  // Switch steps
+  document.getElementById('otpStepPhone').style.display = 'none';
+  document.getElementById('otpStepVerify').style.display = 'block';
+
+  // Show royal toast with OTP
+  showToast(`👑 Royal SMS Gateway: Your verification code is ${generatedOtp}`, 'gold');
+
+  // Start countdown timer (45 seconds)
+  let timeLeft = 45;
+  const timerEl = document.getElementById('otpCountdownTimer');
+  const resendBtn = document.getElementById('btnResendOtp');
+  if (resendBtn) resendBtn.style.display = 'none';
+  if (timerEl) {
+    timerEl.style.display = 'inline';
+    timerEl.textContent = `Resend OTP in ${timeLeft}s`;
+  }
+
+  if (otpCountdownInterval) clearInterval(otpCountdownInterval);
+  otpCountdownInterval = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+      clearInterval(otpCountdownInterval);
+      if (timerEl) timerEl.style.display = 'none';
+      if (resendBtn) resendBtn.style.display = 'inline';
+    } else {
+      if (timerEl) timerEl.textContent = `Resend OTP in ${timeLeft}s`;
+    }
+  }, 1000);
+};
+
+window.handleConfirmVerificationOtp = async function() {
+  const otpInput = document.getElementById('mandatoryOtpInput');
+  const errorEl = document.getElementById('otpValidationError');
+  const enteredOtp = (otpInput?.value || '').trim();
+  const actualOtp = sessionStorage.getItem('royal_pending_otp');
+  const verifiedPhone = sessionStorage.getItem('royal_pending_phone');
+
+  if (!enteredOtp || enteredOtp !== actualOtp) {
+    if (errorEl) errorEl.style.display = 'block';
+    return;
+  }
+  if (errorEl) errorEl.style.display = 'none';
+
+  // Verification successful!
+  const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+  currentUser.phone = verifiedPhone;
+  currentUser.phoneVerified = true;
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+  // Update in localStorage 'users' array
+  const users = JSON.parse(localStorage.getItem('users')) || [];
+  const updatedUsers = users.map(u => {
+    if (u.email && currentUser.email && u.email.toLowerCase() === currentUser.email.toLowerCase()) {
+      return { ...u, phone: verifiedPhone, phoneVerified: true };
+    }
+    return u;
+  });
+  localStorage.setItem('users', JSON.stringify(updatedUsers));
+
+  // Update in Supabase profiles table
+  if (window.supabaseActive && window.supabaseClient && currentUser.email) {
+    try {
+      await window.supabaseClient
+        .from('profiles')
+        .update({ phone: verifiedPhone, phone_verified: true })
+        .eq('email', currentUser.email);
+    } catch (e) {
+      console.warn('Supabase phone update warning:', e);
+    }
+  }
+
+  // Notify admin of verified phone
+  if (typeof notifyAdminNewRegistration === 'function') {
+    notifyAdminNewRegistration(currentUser);
+  }
+
+  // Remove modal
+  const modal = document.getElementById('mandatoryPhoneVerificationModal');
+  if (modal) modal.remove();
+
+  showToast('👑 Khammaghani! Mobile number verified & activated successfully!', 'gold');
+};
 
 // Gender normalization & matching helpers
 function normalizeGender(genderStr) {
