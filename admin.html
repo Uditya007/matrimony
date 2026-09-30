@@ -702,16 +702,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
   <script>
-    // Security PIN configuration (Default: 7665, owner can change anytime)
-    const ADMIN_PIN = '7665';
-
     let allProfilesList = [];
     let filteredProfilesList = [];
 
     // Check existing authentication
     window.addEventListener('DOMContentLoaded', () => {
-      const isAuth = sessionStorage.getItem('royal_admin_auth') === 'true';
-      if (isAuth) {
+      const token = sessionStorage.getItem('royal_admin_token');
+      if (token) {
         unlockAdminView();
       } else {
         document.getElementById('adminGateModal').style.display = 'flex';
@@ -719,20 +716,46 @@
       }
     });
 
-    function handlePinSubmit(e) {
+    async function handlePinSubmit(e) {
       e.preventDefault();
       const enteredPin = document.getElementById('adminPinInput').value.trim();
       const errorEl = document.getElementById('pinErrorMsg');
+      const submitBtn = e.target.querySelector('button[type="submit"]');
 
-      if (enteredPin === ADMIN_PIN) {
-        sessionStorage.setItem('royal_admin_auth', 'true');
-        localStorage.setItem('royal_admin_auth', 'true');
-        errorEl.style.display = 'none';
-        unlockAdminView();
-      } else {
+      if (!enteredPin) return;
+
+      const originalBtnText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '⏳ Verifying Vault Credentials...';
+
+      try {
+        const response = await fetch('/api/admin-auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin: enteredPin })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success && result.token) {
+          sessionStorage.setItem('royal_admin_token', result.token);
+          sessionStorage.setItem('royal_admin_auth', 'true');
+          localStorage.setItem('royal_admin_auth', 'true');
+          errorEl.style.display = 'none';
+          unlockAdminView();
+        } else {
+          errorEl.textContent = result.error || 'Access Denied: Invalid Security PIN';
+          errorEl.style.display = 'block';
+          document.getElementById('adminPinInput').value = '';
+          document.getElementById('adminPinInput').focus();
+        }
+      } catch (networkErr) {
+        console.error('Admin auth network error:', networkErr);
+        errorEl.textContent = 'Server connection error. Please try again.';
         errorEl.style.display = 'block';
-        document.getElementById('adminPinInput').value = '';
-        document.getElementById('adminPinInput').focus();
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
       }
     }
 
@@ -743,27 +766,54 @@
     }
 
     function handleAdminLogout() {
+      sessionStorage.removeItem('royal_admin_token');
       sessionStorage.removeItem('royal_admin_auth');
       localStorage.removeItem('royal_admin_auth');
       window.location.reload();
     }
 
-    // Load profiles from Supabase and LocalStorage
+    // Load profiles from secure backend endpoint
     async function loadAllProfiles(isManualRefresh = false) {
       const tbody = document.getElementById('adminTableBody');
       tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 30px; color: var(--gold-antique);">👑 Fetching royal member directory from cloud database...</td></tr>`;
 
+      const token = sessionStorage.getItem('royal_admin_token');
+      if (!token) {
+        handleAdminLogout();
+        return;
+      }
+
       let dbProfiles = [];
 
-      // 1. Fetch from Supabase if active
-      if (window.supabaseActive && window.supabaseClient) {
-        try {
-          const { data, error } = await window.supabaseClient.from('profiles').select('*');
-          if (!error && Array.isArray(data)) {
-            dbProfiles = data;
+      // 1. Fetch from secure serverless endpoint
+      try {
+        const response = await fetch('/api/admin-members', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
           }
-        } catch (err) {
-          console.warn('Supabase fetch failed:', err);
+        });
+
+        if (response.status === 401) {
+          // Token expired or invalid
+          alert('Administrative session expired. Please re-enter your Security PIN.');
+          handleAdminLogout();
+          return;
+        }
+
+        const result = await response.json();
+        if (response.ok && result.success && Array.isArray(result.profiles)) {
+          dbProfiles = result.profiles;
+        }
+      } catch (err) {
+        console.warn('Backend admin-members endpoint call warning:', err);
+        // Fallback to client Supabase if backend was cold
+        if (window.supabaseActive && window.supabaseClient) {
+          try {
+            const { data } = await window.supabaseClient.from('profiles').select('*');
+            if (Array.isArray(data)) dbProfiles = data;
+          } catch(e) {}
         }
       }
 

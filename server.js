@@ -172,6 +172,10 @@ app.post('/api/verify-payment', (req, res) => {
   }
 });
 
+// Admin Vault Endpoints
+app.post('/api/admin-auth', require('./api/admin-auth'));
+app.post('/api/admin-members', require('./api/admin-members'));
+
 // Fallback route for SPA / root
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
