@@ -407,6 +407,72 @@ window.handleConfirmVerificationOtp = async function() {
   showToast('👑 Khammaghani! Mobile number verified & activated successfully!', 'gold');
 };
 
+// ─── Registration Profile Photo Upload Handler ─────────────────────────────
+window.handleRegisterPhotoChange = function(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    showToast('Please upload a valid image file (JPG, PNG, WebP)', 'normal');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      // Compress with canvas to max 600x600 for optimal fast loading & database storage
+      const canvas = document.createElement('canvas');
+      const maxDim = 600;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > maxDim) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        }
+      } else {
+        if (height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      window.uploadedProfilePhotoBase64 = compressedDataUrl;
+
+      // Update Preview UI
+      const previewImg = document.getElementById('photoPreviewImg');
+      const placeholderText = document.getElementById('photoPlaceholderText');
+      const previewContainer = document.getElementById('photoPreviewContainer');
+      const successCheck = document.getElementById('photoSuccessCheck');
+      const errorText = document.getElementById('photoErrorText');
+
+      if (previewImg) {
+        previewImg.src = compressedDataUrl;
+        previewImg.style.display = 'block';
+      }
+      if (placeholderText) placeholderText.style.display = 'none';
+      if (previewContainer) {
+        previewContainer.style.borderStyle = 'solid';
+        previewContainer.style.borderColor = '#2ecc71';
+      }
+      if (successCheck) successCheck.style.display = 'inline';
+      if (errorText) errorText.style.display = 'none';
+
+      showToast('👑 Profile photo attached successfully!', 'gold');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
 // Gender normalization & matching helpers
 function normalizeGender(genderStr) {
   if (!genderStr) return 'Groom';
@@ -1029,6 +1095,9 @@ function initRegisterPage() {
   const btnGoogle = document.getElementById('btnGoogleAuth');
   let currentStep = 0;
 
+  // Reset photo state for new registration
+  window.uploadedProfilePhotoBase64 = null;
+
   // Google Login redirect prefill check
   const tempGoogleUser = JSON.parse(localStorage.getItem('tempGoogleUser'));
   if (tempGoogleUser) {
@@ -1038,6 +1107,18 @@ function initRegisterPage() {
     const pwdGroup = document.getElementById('regPassword').closest('.form-group');
     if (pwdGroup) pwdGroup.style.display = 'none';
     window.googleUserUid = tempGoogleUser.uid;
+    if (tempGoogleUser.avatar) {
+      window.uploadedProfilePhotoBase64 = tempGoogleUser.avatar;
+      const previewImg = document.getElementById('photoPreviewImg');
+      const placeholderText = document.getElementById('photoPlaceholderText');
+      const successCheck = document.getElementById('photoSuccessCheck');
+      if (previewImg) {
+        previewImg.src = tempGoogleUser.avatar;
+        previewImg.style.display = 'block';
+      }
+      if (placeholderText) placeholderText.style.display = 'none';
+      if (successCheck) successCheck.style.display = 'inline';
+    }
     localStorage.removeItem('tempGoogleUser'); // Consume
     showToast('Google account linked! Please complete your lineage details.', 'gold');
   }
@@ -1121,6 +1202,18 @@ function initRegisterPage() {
       return;
     }
 
+    if (!window.uploadedProfilePhotoBase64) {
+      showToast('👑 Profile Photo is mandatory! Please upload your portrait photo.', 'gold');
+      currentStep = 0;
+      updateRegisterSteps();
+      const previewContainer = document.getElementById('photoPreviewContainer');
+      if (previewContainer) {
+        previewContainer.style.borderColor = '#fc8181';
+        previewContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
     const newUser = {
       id: `U_${Date.now()}`,
       name: document.getElementById('regName').value.trim(),
@@ -1128,6 +1221,8 @@ function initRegisterPage() {
       email: email,
       phone: document.getElementById('regPhone')?.value.trim() || '',
       password: document.getElementById('regPassword').value,
+      img: window.uploadedProfilePhotoBase64 || '',
+      profilePic: window.uploadedProfilePhotoBase64 || '',
       age: parseInt(document.getElementById('regAge').value) || 25,
       dob: document.getElementById('regDOB').value,
       religion: document.getElementById('regReligion').value,
@@ -1242,6 +1337,17 @@ function initRegisterPage() {
       }
       if (pass.length < 6) {
         showToast('Password should be at least 6 characters');
+        return false;
+      }
+      if (!window.uploadedProfilePhotoBase64) {
+        const errorText = document.getElementById('photoErrorText');
+        if (errorText) errorText.style.display = 'block';
+        const previewContainer = document.getElementById('photoPreviewContainer');
+        if (previewContainer) {
+          previewContainer.style.borderColor = '#fc8181';
+          previewContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        showToast('👑 Profile Photo is mandatory! Please upload your portrait photo.', 'gold');
         return false;
       }
       return true;
