@@ -324,6 +324,13 @@ window.handleSendVerificationOtp = function(isResend = false) {
   // Show royal toast with OTP
   showToast(`👑 Royal SMS Gateway: Your verification code is ${generatedOtp}`, 'gold');
 
+  // Trigger backend SMS dispatch (Fast2SMS / SMS Gateway)
+  fetch('/api/send-sms', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone: rawNumber, otp: generatedOtp })
+  }).catch(e => console.warn('SMS dispatch warning:', e));
+
   // Start countdown timer (45 seconds)
   let timeLeft = 45;
   const timerEl = document.getElementById('otpCountdownTimer');

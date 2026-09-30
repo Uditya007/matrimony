@@ -697,6 +697,60 @@
     </div>
   </div>
 
+  <!-- WHATSAPP & SMS DISPATCH MODAL -->
+  <div class="admin-modal-overlay" id="adminMessageModal" onclick="if(event.target === this) closeMessageModal()">
+    <div class="admin-modal-card" style="max-width: 520px;">
+      <button class="modal-close-x" onclick="closeMessageModal()">✕</button>
+      <div style="display: flex; gap: 12px; align-items: center; border-bottom: 1.5px solid var(--admin-border); padding-bottom: 14px; margin-bottom: 18px;">
+        <div style="font-size: 1.8rem;" id="msgModalIcon">💬</div>
+        <div>
+          <h2 style="margin: 0; color: var(--gold-bright); font-family: var(--font-royal); font-size: 1.25rem;" id="msgModalTitle">Royal Communicator</h2>
+          <div style="color: #CBD5E0; font-size: 0.8rem; margin-top: 3px;" id="msgModalSubtitle">Send WhatsApp message or SMS directly to member</div>
+        </div>
+      </div>
+
+      <!-- Recipient Details -->
+      <div style="background: rgba(0, 0, 0, 0.35); border: 1px solid var(--admin-border); border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="color: #A0AEC0;">Recipient:</span> <strong id="msgRecipientName" style="color: #FFF;">-</strong>
+        </div>
+        <div>
+          <span style="color: #A0AEC0;">Phone:</span> <strong id="msgRecipientPhone" style="color: var(--gold-bright);">+91 -</strong>
+        </div>
+      </div>
+
+      <!-- Quick Template Selector -->
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 0.78rem; color: var(--gold-antique); text-transform: uppercase; font-weight: 600; margin-bottom: 6px;">Select Royal Message Template:</label>
+        <select id="msgTemplateSelect" class="admin-select" style="width: 100%; box-sizing: border-box;" onchange="handleTemplateSelect()">
+          <option value="welcome">👑 Welcome & Lineage Verification</option>
+          <option value="gotra">📜 Request Kundali & Gotra Details</option>
+          <option value="matches">💌 Suitable Rajput Match Alert</option>
+          <option value="membership">⭐ Regal Membership Upgrade Offer</option>
+          <option value="custom">✏️ Custom Blank Message</option>
+        </select>
+      </div>
+
+      <!-- Message Text Area -->
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-size: 0.78rem; color: var(--gold-antique); text-transform: uppercase; font-weight: 600; margin-bottom: 6px;">Message Body:</label>
+        <textarea id="msgBodyText" rows="5" style="width: 100%; box-sizing: border-box; padding: 12px; border-radius: 6px; border: 1px solid var(--admin-border); background: rgba(0,0,0,0.45); color: #FFF; font-size: 0.88rem; line-height: 1.5; outline: none; resize: vertical;"></textarea>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="admin-btn btn-wa" style="padding: 10px 18px; font-size: 0.88rem;" onclick="dispatchWhatsAppMessage()">
+          💬 Send on WhatsApp
+        </button>
+        <button class="admin-btn btn-mail" style="padding: 10px 18px; font-size: 0.88rem; background: rgba(243, 156, 18, 0.25); color: #f39c12; border: 1px solid #f39c12;" onclick="dispatchSmsMessage()">
+          📱 Send via SMS
+        </button>
+      </div>
+
+      <div id="msgStatusNotification" style="margin-top: 14px; font-size: 0.8rem; display: none;"></div>
+    </div>
+  </div>
+
   <!-- SCRIPTS -->
   <script src="js/data.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -954,12 +1008,15 @@
               ${profile.phone ? `
                 <span class="phone-number-display">${profile.phone}</span>
                 <div class="contact-action-links">
-                  <a href="https://wa.me/${waPhone}" target="_blank" class="contact-action-btn btn-wa" title="Open WhatsApp Chat">
+                  <button onclick="openMessageDialog('${(profile.name || '').replace(/'/g, "\\'")}', '${cleanPhone}', '${profile.clan || 'Rajput'}', '${profile.gotra || ''}')" class="contact-action-btn btn-wa" title="Send WhatsApp Message">
                     💬 WhatsApp
-                  </a>
+                  </button>
                   <a href="tel:${cleanPhone}" class="contact-action-btn btn-call" title="Call directly">
                     📞 Call
                   </a>
+                  <button onclick="openMessageDialog('${(profile.name || '').replace(/'/g, "\\'")}', '${cleanPhone}', '${profile.clan || 'Rajput'}', '${profile.gotra || ''}')" class="contact-action-btn btn-mail" style="background: rgba(243, 156, 18, 0.2); color: #f39c12; border: 1px solid rgba(243, 156, 18, 0.4);" title="Send SMS">
+                    📱 SMS
+                  </button>
                 </div>
               ` : `
                 <div style="color: #A0AEC0; font-style: italic; font-size: 0.8rem;">
@@ -1074,6 +1131,97 @@
 
     function closeBioModal() {
       document.getElementById('adminBioModal').classList.remove('active');
+    }
+
+    // ─── Royal Communicator: WhatsApp & SMS Handlers ───────────────────────
+    let currentMsgCandidate = { name: '', phone: '', clan: '', gotra: '' };
+
+    function openMessageDialog(name, phone, clan, gotra) {
+      currentMsgCandidate = { name, phone, clan, gotra };
+      document.getElementById('msgRecipientName').textContent = name;
+      document.getElementById('msgRecipientPhone').textContent = `+91 ${phone.replace(/[^0-9]/g, '').slice(-10)}`;
+      document.getElementById('msgTemplateSelect').value = 'welcome';
+      handleTemplateSelect();
+      document.getElementById('msgStatusNotification').style.display = 'none';
+      document.getElementById('adminMessageModal').classList.add('active');
+    }
+
+    function closeMessageModal() {
+      document.getElementById('adminMessageModal').classList.remove('active');
+    }
+
+    function handleTemplateSelect() {
+      const tpl = document.getElementById('msgTemplateSelect').value;
+      const name = currentMsgCandidate.name || 'Member';
+      const clan = currentMsgCandidate.clan || 'Rajput';
+
+      let msg = '';
+      if (tpl === 'welcome') {
+        msg = `Khammaghani ${name} ji! Warm greetings from Shree Rajput Sagai Sambandh. We noticed your matrimonial profile registration from ${clan} clan. Our royal relations desk is here to verify your lineage details and assist your noble matchmaking search. Please feel free to reply with any queries.`;
+      } else if (tpl === 'gotra') {
+        msg = `Khammaghani ${name} ji, this is from Shree Rajput Sagai Sambandh. To assist in finding 100% gotra-compatible Rajput matches, kindly share your ancestral Gotra, Mother Gotra, and Kundali/Biodata details with our matchmaker desk.`;
+      } else if (tpl === 'matches') {
+        msg = `Khammaghani ${name} ji! We have verified matching prospective noble candidates from compatible Rajput clans for your profile on Shree Rajput Sagai Sambandh. Please log in to your dashboard to review: https://www.shreerajputsagaisambandh.com/dashboard.html`;
+      } else if (tpl === 'membership') {
+        msg = `Khammaghani ${name} ji! Enhance your reach on Shree Rajput Sagai Sambandh with our verified Royal Silver & Gold plans, unlocking direct contacts and personalized Rajput matchmaking assistance. Visit: https://www.shreerajputsagaisambandh.com/membership.html`;
+      } else {
+        msg = '';
+      }
+      document.getElementById('msgBodyText').value = msg;
+    }
+
+    function dispatchWhatsAppMessage() {
+      const cleanPhone = currentMsgCandidate.phone.replace(/[^0-9]/g, '').slice(-10);
+      const text = document.getElementById('msgBodyText').value.trim();
+      if (!cleanPhone || cleanPhone.length !== 10) {
+        alert('Invalid phone number.');
+        return;
+      }
+      const waUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(text)}`;
+      window.open(waUrl, '_blank');
+    }
+
+    async function dispatchSmsMessage() {
+      const cleanPhone = currentMsgCandidate.phone.replace(/[^0-9]/g, '').slice(-10);
+      const text = document.getElementById('msgBodyText').value.trim();
+      const statusEl = document.getElementById('msgStatusNotification');
+
+      if (!cleanPhone || cleanPhone.length !== 10) {
+        alert('Please provide a valid 10-digit phone number.');
+        return;
+      }
+      if (!text) {
+        alert('Please enter a message to send via SMS.');
+        return;
+      }
+
+      statusEl.style.display = 'block';
+      statusEl.style.color = '#FCD34D';
+      statusEl.textContent = '⏳ Dispatching SMS via Gateway...';
+
+      try {
+        const token = sessionStorage.getItem('royal_admin_token');
+        const response = await fetch('/api/send-sms', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+          },
+          body: JSON.stringify({ phone: cleanPhone, message: text })
+        });
+
+        const result = await response.json();
+        if (response.ok && result.success) {
+          statusEl.style.color = '#68D391';
+          statusEl.textContent = `✓ ${result.message || 'SMS dispatched successfully!'}`;
+        } else {
+          statusEl.style.color = '#FC8181';
+          statusEl.textContent = `⚠️ ${result.error || 'Failed to dispatch SMS'}`;
+        }
+      } catch (err) {
+        statusEl.style.color = '#FC8181';
+        statusEl.textContent = 'Network error contacting SMS gateway.';
+      }
     }
 
     // Export all members to CSV for Excel / Google Sheets
