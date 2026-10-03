@@ -350,7 +350,7 @@ class SupabaseClient {
         }.resume()
     }
     
-    // Update user profile row
+    // Update user profile row (Supabase PostgreSQL schema aligned)
     func updateProfile(user: User, completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "\(supabaseURL)/rest/v1/profiles?id=eq.\(user.id)") else { return }
         
@@ -360,7 +360,28 @@ class SupabaseClient {
         request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let fields: [String: Any] = [
+        // Build safe about string with embedded socials and biodata URL matching website js/app.js
+        var cleanAbout = user.about ?? ""
+        if !user.instagram.isEmpty || !user.facebook.isEmpty {
+            let socialsObj: [String: String] = ["instagram": user.instagram, "facebook": user.facebook]
+            if let data = try? JSONSerialization.data(withJSONObject: socialsObj), let jsonStr = String(data: data, encoding: .utf8) {
+                if let regex = try? NSRegularExpression(pattern: "\\[Social Links: [^\\]]*\\]", options: []) {
+                    let nsRange = NSRange(cleanAbout.startIndex..<cleanAbout.endIndex, in: cleanAbout)
+                    cleanAbout = regex.stringByReplacingMatches(in: cleanAbout, options: [], range: nsRange, withTemplate: "")
+                }
+                cleanAbout = "\(cleanAbout.trimmingCharacters(in: .whitespacesAndNewlines))\n[Social Links: \(jsonStr)]"
+            }
+        }
+        if !user.biodataUrl.isEmpty {
+            if let regex = try? NSRegularExpression(pattern: "\\[Biodata Link: [^\\]]*\\]", options: []) {
+                let nsRange = NSRange(cleanAbout.startIndex..<cleanAbout.endIndex, in: cleanAbout)
+                cleanAbout = regex.stringByReplacingMatches(in: cleanAbout, options: [], range: nsRange, withTemplate: "")
+            }
+            cleanAbout = "\(cleanAbout.trimmingCharacters(in: .whitespacesAndNewlines))\n[Biodata Link: \(user.biodataUrl)]"
+        }
+        cleanAbout = cleanAbout.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        var fields: [String: Any] = [
             "name": user.name,
             "clan": user.clan,
             "gotra": user.gotra,
@@ -373,21 +394,45 @@ class SupabaseClient {
             "income": user.income,
             "height": user.height,
             "maritalStatus": user.maritalStatus,
-            "profilePic": user.profilePic ?? "",
-            "about": user.about ?? "",
+            "about": cleanAbout,
             "location": user.location,
             "rashi": user.rashi,
             "manglik": user.manglik,
-            "expectations": user.expectations,
-            "instagram": user.instagram,
-            "facebook": user.facebook,
-            "biodataUrl": user.biodataUrl
+            "expectations": user.expectations
         ]
+        if let pic = user.profilePic, !pic.isEmpty {
+            fields["profilePic"] = pic
+        }
         
         request.httpBody = try? JSONSerialization.data(withJSONObject: fields)
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 || httpResponse.statusCode == 200 {
+                completion(true)
+            } else {
+                completion(false)
+            }
+        }.resume()
+    }
+    
+    // Update ONLY about column in Supabase (100% reliable for chats & metadata)
+    func updateProfileAbout(userId: String, about: String, completion: @escaping (Bool) -> Void) {
+        guard let url = URL(string: "\(supabaseURL)/rest/v1/profiles?id=eq.\(userId)") else {
+            completion(false)
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue(apiKey, forHTTPHeaderField: "apikey")
+        request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body = ["about": about]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let httpResponse = response as? HTTPURLResponse, (httpResponse.statusCode == 200 || httpResponse.statusCode == 204) {
                 completion(true)
             } else {
                 completion(false)
@@ -660,12 +705,12 @@ class SupabaseClient {
     }
     
     // Merge two conversations and sort chronologically
-    func getCombinedConversation(profileA: User, profileB: Profile) -> [[String: Any]] {
-        let chatsA = getProfileChats(aboutText: profileA.about)
-        let chatsB = getProfileChats(aboutText: profileB.about)
+    func getCombinedConversation(aboutA: String?, idA: String, aboutB: String?, idB: String) -> [[String: Any]] {
+        let chatsA = getProfileChats(aboutText: aboutA)
+        let chatsB = getProfileChats(aboutText: aboutB)
         
-        let listA = chatsA[profileB.id] ?? []
-        let listB = chatsB[profileA.id] ?? []
+        let listA = chatsA[idB] ?? []
+        let listB = chatsB[idA] ?? []
         
         let combined = listA + listB
         
@@ -685,6 +730,69 @@ class SupabaseClient {
         }
         
         return unique.sorted { ($0["time"] as? Double ?? 0.0) < ($1["time"] as? Double ?? 0.0) }
+    }
+    
+    func getCombinedConversation(profileA: User, profileB: Profile) -> [[String: Any]] {
+        return getCombinedConversation(aboutA: profileA.about, idA: profileA.id, aboutB: profileB.about, idB: profileB.id)
+    }
+    
+    // Extract last message snippet for Chat list row
+    func getLastMessage(userAbout: String?, userId: String, profileAbout: String?, profileId: String) -> (text: String, time: Double, isFromMe: Bool)? {
+        let conv = getCombinedConversation(aboutA: userAbout, idA: userId, aboutB: profileAbout, idB: profileId)
+        guard let last = conv.last else { return nil }
+        let s = last["s"] as? String ?? ""
+        let t = last["t"] as? String ?? ""
+        let time = last["time"] as? Double ?? 0.0
+        return (text: t, time: time, isFromMe: s == userId)
+    }
+    
+    // Send a real-time decentralized message synced with website Supabase database
+    func sendMessage(fromUser: User, toProfile: Profile, text: String, completion: @escaping (Bool) -> Void) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            completion(false)
+            return
+        }
+        
+        // 1. Fetch latest about for currentUser from Supabase
+        fetchProfileAbout(profileId: fromUser.id) { [weak self] freshAbout in
+            guard let self = self else { return }
+            let baseAbout = freshAbout ?? fromUser.about ?? ""
+            
+            var chats = self.getProfileChats(aboutText: baseAbout)
+            var conversationList = chats[toProfile.id] ?? []
+            
+            let timestamp = Date().timeIntervalSince1970 * 1000
+            let newMsgDict: [String: Any] = [
+                "s": fromUser.id,
+                "t": trimmed,
+                "time": timestamp
+            ]
+            conversationList.append(newMsgDict)
+            chats[toProfile.id] = conversationList
+            
+            let updatedAbout = self.setProfileChatsInAbout(aboutText: baseAbout, chatsObj: chats)
+            
+            // 2. PATCH only 'about' column to Supabase profiles row
+            self.updateProfileAbout(userId: fromUser.id, about: updatedAbout) { success in
+                if success {
+                    self.notifyAdminChatMessageSent(fromUser: fromUser, toProfile: toProfile, text: trimmed)
+                }
+                completion(success)
+            }
+        }
+    }
+    
+    func notifyAdminChatMessageSent(fromUser: User, toProfile: Profile, text: String) {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        let dateString = formatter.string(from: Date())
+        let notif = "💬 *Royal Chat Message Sent (iOS)* 💬\n\n" +
+                    "• *From:* \(fromUser.name) _(\(fromUser.clan) Clan)_\n" +
+                    "• *To:* \(toProfile.name) _(\(toProfile.clan) Clan)_\n" +
+                    "• *Message:* \(text)\n\n" +
+                    "📅 _Time: \(dateString)_"
+        sendTelegramNotification(text: notif)
     }
     
     // Fetch individual profile's about field to read their sent messages

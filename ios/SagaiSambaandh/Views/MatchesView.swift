@@ -150,21 +150,39 @@ struct MatchesView: View {
                 }
             )
             
+            let isConnected = session.areConnected(profileId: profile.id)
+            let isSent = session.currentUser != nil && SupabaseClient.shared.getInterests(from: session.currentUser?.about)[profile.id] == "sent"
+            
             Button(action: {
-                handleConnectTap(profile: profile)
+                if isConnected {
+                    openDetail(for: profile)
+                } else if !isSent {
+                    handleConnectTap(profile: profile)
+                }
             }) {
                 HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                    Text("Connect Now")
-                        .font(BrandFonts.bodyBold(size: 14))
+                    if isConnected {
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                        Text("Connected • Message")
+                            .font(BrandFonts.bodyBold(size: 14))
+                    } else if isSent {
+                        Image(systemName: "clock.arrow.circlepath")
+                        Text("Interest Sent (Pending)")
+                            .font(BrandFonts.bodyBold(size: 14))
+                    } else {
+                        Image(systemName: "checkmark.circle.fill")
+                        Text("Connect Now")
+                            .font(BrandFonts.bodyBold(size: 14))
+                    }
                 }
-                .foregroundColor(.lightGold)
+                .foregroundColor(isConnected ? .deepMaroon : .lightGold)
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
-                .background(Color.royalMaroon)
+                .background(isConnected ? Color.royalGold : (isSent ? Color.royalGold.opacity(0.2) : Color.royalMaroon))
                 .cornerRadius(22)
                 .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.royalGold, lineWidth: 1))
             }
+            .disabled(isSent && !isConnected)
         }
         .padding()
         .background(Color.deepMaroon)

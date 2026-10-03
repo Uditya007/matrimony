@@ -412,7 +412,8 @@ struct ContentView: View {
                             
                             // Chat View
                             NavigationView {
-                                ChatView()
+                                ChatView(selectedTab: $selectedTab)
+                                    .environmentObject(session)
                                     .navigationBarTitleDisplayMode(.inline)
                                     .toolbar {
                                         ToolbarItem(placement: .navigationBarLeading) {

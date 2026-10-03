@@ -254,100 +254,173 @@ struct ChatDetailView: View {
     let profile: Profile
     let currentUser: User?
     @EnvironmentObject var session: SagaiSessionManager
+    @Environment(\.presentationMode) var presentationMode
     @State private var messageText: String = ""
     @State private var messages: [SupabaseMessage] = []
     @State private var timer: Timer? = nil
+    @State private var isSending: Bool = false
+    
+    private let quickChips = [
+        "Khammaghani Sa 🙏",
+        "Seeking gotra & lineage compatibility",
+        "Our family sends noble regards",
+        "Could you please share your ancestral biodata?"
+    ]
     
     var body: some View {
-        VStack {
-            HStack {
-            Group {
-                if let imgName = profile.img, !imgName.isEmpty {
-                    if imgName.hasPrefix("http") {
-                        AsyncImage(url: URL(string: imgName)) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+        VStack(spacing: 0) {
+            // Header Bar
+            HStack(spacing: 12) {
+                Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.royalGold)
+                        .padding(6)
+                }
+                
+                Group {
+                    if let imgName = profile.img, !imgName.isEmpty {
+                        if imgName.hasPrefix("http") {
+                            AsyncImage(url: URL(string: imgName)) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            } placeholder: {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                            }
+                        } else {
+                            let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
+                            AsyncImage(url: URL(string: localUrl)) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            } placeholder: {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                            }
                         }
                     } else {
-                        let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
-                        AsyncImage(url: URL(string: localUrl)) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
-                        }
+                        Circle()
+                            .fill(Color.royalGold)
+                            .overlay(
+                                Text(String(profile.name.prefix(1)))
+                                    .font(BrandFonts.displayBold(size: 16))
+                                    .foregroundColor(.deepMaroon)
+                            )
                     }
-                } else {
-                    Circle()
-                        .fill(Color.royalGold)
-                        .overlay(
-                            Text(String(profile.name.prefix(1)))
-                                .font(BrandFonts.displayBold(size: 16))
-                                .foregroundColor(.deepMaroon)
-                        )
                 }
-            }
-            .frame(width: 36, height: 36)
-            .clipShape(Circle())
-            .overlay(Circle().stroke(Color.royalGold.opacity(0.4), lineWidth: 1))
+                .frame(width: 40, height: 40)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.royalGold.opacity(0.6), lineWidth: 1.5))
                 
-                VStack(alignment: .leading) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(profile.name)
                         .font(BrandFonts.displayBold(size: 16))
                         .foregroundColor(.lightGold)
-                    Text("Online")
-                        .font(BrandFonts.body(size: 10))
-                        .foregroundColor(.green)
+                        .lineLimit(1)
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 6, height: 6)
+                        Text("\(profile.clan) Clan • Online")
+                            .font(BrandFonts.body(size: 11))
+                            .foregroundColor(.sandstoneIvory.opacity(0.8))
+                    }
                 }
+                
                 Spacer()
+                
+                if let phone = profile.phone, !phone.isEmpty, session.areConnected(profileId: profile.id) || session.isUnlocked(id: profile.id) {
+                    Button(action: {
+                        let clean = phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                        if let url = URL(string: "tel://\(clean)") {
+                            UIApplication.shared.open(url)
+                        }
+                    }) {
+                        Image(systemName: "phone.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(.royalGold)
+                            .padding(8)
+                            .background(Color.royalGold.opacity(0.15))
+                            .clipShape(Circle())
+                    }
+                }
             }
-            .padding()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
             .background(Color.deepMaroon)
+            .overlay(Divider().background(Color.royalGold.opacity(0.2)), alignment: .bottom)
             
+            // Messages Scroll Area
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
+                        // Trust & lineage banner
                         HStack {
-                            Text("Lineage check verified! You are now connected with \(profile.name). Say hello!")
-                                .font(BrandFonts.body(size: 12))
-                                .foregroundColor(.royalGold)
-                                .padding()
-                                .background(Color.royalGold.opacity(0.08))
-                                .cornerRadius(10)
+                            Spacer()
+                            VStack(spacing: 4) {
+                                Image(systemName: "shield.lefthalf.filled")
+                                    .foregroundColor(.royalGold)
+                                    .font(.system(size: 18))
+                                Text("End-to-End Rajput Verified Dialogue")
+                                    .font(BrandFonts.label(size: 11))
+                                    .foregroundColor(.royalGold)
+                                Text("Conversations are private between families and synced with the Shree Rajput Sagai Sambandh website.")
+                                    .font(BrandFonts.body(size: 11))
+                                    .foregroundColor(.sandstoneIvory.opacity(0.7))
+                                    .multilineTextAlignment(.center)
+                            }
+                            .padding(12)
+                            .background(Color.royalGold.opacity(0.08))
+                            .cornerRadius(12)
+                            .padding(.horizontal)
+                            .padding(.top, 8)
                             Spacer()
                         }
                         
+                        if messages.isEmpty {
+                            VStack(spacing: 8) {
+                                Text("No messages yet")
+                                    .font(BrandFonts.bodyBold(size: 14))
+                                    .foregroundColor(.lightGold)
+                                Text("Initiate noble conversation with \(profile.name.components(separatedBy: " ").first ?? profile.name).")
+                                    .font(BrandFonts.body(size: 12))
+                                    .foregroundColor(.sandstoneIvory.opacity(0.6))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 30)
+                        }
+                        
                         ForEach(messages, id: \.id) { msg in
-                            HStack {
-                                if msg.senderId == currentUser?.id {
-                                    Spacer()
+                            let isMe = msg.senderId == currentUser?.id
+                            HStack(alignment: .bottom, spacing: 6) {
+                                if isMe { Spacer(minLength: 40) }
+                                
+                                VStack(alignment: isMe ? .trailing : .leading, spacing: 4) {
                                     Text(msg.text)
                                         .font(BrandFonts.body(size: 14))
-                                        .foregroundColor(.deepMaroon)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
-                                        .background(Color.royalGold)
+                                        .foregroundColor(isMe ? .deepMaroon : .sandstoneIvory)
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 9)
+                                        .background(isMe ? Color.royalGold : Color.white.opacity(0.12))
                                         .cornerRadius(16)
-                                } else {
-                                    Text(msg.text)
-                                        .font(BrandFonts.body(size: 14))
-                                        .foregroundColor(.sandstoneIvory)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
-                                        .background(Color.white.opacity(0.1))
-                                        .cornerRadius(16)
-                                    Spacer()
+                                    
+                                    if msg.time > 0 {
+                                        let date = Date(timeIntervalSince1970: msg.time / 1000)
+                                        Text(formatMessageTime(date))
+                                            .font(BrandFonts.label(size: 9))
+                                            .foregroundColor(.sandstoneIvory.opacity(0.5))
+                                            .padding(.horizontal, 4)
+                                    }
                                 }
+                                
+                                if !isMe { Spacer(minLength: 40) }
                             }
                         }
                     }
-                    .padding()
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
                 }
                 .onChange(of: messages.count) { _ in
                     if let last = messages.last {
@@ -358,23 +431,59 @@ struct ChatDetailView: View {
                 }
             }
             
-            Spacer()
+            // Quick reply chips
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(quickChips, id: \.self) { chip in
+                        Button(action: {
+                            messageText = chip
+                        }) {
+                            Text(chip)
+                                .font(BrandFonts.body(size: 11))
+                                .foregroundColor(.sandstoneIvory)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.white.opacity(0.08))
+                                .cornerRadius(12)
+                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.royalGold.opacity(0.3), lineWidth: 0.8))
+                        }
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+            }
+            .background(Color.deepMaroon.opacity(0.95))
             
-            HStack {
+            // Input Bar
+            HStack(spacing: 10) {
                 TextField("Write noble message...", text: $messageText)
                     .font(BrandFonts.body(size: 14))
-                    .padding(12)
-                    .background(Color.cardBackground)
+                    .padding(10)
+                    .background(Color.white)
                     .cornerRadius(20)
                     .foregroundColor(.inkBrown)
+                    .disabled(isSending)
                 
                 Button(action: sendMessage) {
-                    Image(systemName: "paperplane.fill")
-                        .font(.title2)
-                        .foregroundColor(.royalGold)
+                    ZStack {
+                        Circle()
+                            .fill(Color.royalGold)
+                            .frame(width: 40, height: 40)
+                        
+                        if isSending {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .deepMaroon))
+                        } else {
+                            Image(systemName: "paperplane.fill")
+                                .font(.system(size: 16))
+                                .foregroundColor(.deepMaroon)
+                        }
+                    }
                 }
+                .disabled(messageText.trimmingCharacters(in: .whitespaces).isEmpty || isSending)
             }
-            .padding()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
             .background(Color.deepMaroon)
         }
         .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
@@ -390,9 +499,21 @@ struct ChatDetailView: View {
         }
     }
     
+    private func formatMessageTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return formatter.string(from: date)
+    }
+    
     private func loadMessages() {
-        guard let user = currentUser else { return }
-        let combinedDicts = SupabaseClient.shared.getCombinedConversation(profileA: user, profileB: profile)
+        guard let user = session.currentUser ?? currentUser else { return }
+        let currentProfile = session.profiles.first(where: { $0.id == profile.id }) ?? profile
+        let combinedDicts = SupabaseClient.shared.getCombinedConversation(
+            aboutA: user.about,
+            idA: user.id,
+            aboutB: currentProfile.about,
+            idB: currentProfile.id
+        )
         self.messages = combinedDicts.map { dict -> SupabaseMessage in
             let s = dict["s"] as? String ?? ""
             let t = dict["t"] as? String ?? ""
@@ -402,48 +523,55 @@ struct ChatDetailView: View {
     }
     
     private func startPolling() {
-        timer = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: true) { _ in
-            SupabaseClient.shared.fetchProfileAbout(profileId: profile.id) { updatedAbout in
+        timer = Timer.scheduledTimer(withTimeInterval: 3.5, repeats: true) { _ in
+            // Poll both partner's profile and current user's profile for live message parity
+            SupabaseClient.shared.fetchProfileAbout(profileId: profile.id) { updatedPartnerAbout in
                 DispatchQueue.main.async {
-                    guard let updatedAbout = updatedAbout else { return }
-                    // Update this profile's about in local state profiles list
-                    if let index = session.profiles.firstIndex(where: { $0.id == profile.id }) {
-                        session.profiles[index].about = updatedAbout
+                    if let updatedPartnerAbout = updatedPartnerAbout {
+                        if let index = session.profiles.firstIndex(where: { $0.id == profile.id }) {
+                            session.profiles[index].about = updatedPartnerAbout
+                        }
                     }
-                    loadMessages()
+                    if let myId = session.currentUser?.id {
+                        SupabaseClient.shared.fetchProfileAbout(profileId: myId) { myUpdatedAbout in
+                            DispatchQueue.main.async {
+                                if let myUpdatedAbout = myUpdatedAbout {
+                                    session.currentUser?.about = myUpdatedAbout
+                                }
+                                loadMessages()
+                            }
+                        }
+                    } else {
+                        loadMessages()
+                    }
                 }
             }
         }
     }
     
     private func sendMessage() {
-        guard let user = currentUser, !messageText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        guard let user = session.currentUser ?? currentUser, !messageText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         
         let textToSend = messageText
         messageText = ""
+        isSending = true
         
+        // Optimistic local update
         let timestamp = Date().timeIntervalSince1970 * 1000
-        let newMsgDict: [String: Any] = ["s": user.id, "t": textToSend, "time": timestamp]
+        let newMsg = SupabaseMessage(id: "\(user.id)_\(timestamp)", senderId: user.id, text: textToSend, time: timestamp)
+        self.messages.append(newMsg)
         
-        var chats = SupabaseClient.shared.getProfileChats(aboutText: user.about)
-        var conversationList = chats[profile.id] ?? []
-        conversationList.append(newMsgDict)
-        chats[profile.id] = conversationList
-        
-        let newAbout = SupabaseClient.shared.setProfileChatsInAbout(aboutText: user.about, chatsObj: chats)
-        
-        var updatedUser = user
-        updatedUser.about = newAbout
-        session.updateCurrentUser(updated: updatedUser)
-        
-        SupabaseClient.shared.updateProfile(user: updatedUser) { success in
-            if success {
-                print("Message synced to Supabase successfully!")
-            } else {
-                print("Failed to sync message to Supabase.")
+        // Send via SupabaseClient
+        SupabaseClient.shared.sendMessage(fromUser: user, toProfile: profile, text: textToSend) { success in
+            DispatchQueue.main.async {
+                self.isSending = false
+                if success {
+                    // Refresh current user's about from Supabase to stay 100% in sync
+                    self.session.refreshCurrentUserAbout()
+                } else {
+                    print("Error syncing message to Supabase.")
+                }
             }
         }
-        
-        loadMessages()
     }
 }

@@ -22,6 +22,10 @@ struct ProfileDetailView: View {
     @State private var showingPdfSafari: Bool = false
     @State private var selectedPdfUrl: URL? = nil
     
+    @State private var showingChatSheet: Bool = false
+    @State private var isSendingInterest: Bool = false
+    @State private var showingInterestSentAlert: Bool = false
+    
     private var isGoldUser: Bool {
         session.currentUser?.tier == "Gold"
     }
@@ -32,6 +36,27 @@ struct ProfileDetailView: View {
     
     private var hasDirectAccess: Bool {
         isGoldUser || isSilverUser
+    }
+    
+    private var isMyOwnProfile: Bool {
+        guard let currentUser = session.currentUser else { return false }
+        return currentUser.id == profile.id
+    }
+    
+    private var isConnected: Bool {
+        session.areConnected(profileId: profile.id)
+    }
+    
+    private var isInterestSentByMe: Bool {
+        guard let currentUserId = session.currentUser?.id else { return false }
+        let myInterests = SupabaseClient.shared.getInterests(from: session.currentUser?.about)
+        return myInterests[profile.id] == "sent"
+    }
+    
+    private var isInterestReceivedFromCandidate: Bool {
+        guard let currentUserId = session.currentUser?.id else { return false }
+        let candidateInterests = SupabaseClient.shared.getInterests(from: profile.about)
+        return candidateInterests[currentUserId] == "sent"
     }
     
     private var cleanAboutText: String {
@@ -375,24 +400,137 @@ struct ProfileDetailView: View {
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(Color.green.opacity(0.2), lineWidth: 1)
                             )
+                            
+                            // Unlocked Actions: Chat, Call, WhatsApp
+                            if !isMyOwnProfile {
+                                VStack(spacing: 10) {
+                                    Button(action: { showingChatSheet = true }) {
+                                        HStack {
+                                            Image(systemName: "bubble.left.and.bubble.right.fill")
+                                            Text("💬 Start Royal Chat")
+                                                .font(BrandFonts.bodyBold(size: 14))
+                                        }
+                                        .foregroundColor(.deepMaroon)
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: 44)
+                                        .background(Color.royalGold)
+                                        .cornerRadius(8)
+                                        .shadow(color: Color.black.opacity(0.15), radius: 2)
+                                    }
+                                    
+                                    if let phone = profile.phone, !phone.isEmpty {
+                                        HStack(spacing: 10) {
+                                            Button(action: {
+                                                let clean = phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                                                if let url = URL(string: "tel://\(clean)") {
+                                                    UIApplication.shared.open(url)
+                                                }
+                                            }) {
+                                                HStack(spacing: 6) {
+                                                    Image(systemName: "phone.fill")
+                                                    Text("Call")
+                                                        .font(BrandFonts.bodyBold(size: 13))
+                                                }
+                                                .foregroundColor(.white)
+                                                .frame(maxWidth: .infinity)
+                                                .frame(height: 40)
+                                                .background(Color.green)
+                                                .cornerRadius(8)
+                                            }
+                                            
+                                            Button(action: {
+                                                var clean = phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                                                if clean.count == 10 { clean = "91" + clean }
+                                                if let url = URL(string: "https://wa.me/\(clean)") {
+                                                    UIApplication.shared.open(url)
+                                                }
+                                            }) {
+                                                HStack(spacing: 6) {
+                                                    Image(systemName: "message.fill")
+                                                    Text("WhatsApp")
+                                                        .font(BrandFonts.bodyBold(size: 13))
+                                                }
+                                                .foregroundColor(.white)
+                                                .frame(maxWidth: .infinity)
+                                                .frame(height: 40)
+                                                .background(Color(hex: "#25D366"))
+                                                .cornerRadius(8)
+                                            }
+                                        }
+                                    }
+                                }
+                                .padding(.top, 4)
+                            }
                         } else {
                             // Locked State details box
-                            VStack(spacing: 12) {
-                                Text("Lineage contact details are secured. Upgrade or build connection to unlock direct communication.")
+                            VStack(spacing: 14) {
+                                Text("Lineage contact details are secured. Connect or upgrade to unlock direct communication.")
                                     .font(BrandFonts.body(size: 12))
                                     .foregroundColor(.gray)
                                     .multilineTextAlignment(.center)
+                                
+                                if !isMyOwnProfile {
+                                    if isInterestReceivedFromCandidate {
+                                        VStack(spacing: 8) {
+                                            Text("💌 \(profile.name) sent you a Match Interest!")
+                                                .font(BrandFonts.bodyBold(size: 13))
+                                                .foregroundColor(.royalMaroon)
+                                            Button(action: acceptIncomingInterest) {
+                                                HStack {
+                                                    Image(systemName: "checkmark.circle.fill")
+                                                    Text("Accept Interest & Connect")
+                                                        .font(BrandFonts.bodyBold(size: 13))
+                                                }
+                                                .foregroundColor(.deepMaroon)
+                                                .frame(maxWidth: .infinity)
+                                                .frame(height: 42)
+                                                .background(Color.royalGold)
+                                                .cornerRadius(8)
+                                            }
+                                        }
+                                    } else if isInterestSentByMe {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "clock.arrow.circlepath")
+                                            Text("Match Interest Sent (Pending Acceptance)")
+                                                .font(BrandFonts.bodyBold(size: 12))
+                                        }
+                                        .foregroundColor(.royalGold)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 10)
+                                        .background(Color.royalGold.opacity(0.12))
+                                        .cornerRadius(8)
+                                    } else {
+                                        Button(action: sendMatchInterest) {
+                                            HStack {
+                                                if isSendingInterest {
+                                                    ProgressView()
+                                                        .progressViewStyle(CircularProgressViewStyle(tint: .deepMaroon))
+                                                } else {
+                                                    Image(systemName: "heart.fill")
+                                                    Text("💌 Express Royal Match Interest")
+                                                        .font(BrandFonts.bodyBold(size: 13))
+                                                }
+                                            }
+                                            .foregroundColor(.deepMaroon)
+                                            .frame(maxWidth: .infinity)
+                                            .frame(height: 42)
+                                            .background(Color.royalGold)
+                                            .cornerRadius(8)
+                                        }
+                                        .disabled(isSendingInterest)
+                                    }
+                                }
                                 
                                 if showingUnlockProgress {
                                     ProgressView("Securing Lineage...")
                                         .padding()
                                 } else {
                                     Button(action: performUnlock) {
-                                        Text(hasDirectAccess ? "Unlock Profile Card" : "Upgrade to Unlock Contact")
-                                            .font(BrandFonts.body(size: 13, weight: .bold))
+                                        Text(hasDirectAccess ? "Unlock Profile Card Directly" : "Upgrade Membership to Unlock Contact")
+                                            .font(BrandFonts.body(size: 12, weight: .bold))
                                             .foregroundColor(hasDirectAccess ? .royalMaroon : .white)
-                                            .padding(.horizontal, 20)
-                                            .padding(.vertical, 10)
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 8)
                                             .background(hasDirectAccess ? Color.lightGold : Color.royalMaroon)
                                             .cornerRadius(8)
                                     }
@@ -419,6 +557,33 @@ struct ProfileDetailView: View {
         .sheet(isPresented: $showingPdfSafari) {
             if let url = selectedPdfUrl {
                 SafariView(url: url)
+            }
+        }
+        .sheet(isPresented: $showingChatSheet) {
+            ChatDetailView(profile: profile, currentUser: session.currentUser)
+                .environmentObject(session)
+        }
+    }
+    
+    private func sendMatchInterest() {
+        guard let currentUser = session.currentUser else { return }
+        isSendingInterest = true
+        SupabaseClient.shared.sendConnection(senderId: currentUser.id, receiverId: profile.id) { _ in
+            DispatchQueue.main.async {
+                isSendingInterest = false
+                session.refreshCurrentUserAbout()
+                session.fetchConnectionsAndGenerateNotifications()
+            }
+        }
+        SupabaseClient.shared.notifyAdminInterestSent(fromUser: currentUser, toProfile: profile)
+    }
+    
+    private func acceptIncomingInterest() {
+        guard let currentUser = session.currentUser else { return }
+        SupabaseClient.shared.updateConnection(senderId: profile.id, receiverId: currentUser.id, status: "accepted") { _ in
+            DispatchQueue.main.async {
+                session.refreshCurrentUserAbout()
+                session.fetchConnectionsAndGenerateNotifications()
             }
         }
     }
