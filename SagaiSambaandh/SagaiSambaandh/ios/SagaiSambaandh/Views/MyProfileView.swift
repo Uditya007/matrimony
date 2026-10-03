@@ -26,6 +26,7 @@ struct MyProfileView: View {
     @State private var biodataUrl: String = ""
     @State private var about: String = ""
     @State private var gender: String = "Groom"
+    @State private var lookingFor: String = "Bride"
     
     @State private var showingAvatarChooser: Bool = false
     
@@ -90,20 +91,20 @@ struct MyProfileView: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 20) {
-                        // SECTION 1: LINEAGE & PERSONAL
+                        // SECTION 1: LINEAGE & MATCHMAKING
                         VStack(alignment: .leading, spacing: 12) {
-                            sectionHeader("TRADITIONAL RAJPUT LINEAGE")
+                            sectionHeader("TRADITIONAL RAJPUT LINEAGE & MATCHMAKING")
                             profileTextField(label: "FULL NAME", text: $name)
                             
                             HStack(spacing: 15) {
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Text("GENDER")
+                                    Text("I AM A")
                                         .font(BrandFonts.label(size: 8))
                                         .foregroundColor(.sandstoneIvory.opacity(0.8))
                                         .fontWeight(.bold)
                                     Picker("Gender", selection: $gender) {
                                         ForEach(genderOptions, id: \.self) { opt in
-                                            Text(opt).tag(opt)
+                                            Text(opt == "Groom" ? "🤵 Groom (Var)" : "👰 Bride (Vadhu)").tag(opt)
                                         }
                                     }
                                     .pickerStyle(MenuPickerStyle())
@@ -111,16 +112,23 @@ struct MyProfileView: View {
                                     .frame(maxWidth: .infinity)
                                     .background(Color.white)
                                     .cornerRadius(6)
+                                    .onChange(of: gender) { newGender in
+                                        if newGender.lowercased() == "groom" {
+                                            lookingFor = "Bride"
+                                        } else if newGender.lowercased() == "bride" {
+                                            lookingFor = "Groom"
+                                        }
+                                    }
                                 }
                                 
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Text("RAJPUT CLAN")
+                                    Text("LOOKING FOR")
                                         .font(BrandFonts.label(size: 8))
                                         .foregroundColor(.sandstoneIvory.opacity(0.8))
                                         .fontWeight(.bold)
-                                    Picker("Clan", selection: $clan) {
-                                        ForEach(clansOptions, id: \.self) { opt in
-                                            Text(opt).tag(opt)
+                                    Picker("Looking For", selection: $lookingFor) {
+                                        ForEach(genderOptions, id: \.self) { opt in
+                                            Text(opt == "Bride" ? "👰 Bride (Vadhu)" : "🤵 Groom (Var)").tag(opt)
                                         }
                                     }
                                     .pickerStyle(MenuPickerStyle())
@@ -129,6 +137,23 @@ struct MyProfileView: View {
                                     .background(Color.white)
                                     .cornerRadius(6)
                                 }
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("RAJPUT CLAN")
+                                    .font(BrandFonts.label(size: 8))
+                                    .foregroundColor(.sandstoneIvory.opacity(0.8))
+                                    .fontWeight(.bold)
+                                Picker("Clan", selection: $clan) {
+                                    ForEach(clansOptions, id: \.self) { opt in
+                                        Text(opt).tag(opt)
+                                    }
+                                }
+                                .pickerStyle(MenuPickerStyle())
+                                .padding(.vertical, 4)
+                                .frame(maxWidth: .infinity)
+                                .background(Color.white)
+                                .cornerRadius(6)
                             }
                             
                             HStack(spacing: 15) {
@@ -339,10 +364,12 @@ struct MyProfileView: View {
         biodataUrl = user.biodataUrl
         about = user.about ?? ""
         gender = user.gender
+        lookingFor = session.searchGender
     }
     
     private func saveProfileCard() {
         guard let user = session.currentUser else { return }
+        session.setLookingForGender(lookingFor)
         let updated = User(
             id: user.id,
             name: name,

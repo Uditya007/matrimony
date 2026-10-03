@@ -17,8 +17,8 @@ struct HomeView: View {
     
     private var filteredProfiles: [Profile] {
         session.profiles.filter { profile in
-            let matchGender = profile.gender == (lookingFor == "Bride" ? "Bride" : "Groom")
-            let matchClan = selectedClan == "All Clans" || profile.clan == selectedClan
+            let matchGender = profile.gender.lowercased() == (lookingFor == "Bride" ? "bride" : "groom")
+            let matchClan = selectedClan == "All Clans" || profile.clan.lowercased() == selectedClan.lowercased()
             return matchGender && matchClan
         }
     }
@@ -265,6 +265,12 @@ struct HomeView: View {
         .sheet(item: $selectedProfileForDetail) { profile in
             ProfileDetailView(profile: profile)
                 .environmentObject(session)
+        }
+        .onAppear {
+            lookingFor = session.searchGender
+        }
+        .onReceive(session.$searchGender) { newGender in
+            lookingFor = newGender
         }
     }
 }

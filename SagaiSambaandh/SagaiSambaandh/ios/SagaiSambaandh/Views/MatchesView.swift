@@ -18,7 +18,7 @@ struct MatchesView: View {
     
     private var filteredMatches: [Profile] {
         let searched = session.profiles.filter {
-            let genderMatch = $0.gender == session.searchGender
+            let genderMatch = $0.gender.lowercased() == session.searchGender.lowercased()
             let clanMatch = session.searchClan == "All Clans" || $0.clan.lowercased() == session.searchClan.lowercased()
             return genderMatch && clanMatch
         }
@@ -29,6 +29,26 @@ struct MatchesView: View {
             }
         }
         return searched
+    }
+    
+    private var allGenderMatchesCount: Int {
+        session.profiles.filter {
+            let genderMatch = $0.gender.lowercased() == session.searchGender.lowercased()
+            let clanMatch = session.searchClan == "All Clans" || $0.clan.lowercased() == session.searchClan.lowercased()
+            return genderMatch && clanMatch
+        }.count
+    }
+    
+    private var gotraMatchesCount: Int {
+        let base = session.profiles.filter {
+            let genderMatch = $0.gender.lowercased() == session.searchGender.lowercased()
+            let clanMatch = session.searchClan == "All Clans" || $0.clan.lowercased() == session.searchClan.lowercased()
+            return genderMatch && clanMatch
+        }
+        if let currentUser = session.currentUser {
+            return base.filter { $0.gotra.lowercased() != currentUser.gotra.lowercased() }.count
+        }
+        return base.count
     }
     
     private func showRegistration() {
@@ -89,6 +109,7 @@ struct MatchesView: View {
                             handleConnectTap(profile: profile)
                         }
                     )
+                    .id("\(session.searchGender)_\(activeFilterTab)")
                     .frame(maxHeight: .infinity)
                 } else {
                     // Modern 2-Column Matches Grid
@@ -180,7 +201,7 @@ struct MatchesView: View {
                     Image(systemName: "mappin.circle.fill")
                         .font(.system(size: 12))
                         .foregroundColor(Color.appPrimary)
-                    Text("Rajasthan, India")
+                    Text("Rajasthan • Showing \(session.searchGender)s")
                         .font(BrandFonts.body(size: 12, weight: .semibold))
                         .foregroundColor(Color.appTextSecondary)
                 }
@@ -209,10 +230,35 @@ struct MatchesView: View {
     
     // MARK: - Filter Capsules
     private var filterCapsulesBar: some View {
-        HStack(spacing: 10) {
-            filterPill(title: "All Matches", count: session.profiles.count, tag: 0)
-            filterPill(title: "Gotra Compatible", count: filteredMatches.count, tag: 1)
-            Spacer()
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                // Quick Looking-For Gender Switcher
+                Button(action: {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                        let nextGender = (session.searchGender.lowercased() == "bride") ? "Groom" : "Bride"
+                        session.setLookingForGender(nextGender)
+                    }
+                }) {
+                    HStack(spacing: 6) {
+                        Text(session.searchGender.lowercased() == "bride" ? "👰 Brides" : "🤵 Grooms")
+                            .font(BrandFonts.body(size: 13, weight: .bold))
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 11, weight: .bold))
+                    }
+                    .foregroundColor(Color.appPrimary)
+                    .padding(.horizontal, 13)
+                    .padding(.vertical, 8)
+                    .background(Color.appPrimary.opacity(0.12))
+                    .clipShape(Capsule())
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.appPrimary.opacity(0.35), lineWidth: 1)
+                    )
+                }
+                
+                filterPill(title: "All \(session.searchGender)s", count: allGenderMatchesCount, tag: 0)
+                filterPill(title: "Gotra Compatible", count: gotraMatchesCount, tag: 1)
+            }
         }
     }
     
@@ -261,24 +307,47 @@ struct MatchesView: View {
     // MARK: - Grid View (2 Columns)
     private var matchesGridView: some View {
         ScrollView {
-            LazyVGrid(
-                columns: [
-                    GridItem(.flexible(), spacing: 14),
-                    GridItem(.flexible(), spacing: 14)
-                ],
-                spacing: 16
-            ) {
-                ForEach(filteredMatches) { profile in
-                    ModernGridCardItem(
-                        profile: profile,
-                        isLocked: isProfileLocked,
-                        onTap: { openDetail(for: profile) },
-                        onConnect: { handleConnectTap(profile: profile) }
-                    )
+            if filteredMatches.isEmpty {
+                VStack(spacing: 16) {
+                    Spacer().frame(height: 50)
+                    ZStack {
+                        Circle()
+                            .fill(Color.appPrimary.opacity(0.1))
+                            .frame(width: 80, height: 80)
+                        Image(systemName: "person.2.slash.fill")
+                            .font(.system(size: 34))
+                            .foregroundColor(Color.appPrimary)
+                    }
+                    Text("No \(session.searchGender)s Found")
+                        .font(BrandFonts.displayBold(size: 18))
+                        .foregroundColor(Color.appTextPrimary)
+                    Text("Try switching your Rajput clan or Gotra filter to view other profiles.")
+                        .font(BrandFonts.body(size: 13))
+                        .foregroundColor(Color.appTextSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
                 }
+                .frame(maxWidth: .infinity)
+            } else {
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: 14),
+                        GridItem(.flexible(), spacing: 14)
+                    ],
+                    spacing: 16
+                ) {
+                    ForEach(filteredMatches) { profile in
+                        ModernGridCardItem(
+                            profile: profile,
+                            isLocked: isProfileLocked,
+                            onTap: { openDetail(for: profile) },
+                            onConnect: { handleConnectTap(profile: profile) }
+                        )
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
         }
         .refreshable {
             await session.refreshProfilesAsync()
@@ -288,6 +357,7 @@ struct MatchesView: View {
 
 // MARK: - 3D Neumorphic Swipe Card Deck
 struct SwipeDeckView: View {
+    @EnvironmentObject var session: SagaiSessionManager
     let profiles: [Profile]
     let isLocked: Bool
     let onUnlock: () -> Void
@@ -796,11 +866,11 @@ struct SwipeDeckView: View {
                     .foregroundColor(Color.appPrimary)
             }
             
-            Text("Deck Completed!")
+            Text(profiles.isEmpty ? "No \(session.searchGender)s Found" : "Deck Completed!")
                 .font(BrandFonts.displayBold(size: 22))
                 .foregroundColor(Color.appTextPrimary)
             
-            Text("You've viewed all matching profiles. Check back soon for newly registered Rajput members.")
+            Text(profiles.isEmpty ? "Try changing your Rajput clan filter or check back later for newly joined members." : "You've viewed all matching profiles. Check back soon for newly registered Rajput members.")
                 .font(BrandFonts.body(size: 13.5))
                 .foregroundColor(Color.appTextSecondary)
                 .multilineTextAlignment(.center)
