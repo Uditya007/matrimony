@@ -248,6 +248,9 @@ struct HomeView: View {
                 }
                 .background(Color.deepMaroon)
             }
+            .refreshable {
+                await session.refreshProfilesAsync()
+            }
         }
         .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
         .navigationBarTitleDisplayMode(.inline)

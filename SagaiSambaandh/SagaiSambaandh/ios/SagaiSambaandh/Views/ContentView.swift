@@ -135,9 +135,42 @@ class SagaiSessionManager: ObservableObject {
         connectionTimer = nil
     }
     
+    func refreshProfiles(completion: (() -> Void)? = nil) {
+        SupabaseClient.shared.fetchProfiles { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                switch result {
+                case .success(let liveProfiles):
+                    if !liveProfiles.isEmpty {
+                        let merged = liveProfiles + MockData.profiles.filter { mock in
+                            !liveProfiles.contains { $0.id == mock.id }
+                        }
+                        self.profiles = merged
+                    }
+                case .failure(let error):
+                    print("Supabase profile refresh error: \(error.localizedDescription)")
+                }
+                completion?()
+            }
+        }
+    }
+    
+    @MainActor
+    func refreshProfilesAsync() async {
+        await withCheckedContinuation { continuation in
+            refreshProfiles {
+                continuation.resume()
+            }
+        }
+    }
+    
     func fetchConnectionsAndGenerateNotifications() {
         guard let currentUserId = currentUser?.id else { return }
         
+        // 1. Live profile sync: Any new user registered on website or app automatically appears!
+        refreshProfiles()
+        
+        // 2. Fetch connection requests & interests
         SupabaseClient.shared.fetchConnections(userId: currentUserId) { [weak self] result in
             guard let self = self else { return }
             guard case .success(let records) = result else { return }

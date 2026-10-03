@@ -133,6 +133,9 @@ struct MatchesView: View {
             }
             .padding()
         }
+        .refreshable {
+            await session.refreshProfilesAsync()
+        }
         .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
     }
     

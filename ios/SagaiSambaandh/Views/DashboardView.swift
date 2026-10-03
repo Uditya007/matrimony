@@ -123,6 +123,9 @@ struct DashboardView: View {
                     }
                     .padding(20)
                 }
+                .refreshable {
+                    await session.refreshProfilesAsync()
+                }
                 .background(Color.sandstoneIvory.opacity(0.15))
             }
         }
