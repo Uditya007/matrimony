@@ -7,51 +7,54 @@ struct InboxView: View {
     @State private var isLoading: Bool = false
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Top Custom Toolbar
-            HStack {
-                Spacer()
-                Text("Inbox & Connections")
-                    .font(BrandFonts.displayBold(size: 20))
-                    .foregroundColor(.lightGold)
-                Spacer()
-            }
-            .padding()
-            .background(Color.deepMaroon)
+        ZStack {
+            Color.white.edgesIgnoringSafeArea(.all)
             
-            // Sub Tabs Selection
-            Picker("SubTabs", selection: $selectedSubTab) {
-                Text("Received").tag(0)
-                Text("Accepted").tag(1)
-                Text("Sent").tag(2)
-            }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(Color.deepMaroon)
-            
-            if isLoading {
-                Spacer()
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
-                Spacer()
-            } else if filteredConnections.isEmpty {
-                emptyState
-            } else {
-                ScrollView {
-                    VStack(spacing: 16) {
-                        ForEach(filteredConnections, id: \.self) { record in
-                            if let profile = lookupProfile(for: record) {
-                                connectionRow(for: record, profile: profile)
+            VStack(spacing: 0) {
+                // Top Custom Header
+                HStack {
+                    Text("Requests")
+                        .font(BrandFonts.displayBold(size: 26))
+                        .foregroundColor(Color.appTextPrimary)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 14)
+                .padding(.bottom, 10)
+                
+                // Sub Tabs Selection
+                Picker("SubTabs", selection: $selectedSubTab) {
+                    Text("Received").tag(0)
+                    Text("Accepted").tag(1)
+                    Text("Sent").tag(2)
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding(.horizontal, 20)
+                .padding(.vertical, 8)
+                
+                if isLoading {
+                    Spacer()
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: Color.appPrimary))
+                    Spacer()
+                } else if filteredConnections.isEmpty {
+                    emptyState
+                } else {
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 12) {
+                            ForEach(filteredConnections, id: \.self) { record in
+                                if let profile = lookupProfile(for: record) {
+                                    connectionRow(for: record, profile: profile)
+                                }
                             }
                         }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
                     }
-                    .padding()
                 }
-                .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
             }
         }
-        .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
+        .navigationBarHidden(true)
         .onAppear(perform: loadConnections)
     }
     
@@ -121,7 +124,7 @@ struct InboxView: View {
     }
     
     private func connectionRow(for record: ConnectionRecord, profile: Profile) -> some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 14) {
             Group {
                 if let imgName = profile.img, !imgName.isEmpty {
                     if imgName.hasPrefix("http") {
@@ -130,8 +133,7 @@ struct InboxView: View {
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
                         } placeholder: {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                            Color.appCardBackground
                         }
                     } else {
                         let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
@@ -140,103 +142,128 @@ struct InboxView: View {
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
                         } placeholder: {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                            Color.appCardBackground
                         }
                     }
                 } else {
-                    Circle()
-                        .fill(Color.royalGold)
-                        .overlay(
-                            Text(String(profile.name.prefix(1)))
-                                .font(BrandFonts.displayBold(size: 22))
-                                .foregroundColor(.deepMaroon)
-                        )
+                    LinearGradient(
+                        colors: [Color.appPrimary, Color.appSecondary],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .overlay(
+                        Text(String(profile.name.prefix(1)))
+                            .font(BrandFonts.displayBold(size: 22))
+                            .foregroundColor(.white)
+                    )
                 }
             }
-            .frame(width: 54, height: 54)
+            .frame(width: 52, height: 52)
             .clipShape(Circle())
-            .overlay(Circle().stroke(Color.royalGold.opacity(0.4), lineWidth: 1))
             
-            VStack(alignment: .leading, spacing: 4) {
-                Text(profile.name)
-                    .font(BrandFonts.displayBold(size: 16))
-                    .foregroundColor(.lightGold)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 4) {
+                    Text(profile.name)
+                        .font(BrandFonts.displayBold(size: 15))
+                        .foregroundColor(Color.appTextPrimary)
+                    if profile.isVerified {
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(Color.verifiedBlue)
+                    }
+                }
+                
                 Text("\(profile.clan) Clan • \(profile.gotra) Gotra")
-                    .font(BrandFonts.body(size: 12))
-                    .foregroundColor(.sandstoneIvory.opacity(0.8))
+                    .font(BrandFonts.body(size: 12, weight: .medium))
+                    .foregroundColor(Color.appTextSecondary)
+                
                 Text("Native: \(profile.thikana)")
                     .font(BrandFonts.body(size: 11))
-                    .foregroundColor(.sandstoneIvory.opacity(0.6))
+                    .foregroundColor(Color.appTextMuted)
             }
             
             Spacer()
             
             if selectedSubTab == 0 {
-                HStack(spacing: 12) {
+                HStack(spacing: 8) {
                     Button(action: { handleDecline(record: record) }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.red)
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(Color.dislikeRed)
+                            .frame(width: 36, height: 36)
+                            .background(Color.dislikeRed.opacity(0.1))
+                            .clipShape(Circle())
                     }
                     Button(action: { handleAccept(record: record) }) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.green)
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(Color.successGreen)
+                            .frame(width: 36, height: 36)
+                            .background(Color.successGreen.opacity(0.12))
+                            .clipShape(Circle())
                     }
                 }
             } else if selectedSubTab == 1 {
                 NavigationLink(destination: ChatDetailView(profile: profile, currentUser: session.currentUser)) {
                     HStack(spacing: 4) {
                         Image(systemName: "bubble.left.and.bubble.right.fill")
+                            .font(.system(size: 11))
                         Text("Chat")
                             .font(BrandFonts.bodyBold(size: 12))
                     }
-                    .foregroundColor(.deepMaroon)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.royalGold)
-                    .cornerRadius(12)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(
+                        LinearGradient(
+                            colors: [Color.appPrimary, Color.appSecondary],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .clipShape(Capsule())
+                    .shadow(color: Color.appPrimary.opacity(0.3), radius: 4, y: 2)
                 }
             } else {
                 Text("Pending")
-                    .font(BrandFonts.label(size: 11))
-                    .foregroundColor(.royalGold)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.royalGold.opacity(0.12))
-                    .cornerRadius(8)
+                    .font(BrandFonts.body(size: 11, weight: .semibold))
+                    .foregroundColor(Color.appTextSecondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color.appCardBackground)
+                    .clipShape(Capsule())
             }
         }
-        .padding()
-        .background(Color.deepMaroon.opacity(0.6))
-        .cornerRadius(12)
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.royalGold.opacity(0.25), lineWidth: 1))
+        .padding(14)
+        .background(Color.white)
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appBorder, lineWidth: 1))
+        .shadow(color: Color.black.opacity(0.03), radius: 6, y: 2)
     }
     
     private var emptyState: some View {
         VStack {
             Spacer()
-            VStack(spacing: 20) {
+            VStack(spacing: 14) {
                 ZStack {
                     Circle()
-                        .fill(Color.deepMaroon)
-                        .frame(width: 100, height: 100)
+                        .fill(Color.appCardBackground)
+                        .frame(width: 80, height: 80)
                     
                     Image(systemName: "envelope.open.fill")
-                        .font(.system(size: 40))
-                        .foregroundColor(.lightGold)
+                        .font(.system(size: 34))
+                        .foregroundColor(Color.appTextMuted)
                 }
                 
                 Text(selectedSubTab == 0 ? "No Pending Requests" : (selectedSubTab == 1 ? "No Active Connections" : "No Sent Requests"))
-                    .font(BrandFonts.displayBold(size: 18))
-                    .foregroundColor(.lightGold)
+                    .font(BrandFonts.displayBold(size: 17))
+                    .foregroundColor(Color.appTextPrimary)
                 
                 Text("Lineage compatibility checks are run in real-time. Invite other members to connect and establish family trust.")
                     .font(BrandFonts.body(size: 13))
-                    .foregroundColor(.sandstoneIvory.opacity(0.7))
+                    .foregroundColor(Color.appTextSecondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, 36)
             }
             Spacer()
         }
@@ -269,13 +296,15 @@ struct ChatDetailView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header Bar
+            // Modern Light Header Bar
             HStack(spacing: 12) {
                 Button(action: { presentationMode.wrappedValue.dismiss() }) {
                     Image(systemName: "chevron.left")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.royalGold)
-                        .padding(6)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(Color.appTextPrimary)
+                        .frame(width: 36, height: 36)
+                        .background(Color.appCardBackground)
+                        .clipShape(Circle())
                 }
                 
                 Group {
@@ -286,8 +315,7 @@ struct ChatDetailView: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
                             } placeholder: {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                                Color.appCardBackground
                             }
                         } else {
                             let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
@@ -296,36 +324,44 @@ struct ChatDetailView: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
                             } placeholder: {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                                Color.appCardBackground
                             }
                         }
                     } else {
-                        Circle()
-                            .fill(Color.royalGold)
-                            .overlay(
-                                Text(String(profile.name.prefix(1)))
-                                    .font(BrandFonts.displayBold(size: 16))
-                                    .foregroundColor(.deepMaroon)
-                            )
+                        LinearGradient(
+                            colors: [Color.appPrimary, Color.appSecondary],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        .overlay(
+                            Text(String(profile.name.prefix(1)))
+                                .font(BrandFonts.displayBold(size: 16))
+                                .foregroundColor(.white)
+                        )
                     }
                 }
-                .frame(width: 40, height: 40)
+                .frame(width: 42, height: 42)
                 .clipShape(Circle())
-                .overlay(Circle().stroke(Color.royalGold.opacity(0.6), lineWidth: 1.5))
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(profile.name)
-                        .font(BrandFonts.displayBold(size: 16))
-                        .foregroundColor(.lightGold)
-                        .lineLimit(1)
+                    HStack(spacing: 4) {
+                        Text(profile.name)
+                            .font(BrandFonts.body(size: 16, weight: .bold))
+                            .foregroundColor(Color.appTextPrimary)
+                            .lineLimit(1)
+                        if profile.isVerified {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 13))
+                                .foregroundColor(Color.verifiedBlue)
+                        }
+                    }
                     HStack(spacing: 4) {
                         Circle()
-                            .fill(Color.green)
+                            .fill(Color.successGreen)
                             .frame(width: 6, height: 6)
                         Text("\(profile.clan) Clan • Online")
-                            .font(BrandFonts.body(size: 11))
-                            .foregroundColor(.sandstoneIvory.opacity(0.8))
+                            .font(BrandFonts.body(size: 11.5))
+                            .foregroundColor(Color.appTextSecondary)
                     }
                 }
                 
@@ -339,57 +375,53 @@ struct ChatDetailView: View {
                         }
                     }) {
                         Image(systemName: "phone.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(.royalGold)
-                            .padding(8)
-                            .background(Color.royalGold.opacity(0.15))
+                            .font(.system(size: 15))
+                            .foregroundColor(Color.appPrimary)
+                            .frame(width: 36, height: 36)
+                            .background(Color.appPrimary.opacity(0.1))
                             .clipShape(Circle())
                     }
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(Color.deepMaroon)
-            .overlay(Divider().background(Color.royalGold.opacity(0.2)), alignment: .bottom)
+            .padding(.vertical, 10)
+            .background(Color.white)
+            .overlay(Divider().background(Color.appDivider), alignment: .bottom)
             
             // Messages Scroll Area
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
-                        // Trust & lineage banner
+                        // Trust & Lineage Pill
                         HStack {
                             Spacer()
-                            VStack(spacing: 4) {
-                                Image(systemName: "shield.lefthalf.filled")
-                                    .foregroundColor(.royalGold)
-                                    .font(.system(size: 18))
-                                Text("End-to-End Rajput Verified Dialogue")
-                                    .font(BrandFonts.label(size: 11))
-                                    .foregroundColor(.royalGold)
-                                Text("Conversations are private between families and synced with the Shree Rajput Sagai Sambandh website.")
-                                    .font(BrandFonts.body(size: 11))
-                                    .foregroundColor(.sandstoneIvory.opacity(0.7))
-                                    .multilineTextAlignment(.center)
+                            HStack(spacing: 6) {
+                                Image(systemName: "lock.shield.fill")
+                                    .foregroundColor(Color.appPrimary)
+                                    .font(.system(size: 12))
+                                Text("End-to-End Rajput Verified Dialogue • Synced")
+                                    .font(BrandFonts.body(size: 11, weight: .semibold))
+                                    .foregroundColor(Color.appTextSecondary)
                             }
-                            .padding(12)
-                            .background(Color.royalGold.opacity(0.08))
-                            .cornerRadius(12)
-                            .padding(.horizontal)
-                            .padding(.top, 8)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 6)
+                            .background(Color.appCardBackground)
+                            .clipShape(Capsule())
+                            .padding(.top, 12)
                             Spacer()
                         }
                         
                         if messages.isEmpty {
-                            VStack(spacing: 8) {
+                            VStack(spacing: 6) {
                                 Text("No messages yet")
                                     .font(BrandFonts.bodyBold(size: 14))
-                                    .foregroundColor(.lightGold)
-                                Text("Initiate noble conversation with \(profile.name.components(separatedBy: " ").first ?? profile.name).")
+                                    .foregroundColor(Color.appTextPrimary)
+                                Text("Say hello to \(profile.name.components(separatedBy: " ").first ?? profile.name)!")
                                     .font(BrandFonts.body(size: 12))
-                                    .foregroundColor(.sandstoneIvory.opacity(0.6))
+                                    .foregroundColor(Color.appTextSecondary)
                             }
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 30)
+                            .padding(.vertical, 36)
                         }
                         
                         ForEach(messages, id: \.id) { msg in
@@ -397,20 +429,36 @@ struct ChatDetailView: View {
                             HStack(alignment: .bottom, spacing: 6) {
                                 if isMe { Spacer(minLength: 40) }
                                 
-                                VStack(alignment: isMe ? .trailing : .leading, spacing: 4) {
+                                VStack(alignment: isMe ? .trailing : .leading, spacing: 3) {
                                     Text(msg.text)
-                                        .font(BrandFonts.body(size: 14))
-                                        .foregroundColor(isMe ? .deepMaroon : .sandstoneIvory)
-                                        .padding(.horizontal, 14)
-                                        .padding(.vertical, 9)
-                                        .background(isMe ? Color.royalGold : Color.white.opacity(0.12))
-                                        .cornerRadius(16)
+                                        .font(BrandFonts.body(size: 14.5))
+                                        .foregroundColor(isMe ? .white : Color.appTextPrimary)
+                                        .padding(.horizontal, 15)
+                                        .padding(.vertical, 10)
+                                        .background(
+                                            Group {
+                                                if isMe {
+                                                    LinearGradient(
+                                                        colors: [Color.appPrimary, Color.appSecondary],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    )
+                                                } else {
+                                                    LinearGradient(
+                                                        colors: [Color.appCardBackground, Color.appCardBackground],
+                                                        startPoint: .top,
+                                                        endPoint: .bottom
+                                                    )
+                                                }
+                                            }
+                                        )
+                                        .cornerRadius(18)
                                     
                                     if msg.time > 0 {
                                         let date = Date(timeIntervalSince1970: msg.time / 1000)
                                         Text(formatMessageTime(date))
-                                            .font(BrandFonts.label(size: 9))
-                                            .foregroundColor(.sandstoneIvory.opacity(0.5))
+                                            .font(BrandFonts.body(size: 10))
+                                            .foregroundColor(Color.appTextMuted)
                                             .padding(.horizontal, 4)
                                     }
                                 }
@@ -430,6 +478,7 @@ struct ChatDetailView: View {
                     }
                 }
             }
+            .background(Color.white)
             
             // Quick reply chips
             ScrollView(.horizontal, showsIndicators: false) {
@@ -439,44 +488,52 @@ struct ChatDetailView: View {
                             messageText = chip
                         }) {
                             Text(chip)
-                                .font(BrandFonts.body(size: 11))
-                                .foregroundColor(.sandstoneIvory)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color.white.opacity(0.08))
-                                .cornerRadius(12)
-                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.royalGold.opacity(0.3), lineWidth: 0.8))
+                                .font(BrandFonts.body(size: 12))
+                                .foregroundColor(Color.appTextPrimary)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 7)
+                                .background(Color.appCardBackground)
+                                .cornerRadius(14)
+                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.appBorder, lineWidth: 1))
                         }
                     }
                 }
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 16)
                 .padding(.vertical, 6)
             }
-            .background(Color.deepMaroon.opacity(0.95))
+            .background(Color.white)
             
-            // Input Bar
+            // Modern Input Bar
             HStack(spacing: 10) {
-                TextField("Write noble message...", text: $messageText)
+                TextField("Type a message...", text: $messageText)
                     .font(BrandFonts.body(size: 14))
-                    .padding(10)
-                    .background(Color.white)
-                    .cornerRadius(20)
-                    .foregroundColor(.inkBrown)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 11)
+                    .background(Color.appCardBackground)
+                    .cornerRadius(22)
+                    .foregroundColor(Color.appTextPrimary)
                     .disabled(isSending)
                 
                 Button(action: sendMessage) {
                     ZStack {
                         Circle()
-                            .fill(Color.royalGold)
-                            .frame(width: 40, height: 40)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.appPrimary, Color.appSecondary],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 42, height: 42)
+                            .shadow(color: Color.appPrimary.opacity(0.35), radius: 6, y: 3)
                         
                         if isSending {
                             ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .deepMaroon))
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         } else {
                             Image(systemName: "paperplane.fill")
                                 .font(.system(size: 16))
-                                .foregroundColor(.deepMaroon)
+                                .foregroundColor(.white)
                         }
                     }
                 }
@@ -484,9 +541,10 @@ struct ChatDetailView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(Color.deepMaroon)
+            .background(Color.white)
+            .overlay(Divider().background(Color.appDivider), alignment: .top)
         }
-        .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
+        .background(Color.white.edgesIgnoringSafeArea(.all))
         .onAppear {
             if let user = currentUser {
                 SupabaseClient.shared.notifyAdminChatOpened(fromUser: user, toProfile: profile)

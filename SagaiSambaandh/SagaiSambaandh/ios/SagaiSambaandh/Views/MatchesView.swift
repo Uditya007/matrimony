@@ -5,194 +5,12 @@ struct MatchesView: View {
     @Binding var selectedTab: Int
     @Binding var showingRegister: Bool
     @Binding var isSideMenuOpen: Bool
-    @State private var activeFilterTab: Int = 0 // 0 = All, 1 = Gotra Compatible
+    
+    @State private var activeFilterTab: Int = 0 // 0 = All Matches, 1 = Gotra Compatible
     @State private var selectedProfileForDetail: Profile? = nil
-    @State private var viewMode: Int = 0 // 0 = Swipe Cards, 1 = List Feed
+    @State private var viewMode: Int = 0 // 0 = Swipe Deck, 1 = Grid Feed
     @State private var showingConnectionSuccess: Bool = false
     @State private var successProfileName: String = ""
-    
-    var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                // View Mode switcher tabs
-                viewModeSwitcher
-                
-                filterTabs
-                
-                if viewMode == 0 {
-                    SwipeDeckView(
-                        profiles: filteredMatches,
-                        isLocked: isProfileLocked,
-                        onUnlock: showRegistration,
-                        onConnect: { profile in
-                            successProfileName = profile.name
-                            showingConnectionSuccess = true
-                            if let currentUser = session.currentUser {
-                                SupabaseClient.shared.sendConnection(senderId: currentUser.id, receiverId: profile.id) { _ in
-                                    DispatchQueue.main.async {
-                                        session.refreshCurrentUserAbout()
-                                        session.fetchConnectionsAndGenerateNotifications()
-                                    }
-                                }
-                                SupabaseClient.shared.notifyAdminInterestSent(fromUser: currentUser, toProfile: profile)
-                            }
-                        }
-                    )
-                    .frame(maxHeight: .infinity)
-                } else {
-                    matchesList
-                }
-            }
-            
-            // Notification toast popover
-            if showingConnectionSuccess {
-                Color.black.opacity(0.4)
-                    .edgesIgnoringSafeArea(.all)
-                    
-                VStack(spacing: 16) {
-                    Image(systemName: "paperplane.fill")
-                        .font(.system(size: 40))
-                        .foregroundColor(.royalGold)
-                    
-                    Text("Connection Sent!")
-                        .font(BrandFonts.displayBold(size: 18))
-                        .foregroundColor(.lightGold)
-                    
-                    Text("\(successProfileName) has been notified of your interest. You will be alerted once they accept.")
-                        .font(BrandFonts.body(size: 13))
-                        .foregroundColor(.sandstoneIvory)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
-                .padding(.vertical, 24)
-                .background(Color.deepMaroon)
-                .cornerRadius(16)
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.royalGold, lineWidth: 2))
-                .padding(30)
-                .shadow(radius: 12)
-                .onAppear {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                        showingConnectionSuccess = false
-                    }
-                }
-            }
-        }
-        .sheet(item: $selectedProfileForDetail) { profile in
-            ProfileDetailView(profile: profile)
-                .environmentObject(session)
-        }
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {
-                    withAnimation {
-                        isSideMenuOpen = true
-                    }
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "line.horizontal.3")
-                            .foregroundColor(.lightGold)
-                            .font(.title2)
-                        
-                        Image("logo")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 32, height: 32)
-                            .clipShape(Circle())
-                            .background(Color.white)
-                            .cornerRadius(16)
-                            .overlay(Circle().stroke(Color.royalGold, lineWidth: 0.5))
-                    }
-                }
-            }
-            ToolbarItem(placement: .principal) {
-                Text("Matches")
-                    .font(BrandFonts.displayBold(size: 18))
-                    .foregroundColor(.lightGold)
-            }
-        }
-    }
-    
-    private var filterTabs: some View {
-        Picker("Filter", selection: $activeFilterTab) {
-            Text("All Matches").tag(0)
-            Text("Gotra Compatible").tag(1)
-        }
-        .pickerStyle(SegmentedPickerStyle())
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(Color.deepMaroon)
-    }
-    
-    private var matchesList: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                ForEach(filteredMatches) { profile in
-                    matchRow(for: profile)
-                }
-            }
-            .padding()
-        }
-        .refreshable {
-            await session.refreshProfilesAsync()
-        }
-        .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
-    }
-    
-    private func matchRow(for profile: Profile) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ProfileSummaryCard(
-                profile: profile,
-                isLocked: isProfileLocked,
-                onUnlockTap: showRegistration,
-                onDetailTap: {
-                    openDetail(for: profile)
-                }
-            )
-            
-            let isConnected = session.areConnected(profileId: profile.id)
-            let isSent = session.currentUser != nil && SupabaseClient.shared.getInterests(from: session.currentUser?.about)[profile.id] == "sent"
-            
-            Button(action: {
-                if isConnected {
-                    openDetail(for: profile)
-                } else if !isSent {
-                    handleConnectTap(profile: profile)
-                }
-            }) {
-                HStack {
-                    if isConnected {
-                        Image(systemName: "bubble.left.and.bubble.right.fill")
-                        Text("Connected • Message")
-                            .font(BrandFonts.bodyBold(size: 14))
-                    } else if isSent {
-                        Image(systemName: "clock.arrow.circlepath")
-                        Text("Interest Sent (Pending)")
-                            .font(BrandFonts.bodyBold(size: 14))
-                    } else {
-                        Image(systemName: "checkmark.circle.fill")
-                        Text("Connect Now")
-                            .font(BrandFonts.bodyBold(size: 14))
-                    }
-                }
-                .foregroundColor(isConnected ? .deepMaroon : .lightGold)
-                .frame(maxWidth: .infinity)
-                .frame(height: 44)
-                .background(isConnected ? Color.royalGold : (isSent ? Color.royalGold.opacity(0.2) : Color.royalMaroon))
-                .cornerRadius(22)
-                .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.royalGold, lineWidth: 1))
-            }
-            .disabled(isSent && !isConnected)
-        }
-        .padding()
-        .background(Color.deepMaroon)
-        .cornerRadius(16)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.royalGold.opacity(0.3), lineWidth: 1)
-        )
-        .shadow(color: Color.black.opacity(0.1), radius: 4)
-    }
     
     private var isProfileLocked: Bool {
         session.currentUser == nil
@@ -230,7 +48,9 @@ struct MatchesView: View {
             showRegistration()
         } else {
             successProfileName = profile.name
-            showingConnectionSuccess = true
+            withAnimation(.spring()) {
+                showingConnectionSuccess = true
+            }
             if let currentUser = session.currentUser {
                 SupabaseClient.shared.sendConnection(senderId: currentUser.id, receiverId: profile.id) { _ in
                     DispatchQueue.main.async {
@@ -243,22 +63,235 @@ struct MatchesView: View {
         }
     }
     
-    private var viewModeSwitcher: some View {
-        Picker("View Mode", selection: $viewMode) {
-            Text("Swipe Cards").tag(0)
-            Text("List Feed").tag(1)
+    var body: some View {
+        ZStack {
+            Color.white.edgesIgnoringSafeArea(.all)
+            
+            VStack(spacing: 0) {
+                // Top Header with Location & Controls
+                topHeaderBar
+                
+                // Filter Capsule Pills
+                filterCapsulesBar
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                
+                if viewMode == 0 {
+                    // 3D Neumorphic Swipe Card Deck
+                    SwipeDeckView(
+                        profiles: filteredMatches,
+                        isLocked: isProfileLocked,
+                        onUnlock: showRegistration,
+                        onOpenDetail: { profile in
+                            openDetail(for: profile)
+                        },
+                        onConnect: { profile in
+                            handleConnectTap(profile: profile)
+                        }
+                    )
+                    .frame(maxHeight: .infinity)
+                } else {
+                    // Modern 2-Column Matches Grid
+                    matchesGridView
+                }
+            }
+            
+            // Connection Sent Toast Popover
+            if showingConnectionSuccess {
+                VStack {
+                    Spacer()
+                    HStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 44, height: 44)
+                            Image(systemName: "heart.fill")
+                                .font(.system(size: 22))
+                                .foregroundColor(Color.appPrimary)
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Rishta Expressed!")
+                                .font(BrandFonts.displayBold(size: 15))
+                                .foregroundColor(.white)
+                            Text("Notified \(successProfileName) of your interest.")
+                                .font(BrandFonts.body(size: 12))
+                                .foregroundColor(.white.opacity(0.9))
+                        }
+                        Spacer()
+                    }
+                    .padding(16)
+                    .background(
+                        LinearGradient(
+                            colors: [Color.appPrimary, Color.appSecondary],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(20)
+                    .shadow(color: Color.appPrimary.opacity(0.35), radius: 16, y: 8)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 24)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+                .zIndex(10)
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) {
+                        withAnimation {
+                            showingConnectionSuccess = false
+                        }
+                    }
+                }
+            }
         }
-        .pickerStyle(SegmentedPickerStyle())
-        .padding(.horizontal)
+        .sheet(item: $selectedProfileForDetail) { profile in
+            ProfileDetailView(profile: profile)
+                .environmentObject(session)
+        }
+        .navigationBarHidden(true)
+    }
+    
+    // MARK: - Header Bar
+    private var topHeaderBar: some View {
+        HStack {
+            // Side Drawer Trigger
+            Button(action: {
+                withAnimation {
+                    isSideMenuOpen = true
+                }
+            }) {
+                Image(systemName: "line.horizontal.3")
+                    .foregroundColor(Color.appTextPrimary)
+                    .font(.title2)
+                    .frame(width: 40, height: 40)
+                    .background(Color.appCardBackground)
+                    .clipShape(Circle())
+            }
+            
+            Spacer()
+            
+            // Center Title & Location Pin
+            VStack(spacing: 2) {
+                Text("Discover")
+                    .font(BrandFonts.displayBold(size: 20))
+                    .foregroundColor(Color.appTextPrimary)
+                
+                HStack(spacing: 4) {
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(Color.appPrimary)
+                    Text("Rajasthan, India")
+                        .font(BrandFonts.body(size: 12, weight: .semibold))
+                        .foregroundColor(Color.appTextSecondary)
+                }
+            }
+            
+            Spacer()
+            
+            // View Mode Toggle (Deck vs Grid)
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    viewMode = (viewMode == 0) ? 1 : 0
+                }
+            }) {
+                Image(systemName: viewMode == 0 ? "square.grid.2x2.fill" : "rectangle.stack.fill")
+                    .foregroundColor(Color.appTextPrimary)
+                    .font(.system(size: 16, weight: .semibold))
+                    .frame(width: 40, height: 40)
+                    .background(Color.appCardBackground)
+                    .clipShape(Circle())
+            }
+        }
+        .padding(.horizontal, 20)
         .padding(.top, 10)
-        .background(Color.deepMaroon)
+        .padding(.bottom, 6)
+    }
+    
+    // MARK: - Filter Capsules
+    private var filterCapsulesBar: some View {
+        HStack(spacing: 10) {
+            filterPill(title: "All Matches", count: session.profiles.count, tag: 0)
+            filterPill(title: "Gotra Compatible", count: filteredMatches.count, tag: 1)
+            Spacer()
+        }
+    }
+    
+    private func filterPill(title: String, count: Int, tag: Int) -> some View {
+        let isSelected = activeFilterTab == tag
+        return Button(action: {
+            withAnimation(.spring(response: 0.3)) {
+                activeFilterTab = tag
+            }
+        }) {
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(BrandFonts.body(size: 13, weight: isSelected ? .bold : .medium))
+                
+                Text("\(count)")
+                    .font(BrandFonts.body(size: 11, weight: .bold))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(isSelected ? Color.white.opacity(0.25) : Color.black.opacity(0.06))
+                    .clipShape(Capsule())
+            }
+            .foregroundColor(isSelected ? .white : Color.appTextSecondary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(
+                Group {
+                    if isSelected {
+                        LinearGradient(
+                            colors: [Color.appPrimary, Color.appSecondary],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    } else {
+                        Color.appCardBackground
+                    }
+                }
+            )
+            .clipShape(Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(isSelected ? Color.clear : Color.appBorder, lineWidth: 1)
+            )
+        }
+    }
+    
+    // MARK: - Grid View (2 Columns)
+    private var matchesGridView: some View {
+        ScrollView {
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: 14),
+                    GridItem(.flexible(), spacing: 14)
+                ],
+                spacing: 16
+            ) {
+                ForEach(filteredMatches) { profile in
+                    ModernGridCardItem(
+                        profile: profile,
+                        isLocked: isProfileLocked,
+                        onTap: { openDetail(for: profile) },
+                        onConnect: { handleConnectTap(profile: profile) }
+                    )
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+        }
+        .refreshable {
+            await session.refreshProfilesAsync()
+        }
     }
 }
 
+// MARK: - 3D Neumorphic Swipe Card Deck
 struct SwipeDeckView: View {
     let profiles: [Profile]
     let isLocked: Bool
     let onUnlock: () -> Void
+    let onOpenDetail: (Profile) -> Void
     let onConnect: (Profile) -> Void
     
     @State private var currentIndex: Int = 0
@@ -266,185 +299,459 @@ struct SwipeDeckView: View {
     @State private var rotation: Double = 0
     
     var body: some View {
-        ZStack {
-            if currentIndex < profiles.count {
-                let profile = profiles[currentIndex]
-                
-                VStack(spacing: 20) {
-                    // Swipe Card Container
-                    ZStack(alignment: .bottom) {
-                        // Blurred representation if locked, monogram if open
-                        if isLocked {
-                            VStack(spacing: 16) {
-                                Spacer()
-                                Image(systemName: "lock.fill")
-                                    .font(.system(size: 64))
-                                    .foregroundColor(.royalGold)
-                                Text("Lineage Portrait Locked")
-                                    .font(BrandFonts.displayBold(size: 20))
-                                    .foregroundColor(.lightGold)
-                                Text("Complete Verification to unlock photos.")
-                                    .font(BrandFonts.body(size: 13))
-                                    .foregroundColor(.sandstoneIvory.opacity(0.7))
-                                    .multilineTextAlignment(.center)
-                                    .padding(.horizontal)
-                                Spacer()
-                            }
-                            .frame(width: 320, height: 420)
-                            .background(Color.royalGold.opacity(0.12))
-                            .cornerRadius(24)
-                            .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.royalGold.opacity(0.3), lineWidth: 1.5))
-                        } else {
-                            // Monogram circular or simple background with details
-                            VStack(spacing: 20) {
-                                Spacer()
-                                Circle()
-                                    .fill(Color.royalGold)
-                                    .frame(width: 120, height: 120)
-                                    .overlay(
-                                        Text(String(profile.name.prefix(1)))
-                                            .font(BrandFonts.displayBold(size: 48))
-                                            .foregroundColor(.deepMaroon)
-                                    )
-                                Spacer()
-                            }
-                            .frame(width: 320, height: 420)
-                            .background(Color.black.opacity(0.2))
-                            .cornerRadius(24)
-                            .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.royalGold.opacity(0.3), lineWidth: 1.5))
+        GeometryReader { geometry in
+            let cardWidth = min(geometry.size.width - 32, 380)
+            let cardHeight = min(geometry.size.height - 130, cardWidth * 1.38)
+            
+            VStack(spacing: 16) {
+                ZStack {
+                    if currentIndex < profiles.count {
+                        // Background placeholder card for deck depth
+                        if currentIndex + 1 < profiles.count {
+                            let nextProfile = profiles[currentIndex + 1]
+                            cardContent(for: nextProfile, width: cardWidth, height: cardHeight)
+                                .scaleEffect(0.94)
+                                .offset(y: 14)
+                                .opacity(0.65)
                         }
                         
-                        // Dark Shadow overlay for text readability
-                        LinearGradient(
-                            colors: [.clear, .black.opacity(0.85)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                        .frame(height: 180)
-                        .cornerRadius(24)
-                        
-                        // Profile details
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack {
-                                Text("\(profile.name), \(profile.age)")
-                                    .font(BrandFonts.displayBold(size: 20))
-                                    .foregroundColor(.white)
-                                
-                                if profile.isVerified {
-                                    Image(systemName: "checkmark.seal.fill")
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                            
-                            Text("\(profile.clan) Clan • \(profile.gotra) Gotra")
-                                .font(BrandFonts.body(size: 14, weight: .bold))
-                                .foregroundColor(.lightGold)
-                            
-                            Text("\(profile.height) • \(profile.education) • \(profile.occupation)")
-                                .font(BrandFonts.body(size: 12))
-                                .foregroundColor(.white.opacity(0.9))
-                            
-                            Text("Thikana: \(profile.thikana)")
-                                .font(BrandFonts.body(size: 12))
-                                .foregroundColor(.lightGold.opacity(0.8))
-                        }
-                        .padding(20)
-                        .frame(width: 320, alignment: .leading)
-                    }
-                    .frame(width: 320, height: 420)
-                    .offset(offset)
-                    .rotationEffect(.degrees(rotation))
-                    .gesture(
-                        DragGesture()
-                            .onChanged { gesture in
-                                offset = gesture.translation
-                                rotation = Double(gesture.translation.width / 15)
-                            }
-                            .onEnded { gesture in
-                                if gesture.translation.width > 120 {
-                                    // Swiped Right -> Connect
-                                    swipeRight(profile: profile)
-                                } else if gesture.translation.width < -120 {
-                                    // Swiped Left -> Skip
-                                    swipeLeft()
-                                } else {
-                                    // Reset
-                                    withAnimation(.spring()) {
-                                        offset = .zero
-                                        rotation = 0
+                        // Active foreground card
+                        let activeProfile = profiles[currentIndex]
+                        cardContent(for: activeProfile, width: cardWidth, height: cardHeight)
+                            .offset(offset)
+                            .rotationEffect(.degrees(rotation))
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { gesture in
+                                        offset = gesture.translation
+                                        rotation = Double(gesture.translation.width / 18)
                                     }
-                                }
-                            }
-                    )
-                    
-                    // Swipe Action Buttons
-                    HStack(spacing: 40) {
-                        // Cross / Reject button
-                        Button(action: {
-                            swipeLeft()
-                        }) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 22, weight: .bold))
-                                .foregroundColor(.red)
-                                .frame(width: 60, height: 60)
-                                .background(Color.white)
-                                .clipShape(Circle())
-                                .shadow(radius: 4)
+                                    .onEnded { gesture in
+                                        if gesture.translation.width > 110 {
+                                            swipeRight(profile: activeProfile)
+                                        } else if gesture.translation.width < -110 {
+                                            swipeLeft()
+                                        } else if gesture.translation.height < -120 {
+                                            swipeUp(profile: activeProfile)
+                                        } else {
+                                            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                                                offset = .zero
+                                                rotation = 0
+                                            }
+                                        }
+                                    }
+                            )
+                    } else {
+                        // Deck Completed State
+                        deckCompletedView
+                            .frame(width: cardWidth, height: cardHeight)
+                    }
+                }
+                .frame(width: cardWidth, height: cardHeight)
+                
+                // 3D Neumorphic Floating Action Buttons Row
+                if currentIndex < profiles.count {
+                    let activeProfile = profiles[currentIndex]
+                    neumorphicActionButtonsRow(for: activeProfile)
+                        .padding(.top, 4)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+    
+    // MARK: - Card Container
+    private func cardContent(for profile: Profile, width: CGFloat, height: CGFloat) -> some View {
+        let likeOpacity = min(1.0, max(0.0, Double(offset.width / 90.0)))
+        let passOpacity = min(1.0, max(0.0, Double(-offset.width / 90.0)))
+        let starOpacity = min(1.0, max(0.0, Double(-offset.height / 90.0)))
+        
+        return ZStack(alignment: .bottom) {
+            // 1. Candidate Photo / Locked Backdrop
+            ZStack {
+                if isLocked {
+                    lockedCardBackdrop
+                } else {
+                    candidatePhotoView(for: profile)
+                }
+            }
+            .frame(width: width, height: height)
+            .clipped()
+            
+            // 2. Multi-stop Deep Gradient Overlay
+            AppGradients.overlay
+                .frame(width: width, height: height)
+                .allowsHitTesting(false)
+            
+            // 3. Dynamic Real-time Drag Stamps
+            // (a) SEND RISHTA (Swiping Right)
+            if likeOpacity > 0.05 {
+                VStack {
+                    HStack {
+                        HStack(spacing: 8) {
+                            Image(systemName: "heart.fill")
+                                .font(.system(size: 22))
+                            Text("SEND RISHTA")
+                                .font(BrandFonts.displayBold(size: 19))
+                                .tracking(1.5)
                         }
+                        .foregroundColor(Color.successGreen)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color.black.opacity(0.45))
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.successGreen, lineWidth: 3)
+                        )
+                        .rotationEffect(.degrees(-15))
+                        .opacity(likeOpacity)
+                        .padding(.leading, 24)
+                        .padding(.top, 24)
                         
-                        // Tick / Connect button
-                        Button(action: {
-                            swipeRight(profile: profile)
-                        }) {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 22, weight: .bold))
-                                .foregroundColor(.green)
-                                .frame(width: 60, height: 60)
-                                .background(Color.white)
-                                .clipShape(Circle())
-                                .shadow(radius: 4)
+                        Spacer()
+                    }
+                    Spacer()
+                }
+                .allowsHitTesting(false)
+            }
+            
+            // (b) PASS (Swiping Left)
+            if passOpacity > 0.05 {
+                VStack {
+                    HStack {
+                        Spacer()
+                        HStack(spacing: 8) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 20, weight: .bold))
+                            Text("PASS")
+                                .font(BrandFonts.displayBold(size: 20))
+                                .tracking(2)
+                        }
+                        .foregroundColor(Color.dislikeRed)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.black.opacity(0.45))
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.dislikeRed, lineWidth: 3)
+                        )
+                        .rotationEffect(.degrees(15))
+                        .opacity(passOpacity)
+                        .padding(.trailing, 24)
+                        .padding(.top, 24)
+                    }
+                    Spacer()
+                }
+                .allowsHitTesting(false)
+            }
+            
+            // (c) SHORTLIST (Swiping Up)
+            if starOpacity > 0.05 && abs(offset.width) < 60 {
+                VStack {
+                    HStack(spacing: 8) {
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 20))
+                        Text("SHORTLIST")
+                            .font(BrandFonts.displayBold(size: 18))
+                            .tracking(1.5)
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .background(
+                        LinearGradient(
+                            colors: [Color.starPurple, Color.starGold],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(14)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(Color.white, lineWidth: 2)
+                    )
+                    .shadow(color: Color.starPurple.opacity(0.5), radius: 12, y: 4)
+                    .opacity(starOpacity)
+                    .padding(.top, 30)
+                    
+                    Spacer()
+                }
+                .allowsHitTesting(false)
+            }
+            
+            // 4. Rich Candidate Information Bottom Card
+            VStack(alignment: .leading, spacing: 8) {
+                // Name, Age, Verified & Info Arrow Button
+                HStack(alignment: .center) {
+                    HStack(spacing: 6) {
+                        Text(isLocked ? "Lineage Member" : "\(profile.name), \(profile.age)")
+                            .font(BrandFonts.displayBold(size: 24))
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                        
+                        if profile.isVerified {
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundColor(Color.verifiedBlue)
+                                .font(.system(size: 16))
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    // Info Button to open profile details
+                    Button(action: {
+                        onOpenDetail(profile)
+                    }) {
+                        Image(systemName: "arrow.up")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 38, height: 38)
+                            .background(Color.white.opacity(0.22))
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.white.opacity(0.45), lineWidth: 1.5))
+                    }
+                }
+                
+                // Clan & Gotra Pill Tags
+                HStack(spacing: 8) {
+                    badgePill(text: "\(profile.clan) Clan", color: Color.royalGold)
+                    badgePill(text: "\(profile.gotra) Gotra", color: Color.white.opacity(0.85))
+                }
+                
+                // Profession
+                HStack(spacing: 6) {
+                    Image(systemName: "briefcase.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.8))
+                    Text("\(profile.occupation) • \(profile.education)")
+                        .font(BrandFonts.body(size: 13, weight: .medium))
+                        .foregroundColor(.white.opacity(0.92))
+                        .lineLimit(1)
+                }
+                
+                // Native Thikana
+                HStack(spacing: 6) {
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(Color.appSecondary)
+                    Text("Thikana: \(profile.thikana)")
+                        .font(BrandFonts.body(size: 12))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+            }
+            .padding(20)
+            .frame(width: width, alignment: .leading)
+        }
+        .frame(width: width, height: height)
+        .cornerRadius(28)
+        .shadow(color: Color.black.opacity(0.12), radius: 24, x: 0, y: 12)
+        .shadow(color: Color.appPrimary.opacity(0.06), radius: 30, x: 0, y: 4)
+    }
+    
+    private func badgePill(text: String, color: Color) -> some View {
+        Text(text)
+            .font(BrandFonts.label(size: 11, weight: .bold))
+            .foregroundColor(color)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(Color.white.opacity(0.16))
+            .clipShape(Capsule())
+    }
+    
+    // Photo View
+    private func candidatePhotoView(for profile: Profile) -> some View {
+        Group {
+            if let imgName = profile.img, !imgName.isEmpty {
+                if imgName.hasPrefix("http") {
+                    AsyncImage(url: URL(string: imgName)) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        ZStack {
+                            Color.appCardBackground
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: Color.appPrimary))
+                        }
+                    }
+                } else {
+                    let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
+                    AsyncImage(url: URL(string: localUrl)) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        ZStack {
+                            Color.appCardBackground
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: Color.appPrimary))
                         }
                     }
                 }
-                .transition(.asymmetric(insertion: .identity, removal: .move(edge: offset.width > 0 ? .trailing : .leading)))
             } else {
-                // No more cards
-                VStack(spacing: 12) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 48))
-                        .foregroundColor(.royalGold)
-                    
-                    Text("Noble Deck Completed!")
-                        .font(BrandFonts.displayBold(size: 18))
-                        .foregroundColor(.lightGold)
-                    
-                    Text("You have viewed all compatible matches in your clan.")
-                        .font(BrandFonts.body(size: 13))
-                        .foregroundColor(.sandstoneIvory.opacity(0.7))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                    
-                    Button("Start Over") {
-                        currentIndex = 0
-                    }
-                    .font(BrandFonts.bodyBold(size: 14))
-                    .foregroundColor(.deepMaroon)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
-                    .background(Color.royalGold)
-                    .cornerRadius(20)
+                // Fallback Monogram
+                ZStack {
+                    LinearGradient(
+                        colors: [Color.appPrimary.opacity(0.85), Color.appSecondary.opacity(0.85)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    Text(String(profile.name.prefix(1)))
+                        .font(BrandFonts.displayBold(size: 84))
+                        .foregroundColor(.white)
                 }
-                .padding(40)
             }
         }
     }
     
-    private func swipeLeft() {
-        withAnimation(.easeInOut(duration: 0.2)) {
-            offset = CGSize(width: -500, height: 0)
-            rotation = -30
+    // Locked Card Backdrop
+    private var lockedCardBackdrop: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color(hex: "#2B1810"), Color(hex: "#1B1B1E")],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            
+            VStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.1))
+                        .frame(width: 80, height: 80)
+                    Image(systemName: "lock.shield.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(Color.royalGold)
+                }
+                
+                Text("Lineage Portrait Secured")
+                    .font(BrandFonts.displayBold(size: 20))
+                    .foregroundColor(.white)
+                
+                Text("Log in or create a profile to view authentic portraits.")
+                    .font(BrandFonts.body(size: 13))
+                    .foregroundColor(.white.opacity(0.7))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 30)
+                
+                Button(action: onUnlock) {
+                    Text("Unlock Lineage")
+                        .font(BrandFonts.bodyBold(size: 14))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 10)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.appPrimary, Color.appSecondary],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .clipShape(Capsule())
+                }
+                .padding(.top, 4)
+            }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+    }
+    
+    // MARK: - 3D Neumorphic Action Buttons
+    private func neumorphicActionButtonsRow(for profile: Profile) -> some View {
+        HStack(alignment: .bottom, spacing: 36) {
+            // PASS Button (3D Neumorphic)
+            neumorphicButton(
+                icon: "xmark",
+                iconColor: Color.dislikeRed,
+                label: "PASS",
+                size: 58,
+                action: { swipeLeft() }
+            )
+            
+            // Elevated RISHTA Hero Button
+            heroConnectButton(
+                action: { swipeRight(profile: profile) }
+            )
+            
+            // SHORTLIST Button (3D Neumorphic)
+            neumorphicButton(
+                icon: "star.fill",
+                iconColor: Color.starPurple,
+                label: "SHORTLIST",
+                size: 58,
+                action: { swipeUp(profile: profile) }
+            )
+        }
+    }
+    
+    private func neumorphicButton(icon: String, iconColor: Color, label: String, size: CGFloat, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.white, Color(hex: "#F6F7FB"), Color(hex: "#E9EBF1")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: size, height: size)
+                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                        .shadow(color: Color.white, radius: 8, x: -4, y: -4)
+                        .shadow(color: Color(hex: "#B8BCC8").opacity(0.45), radius: 10, x: 4, y: 5)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: size * 0.38, weight: .bold))
+                        .foregroundColor(iconColor)
+                }
+                
+                Text(label)
+                    .font(BrandFonts.label(size: 11, weight: .bold))
+                    .foregroundColor(Color.appTextSecondary)
+                    .tracking(0.6)
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private func heroConnectButton(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.appPrimary, Color.appSecondary],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 76, height: 76)
+                        .overlay(Circle().stroke(Color.white.opacity(0.3), lineWidth: 2.5))
+                        .shadow(color: Color.appPrimary.opacity(0.4), radius: 16, x: 0, y: 8)
+                        .shadow(color: Color.white.opacity(0.6), radius: 6, x: -3, y: -3)
+                    
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 34))
+                        .foregroundColor(.white)
+                }
+                
+                Text("RISHTA")
+                    .font(BrandFonts.label(size: 12, weight: .heavy))
+                    .foregroundColor(Color.appPrimary)
+                    .tracking(0.8)
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    // MARK: - Gestures & Actions
+    private func swipeLeft() {
+        withAnimation(.easeInOut(duration: 0.22)) {
+            offset = CGSize(width: -600, height: 0)
+            rotation = -25
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
             currentIndex += 1
             offset = .zero
             rotation = 0
@@ -452,102 +759,189 @@ struct SwipeDeckView: View {
     }
     
     private func swipeRight(profile: Profile) {
-        withAnimation(.easeInOut(duration: 0.2)) {
-            offset = CGSize(width: 500, height: 0)
-            rotation = 30
+        withAnimation(.easeInOut(duration: 0.22)) {
+            offset = CGSize(width: 600, height: 0)
+            rotation = 25
         }
         onConnect(profile)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
             currentIndex += 1
             offset = .zero
             rotation = 0
         }
     }
+    
+    private func swipeUp(profile: Profile) {
+        withAnimation(.easeInOut(duration: 0.22)) {
+            offset = CGSize(width: 0, height: -600)
+            rotation = 0
+        }
+        onConnect(profile)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
+            currentIndex += 1
+            offset = .zero
+            rotation = 0
+        }
+    }
+    
+    // MARK: - Deck Completed State
+    private var deckCompletedView: some View {
+        VStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(Color.appPrimary.opacity(0.1))
+                    .frame(width: 90, height: 90)
+                Image(systemName: "sparkles")
+                    .font(.system(size: 42))
+                    .foregroundColor(Color.appPrimary)
+            }
+            
+            Text("Deck Completed!")
+                .font(BrandFonts.displayBold(size: 22))
+                .foregroundColor(Color.appTextPrimary)
+            
+            Text("You've viewed all matching profiles. Check back soon for newly registered Rajput members.")
+                .font(BrandFonts.body(size: 13.5))
+                .foregroundColor(Color.appTextSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+            
+            Button(action: {
+                withAnimation {
+                    currentIndex = 0
+                }
+            }) {
+                Text("Start Over")
+                    .font(BrandFonts.bodyBold(size: 14))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 12)
+                    .background(
+                        LinearGradient(
+                            colors: [Color.appPrimary, Color.appSecondary],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .clipShape(Capsule())
+                    .shadow(color: Color.appPrimary.opacity(0.3), radius: 8, y: 4)
+            }
+            .padding(.top, 8)
+        }
+        .padding(32)
+        .background(Color.white)
+        .cornerRadius(28)
+        .overlay(RoundedRectangle(cornerRadius: 28).stroke(Color.appBorder, lineWidth: 1.5))
+        .shadow(color: Color.black.opacity(0.06), radius: 16, y: 6)
+    }
 }
 
-// Simple summary card mockup helper
-struct ProfileSummaryCard: View {
+// MARK: - Modern 2-Column Grid Card Item
+struct ModernGridCardItem: View {
     let profile: Profile
     let isLocked: Bool
-    var onUnlockTap: () -> Void
-    var onDetailTap: () -> Void
+    let onTap: () -> Void
+    let onConnect: () -> Void
     
     var body: some View {
-        Button(action: onDetailTap) {
-            HStack(spacing: 16) {
-                // Avatar / Photo
-                ZStack {
-                    if isLocked {
-                        // Blurred representation
-                        Circle()
-                            .fill(Color.royalGold.opacity(0.15))
-                            .frame(width: 80, height: 80)
-                        
-                        Image(systemName: "lock.fill")
-                            .foregroundColor(.royalGold)
-                            .font(.title2)
-                    } else {
-                        // Unlocked State Photo or Initials Monogram
-                        Group {
-                            if let imgName = profile.img, !imgName.isEmpty {
-                                if imgName.hasPrefix("http") {
-                                    AsyncImage(url: URL(string: imgName)) { image in
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                    } placeholder: {
-                                        ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
-                                    }
-                                } else {
-                                    let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
-                                    AsyncImage(url: URL(string: localUrl)) { image in
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                    } placeholder: {
-                                        ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
-                                    }
+        Button(action: onTap) {
+            VStack(spacing: 0) {
+                ZStack(alignment: .bottomLeading) {
+                    // Photo
+                    Group {
+                        if !isLocked, let imgName = profile.img, !imgName.isEmpty {
+                            if imgName.hasPrefix("http") {
+                                AsyncImage(url: URL(string: imgName)) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                } placeholder: {
+                                    Color.appCardBackground
                                 }
                             } else {
-                                Circle()
-                                    .fill(Color.royalGold)
-                                    .overlay(
-                                        Text(String(profile.name.prefix(1)))
-                                            .font(BrandFonts.displayBold(size: 32))
-                                            .foregroundColor(.deepMaroon)
-                                    )
+                                let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
+                                AsyncImage(url: URL(string: localUrl)) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                } placeholder: {
+                                    Color.appCardBackground
+                                }
+                            }
+                        } else {
+                            LinearGradient(
+                                colors: [Color.appPrimary.opacity(0.8), Color.appSecondary.opacity(0.8)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                            .overlay(
+                                Text(String(profile.name.prefix(1)))
+                                    .font(BrandFonts.displayBold(size: 36))
+                                    .foregroundColor(.white)
+                            )
+                        }
+                    }
+                    .frame(height: 190)
+                    .clipped()
+                    
+                    // Dark Bottom Gradient
+                    LinearGradient(
+                        colors: [Color.clear, Color.black.opacity(0.75)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 70)
+                    
+                    // Information on Card
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 4) {
+                            Text("\(profile.name), \(profile.age)")
+                                .font(BrandFonts.displayBold(size: 14))
+                                .foregroundColor(.white)
+                                .lineLimit(1)
+                            
+                            if profile.isVerified {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .foregroundColor(Color.verifiedBlue)
+                                    .font(.system(size: 11))
                             }
                         }
-                        .frame(width: 80, height: 80)
-                        .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.royalGold.opacity(0.4), lineWidth: 1))
+                        
+                        Text("\(profile.clan) • \(profile.gotra)")
+                            .font(BrandFonts.body(size: 11, weight: .medium))
+                            .foregroundColor(.white.opacity(0.85))
+                            .lineLimit(1)
                     }
+                    .padding(10)
                 }
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(isLocked ? "Photo Locked" : profile.name)
-                            .font(BrandFonts.displayBold(size: 18))
-                            .foregroundColor(.lightGold)
-                        
-                        if profile.isVerified {
-                            Image(systemName: "checkmark.seal.fill")
-                                .foregroundColor(.blue)
-                        }
+                // Bottom Action Strip
+                HStack {
+                    Text(profile.occupation)
+                        .font(BrandFonts.body(size: 11))
+                        .foregroundColor(Color.appTextSecondary)
+                        .lineLimit(1)
+                    Spacer()
+                    Button(action: onConnect) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(Color.appPrimary)
+                            .frame(width: 30, height: 30)
+                            .background(Color.appPrimary.opacity(0.12))
+                            .clipShape(Circle())
                     }
-                    
-                    Text("\(profile.age) yrs • \(profile.height) • \(profile.clan)")
-                        .font(BrandFonts.body(size: 13))
-                        .foregroundColor(.sandstoneIvory.opacity(0.8))
-                    
-                    Text("Gotra: \(profile.gotra) • Native: \(profile.thikana)")
-                        .font(BrandFonts.body(size: 12))
-                        .foregroundColor(.sandstoneIvory.opacity(0.6))
                 }
-                Spacer()
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(Color.white)
             }
+            .background(Color.white)
+            .cornerRadius(18)
+            .overlay(
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(Color.appBorder, lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 3)
         }
         .buttonStyle(PlainButtonStyle())
     }

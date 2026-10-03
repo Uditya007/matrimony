@@ -14,20 +14,19 @@ struct LoginView: View {
         GeometryReader { geometry in
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    Spacer(minLength: geometry.size.height * 0.05)
+                    Spacer(minLength: 30)
                     
-                    // Centered Medallion Logo
+                    // Brand Logo Medallion
                     ZStack {
                         Circle()
-                            .stroke(
+                            .fill(
                                 LinearGradient(
-                                    colors: [.royalGold, .lightGold, .royalGold],
+                                    colors: [Color.appPrimary.opacity(0.12), Color.appSecondary.opacity(0.06)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 2.5
+                                )
                             )
-                            .frame(width: 104, height: 104)
+                            .frame(width: 96, height: 96)
                         
                         Group {
                             if let img = UIImage(named: "logo") {
@@ -35,185 +34,187 @@ struct LoginView: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                             } else {
-                                Image(systemName: "shield.fill")
-                                    .font(.system(size: 32))
-                                    .foregroundColor(.lightGold)
+                                Image(systemName: "heart.circle.fill")
+                                    .font(.system(size: 48))
+                                    .foregroundColor(Color.appPrimary)
                             }
                         }
-                        .frame(width: 96, height: 96)
+                        .frame(width: 80, height: 80)
                         .clipShape(Circle())
                     }
-                    .shadow(color: Color.black.opacity(0.08), radius: 5, x: 0, y: 3)
                     .padding(.top, 10)
                     
-                    Spacer().frame(height: 16)
+                    Spacer().frame(height: 20)
                     
-                    // Title block
-                    VStack(spacing: 6) {
-                        Text("SHREE RAJPUT")
-                            .font(BrandFonts.label(size: 11))
-                            .foregroundColor(.royalGold)
-                            .tracking(3)
-                        
-                        Text("Sagai Sambaandh")
+                    // Main Headlines (Matching UI Kit)
+                    VStack(spacing: 8) {
+                        Text("Start Something Real")
                             .font(BrandFonts.displayBold(size: 28))
-                            .foregroundColor(.lightGold)
+                            .foregroundColor(Color.appTextPrimary)
+                            .tracking(-0.5)
                         
-                        Text("Access Rajasthan's Royal Matrimony")
-                            .font(BrandFonts.body(size: 12))
-                            .foregroundColor(.sandstoneIvory.opacity(0.7))
+                        Text("Meet authentic Rajput members who share your values, gotra, and noble lineage.")
+                            .font(BrandFonts.body(size: 14))
+                            .foregroundColor(Color.appTextSecondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                            .lineSpacing(2)
                     }
-                    .multilineTextAlignment(.center)
                     
                     Spacer().frame(height: 24)
                     
-                    // Centered Login Card Window
-                    VStack(spacing: 20) {
-                        // Demo credentials panel
+                    // Demo Access Hint Pill
+                    HStack(spacing: 6) {
+                        Image(systemName: "key.fill")
+                            .font(.system(size: 11))
+                            .foregroundColor(Color.appPrimary)
+                        Text("DEMO: Username 12345 • Password 12345")
+                            .font(BrandFonts.body(size: 12, weight: .bold))
+                            .foregroundColor(Color.appPrimary)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.appPrimary.opacity(0.08))
+                    .clipShape(Capsule())
+                    
+                    Spacer().frame(height: 20)
+                    
+                    // Form Card
+                    VStack(spacing: 16) {
+                        // Email / Username Input
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("NOBLE ACCESS DEMO:")
-                                .font(BrandFonts.label(size: 9))
-                                .foregroundColor(.royalMaroon)
-                                .fontWeight(.bold)
-                                .tracking(1)
+                            Text("EMAIL OR USERNAME")
+                                .font(BrandFonts.label(size: 10, weight: .bold))
+                                .foregroundColor(Color.appTextSecondary)
+                                .tracking(0.8)
                             
-                            Text("Username: 12345")
-                                .font(BrandFonts.body(size: 11, weight: .bold))
-                                .foregroundColor(.inkBrown)
-                            
-                            Text("Password: 12345")
-                                .font(BrandFonts.body(size: 11, weight: .bold))
-                                .foregroundColor(.inkBrown)
-                        }
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.royalGold.opacity(0.06))
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.royalGold.opacity(0.25), lineWidth: 1)
-                        )
-                        
-                        // Input forms
-                        VStack(spacing: 16) {
-                            // Email
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("ROYAL CREDENTIALS (EMAIL)")
-                                    .font(BrandFonts.label(size: 9))
-                                    .foregroundColor(.royalMaroon) // Red label text for visibility
-                                    .fontWeight(.bold)
-                                    .tracking(0.5)
+                            HStack(spacing: 10) {
+                                Image(systemName: "envelope.fill")
+                                    .foregroundColor(Color.appTextMuted)
+                                    .font(.system(size: 15))
                                 
-                                TextField("e.g. royal@sagaisambaandh.com", text: $emailInput)
+                                TextField("e.g. 12345 or user@example.com", text: $emailInput)
                                     .keyboardType(.emailAddress)
                                     .autocapitalization(.none)
                                     .font(BrandFonts.body(size: 14))
-                                    .foregroundColor(.inkBrown) // Explicitly dark brown input text
-                                    .padding(12)
-                                    .background(Color.cardBackground)
-                                    .cornerRadius(8)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.royalGold.opacity(0.3), lineWidth: 1)
-                                    )
+                                    .foregroundColor(Color.appTextPrimary)
                             }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 14)
+                            .background(Color.appCardBackground)
+                            .cornerRadius(14)
+                            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.appBorder, lineWidth: 1))
+                        }
+                        
+                        // Password Input
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("PASSWORD")
+                                .font(BrandFonts.label(size: 10, weight: .bold))
+                                .foregroundColor(Color.appTextSecondary)
+                                .tracking(0.8)
                             
-                            // Password
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("PASSWORD")
-                                    .font(BrandFonts.label(size: 9))
-                                    .foregroundColor(.royalMaroon) // Red label text for visibility
-                                    .fontWeight(.bold)
-                                    .tracking(0.5)
+                            HStack(spacing: 10) {
+                                Image(systemName: "lock.fill")
+                                    .foregroundColor(Color.appTextMuted)
+                                    .font(.system(size: 15))
                                 
                                 SecureField("••••••••", text: $passwordInput)
                                     .font(BrandFonts.body(size: 14))
-                                    .foregroundColor(.inkBrown) // Explicitly dark brown input text
-                                    .padding(12)
-                                    .background(Color.cardBackground)
-                                    .cornerRadius(8)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.royalGold.opacity(0.3), lineWidth: 1)
-                                    )
+                                    .foregroundColor(Color.appTextPrimary)
                             }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 14)
+                            .background(Color.appCardBackground)
+                            .cornerRadius(14)
+                            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.appBorder, lineWidth: 1))
                         }
                         
                         if let error = errorMessage {
                             Text(error)
                                 .font(BrandFonts.body(size: 12))
-                                .foregroundColor(.red)
+                                .foregroundColor(Color.dislikeRed)
                                 .multilineTextAlignment(.center)
-                                .padding(.top, 4)
+                                .padding(.top, 2)
                         }
                         
-                        // Submit CTA
+                        // Primary CTA
                         Button(action: handleLogin) {
-                            Text("Enter Sanctuary")
-                                .font(BrandFonts.body(size: 14, weight: .bold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color.royalMaroon)
-                                .cornerRadius(8)
-                                .shadow(color: Color.royalMaroon.opacity(0.3), radius: 4, x: 0, y: 3)
+                            HStack(spacing: 8) {
+                                Text("Continue with Sanctuary")
+                                    .font(BrandFonts.bodyBold(size: 15))
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 14, weight: .bold))
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 52)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.appPrimary, Color.appSecondary],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(26)
+                            .shadow(color: Color.appPrimary.opacity(0.35), radius: 10, y: 5)
                         }
-                        .padding(.top, 5)
+                        .padding(.top, 4)
                         
-                        // Divider
+                        // Divider: or connect with
                         HStack {
-                            Rectangle().fill(Color.gray.opacity(0.3)).frame(height: 0.5)
-                            Text("OR").font(BrandFonts.label(size: 10)).foregroundColor(.gray)
-                            Rectangle().fill(Color.gray.opacity(0.3)).frame(height: 0.5)
+                            Rectangle().fill(Color.appBorder).frame(height: 1)
+                            Text("or connect with")
+                                .font(BrandFonts.body(size: 12, weight: .medium))
+                                .foregroundColor(Color.appTextMuted)
+                                .padding(.horizontal, 10)
+                            Rectangle().fill(Color.appBorder).frame(height: 1)
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 6)
                         
                         // Google Login CTA
                         Button(action: handleGoogleLogin) {
-                            HStack(spacing: 12) {
+                            HStack(spacing: 10) {
                                 Image(systemName: "globe")
-                                    .foregroundColor(.royalMaroon)
+                                    .font(.system(size: 16))
+                                    .foregroundColor(Color.appTextPrimary)
                                 Text("Continue with Google")
-                                    .font(BrandFonts.body(size: 14, weight: .bold))
-                                    .foregroundColor(.royalMaroon)
+                                    .font(BrandFonts.bodyBold(size: 14))
+                                    .foregroundColor(Color.appTextPrimary)
                             }
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
+                            .frame(height: 50)
                             .background(Color.white)
-                            .cornerRadius(8)
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.royalGold.opacity(0.3), lineWidth: 1))
+                            .cornerRadius(25)
+                            .overlay(RoundedRectangle(cornerRadius: 25).stroke(Color.appBorder, lineWidth: 1.5))
+                            .shadow(color: Color.black.opacity(0.03), radius: 6, y: 2)
                         }
                         
-                        // Registration redirect link
+                        // Sign Up Link
                         Button(action: { showingRegister = true }) {
-                            HStack {
-                                Text("Already have a lineage record?")
-                                    .font(BrandFonts.body(size: 12))
-                                    .foregroundColor(.gray)
-                                Text("Sign Up here")
-                                    .font(BrandFonts.body(size: 12, weight: .bold))
-                                    .foregroundColor(.royalMaroon)
+                            HStack(spacing: 4) {
+                                Text("Don't have a profile yet?")
+                                    .font(BrandFonts.body(size: 13))
+                                    .foregroundColor(Color.appTextSecondary)
+                                Text("Register here")
+                                    .font(BrandFonts.bodyBold(size: 13))
+                                    .foregroundColor(Color.appPrimary)
                             }
                         }
-                        
-
+                        .padding(.top, 6)
                     }
                     .padding(24)
-                    .background(Color.deepMaroon)
-                    .cornerRadius(16)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.royalGold.opacity(0.2), lineWidth: 1.5)
-                    )
-                    .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+                    .background(Color.white)
+                    .cornerRadius(24)
+                    .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.appBorder, lineWidth: 1))
+                    .shadow(color: Color.black.opacity(0.04), radius: 14, y: 6)
                     .padding(.horizontal, 20)
                     
-                    Spacer(minLength: geometry.size.height * 0.05)
+                    Spacer(minLength: 30)
                 }
                 .frame(minHeight: geometry.size.height)
             }
         }
-        .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
+        .background(Color.white.edgesIgnoringSafeArea(.all))
         .navigationBarHidden(true)
     }
     
@@ -234,7 +235,7 @@ struct LoginView: View {
                 session.login(user: demoUser)
             }
         } else {
-            errorMessage = "Invalid credentials. Please use the demo credentials provided."
+            errorMessage = "Invalid credentials. Please use Username: 12345 & Password: 12345."
         }
     }
     

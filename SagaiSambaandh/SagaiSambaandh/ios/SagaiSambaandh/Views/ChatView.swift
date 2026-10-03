@@ -4,11 +4,10 @@ struct ChatView: View {
     @EnvironmentObject var session: SagaiSessionManager
     var selectedTab: Binding<Int>? = nil
     
-    @State private var selectedSubTab: Int = 0 // 0 = All Conversations, 1 = Connected Matches
     @State private var searchText: String = ""
     @State private var activeChatProfile: Profile? = nil
     
-    // Profiles that are connected (either party accepted)
+    // Connected profiles (either party accepted connection)
     private var connectedProfiles: [Profile] {
         guard let currentUserId = session.currentUser?.id else { return [] }
         return session.profiles.filter { profile in
@@ -16,7 +15,7 @@ struct ChatView: View {
         }
     }
     
-    // Profiles that have active message history or are connected
+    // Profiles that have an active conversation or are connected
     private var conversationProfiles: [Profile] {
         guard let currentUser = session.currentUser else { return [] }
         let myChats = SupabaseClient.shared.getProfileChats(aboutText: currentUser.about)
@@ -49,10 +48,11 @@ struct ChatView: View {
             return last1 > last2
         }
         
-        if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+        let trimmed = searchText.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty {
             return list
         } else {
-            let query = searchText.lowercased()
+            let query = trimmed.lowercased()
             return list.filter {
                 $0.name.lowercased().contains(query) ||
                 $0.clan.lowercased().contains(query) ||
@@ -62,59 +62,62 @@ struct ChatView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Search Bar
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.royalGold)
-                TextField("Search conversations by name, clan...", text: $searchText)
-                    .font(BrandFonts.body(size: 13))
-                    .foregroundColor(.sandstoneIvory)
-                if !searchText.isEmpty {
-                    Button(action: { searchText = "" }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.gray)
+        ZStack {
+            Color.white.edgesIgnoringSafeArea(.all)
+            
+            VStack(spacing: 0) {
+                // Top Header Title
+                HStack {
+                    Text("Messages")
+                        .font(BrandFonts.displayBold(size: 28))
+                        .foregroundColor(Color.appTextPrimary)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 14)
+                .padding(.bottom, 10)
+                
+                // Clean Search Field (Matching UI Kit)
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(Color.appTextMuted)
+                    
+                    TextField("Search chats by name, gotra...", text: $searchText)
+                        .font(BrandFonts.body(size: 14))
+                        .foregroundColor(Color.appTextPrimary)
+                    
+                    if !searchText.isEmpty {
+                        Button(action: { searchText = "" }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 16))
+                                .foregroundColor(Color.appTextMuted)
+                        }
                     }
                 }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.white.opacity(0.08))
-            .cornerRadius(10)
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-            .padding(.bottom, 6)
-            
-            // Subtabs
-            Picker("SubTabs", selection: $selectedSubTab) {
-                Text("All Conversations (\(conversationProfiles.count))").tag(0)
-                Text("Connected (\(connectedProfiles.count))").tag(1)
-            }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding(.horizontal, 16)
-            .padding(.vertical, 6)
-            
-            let displayedProfiles = selectedSubTab == 0 ? conversationProfiles : connectedProfiles
-            
-            if displayedProfiles.isEmpty {
-                emptyStateView
-            } else {
-                ScrollView {
-                    VStack(spacing: 12) {
-                        // Quick-tap horizontal stories for connected members
-                        if !connectedProfiles.isEmpty && selectedSubTab == 0 {
-                            connectedStoriesSection
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(Color.appCardBackground)
+                .cornerRadius(14)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 12)
+                
+                // Main Content Area
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        // 1. New Matches Horizontal Story Tray
+                        if searchText.isEmpty && !connectedProfiles.isEmpty {
+                            newMatchesSection
+                            
+                            Divider()
+                                .background(Color.appDivider)
+                                .padding(.horizontal, 20)
                         }
                         
-                        // Conversations List
-                        VStack(spacing: 8) {
-                            ForEach(displayedProfiles) { profile in
-                                conversationRow(profile: profile)
-                            }
-                        }
+                        // 2. Conversations Section
+                        conversationsSection
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
+                    .padding(.bottom, 24)
                 }
                 .refreshable {
                     await session.refreshProfilesAsync()
@@ -122,7 +125,7 @@ struct ChatView: View {
                 }
             }
         }
-        .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
+        .navigationBarHidden(true)
         .sheet(item: $activeChatProfile) { profile in
             ChatDetailView(profile: profile, currentUser: session.currentUser)
                 .environmentObject(session)
@@ -133,134 +136,63 @@ struct ChatView: View {
         }
     }
     
-    // Horizontal row of connected members
-    private var connectedStoriesSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("CONNECTED LINEAGE")
-                .font(BrandFonts.label(size: 10))
-                .foregroundColor(.sandstoneIvory.opacity(0.6))
-                .tracking(1)
+    // MARK: - New Matches Section (UI Kit Activity Story Tray)
+    private var newMatchesSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("New Matches")
+                .font(BrandFonts.displayBold(size: 15))
+                .foregroundColor(Color.appTextPrimary)
+                .padding(.horizontal, 20)
             
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 14) {
+                HStack(spacing: 16) {
                     ForEach(connectedProfiles) { profile in
                         Button(action: {
                             activeChatProfile = profile
                         }) {
                             VStack(spacing: 6) {
-                                ZStack {
-                                    avatarView(for: profile, size: 52)
-                                    Circle()
-                                        .stroke(Color.royalGold, lineWidth: 2)
-                                        .frame(width: 54, height: 54)
+                                ZStack(alignment: .bottomTrailing) {
+                                    // Circular Avatar with Gradient Ring
+                                    ZStack {
+                                        Circle()
+                                            .stroke(
+                                                LinearGradient(
+                                                    colors: [Color.appPrimary, Color.starPurple],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                ),
+                                                lineWidth: 2.2
+                                            )
+                                            .frame(width: 62, height: 62)
+                                        
+                                        storyAvatarImage(for: profile, size: 54)
+                                    }
                                     
-                                    // Chat bubble badge
+                                    // Subtle Online Dot
                                     Circle()
-                                        .fill(Color.royalGold)
-                                        .frame(width: 18, height: 18)
-                                        .overlay(
-                                            Image(systemName: "bubble.right.fill")
-                                                .font(.system(size: 9))
-                                                .foregroundColor(.deepMaroon)
-                                        )
-                                        .offset(x: 18, y: 18)
+                                        .fill(Color.successGreen)
+                                        .frame(width: 13, height: 13)
+                                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                                        .offset(x: -1, y: -1)
                                 }
                                 
                                 Text(profile.name.components(separatedBy: " ").first ?? profile.name)
-                                    .font(BrandFonts.body(size: 11, weight: .semibold))
-                                    .foregroundColor(.sandstoneIvory)
+                                    .font(BrandFonts.body(size: 12, weight: .semibold))
+                                    .foregroundColor(Color.appTextPrimary)
                                     .lineLimit(1)
-                                    .frame(width: 60)
+                                    .frame(width: 66)
                             }
                         }
                         .buttonStyle(PlainButtonStyle())
                     }
                 }
+                .padding(.horizontal, 20)
                 .padding(.vertical, 4)
             }
         }
-        .padding(.vertical, 6)
     }
     
-    // Conversation row card
-    private func conversationRow(profile: Profile) -> some View {
-        let lastMsg = SupabaseClient.shared.getLastMessage(
-            userAbout: session.currentUser?.about,
-            userId: session.currentUser?.id ?? "",
-            profileAbout: profile.about,
-            profileId: profile.id
-        )
-        
-        return Button(action: {
-            activeChatProfile = profile
-        }) {
-            HStack(spacing: 12) {
-                // Avatar
-                ZStack(alignment: .bottomTrailing) {
-                    avatarView(for: profile, size: 50)
-                    Circle()
-                        .fill(Color.green)
-                        .frame(width: 12, height: 12)
-                        .overlay(Circle().stroke(Color.deepMaroon, lineWidth: 2))
-                }
-                
-                // Info & Snippet
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(profile.name)
-                            .font(BrandFonts.displayBold(size: 15))
-                            .foregroundColor(.lightGold)
-                            .lineLimit(1)
-                        
-                        if profile.isVerified {
-                            Image(systemName: "checkmark.seal.fill")
-                                .font(.system(size: 12))
-                                .foregroundColor(Color(hex: "#2ecc71"))
-                        }
-                        
-                        Spacer()
-                        
-                        if let time = lastMsg?.time, time > 0 {
-                            let date = Date(timeIntervalSince1970: time / 1000)
-                            Text(formatTimestamp(date))
-                                .font(BrandFonts.label(size: 10))
-                                .foregroundColor(.sandstoneIvory.opacity(0.5))
-                        }
-                    }
-                    
-                    HStack(spacing: 6) {
-                        Text("\(profile.clan) • \(profile.gotra)")
-                            .font(BrandFonts.label(size: 10))
-                            .foregroundColor(.royalGold.opacity(0.85))
-                        
-                        Text("•")
-                            .font(.system(size: 8))
-                            .foregroundColor(.gray)
-                        
-                        if let last = lastMsg {
-                            let prefix = last.isFromMe ? "You: " : ""
-                            Text("\(prefix)\(last.text)")
-                                .font(BrandFonts.body(size: 12))
-                                .foregroundColor(.sandstoneIvory.opacity(0.75))
-                                .lineLimit(1)
-                        } else {
-                            Text("Connected. Tap to message!")
-                                .font(BrandFonts.body(size: 12))
-                                .foregroundColor(.royalGold)
-                                .italic()
-                        }
-                    }
-                }
-            }
-            .padding(12)
-            .background(Color.white.opacity(0.06))
-            .cornerRadius(12)
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.royalGold.opacity(0.2), lineWidth: 1))
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-    
-    private func avatarView(for profile: Profile, size: CGFloat) -> some View {
+    private func storyAvatarImage(for profile: Profile, size: CGFloat) -> some View {
         Group {
             if let imgName = profile.img, !imgName.isEmpty {
                 if imgName.hasPrefix("http") {
@@ -269,8 +201,7 @@ struct ChatView: View {
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                     } placeholder: {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                        Color.appCardBackground
                     }
                 } else {
                     let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
@@ -279,23 +210,131 @@ struct ChatView: View {
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                     } placeholder: {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
+                        Color.appCardBackground
                     }
                 }
             } else {
-                Circle()
-                    .fill(Color.royalGold)
-                    .overlay(
-                        Text(String(profile.name.prefix(1)))
-                            .font(BrandFonts.displayBold(size: size * 0.45))
-                            .foregroundColor(.deepMaroon)
-                    )
+                LinearGradient(
+                    colors: [Color.appPrimary, Color.appSecondary],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .overlay(
+                    Text(String(profile.name.prefix(1)))
+                        .font(BrandFonts.displayBold(size: size * 0.42))
+                        .foregroundColor(.white)
+                )
             }
         }
         .frame(width: size, height: size)
         .clipShape(Circle())
-        .overlay(Circle().stroke(Color.royalGold.opacity(0.4), lineWidth: 1))
+    }
+    
+    // MARK: - Conversations Section
+    private var conversationsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(searchText.isEmpty ? "Conversations" : "Results")
+                .font(BrandFonts.displayBold(size: 15))
+                .foregroundColor(Color.appTextPrimary)
+                .padding(.horizontal, 20)
+            
+            if conversationProfiles.isEmpty {
+                emptyChatsView
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(conversationProfiles.enumerated()), id: \.element.id) { index, profile in
+                        conversationRow(profile: profile)
+                        
+                        if index < conversationProfiles.count - 1 {
+                            Divider()
+                                .background(Color.appDivider)
+                                .padding(.leading, 84)
+                                .padding(.trailing, 20)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Conversation Row (Matching UI Kit chat_list_item.dart)
+    private func conversationRow(profile: Profile) -> some View {
+        let lastMsg = SupabaseClient.shared.getLastMessage(
+            userAbout: session.currentUser?.about,
+            userId: session.currentUser?.id ?? "",
+            profileAbout: profile.about,
+            profileId: profile.id
+        )
+        let isUnread = lastMsg != nil && !(lastMsg?.isFromMe ?? true)
+        
+        return Button(action: {
+            activeChatProfile = profile
+        }) {
+            HStack(spacing: 14) {
+                // Avatar with Online dot
+                ZStack(alignment: .bottomTrailing) {
+                    storyAvatarImage(for: profile, size: 54)
+                    
+                    Circle()
+                        .fill(Color.successGreen)
+                        .frame(width: 12, height: 12)
+                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                }
+                
+                // Name & Message Snippet
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 4) {
+                        Text(profile.name)
+                            .font(BrandFonts.body(size: 15.5, weight: isUnread ? .bold : .semibold))
+                            .foregroundColor(Color.appTextPrimary)
+                            .lineLimit(1)
+                        
+                        if profile.isVerified {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 13))
+                                .foregroundColor(Color.verifiedBlue)
+                        }
+                        
+                        Spacer()
+                        
+                        if let time = lastMsg?.time, time > 0 {
+                            let date = Date(timeIntervalSince1970: time / 1000)
+                            Text(formatTimestamp(date))
+                                .font(BrandFonts.body(size: 11.5, weight: isUnread ? .bold : .regular))
+                                .foregroundColor(isUnread ? Color.appPrimary : Color.appTextMuted)
+                        }
+                    }
+                    
+                    HStack {
+                        if let last = lastMsg {
+                            let prefix = last.isFromMe ? "You: " : ""
+                            Text("\(prefix)\(last.text)")
+                                .font(BrandFonts.body(size: 13.5, weight: isUnread ? .semibold : .regular))
+                                .foregroundColor(isUnread ? Color.appTextPrimary : Color.appTextSecondary)
+                                .lineLimit(1)
+                        } else {
+                            Text("Connected. Tap to message!")
+                                .font(BrandFonts.body(size: 13))
+                                .foregroundColor(Color.appPrimary)
+                                .italic()
+                                .lineLimit(1)
+                        }
+                        
+                        Spacer()
+                        
+                        if isUnread {
+                            Circle()
+                                .fill(Color.appPrimary)
+                                .frame(width: 8, height: 8)
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PlainButtonStyle())
     }
     
     private func formatTimestamp(_ date: Date) -> String {
@@ -313,46 +352,53 @@ struct ChatView: View {
         }
     }
     
-    private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            Spacer()
+    // MARK: - Empty State View
+    private var emptyChatsView: some View {
+        VStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(Color.white.opacity(0.05))
-                    .frame(width: 90, height: 90)
-                Image(systemName: "bubble.left.and.bubble.right.fill")
-                    .font(.system(size: 40))
-                    .foregroundColor(.royalGold)
+                    .fill(Color.appCardBackground)
+                    .frame(width: 72, height: 72)
+                Image(systemName: "bubble.left.and.bubble.right")
+                    .font(.system(size: 30))
+                    .foregroundColor(Color.appTextMuted)
             }
+            .padding(.top, 30)
             
             Text("No Conversations Yet")
-                .font(BrandFonts.displayBold(size: 18))
-                .foregroundColor(.lightGold)
+                .font(BrandFonts.displayBold(size: 16))
+                .foregroundColor(Color.appTextPrimary)
             
-            Text("Express interest in the Matches tab or accept pending requests in your Inbox to start noble family dialogues.")
+            Text("Send a Rishta in Discover or accept pending requests to start communicating.")
                 .font(BrandFonts.body(size: 13))
-                .foregroundColor(.sandstoneIvory.opacity(0.7))
+                .foregroundColor(Color.appTextSecondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 36)
+                .padding(.horizontal, 40)
             
             Button(action: {
                 selectedTab?.wrappedValue = 1
             }) {
-                HStack(spacing: 8) {
-                    Image(systemName: "heart.fill")
-                    Text("Discover Compatible Matches")
-                        .font(BrandFonts.bodyBold(size: 14))
+                HStack(spacing: 6) {
+                    Image(systemName: "rectangle.stack.fill")
+                    Text("Explore Discover Deck")
+                        .font(BrandFonts.bodyBold(size: 13.5))
                 }
-                .foregroundColor(.deepMaroon)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Color.royalGold)
-                .cornerRadius(20)
-                .shadow(radius: 4)
+                .foregroundColor(.white)
+                .padding(.horizontal, 22)
+                .padding(.vertical, 10)
+                .background(
+                    LinearGradient(
+                        colors: [Color.appPrimary, Color.appSecondary],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(Capsule())
+                .shadow(color: Color.appPrimary.opacity(0.3), radius: 6, y: 3)
             }
-            .padding(.top, 10)
-            
-            Spacer()
+            .padding(.top, 4)
         }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
     }
 }
