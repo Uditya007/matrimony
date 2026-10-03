@@ -24,7 +24,7 @@ struct HomeView: View {
     }
     
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
                 // Hero Header Banner with Slide Show
                 ZStack(alignment: .bottom) {
@@ -33,43 +33,40 @@ struct HomeView: View {
                         image.resizable()
                              .aspectRatio(contentMode: .fill)
                     } placeholder: {
-                        Color.deepMaroon
+                        Color.appCardBackground
                     }
-                    .frame(height: 260)
+                    .frame(height: 280)
                     .clipped()
                     
-                    // Dark maroon gradient overlay to keep text readable
+                    // Romantic Gradient Overlay
                     LinearGradient(
-                        colors: [Color.deepMaroon.opacity(0.4), Color.royalMaroon.opacity(0.9)],
+                        colors: [Color.black.opacity(0.2), Color.black.opacity(0.85)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    .frame(height: 260)
+                    .frame(height: 280)
                     
-                    VStack(spacing: 12) {
+                    VStack(spacing: 10) {
                         Text("A UNION OF RAJPUT LINEAGE & LEGACY")
-                            .font(BrandFonts.label(size: 10))
-                            .foregroundColor(.lightGold)
-                            .tracking(3)
+                            .font(BrandFonts.label(size: 10, weight: .bold))
+                            .foregroundColor(Color.royalGold)
+                            .tracking(2.5)
                         
                         Text("Where Lineage\nMeets Sacred Legacy")
-                            .font(BrandFonts.displayBold(size: 28))
-                            .foregroundColor(.sandstoneIvory)
+                            .font(BrandFonts.displayBold(size: 26))
+                            .foregroundColor(.white)
                             .multilineTextAlignment(.center)
-                            .lineSpacing(4)
+                            .lineSpacing(3)
                         
-                        Text("Welcome to the most premium, secure, and dedicated matchmaking portal for the noble Rajput community.")
+                        Text("The most authentic, verified matrimony network for Rajput families.")
                             .font(BrandFonts.body(size: 13))
-                            .foregroundColor(.sandstoneIvory.opacity(0.8))
+                            .foregroundColor(.white.opacity(0.85))
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 30)
-                            .padding(.bottom, 20)
+                            .padding(.bottom, 16)
                     }
                     .padding(.top, 40)
-                    .padding(.bottom, 60)
-                    
-                    // Palace silhouette vector divider
-                    PalaceDivider(fillColor: .deepMaroon)
+                    .padding(.bottom, 36)
                 }
                 .onReceive(timer) { _ in
                     activeHeroSlide = (activeHeroSlide + 1) % 3
@@ -77,130 +74,139 @@ struct HomeView: View {
                 
                 // Content Section
                 VStack(spacing: 24) {
-                    // Search Widget
-                    VStack(spacing: 15) {
-                        Text("FIND YOUR NOBLE MATCH")
-                            .font(BrandFonts.label(size: 12))
-                            .foregroundColor(.royalMaroon)
-                            .tracking(1.5)
-                            .fontWeight(.bold)
+                    // Modern Search Widget Card
+                    VStack(spacing: 16) {
+                        HStack {
+                            Image(systemName: "sparkles")
+                                .foregroundColor(Color.appPrimary)
+                            Text("FIND YOUR NOBLE MATCH")
+                                .font(BrandFonts.label(size: 11, weight: .bold))
+                                .foregroundColor(Color.appTextPrimary)
+                                .tracking(1.2)
+                            Spacer()
+                        }
                         
-                        HStack(spacing: 15) {
+                        HStack(spacing: 12) {
                             // Looking For Picker
-                            VStack(alignment: .leading, spacing: 5) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text("LOOKING FOR")
-                                    .font(BrandFonts.label(size: 8))
-                                    .foregroundColor(.gray)
+                                    .font(BrandFonts.label(size: 9, weight: .bold))
+                                    .foregroundColor(Color.appTextSecondary)
                                 Picker("Looking For", selection: $lookingFor) {
                                     Text("Bride (Ladi)").tag("Bride")
                                     Text("Groom (Lada)").tag("Groom")
                                 }
                                 .pickerStyle(MenuPickerStyle())
-                                .foregroundColor(.inkBrown)
+                                .foregroundColor(Color.appTextPrimary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 6)
+                                .background(Color.appCardBackground)
+                                .cornerRadius(10)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             
                             // Rajput Clan Picker
-                            VStack(alignment: .leading, spacing: 5) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text("RAJPUT CLAN")
-                                    .font(BrandFonts.label(size: 8))
-                                    .foregroundColor(.gray)
+                                    .font(BrandFonts.label(size: 9, weight: .bold))
+                                    .foregroundColor(Color.appTextSecondary)
                                 Picker("Clan", selection: $selectedClan) {
                                     ForEach(clansOptions, id: \.self) { option in
                                         Text(option).tag(option)
                                     }
                                 }
                                 .pickerStyle(MenuPickerStyle())
-                                .foregroundColor(.inkBrown)
+                                .foregroundColor(Color.appTextPrimary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 6)
+                                .background(Color.appCardBackground)
+                                .cornerRadius(10)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .padding(.vertical, 8)
                         
                         // Search CTA Button
                         Button(action: {
                             session.setSearchFilters(gender: lookingFor, clan: selectedClan)
                             selectedTab = 1 // Go to Matches tab
                         }) {
-                            Text(session.currentUser == nil ? "Log In to Search" : "Search Matches")
-                                .font(BrandFonts.body(size: 14, weight: .bold))
-                                .foregroundColor(.royalMaroon)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(
-                                    LinearGradient(
-                                        colors: [.royalGold, .lightGold, .royalGold],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
+                            HStack(spacing: 6) {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 14, weight: .bold))
+                                Text(session.currentUser == nil ? "Log In to Search" : "Search Matches")
+                                    .font(BrandFonts.bodyBold(size: 14))
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.appPrimary, Color.appSecondary],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
                                 )
-                                .cornerRadius(8)
-                                .shadow(radius: 2)
+                            )
+                            .cornerRadius(24)
+                            .shadow(color: Color.appPrimary.opacity(0.3), radius: 8, y: 4)
                         }
                     }
                     .padding(20)
-                    .background(Color.deepMaroon)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.royalGold.opacity(0.3), lineWidth: 1.2)
-                    )
+                    .background(Color.white)
+                    .cornerRadius(20)
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.appBorder, lineWidth: 1))
+                    .shadow(color: Color.black.opacity(0.06), radius: 14, y: 6)
                     .padding(.horizontal, 20)
-                    .offset(y: -40)
-                    .padding(.bottom, -30)
+                    .offset(y: -24)
+                    .padding(.bottom, -12)
                     
                     // Profile Completion Checklist Widget
                     if session.currentUser != nil {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Complete your Profile")
                                 .font(BrandFonts.displayBold(size: 16))
-                                .foregroundColor(.lightGold)
+                                .foregroundColor(Color.appTextPrimary)
                             
                             Text("Completed profiles get 2x more matches and responses.")
-                                .font(BrandFonts.body(size: 12))
-                                .foregroundColor(.sandstoneIvory.opacity(0.7))
-                                .padding(.bottom, 6)
+                                .font(BrandFonts.body(size: 12.5))
+                                .foregroundColor(Color.appTextSecondary)
+                                .padding(.bottom, 2)
                             
                             ProfileChecklistItem(title: "Verify your Rajput Lineage", checked: true)
-                            ProfileChecklistItem(title: "Upload Heritage Photos", checked: false)
-                            ProfileChecklistItem(title: "Add Astro & Kundli details", checked: false)
+                            ProfileChecklistItem(title: "Upload Authentic Portrait", checked: session.currentUser?.profilePic?.isEmpty == false)
+                            ProfileChecklistItem(title: "Add Gotra & Astro details", checked: session.currentUser?.gotra.isEmpty == false)
                         }
-                        .padding()
-                        .background(Color.deepMaroon)
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.royalGold.opacity(0.3), lineWidth: 1)
-                        )
+                        .padding(18)
+                        .background(Color.appCardBackground)
+                        .cornerRadius(18)
+                        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.appBorder, lineWidth: 1))
                         .padding(.horizontal, 20)
-                        .padding(.bottom, 20)
                     }
                     
                     // Featured Showcase
-                    VStack(alignment: .leading, spacing: 15) {
+                    VStack(alignment: .leading, spacing: 14) {
                         HStack {
-                            VStack(alignment: .leading, spacing: 4) {
+                            VStack(alignment: .leading, spacing: 3) {
                                 Text("Featured Rajput Lineages")
-                                    .font(BrandFonts.displayBold(size: 20))
-                                    .foregroundColor(.lightGold)
+                                    .font(BrandFonts.displayBold(size: 18))
+                                    .foregroundColor(Color.appTextPrimary)
                                 Text("Verified brides and grooms recently active")
-                                    .font(BrandFonts.body(size: 12))
-                                    .foregroundColor(.sandstoneIvory.opacity(0.7))
+                                    .font(BrandFonts.body(size: 12.5))
+                                    .foregroundColor(Color.appTextSecondary)
                             }
                             Spacer()
                         }
                         .padding(.horizontal, 20)
                         
                         if filteredProfiles.isEmpty {
-                            Text("No noble profiles match your search criteria currently.")
+                            Text("No profiles match your search criteria currently.")
                                 .font(BrandFonts.body(size: 13))
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.appTextMuted)
                                 .italic()
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .padding(.vertical, 30)
                         } else {
                             ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 20) {
+                                HStack(spacing: 16) {
                                     ForEach(filteredProfiles) { profile in
                                         let lockedState = session.currentUser == nil
                                         
@@ -209,7 +215,7 @@ struct HomeView: View {
                                             isLocked: lockedState,
                                             onUnlockTap: {
                                                 showingRegister = true
-                                                selectedTab = 3 // Direct to registration
+                                                selectedTab = 3
                                             },
                                             onDetailTap: {
                                                 if lockedState {
@@ -220,69 +226,42 @@ struct HomeView: View {
                                                 }
                                             }
                                         )
-                                        .frame(width: 280)
+                                        .frame(width: 270)
                                     }
                                 }
                                 .padding(.horizontal, 20)
-                                .padding(.vertical, 8)
+                                .padding(.vertical, 4)
                             }
                         }
                     }
                     
                     // Royal Promise / Trust block
-                    VStack(alignment: .leading, spacing: 15) {
+                    VStack(alignment: .leading, spacing: 14) {
                         Text("The Shree Rajput Sagai Sambandh Promise")
-                            .font(BrandFonts.displayBold(size: 20))
-                            .foregroundColor(.lightGold)
+                            .font(BrandFonts.displayBold(size: 18))
+                            .foregroundColor(Color.appTextPrimary)
                             .padding(.horizontal, 20)
                         
                         VStack(spacing: 12) {
                             PromiseRow(icon: "checkmark.seal.fill", title: "100% Rajput Lineage Audit", desc: "No general castes. Every profile undergoes gotra, kul, and thikana validation.")
-                            PromiseRow(icon: "photo.fill.badge.plus", title: "Locked Photo Privacy", desc: "Your photograph is blurred to guests. Unlocks only to mutual interest.")
+                            PromiseRow(icon: "photo.fill.badge.plus", title: "Locked Photo Privacy", desc: "Your photograph is blurred to guests. Unlocks only upon mutual interest.")
                             PromiseRow(icon: "person.2.fill", title: "Direct Family Connection", desc: "Enable direct dialogues between noble families with zero mediator interference.")
                         }
+                        .padding(18)
+                        .background(Color.appCardBackground)
+                        .cornerRadius(20)
+                        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.appBorder, lineWidth: 1))
                         .padding(.horizontal, 20)
                     }
-                    .padding(.vertical, 20)
-                    .background(Color.deepMaroon)
+                    .padding(.bottom, 24)
                 }
-                .background(Color.deepMaroon)
             }
             .refreshable {
                 await session.refreshProfilesAsync()
             }
         }
-        .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {
-                    withAnimation {
-                        isSideMenuOpen = true
-                    }
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "line.horizontal.3")
-                            .foregroundColor(.lightGold)
-                            .font(.title2)
-                        
-                        Image("logo")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 32, height: 32)
-                            .clipShape(Circle())
-                            .background(Color.white)
-                            .cornerRadius(16)
-                            .overlay(Circle().stroke(Color.royalGold, lineWidth: 0.5))
-                    }
-                }
-            }
-            ToolbarItem(placement: .principal) {
-                Text("Sagai Sambandh")
-                    .font(BrandFonts.displayBold(size: 18))
-                    .foregroundColor(.lightGold)
-            }
-        }
+        .background(Color.white.edgesIgnoringSafeArea(.all))
+        .navigationBarHidden(true)
         .sheet(item: $selectedProfileForDetail) { profile in
             ProfileDetailView(profile: profile)
                 .environmentObject(session)
@@ -296,23 +275,23 @@ struct PromiseRow: View {
     let desc: String
     
     var body: some View {
-        HStack(alignment: .top, spacing: 15) {
+        HStack(alignment: .top, spacing: 14) {
             Image(systemName: icon)
                 .font(.system(size: 20))
-                .foregroundColor(.royalGold)
-                .frame(width: 25)
+                .foregroundColor(Color.appPrimary)
+                .frame(width: 26)
             
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(BrandFonts.body(size: 14, weight: .bold))
-                    .foregroundColor(.sandstoneIvory)
+                    .foregroundColor(Color.appTextPrimary)
                 Text(desc)
                     .font(BrandFonts.body(size: 12))
-                    .foregroundColor(.sandstoneIvory.opacity(0.7))
+                    .foregroundColor(Color.appTextSecondary)
                     .lineSpacing(2)
             }
         }
-        .padding(.vertical, 5)
+        .padding(.vertical, 4)
     }
 }
 
@@ -323,12 +302,12 @@ struct ProfileChecklistItem: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: checked ? "checkmark.circle.fill" : "circle")
-                .foregroundColor(checked ? .green : .sandstoneIvory.opacity(0.3))
+                .foregroundColor(checked ? Color.successGreen : Color.appTextMuted)
                 .font(.system(size: 16))
             
             Text(title)
                 .font(BrandFonts.body(size: 13))
-                .foregroundColor(.sandstoneIvory)
+                .foregroundColor(Color.appTextPrimary)
             
             Spacer()
         }

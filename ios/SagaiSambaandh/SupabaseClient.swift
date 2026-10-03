@@ -471,6 +471,31 @@ class SupabaseClient {
         return cleanAbout
     }
     
+    func getSocialLinks(from aboutText: String?) -> [String: String] {
+        guard let about = aboutText, !about.isEmpty else { return [:] }
+        let pattern = "\\[Social Links: ([^\\]]*)\\]"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return [:] }
+        let nsRange = NSRange(about.startIndex..<about.endIndex, in: about)
+        guard let match = regex.firstMatch(in: about, options: [], range: nsRange),
+              let range = Range(match.range(at: 1), in: about) else { return [:] }
+        let jsonStr = String(about[range]).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let data = jsonStr.data(using: .utf8),
+              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: String] else {
+            return [:]
+        }
+        return dict
+    }
+    
+    func getBiodataLink(from aboutText: String?) -> String {
+        guard let about = aboutText, !about.isEmpty else { return "" }
+        let pattern = "\\[Biodata Link: ([^\\]]*)\\]"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return "" }
+        let nsRange = NSRange(about.startIndex..<about.endIndex, in: about)
+        guard let match = regex.firstMatch(in: about, options: [], range: nsRange),
+              let range = Range(match.range(at: 1), in: about) else { return "" }
+        return String(about[range]).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
     // Send match interest to a profile (syncs directly with Supabase profiles table)
     func sendConnection(senderId: String, receiverId: String, completion: @escaping (Result<Void, Error>) -> Void) {
         guard let url = URL(string: "\(supabaseURL)/rest/v1/profiles?id=eq.\(senderId)&select=about") else { return }

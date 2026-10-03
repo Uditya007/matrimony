@@ -61,7 +61,6 @@ struct ProfileDetailView: View {
     
     private var cleanAboutText: String {
         guard var bio = profile.about else { return "" }
-        // Strip [Social Links: ...], [Biodata Link: ...], [Interests: ...], [Chats: ...]
         let patterns = [
             "\\[Social Links: [^\\]]*\\]",
             "\\[Biodata Link: [^\\]]*\\]",
@@ -83,477 +82,69 @@ struct ProfileDetailView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Top Bar
-            HStack {
-                Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                    Image(systemName: "chevron.down.circle.fill")
-                        .font(.system(size: 26))
-                        .foregroundColor(.gray)
-                }
-                Spacer()
-                Text("Lineage Details")
-                    .font(BrandFonts.label(size: 14))
-                    .foregroundColor(.royalMaroon)
-                    .fontWeight(.bold)
-                Spacer()
-                Color.clear.frame(width: 26, height: 26)
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 15)
-            .padding(.bottom, 10)
-            .background(Color.cardBackground)
+        ZStack(alignment: .bottom) {
+            Color.white.edgesIgnoringSafeArea(.all)
             
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Profile Photo Frame
-                    ZStack {
-                        if let imgName = profile.img, !imgName.isEmpty {
-                            if imgName.hasPrefix("http") {
-                                AsyncImage(url: URL(string: imgName)) { image in
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                } placeholder: {
-                                    ZStack {
-                                        Color.deepMaroon
-                                        ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
-                                    }
-                                }
-                            } else {
-                                let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
-                                AsyncImage(url: URL(string: localUrl)) { image in
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                } placeholder: {
-                                    ZStack {
-                                        Color.deepMaroon
-                                        ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
-                                    }
-                                }
-                            }
-                        } else {
-                            LinearGradient(colors: [.royalMaroon, .deepMaroon], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                .overlay(
-                                    Text(profile.name.components(separatedBy: " ").map { String($0.prefix(1)) }.joined())
-                                        .font(.system(size: 48, weight: .bold, design: .serif))
-                                        .foregroundColor(.white)
-                                )
-                        }
-                    }
-                    .frame(width: 180, height: 220)
-                    .clipShape(JharokhaShape())
-                    .overlay(JharokhaBorder(lineWidth: 3))
-                    .padding(.top, 15)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    // 1. Hero Photo Header with Floating Controls
+                    heroHeaderSection
                     
-                    // Name & Basic Info
-                    VStack(spacing: 6) {
-                        HStack {
-                            Text(profile.name)
-                                .font(BrandFonts.displayBold(size: 24))
-                                .foregroundColor(.royalMaroon)
-                            
-                            if profile.isVerified {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .foregroundColor(Color(hex: "#2ecc71"))
-                                    .font(.system(size: 18))
-                            }
-                        }
+                    // 2. Profile Details Sheet Content
+                    VStack(alignment: .leading, spacing: 20) {
+                        // Candidate Name, Age & Verified
+                        nameAndVerificationHeader
                         
-                        Text("\(profile.age) Yrs • \(profile.height) • \(profile.location)")
-                            .font(BrandFonts.body(size: 13))
-                            .foregroundColor(.gray)
-                    }
-                    
-                    // Rajput Lineage Parameters
-                    VStack(alignment: .leading, spacing: 15) {
-                        Text("HERITAGE & LINEAGE")
-                            .font(BrandFonts.label(size: 10))
-                            .foregroundColor(.gray)
-                            .tracking(1.5)
+                        // Lineage Fact Chips
+                        factChipsGrid
                         
-                        HStack(spacing: 20) {
-                            LineageTag(label: "Rajput Clan", value: profile.clan)
-                            LineageTag(label: "Paternal Gotra", value: profile.gotra)
-                        }
-                        
-                        HStack(spacing: 20) {
-                            LineageTag(label: "Thikana (Estate)", value: profile.thikana)
-                            LineageTag(label: "Maternal Gotra", value: profile.motherGotra ?? "Not Specified")
-                        }
-                    }
-                    .padding(20)
-                    .background(Color.cardBackground)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.royalGold.opacity(0.15), lineWidth: 1)
-                    )
-                    
-                    // Astro & Specifications
-                    VStack(alignment: .leading, spacing: 15) {
-                        Text("SPECIFICATIONS & ASTROLOGICS")
-                            .font(BrandFonts.label(size: 10))
-                            .foregroundColor(.gray)
-                            .tracking(1.5)
-                        
-                        HStack(spacing: 20) {
-                            LineageTag(label: "Date of Birth", value: profile.dob ?? "Not Specified")
-                            LineageTag(label: "Zodiac / Rashi", value: profile.rashi ?? "Not Specified")
-                        }
-                        
-                        HStack(spacing: 20) {
-                            LineageTag(label: "Manglik Status", value: profile.manglik ?? "Non-Manglik")
-                            LineageTag(label: "Marital Status", value: profile.maritalStatus ?? "Never Married")
-                        }
-                    }
-                    .padding(20)
-                    .background(Color.cardBackground)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.royalGold.opacity(0.15), lineWidth: 1)
-                    )
-                    
-                    // Professional & Educational details
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("PROFESSION & EDUCATION")
-                            .font(BrandFonts.label(size: 10))
-                            .foregroundColor(.gray)
-                            .tracking(1.5)
-                            .padding(.bottom, 4)
-                        
-                        InfoRow(label: "Occupation", value: profile.occupation)
-                        InfoRow(label: "Education", value: profile.education)
-                        InfoRow(label: "Annual Income", value: profile.income)
-                    }
-                    .padding(20)
-                    .background(Color.cardBackground)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.royalGold.opacity(0.15), lineWidth: 1)
-                    )
-                    
-                    // Biography & Partner Expectations
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("BIOGRAPHY & ALIGNMENT EXPECTATIONS")
-                            .font(BrandFonts.label(size: 10))
-                            .foregroundColor(.gray)
-                            .tracking(1.5)
-                            .padding(.bottom, 4)
-                        
+                        // Hinge-Style Prompt: About Me
                         if !cleanAboutText.isEmpty {
-                            Text("About Me")
-                                .font(BrandFonts.bodyBold(size: 12))
-                                .foregroundColor(.royalMaroon)
-                            Text(cleanAboutText)
-                                .font(BrandFonts.body(size: 13))
-                                .foregroundColor(.inkBrown)
-                                .padding(.bottom, 8)
-                        }
-                        
-                        if let expectations = profile.expectations, !expectations.isEmpty {
-                            Text("Partner Expectations")
-                                .font(BrandFonts.bodyBold(size: 12))
-                                .foregroundColor(.royalMaroon)
-                            Text(expectations)
-                                .font(BrandFonts.body(size: 13))
-                                .foregroundColor(.inkBrown)
-                        }
-                    }
-                    .padding(20)
-                    .background(Color.cardBackground)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.royalGold.opacity(0.15), lineWidth: 1)
-                    )
-                    
-                    // Contact details locked / unlocked state box
-                    VStack(spacing: 15) {
-                        HStack {
-                            Image(systemName: "phone.circle.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(.royalGold)
-                            Text("Direct Contact Details")
-                                .font(BrandFonts.label(size: 12))
-                                .foregroundColor(.royalMaroon)
-                                .fontWeight(.bold)
-                            Spacer()
-                        }
-                        
-                        if isUnlockedOrOwn {
-                            // Unlocked Details display
-                            VStack(alignment: .leading, spacing: 10) {
-                                HStack {
-                                    Image(systemName: "phone.fill")
-                                        .foregroundColor(.royalMaroon)
-                                    Text(profile.phone ?? "Not Specified")
-                                        .font(BrandFonts.body(size: 14, weight: .bold))
-                                }
-                                HStack {
-                                    Image(systemName: "envelope.fill")
-                                        .foregroundColor(.royalMaroon)
-                                    Text((profile.email?.isEmpty == false ? profile.email : nil) ?? (profile.id.contains("-") ? "\(profile.name.lowercased().replacingOccurrences(of: " ", with: "."))@shreerajputsagaisambandh-member.com" : "Not Specified"))
-                                        .font(BrandFonts.body(size: 14, weight: .bold))
-                                }
-                                HStack {
-                                    Image(systemName: "mappin.and.ellipse")
-                                        .foregroundColor(.royalMaroon)
-                                    Text(profile.location)
-                                        .font(BrandFonts.body(size: 14))
-                                }
-                                
-                                // Social links if present
-                                let ig = profile.instagram ?? ""
-                                let fb = profile.facebook ?? ""
-                                let pdf = profile.biodataUrl ?? ""
-                                
-                                if !ig.isEmpty || !fb.isEmpty || !pdf.isEmpty {
-                                    Divider().padding(.vertical, 8)
-                                    
-                                    Text("SOCIALS & DOCUMENTS")
-                                        .font(BrandFonts.label(size: 9))
-                                        .foregroundColor(.gray)
-                                        .tracking(1)
-                                        .padding(.bottom, 4)
-                                    
-                                    HStack(spacing: 10) {
-                                        if !ig.isEmpty {
-                                            Button(action: {
-                                                var urlStr = ig
-                                                if !urlStr.hasPrefix("http") {
-                                                    urlStr = "https://instagram.com/\(urlStr.replacingOccurrences(of: "@", with: "").trimmingCharacters(in: .whitespaces))"
-                                                }
-                                                if let url = URL(string: urlStr) {
-                                                    UIApplication.shared.open(url)
-                                                }
-                                            }) {
-                                                HStack(spacing: 4) {
-                                                    Image(systemName: "camera.fill")
-                                                    Text("Instagram")
-                                                }
-                                                .font(BrandFonts.bodyBold(size: 11))
-                                                .foregroundColor(.white)
-                                                .padding(.horizontal, 12)
-                                                .padding(.vertical, 6)
-                                                .background(Color.pink.opacity(0.8))
-                                                .cornerRadius(6)
-                                            }
-                                        }
-                                        
-                                        if !fb.isEmpty {
-                                            Button(action: {
-                                                var urlStr = fb
-                                                if !urlStr.hasPrefix("http") {
-                                                    urlStr = "https://facebook.com/\(urlStr.trimmingCharacters(in: .whitespaces))"
-                                                }
-                                                if let url = URL(string: urlStr) {
-                                                    UIApplication.shared.open(url)
-                                                }
-                                            }) {
-                                                HStack(spacing: 4) {
-                                                    Image(systemName: "link")
-                                                    Text("Facebook")
-                                                }
-                                                .font(BrandFonts.bodyBold(size: 11))
-                                                .foregroundColor(.white)
-                                                .padding(.horizontal, 12)
-                                                .padding(.vertical, 6)
-                                                .background(Color.blue.opacity(0.8))
-                                                .cornerRadius(6)
-                                            }
-                                        }
-                                    }
-                                    
-                                    if !pdf.isEmpty {
-                                        Button(action: {
-                                            if let url = URL(string: pdf) {
-                                                selectedPdfUrl = url
-                                                showingPdfSafari = true
-                                            }
-                                        }) {
-                                            HStack {
-                                                Image(systemName: "doc.plaintext.fill")
-                                                Text("View Ancestral Biodata (PDF)")
-                                            }
-                                            .font(BrandFonts.bodyBold(size: 12))
-                                            .foregroundColor(.deepMaroon)
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 8)
-                                            .background(Color.royalGold)
-                                            .cornerRadius(6)
-                                            .padding(.top, 4)
-                                        }
-                                    }
-                                }
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(15)
-                            .background(Color.green.opacity(0.06))
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.green.opacity(0.2), lineWidth: 1)
+                            promptCard(
+                                title: "ABOUT ME",
+                                content: cleanAboutText,
+                                icon: "quote.opening"
                             )
-                            
-                            // Unlocked Actions: Chat, Call, WhatsApp
-                            if !isMyOwnProfile {
-                                VStack(spacing: 10) {
-                                    Button(action: { showingChatSheet = true }) {
-                                        HStack {
-                                            Image(systemName: "bubble.left.and.bubble.right.fill")
-                                            Text("💬 Start Royal Chat")
-                                                .font(BrandFonts.bodyBold(size: 14))
-                                        }
-                                        .foregroundColor(.deepMaroon)
-                                        .frame(maxWidth: .infinity)
-                                        .frame(height: 44)
-                                        .background(Color.royalGold)
-                                        .cornerRadius(8)
-                                        .shadow(color: Color.black.opacity(0.15), radius: 2)
-                                    }
-                                    
-                                    if let phone = profile.phone, !phone.isEmpty {
-                                        HStack(spacing: 10) {
-                                            Button(action: {
-                                                let clean = phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-                                                if let url = URL(string: "tel://\(clean)") {
-                                                    UIApplication.shared.open(url)
-                                                }
-                                            }) {
-                                                HStack(spacing: 6) {
-                                                    Image(systemName: "phone.fill")
-                                                    Text("Call")
-                                                        .font(BrandFonts.bodyBold(size: 13))
-                                                }
-                                                .foregroundColor(.white)
-                                                .frame(maxWidth: .infinity)
-                                                .frame(height: 40)
-                                                .background(Color.green)
-                                                .cornerRadius(8)
-                                            }
-                                            
-                                            Button(action: {
-                                                var clean = phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-                                                if clean.count == 10 { clean = "91" + clean }
-                                                if let url = URL(string: "https://wa.me/\(clean)") {
-                                                    UIApplication.shared.open(url)
-                                                }
-                                            }) {
-                                                HStack(spacing: 6) {
-                                                    Image(systemName: "message.fill")
-                                                    Text("WhatsApp")
-                                                        .font(BrandFonts.bodyBold(size: 13))
-                                                }
-                                                .foregroundColor(.white)
-                                                .frame(maxWidth: .infinity)
-                                                .frame(height: 40)
-                                                .background(Color(hex: "#25D366"))
-                                                .cornerRadius(8)
-                                            }
-                                        }
-                                    }
-                                }
-                                .padding(.top, 4)
-                            }
-                        } else {
-                            // Locked State details box
-                            VStack(spacing: 14) {
-                                Text("Lineage contact details are secured. Connect or upgrade to unlock direct communication.")
-                                    .font(BrandFonts.body(size: 12))
-                                    .foregroundColor(.gray)
-                                    .multilineTextAlignment(.center)
-                                
-                                if !isMyOwnProfile {
-                                    if isInterestReceivedFromCandidate {
-                                        VStack(spacing: 8) {
-                                            Text("💌 \(profile.name) sent you a Match Interest!")
-                                                .font(BrandFonts.bodyBold(size: 13))
-                                                .foregroundColor(.royalMaroon)
-                                            Button(action: acceptIncomingInterest) {
-                                                HStack {
-                                                    Image(systemName: "checkmark.circle.fill")
-                                                    Text("Accept Interest & Connect")
-                                                        .font(BrandFonts.bodyBold(size: 13))
-                                                }
-                                                .foregroundColor(.deepMaroon)
-                                                .frame(maxWidth: .infinity)
-                                                .frame(height: 42)
-                                                .background(Color.royalGold)
-                                                .cornerRadius(8)
-                                            }
-                                        }
-                                    } else if isInterestSentByMe {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "clock.arrow.circlepath")
-                                            Text("Match Interest Sent (Pending Acceptance)")
-                                                .font(BrandFonts.bodyBold(size: 12))
-                                        }
-                                        .foregroundColor(.royalGold)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 10)
-                                        .background(Color.royalGold.opacity(0.12))
-                                        .cornerRadius(8)
-                                    } else {
-                                        Button(action: sendMatchInterest) {
-                                            HStack {
-                                                if isSendingInterest {
-                                                    ProgressView()
-                                                        .progressViewStyle(CircularProgressViewStyle(tint: .deepMaroon))
-                                                } else {
-                                                    Image(systemName: "heart.fill")
-                                                    Text("💌 Express Royal Match Interest")
-                                                        .font(BrandFonts.bodyBold(size: 13))
-                                                }
-                                            }
-                                            .foregroundColor(.deepMaroon)
-                                            .frame(maxWidth: .infinity)
-                                            .frame(height: 42)
-                                            .background(Color.royalGold)
-                                            .cornerRadius(8)
-                                        }
-                                        .disabled(isSendingInterest)
-                                    }
-                                }
-                                
-                                if showingUnlockProgress {
-                                    ProgressView("Securing Lineage...")
-                                        .padding()
-                                } else {
-                                    Button(action: performUnlock) {
-                                        Text(hasDirectAccess ? "Unlock Profile Card Directly" : "Upgrade Membership to Unlock Contact")
-                                            .font(BrandFonts.body(size: 12, weight: .bold))
-                                            .foregroundColor(hasDirectAccess ? .royalMaroon : .white)
-                                            .padding(.horizontal, 16)
-                                            .padding(.vertical, 8)
-                                            .background(hasDirectAccess ? Color.lightGold : Color.royalMaroon)
-                                            .cornerRadius(8)
-                                    }
-                                }
-                            }
-                            .padding(15)
-                            .frame(maxWidth: .infinity)
-                            .background(Color.royalGold.opacity(0.05))
-                            .cornerRadius(8)
                         }
+                        
+                        // Hinge-Style Prompt: Partner Expectations
+                        if let expectations = profile.expectations, !expectations.isEmpty {
+                            promptCard(
+                                title: "PARTNER EXPECTATIONS",
+                                content: expectations,
+                                icon: "heart.text.square"
+                            )
+                        }
+                        
+                        // Rajput Lineage & Heritage Card
+                        lineageHeritageCard
+                        
+                        // Horoscope & Astrological Specifications
+                        astroSpecificationsCard
+                        
+                        // Professional & Educational Summary
+                        professionEducationCard
+                        
+                        // Unlocked Contact & Biodata section (if unlocked)
+                        if isUnlockedOrOwn {
+                            unlockedContactCard
+                        }
+                        
+                        // Bottom spacing for sticky floating action bar
+                        Spacer().frame(height: 100)
                     }
-                    .padding(20)
-                    .background(Color.cardBackground)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.royalGold.opacity(0.15), lineWidth: 1)
-                    )
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    .background(Color.white)
+                    .cornerRadius(32, corners: [.topLeft, .topRight])
+                    .offset(y: -24)
                 }
-                .padding(20)
             }
+            .edgesIgnoringSafeArea(.top)
+            
+            // 3. Floating Bottom Action Bar (UI Kit CandidateActionBar)
+            floatingBottomActionBar
         }
-        .background(Color.sandstoneIvory.edgesIgnoringSafeArea(.all))
         .sheet(isPresented: $showingPdfSafari) {
             if let url = selectedPdfUrl {
                 SafariView(url: url)
@@ -565,6 +156,510 @@ struct ProfileDetailView: View {
         }
     }
     
+    // MARK: - 1. Hero Header
+    private var heroHeaderSection: some View {
+        ZStack(alignment: .top) {
+            // Photo or Fallback
+            Group {
+                if let imgName = profile.img, !imgName.isEmpty {
+                    if imgName.hasPrefix("http") {
+                        AsyncImage(url: URL(string: imgName)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Color.appCardBackground
+                        }
+                    } else {
+                        let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
+                        AsyncImage(url: URL(string: localUrl)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Color.appCardBackground
+                        }
+                    }
+                } else {
+                    LinearGradient(
+                        colors: [Color.appPrimary, Color.appSecondary],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .overlay(
+                        Text(String(profile.name.prefix(1)))
+                            .font(BrandFonts.displayBold(size: 80))
+                            .foregroundColor(.white)
+                    )
+                }
+            }
+            .frame(height: 380)
+            .clipped()
+            
+            // Top Controls Bar (Dismiss & Share)
+            HStack {
+                Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(Color.appTextPrimary)
+                        .frame(width: 42, height: 42)
+                        .background(Color.white.opacity(0.92))
+                        .clipShape(Circle())
+                        .shadow(color: Color.black.opacity(0.1), radius: 8, y: 2)
+                }
+                
+                Spacer()
+                
+                if isConnected {
+                    Button(action: { showingChatSheet = true }) {
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(Color.appPrimary)
+                            .frame(width: 42, height: 42)
+                            .background(Color.white.opacity(0.92))
+                            .clipShape(Circle())
+                            .shadow(color: Color.black.opacity(0.1), radius: 8, y: 2)
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 52)
+        }
+    }
+    
+    // MARK: - 2. Name & Verification
+    private var nameAndVerificationHeader: some View {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text("\(profile.name), \(profile.age)")
+                        .font(BrandFonts.displayBold(size: 26))
+                        .foregroundColor(Color.appTextPrimary)
+                    
+                    if profile.isVerified {
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundColor(Color.verifiedBlue)
+                            .font(.system(size: 18))
+                    }
+                }
+                
+                Text("\(profile.occupation) • \(profile.location)")
+                    .font(BrandFonts.body(size: 14))
+                    .foregroundColor(Color.appTextSecondary)
+            }
+            Spacer()
+        }
+    }
+    
+    // MARK: - 3. Fact Chips Grid (UI Kit Interest / Fact Chips)
+    private var factChipsGrid: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                factChip(icon: "crown.fill", text: "\(profile.clan) Clan")
+                factChip(icon: "shield.fill", text: "\(profile.gotra) Gotra")
+                factChip(icon: "mappin.circle.fill", text: profile.thikana)
+            }
+            HStack(spacing: 8) {
+                factChip(icon: "arrow.up.and.down", text: profile.height)
+                if let rashi = profile.rashi, !rashi.isEmpty {
+                    factChip(icon: "sparkles", text: rashi)
+                }
+                factChip(icon: "briefcase.fill", text: profile.education)
+            }
+        }
+    }
+    
+    private func factChip(icon: String, text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 12))
+                .foregroundColor(Color.appPrimary)
+            Text(text)
+                .font(BrandFonts.body(size: 12.5, weight: .semibold))
+                .foregroundColor(Color.appTextPrimary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color.appCardBackground)
+        .cornerRadius(14)
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.appBorder, lineWidth: 1))
+    }
+    
+    // MARK: - 4. Prompt Card (Hinge style)
+    private func promptCard(title: String, content: String, icon: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 13))
+                    .foregroundColor(Color.appPrimary)
+                Text(title)
+                    .font(BrandFonts.label(size: 11, weight: .bold))
+                    .foregroundColor(Color.appTextSecondary)
+                    .tracking(1.0)
+            }
+            
+            Text(content)
+                .font(BrandFonts.body(size: 14.5))
+                .foregroundColor(Color.appTextPrimary)
+                .lineSpacing(4)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.appCardBackground)
+        .cornerRadius(20)
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.appBorder, lineWidth: 1))
+    }
+    
+    // MARK: - 5. Lineage & Heritage Card
+    private var lineageHeritageCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 6) {
+                Image(systemName: "shield.lefthalf.filled")
+                    .foregroundColor(Color.royalGold)
+                Text("RAJPUT HERITAGE & LINEAGE")
+                    .font(BrandFonts.label(size: 11, weight: .bold))
+                    .foregroundColor(Color.appTextSecondary)
+                    .tracking(1.0)
+            }
+            
+            HStack(spacing: 16) {
+                lineageItem(title: "Rajput Clan", value: profile.clan)
+                lineageItem(title: "Paternal Gotra", value: profile.gotra)
+            }
+            
+            HStack(spacing: 16) {
+                lineageItem(title: "Thikana (Estate)", value: profile.thikana)
+                lineageItem(title: "Maternal Gotra", value: profile.motherGotra ?? "Not Specified")
+            }
+        }
+        .padding(18)
+        .background(Color.white)
+        .cornerRadius(20)
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.appBorder, lineWidth: 1))
+        .shadow(color: Color.black.opacity(0.03), radius: 8, y: 3)
+    }
+    
+    private func lineageItem(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(BrandFonts.body(size: 11))
+                .foregroundColor(Color.appTextMuted)
+            Text(value)
+                .font(BrandFonts.bodyBold(size: 13.5))
+                .foregroundColor(Color.appTextPrimary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    // MARK: - 6. Astro Specifications Card
+    private var astroSpecificationsCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles")
+                    .foregroundColor(Color.starPurple)
+                Text("ASTROLOGY & SPECIFICATIONS")
+                    .font(BrandFonts.label(size: 11, weight: .bold))
+                    .foregroundColor(Color.appTextSecondary)
+                    .tracking(1.0)
+            }
+            
+            HStack(spacing: 16) {
+                lineageItem(title: "Date of Birth", value: profile.dob ?? "Not Specified")
+                lineageItem(title: "Zodiac / Rashi", value: profile.rashi ?? "Not Specified")
+            }
+            
+            HStack(spacing: 16) {
+                lineageItem(title: "Manglik Status", value: profile.manglik ?? "Non-Manglik")
+                lineageItem(title: "Marital Status", value: profile.maritalStatus ?? "Never Married")
+            }
+        }
+        .padding(18)
+        .background(Color.white)
+        .cornerRadius(20)
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.appBorder, lineWidth: 1))
+        .shadow(color: Color.black.opacity(0.03), radius: 8, y: 3)
+    }
+    
+    // MARK: - 7. Profession & Education
+    private var professionEducationCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: "graduationcap.fill")
+                    .foregroundColor(Color.appPrimary)
+                Text("CAREER & EDUCATION")
+                    .font(BrandFonts.label(size: 11, weight: .bold))
+                    .foregroundColor(Color.appTextSecondary)
+                    .tracking(1.0)
+            }
+            
+            HStack(spacing: 16) {
+                lineageItem(title: "Occupation", value: profile.occupation)
+                lineageItem(title: "Education", value: profile.education)
+            }
+            
+            if !profile.income.isEmpty {
+                lineageItem(title: "Annual Income", value: profile.income)
+            }
+        }
+        .padding(18)
+        .background(Color.white)
+        .cornerRadius(20)
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.appBorder, lineWidth: 1))
+        .shadow(color: Color.black.opacity(0.03), radius: 8, y: 3)
+    }
+    
+    // MARK: - 8. Unlocked Contact Card
+    private var unlockedContactCard: some View {
+        let socials = SupabaseClient.shared.getSocialLinks(from: profile.about)
+        let ig = socials["instagram"] ?? ""
+        let fb = socials["facebook"] ?? ""
+        let pdf = SupabaseClient.shared.getBiodataLink(from: profile.about)
+        
+        return VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Image(systemName: "lock.open.fill")
+                    .foregroundColor(Color.successGreen)
+                Text("VERIFIED CONTACT & BIODATA")
+                    .font(BrandFonts.label(size: 11, weight: .bold))
+                    .foregroundColor(Color.successGreen)
+                    .tracking(1.0)
+            }
+            
+            if let phone = profile.phone, !phone.isEmpty {
+                HStack {
+                    Image(systemName: "phone.fill")
+                        .foregroundColor(Color.appTextSecondary)
+                    Text(phone)
+                        .font(BrandFonts.bodyBold(size: 15))
+                        .foregroundColor(Color.appTextPrimary)
+                }
+            }
+            
+            // Social buttons
+            if !ig.isEmpty || !fb.isEmpty {
+                HStack(spacing: 12) {
+                    if !ig.isEmpty {
+                        Button(action: {
+                            var urlStr = ig
+                            if !urlStr.hasPrefix("http") {
+                                urlStr = "https://instagram.com/\(urlStr.trimmingCharacters(in: .whitespaces))"
+                            }
+                            if let url = URL(string: urlStr) {
+                                UIApplication.shared.open(url)
+                            }
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "camera.fill")
+                                Text("Instagram")
+                            }
+                            .font(BrandFonts.bodyBold(size: 12))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(Color.starPurple)
+                            .cornerRadius(10)
+                        }
+                    }
+                    
+                    if !fb.isEmpty {
+                        Button(action: {
+                            var urlStr = fb
+                            if !urlStr.hasPrefix("http") {
+                                urlStr = "https://facebook.com/\(urlStr.trimmingCharacters(in: .whitespaces))"
+                            }
+                            if let url = URL(string: urlStr) {
+                                UIApplication.shared.open(url)
+                            }
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "link")
+                                Text("Facebook")
+                            }
+                            .font(BrandFonts.bodyBold(size: 12))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(Color.blue)
+                            .cornerRadius(10)
+                        }
+                    }
+                }
+            }
+            
+            if !pdf.isEmpty {
+                Button(action: {
+                    if let url = URL(string: pdf) {
+                        selectedPdfUrl = url
+                        showingPdfSafari = true
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: "doc.plaintext.fill")
+                        Text("View Ancestral Biodata (PDF)")
+                    }
+                    .font(BrandFonts.bodyBold(size: 13))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color.appTextPrimary)
+                    .cornerRadius(12)
+                }
+            }
+        }
+        .padding(18)
+        .background(Color.successGreen.opacity(0.06))
+        .cornerRadius(20)
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.successGreen.opacity(0.25), lineWidth: 1))
+    }
+    
+    // MARK: - 9. Floating Bottom Action Bar
+    private var floatingBottomActionBar: some View {
+        VStack(spacing: 0) {
+            Divider()
+                .background(Color.appDivider)
+            
+            HStack(spacing: 12) {
+                if isUnlockedOrOwn && !isMyOwnProfile {
+                    // Chat CTA
+                    Button(action: { showingChatSheet = true }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "bubble.left.and.bubble.right.fill")
+                            Text("Start Chat")
+                        }
+                        .font(BrandFonts.bodyBold(size: 14))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.appPrimary, Color.appSecondary],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(25)
+                        .shadow(color: Color.appPrimary.opacity(0.35), radius: 8, y: 4)
+                    }
+                    
+                    if let phone = profile.phone, !phone.isEmpty {
+                        // Call
+                        Button(action: {
+                            let clean = phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                            if let url = URL(string: "tel://\(clean)") {
+                                UIApplication.shared.open(url)
+                            }
+                        }) {
+                            Image(systemName: "phone.fill")
+                                .font(.system(size: 18))
+                                .foregroundColor(.white)
+                                .frame(width: 50, height: 50)
+                                .background(Color.successGreen)
+                                .clipShape(Circle())
+                                .shadow(color: Color.successGreen.opacity(0.35), radius: 8, y: 4)
+                        }
+                        
+                        // WhatsApp
+                        Button(action: {
+                            var clean = phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                            if clean.count == 10 { clean = "91" + clean }
+                            if let url = URL(string: "https://wa.me/\(clean)") {
+                                UIApplication.shared.open(url)
+                            }
+                        }) {
+                            Image(systemName: "message.fill")
+                                .font(.system(size: 18))
+                                .foregroundColor(.white)
+                                .frame(width: 50, height: 50)
+                                .background(Color(hex: "#25D366"))
+                                .clipShape(Circle())
+                                .shadow(color: Color(hex: "#25D366").opacity(0.35), radius: 8, y: 4)
+                        }
+                    }
+                } else if !isMyOwnProfile {
+                    // Pass Button
+                    Button(action: {
+                        presentationMode.wrappedValue.dismiss()
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(Color.dislikeRed)
+                            .frame(width: 50, height: 50)
+                            .background(Color.white)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.dislikeRed.opacity(0.3), lineWidth: 1.5))
+                            .shadow(color: Color.black.opacity(0.06), radius: 8, y: 4)
+                    }
+                    
+                    // Main Interest CTA
+                    if isInterestReceivedFromCandidate {
+                        Button(action: acceptIncomingInterest) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle.fill")
+                                Text("Accept Rishta & Connect")
+                            }
+                            .font(BrandFonts.bodyBold(size: 14))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.successGreen, Color(hex: "#059669")],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(25)
+                            .shadow(color: Color.successGreen.opacity(0.35), radius: 8, y: 4)
+                        }
+                    } else if isInterestSentByMe {
+                        HStack(spacing: 6) {
+                            Image(systemName: "clock.arrow.circlepath")
+                            Text("Rishta Sent (Pending)")
+                        }
+                        .font(BrandFonts.bodyBold(size: 14))
+                        .foregroundColor(Color.appPrimary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.appPrimary.opacity(0.12))
+                        .cornerRadius(25)
+                    } else {
+                        Button(action: sendMatchInterest) {
+                            HStack(spacing: 6) {
+                                if isSendingInterest {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                } else {
+                                    Image(systemName: "heart.fill")
+                                    Text("Express Rishta")
+                                }
+                            }
+                            .font(BrandFonts.bodyBold(size: 14))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.appPrimary, Color.appSecondary],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(25)
+                            .shadow(color: Color.appPrimary.opacity(0.35), radius: 8, y: 4)
+                        }
+                        .disabled(isSendingInterest)
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 10)
+            .padding(.bottom, 24)
+            .background(Color.white)
+        }
+    }
+    
+    // MARK: - Actions
     private func sendMatchInterest() {
         guard let currentUser = session.currentUser else { return }
         isSendingInterest = true
@@ -600,39 +695,5 @@ struct ProfileDetailView: View {
             unlockSuccess = true
             session.unlockProfile(id: profile.id)
         }
-    }
-}
-
-struct LineageTag: View {
-    let label: String
-    let value: String
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label.uppercased())
-                .font(BrandFonts.label(size: 8))
-                .foregroundColor(.gray)
-            Text(value)
-                .font(BrandFonts.body(size: 14, weight: .semibold))
-                .foregroundColor(.inkBrown)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-struct InfoRow: View {
-    let label: String
-    let value: String
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(label)
-                .font(BrandFonts.body(size: 11, weight: .bold))
-                .foregroundColor(.gray)
-            Text(value)
-                .font(BrandFonts.body(size: 13))
-                .foregroundColor(.inkBrown)
-        }
-        .padding(.vertical, 2)
     }
 }

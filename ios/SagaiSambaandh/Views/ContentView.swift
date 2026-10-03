@@ -242,6 +242,53 @@ struct ContentView: View {
         return user.gotra.isEmpty || user.motherGotra.isEmpty || user.thikana.isEmpty || user.phone.isEmpty
     }
     
+    init() {
+        #if canImport(UIKit)
+        let tabAppearance = UITabBarAppearance()
+        tabAppearance.configureWithOpaqueBackground()
+        tabAppearance.backgroundColor = UIColor.white
+        tabAppearance.shadowColor = UIColor(red: 0.90, green: 0.91, blue: 0.93, alpha: 1.0)
+        
+        let normalAttrs: [NSAttributedString.Key: Any] = [
+            .foregroundColor: UIColor(red: 0.61, green: 0.64, blue: 0.69, alpha: 1.0),
+            .font: UIFont.systemFont(ofSize: 11, weight: .medium)
+        ]
+        let selectedAttrs: [NSAttributedString.Key: Any] = [
+            .foregroundColor: UIColor(red: 0.91, green: 0.25, blue: 0.34, alpha: 1.0), // AppColors.primary #E94057
+            .font: UIFont.systemFont(ofSize: 11, weight: .bold)
+        ]
+        
+        tabAppearance.stackedLayoutAppearance.normal.titleTextAttributes = normalAttrs
+        tabAppearance.stackedLayoutAppearance.normal.iconColor = UIColor(red: 0.61, green: 0.64, blue: 0.69, alpha: 1.0)
+        tabAppearance.stackedLayoutAppearance.selected.titleTextAttributes = selectedAttrs
+        tabAppearance.stackedLayoutAppearance.selected.iconColor = UIColor(red: 0.91, green: 0.25, blue: 0.34, alpha: 1.0)
+        
+        UITabBar.appearance().standardAppearance = tabAppearance
+        if #available(iOS 15.0, *) {
+            UITabBar.appearance().scrollEdgeAppearance = tabAppearance
+        }
+        
+        let navAppearance = UINavigationBarAppearance()
+        navAppearance.configureWithOpaqueBackground()
+        navAppearance.backgroundColor = UIColor.white
+        navAppearance.shadowColor = UIColor(red: 0.90, green: 0.91, blue: 0.93, alpha: 1.0)
+        navAppearance.titleTextAttributes = [
+            .foregroundColor: UIColor(red: 0.11, green: 0.11, blue: 0.12, alpha: 1.0),
+            .font: UIFont.systemFont(ofSize: 18, weight: .bold)
+        ]
+        navAppearance.largeTitleTextAttributes = [
+            .foregroundColor: UIColor(red: 0.11, green: 0.11, blue: 0.12, alpha: 1.0),
+            .font: UIFont.systemFont(ofSize: 28, weight: .bold)
+        ]
+        UINavigationBar.appearance().standardAppearance = navAppearance
+        UINavigationBar.appearance().compactAppearance = navAppearance
+        if #available(iOS 15.0, *) {
+            UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
+        }
+        UINavigationBar.appearance().tintColor = UIColor(red: 0.91, green: 0.25, blue: 0.34, alpha: 1.0)
+        #endif
+    }
+    
     var body: some View {
         ZStack {
             if isSplashActive {
@@ -270,7 +317,7 @@ struct ContentView: View {
                         .environmentObject(session)
                 } else {
                     ZStack {
-                        // Authenticated view with 5 Shaadi-style tabs
+                        // Authenticated view with 5 modern Marriage App tabs
                         TabView(selection: $selectedTab) {
                             // Home View
                             NavigationView {
@@ -285,14 +332,14 @@ struct ContentView: View {
                                                 }
                                             }) {
                                                 Image(systemName: "line.horizontal.3")
-                                                    .foregroundColor(.lightGold)
+                                                    .foregroundColor(.appTextPrimary)
                                                     .font(.title2)
                                             }
                                         }
                                         ToolbarItem(placement: .principal) {
                                             Text("Sagai Sambaandh")
                                                 .font(BrandFonts.displayBold(size: 18))
-                                                .foregroundColor(.lightGold)
+                                                .foregroundColor(.appTextPrimary)
                                         }
                                         ToolbarItem(placement: .navigationBarTrailing) {
                                             Button(action: {
@@ -300,11 +347,11 @@ struct ContentView: View {
                                             }) {
                                                 ZStack {
                                                     Image(systemName: "bell.fill")
-                                                        .foregroundColor(.lightGold)
+                                                        .foregroundColor(.appTextPrimary)
                                                         .font(.title2)
                                                     if !session.notificationsList.isEmpty {
                                                         Circle()
-                                                            .fill(Color.red)
+                                                            .fill(Color.appPrimary)
                                                             .frame(width: 8, height: 8)
                                                             .offset(x: 8, y: -8)
                                                     }
@@ -331,14 +378,14 @@ struct ContentView: View {
                                                 }
                                             }) {
                                                 Image(systemName: "line.horizontal.3")
-                                                    .foregroundColor(.lightGold)
+                                                    .foregroundColor(.appTextPrimary)
                                                     .font(.title2)
                                             }
                                         }
                                         ToolbarItem(placement: .principal) {
-                                            Text("Matches")
+                                            Text("Discover")
                                                 .font(BrandFonts.displayBold(size: 18))
-                                                .foregroundColor(.lightGold)
+                                                .foregroundColor(.appTextPrimary)
                                         }
                                         ToolbarItem(placement: .navigationBarTrailing) {
                                             Button(action: {
@@ -346,11 +393,11 @@ struct ContentView: View {
                                             }) {
                                                 ZStack {
                                                     Image(systemName: "bell.fill")
-                                                        .foregroundColor(.lightGold)
+                                                        .foregroundColor(.appTextPrimary)
                                                         .font(.title2)
                                                     if !session.notificationsList.isEmpty {
                                                         Circle()
-                                                            .fill(Color.red)
+                                                            .fill(Color.appPrimary)
                                                             .frame(width: 8, height: 8)
                                                             .offset(x: 8, y: -8)
                                                     }
@@ -360,7 +407,7 @@ struct ContentView: View {
                                     }
                             }
                             .tabItem {
-                                Label("Matches", systemImage: "heart.fill")
+                                Label("Discover", systemImage: "rectangle.stack.fill")
                             }
                             .tag(1)
                             
@@ -377,14 +424,14 @@ struct ContentView: View {
                                                 }
                                             }) {
                                                 Image(systemName: "line.horizontal.3")
-                                                    .foregroundColor(.lightGold)
+                                                    .foregroundColor(.appTextPrimary)
                                                     .font(.title2)
                                             }
                                         }
                                         ToolbarItem(placement: .principal) {
-                                            Text("Inbox")
+                                            Text("Requests")
                                                 .font(BrandFonts.displayBold(size: 18))
-                                                .foregroundColor(.lightGold)
+                                                .foregroundColor(.appTextPrimary)
                                         }
                                         ToolbarItem(placement: .navigationBarTrailing) {
                                             Button(action: {
@@ -392,11 +439,11 @@ struct ContentView: View {
                                             }) {
                                                 ZStack {
                                                     Image(systemName: "bell.fill")
-                                                        .foregroundColor(.lightGold)
+                                                        .foregroundColor(.appTextPrimary)
                                                         .font(.title2)
                                                     if !session.notificationsList.isEmpty {
                                                         Circle()
-                                                            .fill(Color.red)
+                                                            .fill(Color.appPrimary)
                                                             .frame(width: 8, height: 8)
                                                             .offset(x: 8, y: -8)
                                                     }
@@ -406,7 +453,7 @@ struct ContentView: View {
                                     }
                             }
                             .tabItem {
-                                Label("Inbox", systemImage: "envelope.fill")
+                                Label("Requests", systemImage: "envelope.fill")
                             }
                             .tag(2)
                             
@@ -423,19 +470,19 @@ struct ContentView: View {
                                                 }
                                             }) {
                                                 Image(systemName: "line.horizontal.3")
-                                                    .foregroundColor(.lightGold)
+                                                    .foregroundColor(.appTextPrimary)
                                                     .font(.title2)
                                             }
                                         }
                                         ToolbarItem(placement: .principal) {
-                                            Text("Chat")
+                                            Text("Messages")
                                                 .font(BrandFonts.displayBold(size: 18))
-                                                .foregroundColor(.lightGold)
+                                                .foregroundColor(.appTextPrimary)
                                         }
                                     }
                             }
                             .tabItem {
-                                Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
+                                Label("Messages", systemImage: "bubble.left.and.bubble.right.fill")
                             }
                             .tag(3)
                             
@@ -452,14 +499,14 @@ struct ContentView: View {
                                                 }
                                             }) {
                                                 Image(systemName: "line.horizontal.3")
-                                                    .foregroundColor(.lightGold)
+                                                    .foregroundColor(.appTextPrimary)
                                                     .font(.title2)
                                             }
                                         }
                                         ToolbarItem(placement: .principal) {
                                             Text("Premium")
                                                 .font(BrandFonts.displayBold(size: 18))
-                                                .foregroundColor(.lightGold)
+                                                .foregroundColor(.appTextPrimary)
                                         }
                                     }
                             }
@@ -468,7 +515,7 @@ struct ContentView: View {
                             }
                             .tag(4)
                         }
-                        .accentColor(.royalGold)
+                        .accentColor(.appPrimary)
                         .disabled(isSideMenuOpen)
                         
                         // Dimmed overlay when side menu drawer is open

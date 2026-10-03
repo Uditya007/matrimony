@@ -29,6 +29,36 @@ extension Color {
         )
     }
     
+    // MARK: - Marriage App UI Kit Palette
+    static let appPrimary = Color(hex: "#E94057")
+    static let appPrimaryDark = Color(hex: "#C72C41")
+    static let appPrimaryLight = Color(hex: "#FFF0F2")
+    static let appSecondary = Color(hex: "#F27121")
+    static let appAccent = Color(hex: "#8A2387")
+    
+    // Backgrounds & Surfaces
+    static let appBackground = Color(hex: "#FFFFFF")
+    static let appSurface = Color(hex: "#FFFFFF")
+    static let appSurfaceElevated = Color(hex: "#FAFAFA")
+    static let appCardBackground = Color(hex: "#F4F4F6")
+    
+    // Typography
+    static let appTextPrimary = Color(hex: "#1B1B1E")
+    static let appTextSecondary = Color(hex: "#6B7280")
+    static let appTextMuted = Color(hex: "#9CA3AF")
+    
+    // Borders & Dividers
+    static let appBorder = Color(hex: "#E5E7EB")
+    static let appDivider = Color(hex: "#F3F4F6")
+    
+    // Status & Badges
+    static let verifiedBlue = Color(hex: "#3B82F6")
+    static let successGreen = Color(hex: "#10B981")
+    static let dislikeRed = Color(hex: "#EF4444")
+    static let starPurple = Color(hex: "#8A2387")
+    static let starGold = Color(hex: "#F59E0B")
+    
+    // Royal Rajput Heritage Palette (Maintained for lineage branding)
     static let royalMaroon = Color(hex: "#6B1220")
     static let deepMaroon = Color(hex: "#4A0D18")
     static let royalGold = Color(hex: "#C9A227")
@@ -36,65 +66,66 @@ extension Color {
     static let sandstoneIvory = Color(hex: "#F5EDE0")
     static let jodhpurIndigo = Color(hex: "#1D2B53")
     static let inkBrown = Color(hex: "#2B1810")
-    static let cardBackground = Color(hex: "#FCFBF7")
+    static let cardBackground = Color(hex: "#F4F4F6")
     
-    // Fallbacks for standard gray colors
-    static let textDark = Color(hex: "#2B1810")
-    static let textMuted = Color.gray.opacity(0.8)
+    static let textDark = Color(hex: "#1B1B1E")
+    static let textMuted = Color(hex: "#6B7280")
+}
+
+struct AppGradients {
+    static let primary = LinearGradient(
+        colors: [Color(hex: "#E94057"), Color(hex: "#F27121")],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+    
+    static let romantic = LinearGradient(
+        colors: [Color(hex: "#E94057"), Color(hex: "#8A2387")],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+    
+    static let royalGold = LinearGradient(
+        colors: [Color(hex: "#C9A227"), Color(hex: "#E8C766")],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+    
+    static let overlay = LinearGradient(
+        colors: [
+            Color.clear,
+            Color.clear,
+            Color.black.opacity(0.35),
+            Color.black.opacity(0.78),
+            Color.black.opacity(0.96)
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
 }
 
 struct BrandFonts {
     static func display(size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        #if canImport(UIKit)
-        if UIFont(name: "CormorantGaramond-Regular", size: size) != nil {
-            return Font.custom("CormorantGaramond-Regular", size: size)
-        }
-        #endif
-        return Font.system(size: size, weight: weight, design: .serif)
+        return Font.system(size: size, weight: weight, design: .default)
     }
     
     static func displayItalic(size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        #if canImport(UIKit)
-        if UIFont(name: "CormorantGaramond-Italic", size: size) != nil {
-            return Font.custom("CormorantGaramond-Italic", size: size)
-        }
-        #endif
-        return Font.system(size: size, weight: weight, design: .serif).italic()
+        return Font.system(size: size, weight: weight, design: .default).italic()
     }
     
     static func displayBold(size: CGFloat) -> Font {
-        #if canImport(UIKit)
-        if UIFont(name: "CormorantGaramond-Bold", size: size) != nil {
-            return Font.custom("CormorantGaramond-Bold", size: size)
-        }
-        #endif
-        return Font.system(size: size, weight: .bold, design: .serif)
+        return Font.system(size: size, weight: .bold, design: .default)
     }
     
-    static func label(size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        #if canImport(UIKit)
-        if UIFont(name: "Cinzel-Regular", size: size) != nil {
-            return Font.custom("Cinzel-Regular", size: size)
-        }
-        #endif
-        return Font.system(size: size, weight: weight == .regular ? .bold : weight, design: .default)
+    static func label(size: CGFloat, weight: Font.Weight = .bold) -> Font {
+        return Font.system(size: size, weight: weight, design: .default)
     }
     
     static func body(size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        #if canImport(UIKit)
-        if UIFont(name: "Poppins-Regular", size: size) != nil {
-            return Font.custom("Poppins-Regular", size: size)
-        }
-        #endif
         return Font.system(size: size, weight: weight, design: .default)
     }
     
     static func bodyBold(size: CGFloat) -> Font {
-        #if canImport(UIKit)
-        if UIFont(name: "Poppins-Bold", size: size) != nil {
-            return Font.custom("Poppins-Bold", size: size)
-        }
-        #endif
         return Font.system(size: size, weight: .bold, design: .default)
     }
 }
