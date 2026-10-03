@@ -54,8 +54,15 @@ class SagaiSessionManager: ObservableObject {
     }
     
     func areConnected(profileId: String) -> Bool {
-        if let conn = getConnection(with: profileId) {
-            return conn.status == "accepted"
+        guard let currentUserId = currentUser?.id else { return false }
+        if let conn = getConnection(with: profileId), conn.status == "accepted" {
+            return true
+        }
+        let myInterests = SupabaseClient.shared.getInterests(from: currentUser?.about)
+        if myInterests[profileId] == "accepted" { return true }
+        if let otherProfile = profiles.first(where: { $0.id == profileId }) {
+            let otherInterests = SupabaseClient.shared.getInterests(from: otherProfile.about)
+            if otherInterests[currentUserId] == "accepted" { return true }
         }
         return false
     }
@@ -131,42 +138,33 @@ class SagaiSessionManager: ObservableObject {
     func fetchConnectionsAndGenerateNotifications() {
         guard let currentUserId = currentUser?.id else { return }
         
-        let urlString = "\(SupabaseClient.shared.supabaseURL)/rest/v1/connections?or=(sender_id.eq.\(currentUserId),receiver_id.eq.\(currentUserId))"
-        guard let url = URL(string: urlString) else { return }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.addValue(SupabaseClient.shared.apiKey, forHTTPHeaderField: "apikey")
-        request.addValue("Bearer \(SupabaseClient.shared.apiKey)", forHTTPHeaderField: "Authorization")
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data,
-                  let records = try? JSONDecoder().decode([ConnectionRecord].self, from: data) else {
-                return
-            }
+        SupabaseClient.shared.fetchConnections(userId: currentUserId) { [weak self] result in
+            guard let self = self else { return }
+            guard case .success(let records) = result else { return }
             
             // Build notifications list
             var list: [RoyalNotification] = []
             for record in records {
-                if record.receiver_id == currentUserId {
+                if record.receiver_id == currentUserId && record.status == "pending" {
                     let senderProfile = self.profiles.first(where: { $0.id == record.sender_id })
                     let senderName = senderProfile?.name ?? "Noble Member"
                     list.append(RoyalNotification(
-                        id: record.sender_id + "_" + record.status,
+                        id: record.sender_id + "_pending",
                         notifKey: "interest_from_\(record.sender_id)",
-                        message: "\(senderName) sent you a Match Interest! Chat is now unlocked.",
+                        message: "\(senderName) sent you a Royal Match Interest! Accept to reveal mobile number.",
                         profileId: record.sender_id,
                         timestamp: "Just now",
                         read: false
                     ))
-                } else if record.sender_id == currentUserId && record.status == "accepted" {
-                    let receiverProfile = self.profiles.first(where: { $0.id == record.receiver_id })
-                    let receiverName = receiverProfile?.name ?? "Noble Member"
+                } else if record.status == "accepted" {
+                    let otherId = record.sender_id == currentUserId ? record.receiver_id : record.sender_id
+                    let otherProfile = self.profiles.first(where: { $0.id == otherId })
+                    let otherName = otherProfile?.name ?? "Noble Member"
                     list.append(RoyalNotification(
-                        id: record.receiver_id + "_accepted",
-                        notifKey: "accepted_from_\(record.receiver_id)",
-                        message: "\(receiverName) accepted your Royal Interest! Click to chat.",
-                        profileId: record.receiver_id,
+                        id: otherId + "_accepted",
+                        notifKey: "accepted_from_\(otherId)",
+                        message: "\(otherName) connected with you! Contact details & chat are unlocked.",
+                        profileId: otherId,
                         timestamp: "Just now",
                         read: false
                     ))
@@ -177,7 +175,20 @@ class SagaiSessionManager: ObservableObject {
                 self.connections = records
                 self.notificationsList = list
             }
-        }.resume()
+        }
+    }
+    
+    func refreshCurrentUserAbout() {
+        guard let currentUserId = currentUser?.id else { return }
+        SupabaseClient.shared.fetchProfileAbout(profileId: currentUserId) { [weak self] about in
+            DispatchQueue.main.async {
+                guard let about = about else { return }
+                self?.currentUser?.about = about
+                if let user = self?.currentUser, let data = try? JSONEncoder().encode(user) {
+                    UserDefaults.standard.set(data, forKey: "saved_user_session")
+                }
+            }
+        }
     }
 }
 

@@ -273,7 +273,7 @@ struct ProfileDetailView: View {
                                 HStack {
                                     Image(systemName: "envelope.fill")
                                         .foregroundColor(.royalMaroon)
-                                    Text(profile.id.contains("-") ? "\(profile.name.lowercased().replacingOccurrences(of: " ", with: "."))@shreerajputsagaisambandh-member.com" : "Not Specified")
+                                    Text((profile.email?.isEmpty == false ? profile.email : nil) ?? (profile.id.contains("-") ? "\(profile.name.lowercased().replacingOccurrences(of: " ", with: "."))@shreerajputsagaisambandh-member.com" : "Not Specified"))
                                         .font(BrandFonts.body(size: 14, weight: .bold))
                                 }
                                 HStack {

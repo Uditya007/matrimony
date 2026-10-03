@@ -74,7 +74,7 @@ struct AvatarSelectionView: View {
                             .padding(12)
                             .background(Color.white)
                             .cornerRadius(6)
-                            .onChange(of: customUrl) { newValue in
+                            .onChange(of: customUrl) { _, newValue in
                                 if !newValue.isEmpty {
                                     selectedAvatar = newValue
                                 }

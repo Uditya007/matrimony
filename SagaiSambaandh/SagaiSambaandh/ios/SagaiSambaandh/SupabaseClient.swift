@@ -36,7 +36,8 @@ class SupabaseClient {
                         let education = dict["education"] as? String ?? ""
                         let occupation = dict["occupation"] as? String ?? ""
                         let income = dict["income"] as? String ?? ""
-                        let profilePic = dict["profilePic"] as? String ?? ""
+                        let rawPic = (dict["profilePic"] as? String)?.isEmpty == false ? (dict["profilePic"] as? String) : (dict["img"] as? String)
+                        let email = dict["email"] as? String ?? ""
                         let about = dict["about"] as? String ?? ""
                         
                         let motherGotra = dict["motherGotra"] as? String ?? ""
@@ -74,11 +75,12 @@ class SupabaseClient {
                             education: education,
                             income: income,
                             isVerified: true,
-                            img: profilePic.isEmpty ? nil : profilePic,
+                            img: rawPic,
                             about: about,
                             motherGotra: motherGotra,
                             dob: dobStr,
                             phone: phone,
+                            email: email,
                             maritalStatus: maritalStatus,
                             rashi: rashi,
                             manglik: manglik,
@@ -393,88 +395,185 @@ class SupabaseClient {
         }.resume()
     }
     
-    // Send a Like / Connection request to the connections database table
-    func sendConnection(senderId: String, receiverId: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        guard let url = URL(string: "\(supabaseURL)/rest/v1/connections") else { return }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.addValue(apiKey, forHTTPHeaderField: "apikey")
-        request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let fields: [String: Any] = [
-            "sender_id": senderId,
-            "receiver_id": receiverId,
-            "status": "pending"
-        ]
-        request.httpBody = try? JSONSerialization.data(withJSONObject: fields)
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 201 || httpResponse.statusCode == 200 {
-                completion(.success(()))
-            } else {
-                completion(.failure(NSError(domain: "SupabaseClient", code: -4, userInfo: [NSLocalizedDescriptionKey: "Failed to send like"])))
-            }
-        }.resume()
+    // MARK: - Decentralized Supabase Interests & Matchmaking (100% Website Parity)
+    
+    func getInterests(from aboutText: String?) -> [String: String] {
+        guard let about = aboutText, !about.isEmpty else { return [:] }
+        let pattern = "\\[Interests: ([^\\]]*)\\]"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return [:] }
+        let nsRange = NSRange(about.startIndex..<about.endIndex, in: about)
+        guard let match = regex.firstMatch(in: about, options: [], range: nsRange),
+              let range = Range(match.range(at: 1), in: about) else { return [:] }
+        let jsonStr = String(about[range]).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let data = jsonStr.data(using: .utf8),
+              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: String] else {
+            return [:]
+        }
+        return dict
     }
     
-    // Fetch connection requests for a user
-    func fetchConnections(userId: String, completion: @escaping (Result<[ConnectionRecord], Error>) -> Void) {
-        // Query rows where user is either sender or receiver
-        guard let url = URL(string: "\(supabaseURL)/rest/v1/connections?or=(sender_id.eq.\(userId),receiver_id.eq.\(userId))") else { return }
-        
+    func setInterests(in aboutText: String?, interests: [String: String]) -> String {
+        var cleanAbout = aboutText ?? ""
+        if let regex = try? NSRegularExpression(pattern: "\\[Interests: [^\\]]*\\]", options: []) {
+            let nsRange = NSRange(cleanAbout.startIndex..<cleanAbout.endIndex, in: cleanAbout)
+            cleanAbout = regex.stringByReplacingMatches(in: cleanAbout, options: [], range: nsRange, withTemplate: "")
+        }
+        cleanAbout = cleanAbout.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let data = try? JSONSerialization.data(withJSONObject: interests, options: []),
+           let jsonStr = String(data: data, encoding: .utf8) {
+            return cleanAbout.isEmpty ? "[Interests: \(jsonStr)]" : "\(cleanAbout)\n[Interests: \(jsonStr)]"
+        }
+        return cleanAbout
+    }
+    
+    // Send match interest to a profile (syncs directly with Supabase profiles table)
+    func sendConnection(senderId: String, receiverId: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let url = URL(string: "\(supabaseURL)/rest/v1/profiles?id=eq.\(senderId)&select=about") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.addValue(apiKey, forHTTPHeaderField: "apikey")
         request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        URLSession.shared.dataTask(with: request) { [weak self] data, _, error in
+            guard let self = self else { return }
             if let error = error {
                 completion(.failure(error))
                 return
             }
-            guard let data = data else {
-                completion(.success([]))
-                return
+            var currentAbout = ""
+            if let data = data,
+               let rows = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+               let first = rows.first {
+                currentAbout = first["about"] as? String ?? ""
             }
-            do {
-                let records = try JSONDecoder().decode([ConnectionRecord].self, from: data)
-                completion(.success(records))
-            } catch {
-                completion(.failure(error))
-            }
+            
+            var interests = self.getInterests(from: currentAbout)
+            interests[receiverId] = "sent"
+            let updatedAbout = self.setInterests(in: currentAbout, interests: interests)
+            
+            guard let patchUrl = URL(string: "\(self.supabaseURL)/rest/v1/profiles?id=eq.\(senderId)") else { return }
+            var patchRequest = URLRequest(url: patchUrl)
+            patchRequest.httpMethod = "PATCH"
+            patchRequest.addValue(self.apiKey, forHTTPHeaderField: "apikey")
+            patchRequest.addValue("Bearer \(self.apiKey)", forHTTPHeaderField: "Authorization")
+            patchRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            let body = ["about": updatedAbout]
+            patchRequest.httpBody = try? JSONSerialization.data(withJSONObject: body)
+            
+            URLSession.shared.dataTask(with: patchRequest) { _, patchResp, patchErr in
+                if let patchErr = patchErr {
+                    completion(.failure(patchErr))
+                } else {
+                    completion(.success(()))
+                }
+            }.resume()
         }.resume()
     }
     
-    // Update connection status (e.g. accept or reject a request)
-    func updateConnection(connectionId: String, status: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        guard let url = URL(string: "\(supabaseURL)/rest/v1/connections?id=eq.\(connectionId)") else { return }
-        
+    // Fetch connection requests for a user from Supabase profiles metadata
+    func fetchConnections(userId: String, completion: @escaping (Result<[ConnectionRecord], Error>) -> Void) {
+        fetchProfiles { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .failure(let error):
+                completion(.failure(error))
+            case .success(let allProfiles):
+                guard let myProfile = allProfiles.first(where: { $0.id == userId }) else {
+                    completion(.success([]))
+                    return
+                }
+                let myInterests = self.getInterests(from: myProfile.about)
+                var records: [ConnectionRecord] = []
+                
+                for p in allProfiles where p.id != userId {
+                    let otherInterests = self.getInterests(from: p.about)
+                    
+                    // Connected (either party accepted)
+                    if myInterests[p.id] == "accepted" || otherInterests[userId] == "accepted" {
+                        records.append(ConnectionRecord(
+                            sender_id: p.id,
+                            receiver_id: userId,
+                            status: "accepted"
+                        ))
+                    }
+                    // Incoming pending request
+                    else if otherInterests[userId] == "sent" && myInterests[p.id] != "declined" {
+                        records.append(ConnectionRecord(
+                            sender_id: p.id,
+                            receiver_id: userId,
+                            status: "pending"
+                        ))
+                    }
+                    // Sent pending request
+                    else if myInterests[p.id] == "sent" && otherInterests[userId] != "declined" {
+                        records.append(ConnectionRecord(
+                            sender_id: userId,
+                            receiver_id: p.id,
+                            status: "pending"
+                        ))
+                    }
+                }
+                completion(.success(records))
+            }
+        }
+    }
+    
+    // Update connection status (accept or decline)
+    func updateConnection(senderId: String, receiverId: String, status: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let url = URL(string: "\(supabaseURL)/rest/v1/profiles?id=eq.\(receiverId)&select=about") else { return }
         var request = URLRequest(url: url)
-        request.httpMethod = "PATCH"
+        request.httpMethod = "GET"
         request.addValue(apiKey, forHTTPHeaderField: "apikey")
         request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let fields = ["status": status]
-        request.httpBody = try? JSONSerialization.data(withJSONObject: fields)
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        URLSession.shared.dataTask(with: request) { [weak self] data, _, error in
+            guard let self = self else { return }
             if let error = error {
                 completion(.failure(error))
                 return
             }
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 || httpResponse.statusCode == 200 {
-                completion(.success(()))
-            } else {
-                completion(.failure(NSError(domain: "SupabaseClient", code: -5, userInfo: [NSLocalizedDescriptionKey: "Failed to update like status"])))
+            var currentAbout = ""
+            if let data = data,
+               let rows = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+               let first = rows.first {
+                currentAbout = first["about"] as? String ?? ""
             }
+            
+            var interests = self.getInterests(from: currentAbout)
+            interests[senderId] = status
+            let updatedAbout = self.setInterests(in: currentAbout, interests: interests)
+            
+            guard let patchUrl = URL(string: "\(self.supabaseURL)/rest/v1/profiles?id=eq.\(receiverId)") else { return }
+            var patchRequest = URLRequest(url: patchUrl)
+            patchRequest.httpMethod = "PATCH"
+            patchRequest.addValue(self.apiKey, forHTTPHeaderField: "apikey")
+            patchRequest.addValue("Bearer \(self.apiKey)", forHTTPHeaderField: "Authorization")
+            patchRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            let body = ["about": updatedAbout]
+            patchRequest.httpBody = try? JSONSerialization.data(withJSONObject: body)
+            
+            URLSession.shared.dataTask(with: patchRequest) { _, _, patchErr in
+                if let patchErr = patchErr {
+                    completion(.failure(patchErr))
+                } else {
+                    completion(.success(()))
+                }
+            }.resume()
         }.resume()
+    }
+    
+    // Compatibility overload for connectionId parameter
+    func updateConnection(connectionId: String, status: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        let parts = connectionId.components(separatedBy: "_")
+        if parts.count >= 2 {
+            let sId = parts[0]
+            let rId = parts[1]
+            updateConnection(senderId: sId, receiverId: rId, status: status, completion: completion)
+        } else {
+            completion(.success(()))
+        }
     }
     
     // Telegram Bot Notifications helper

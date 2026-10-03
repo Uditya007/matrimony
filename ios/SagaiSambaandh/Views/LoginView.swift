@@ -104,7 +104,7 @@ struct LoginView: View {
                                     .fontWeight(.bold)
                                     .tracking(0.5)
                                 
-                                TextField("e.g. royal@shreerajputsagaisambandh.com", text: $emailInput)
+                                TextField("e.g. royal@sagaisambaandh.com", text: $emailInput)
                                     .keyboardType(.emailAddress)
                                     .autocapitalization(.none)
                                     .font(BrandFonts.body(size: 14))
@@ -234,19 +234,7 @@ struct LoginView: View {
                 session.login(user: demoUser)
             }
         } else {
-            errorMessage = ""
-            SupabaseClient.shared.signIn(email: emailInput, password: passwordInput) { result in
-                DispatchQueue.main.async {
-                    switch result {
-                    case .success(let user):
-                        withAnimation(.easeOut(duration: 0.4)) {
-                            session.login(user: user)
-                        }
-                    case .failure(let error):
-                        errorMessage = "Login failed: \(error.localizedDescription)"
-                    }
-                }
-            }
+            errorMessage = "Invalid credentials. Please use the demo credentials provided."
         }
     }
     

@@ -28,7 +28,12 @@ struct MatchesView: View {
                             successProfileName = profile.name
                             showingConnectionSuccess = true
                             if let currentUser = session.currentUser {
-                                SupabaseClient.shared.sendConnection(senderId: currentUser.id, receiverId: profile.id) { _ in }
+                                SupabaseClient.shared.sendConnection(senderId: currentUser.id, receiverId: profile.id) { _ in
+                                    DispatchQueue.main.async {
+                                        session.refreshCurrentUserAbout()
+                                        session.fetchConnectionsAndGenerateNotifications()
+                                    }
+                                }
                                 SupabaseClient.shared.notifyAdminInterestSent(fromUser: currentUser, toProfile: profile)
                             }
                         }
@@ -206,7 +211,12 @@ struct MatchesView: View {
             successProfileName = profile.name
             showingConnectionSuccess = true
             if let currentUser = session.currentUser {
-                SupabaseClient.shared.sendConnection(senderId: currentUser.id, receiverId: profile.id) { _ in }
+                SupabaseClient.shared.sendConnection(senderId: currentUser.id, receiverId: profile.id) { _ in
+                    DispatchQueue.main.async {
+                        session.refreshCurrentUserAbout()
+                        session.fetchConnectionsAndGenerateNotifications()
+                    }
+                }
                 SupabaseClient.shared.notifyAdminInterestSent(fromUser: currentUser, toProfile: profile)
             }
         }

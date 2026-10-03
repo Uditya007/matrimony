@@ -5,6 +5,7 @@ struct HomeView: View {
     @EnvironmentObject var session: SagaiSessionManager
     @Binding var selectedTab: Int
     @Binding var showingRegister: Bool
+    @Binding var isSideMenuOpen: Bool
     
     @State private var lookingFor: String = "Bride"
     @State private var selectedClan: String = "All Clans"
@@ -249,7 +250,36 @@ struct HomeView: View {
             }
         }
         .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
-        .navigationBarHidden(true)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    withAnimation {
+                        isSideMenuOpen = true
+                    }
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "line.horizontal.3")
+                            .foregroundColor(.lightGold)
+                            .font(.title2)
+                        
+                        Image("logo")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 32, height: 32)
+                            .clipShape(Circle())
+                            .background(Color.white)
+                            .cornerRadius(16)
+                            .overlay(Circle().stroke(Color.royalGold, lineWidth: 0.5))
+                    }
+                }
+            }
+            ToolbarItem(placement: .principal) {
+                Text("Sagai Sambandh")
+                    .font(BrandFonts.displayBold(size: 18))
+                    .foregroundColor(.lightGold)
+            }
+        }
         .sheet(item: $selectedProfileForDetail) { profile in
             ProfileDetailView(profile: profile)
                 .environmentObject(session)

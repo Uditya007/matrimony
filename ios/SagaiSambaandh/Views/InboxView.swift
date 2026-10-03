@@ -95,55 +95,29 @@ struct InboxView: View {
     }
     
     private func handleAccept(record: ConnectionRecord) {
-        guard let url = URL(string: "https://afbrznllcfgfcjuinnlf.supabase.co/rest/v1/connections?sender_id=eq.\(record.sender_id)&receiver_id=eq.\(record.receiver_id)") else { return }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.addValue("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0", forHTTPHeaderField: "apikey")
-        request.addValue("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0", forHTTPHeaderField: "Authorization")
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data,
-                  let rows = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
-                  let first = rows.first,
-                  let cid = first["id"] as? String else {
-                return
-            }
-            
-            SupabaseClient.shared.updateConnection(connectionId: cid, status: "accepted") { result in
-                DispatchQueue.main.async {
-                    if case .success = result {
-                        self.loadConnections()
-                    }
+        guard let currentUserId = session.currentUser?.id else { return }
+        let otherUserId = record.sender_id == currentUserId ? record.receiver_id : record.sender_id
+        SupabaseClient.shared.updateConnection(senderId: otherUserId, receiverId: currentUserId, status: "accepted") { result in
+            DispatchQueue.main.async {
+                if case .success = result {
+                    self.loadConnections()
+                    self.session.refreshCurrentUserAbout()
                 }
             }
-        }.resume()
+        }
     }
     
     private func handleDecline(record: ConnectionRecord) {
-        guard let url = URL(string: "https://afbrznllcfgfcjuinnlf.supabase.co/rest/v1/connections?sender_id=eq.\(record.sender_id)&receiver_id=eq.\(record.receiver_id)") else { return }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.addValue("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0", forHTTPHeaderField: "apikey")
-        request.addValue("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0", forHTTPHeaderField: "Authorization")
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data,
-                  let rows = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
-                  let first = rows.first,
-                  let cid = first["id"] as? String else {
-                return
-            }
-            
-            SupabaseClient.shared.updateConnection(connectionId: cid, status: "rejected") { result in
-                DispatchQueue.main.async {
-                    if case .success = result {
-                        self.loadConnections()
-                    }
+        guard let currentUserId = session.currentUser?.id else { return }
+        let otherUserId = record.sender_id == currentUserId ? record.receiver_id : record.sender_id
+        SupabaseClient.shared.updateConnection(senderId: otherUserId, receiverId: currentUserId, status: "declined") { result in
+            DispatchQueue.main.async {
+                if case .success = result {
+                    self.loadConnections()
+                    self.session.refreshCurrentUserAbout()
                 }
             }
-        }.resume()
+        }
     }
     
     private func connectionRow(for record: ConnectionRecord, profile: Profile) -> some View {

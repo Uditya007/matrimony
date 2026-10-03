@@ -22,6 +22,7 @@ struct Profile: Identifiable, Codable, Hashable {
     var motherGotra: String? = ""
     var dob: String? = ""
     var phone: String? = ""
+    var email: String? = ""
     var maritalStatus: String? = "Never Married"
     var rashi: String? = ""
     var manglik: String? = "Non-Manglik"
