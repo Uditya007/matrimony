@@ -440,30 +440,115 @@ class SupabaseClient {
         }.resume()
     }
     
-    // MARK: - Decentralized Supabase Interests & Matchmaking (100% Website Parity)
+    // MARK: - Decentralized Supabase Metadata, Interests & Chat System (100% Website Parity)
+    
+    // Robust JSON Block Extractor (Balanced Braces & Brackets - 100% Immune to Greedy Regex & Trailing Tags)
+    func extractJsonBlock(tag: String, from text: String?) -> Any? {
+        guard let text = text, !text.isEmpty else { return nil }
+        guard let startRange = text.range(of: "[\(tag): ") else { return nil }
+        let sub = text[startRange.upperBound...]
+        guard let firstChar = sub.first, firstChar == "{" || firstChar == "[" else { return nil }
+        let openChar = firstChar
+        let closeChar: Character = openChar == "{" ? "}" : "]"
+        
+        var depth = 0
+        var endIndex: String.Index? = nil
+        var inString = false
+        var escape = false
+        
+        for (i, char) in zip(sub.indices, sub) {
+            if escape { escape = false; continue }
+            if char == "\\" { escape = true; continue }
+            if char == "\"" { inString = !inString; continue }
+            if !inString {
+                if char == openChar { depth += 1 }
+                else if char == closeChar {
+                    depth -= 1
+                    if depth == 0 {
+                        endIndex = i
+                        break
+                    }
+                }
+            }
+        }
+        
+        guard let end = endIndex else { return nil }
+        let jsonStr = String(sub[...end])
+        guard let data = jsonStr.data(using: .utf8),
+              let obj = try? JSONSerialization.jsonObject(with: data) else {
+            return nil
+        }
+        return obj
+    }
+    
+    // Robust Tag Block Remover (Preserves other metadata tags and multiline text cleanly)
+    func removeTagBlock(tag: String, from text: String?) -> String {
+        guard var str = text, !str.isEmpty else { return "" }
+        while let startRange = str.range(of: "[\(tag): ") {
+            let sub = str[startRange.upperBound...]
+            if let firstChar = sub.first, firstChar == "{" || firstChar == "[" {
+                let openChar = firstChar
+                let closeChar: Character = openChar == "{" ? "}" : "]"
+                var depth = 0
+                var endIndex: String.Index? = nil
+                var inString = false
+                var escape = false
+                for (i, char) in zip(sub.indices, sub) {
+                    if escape { escape = false; continue }
+                    if char == "\\" { escape = true; continue }
+                    if char == "\"" { inString = !inString; continue }
+                    if !inString {
+                        if char == openChar { depth += 1 }
+                        else if char == closeChar {
+                            depth -= 1
+                            if depth == 0 {
+                                let afterBrace = str.index(after: i)
+                                if afterBrace < str.endIndex && str[afterBrace] == "]" {
+                                    endIndex = afterBrace
+                                } else {
+                                    endIndex = i
+                                }
+                                break
+                            }
+                        }
+                    }
+                }
+                if let end = endIndex {
+                    str.removeSubrange(startRange.lowerBound...end)
+                } else {
+                    break
+                }
+            } else {
+                if let closeBracket = sub.firstIndex(of: "]") {
+                    str.removeSubrange(startRange.lowerBound...closeBracket)
+                } else {
+                    break
+                }
+            }
+        }
+        return str.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    // Clean user bio for display (strips internal system tags)
+    func cleanBioText(from aboutText: String?) -> String {
+        var str = aboutText ?? ""
+        str = removeTagBlock(tag: "Chats", from: str)
+        str = removeTagBlock(tag: "Interests", from: str)
+        str = removeTagBlock(tag: "Social Links", from: str)
+        str = removeTagBlock(tag: "Biodata Link", from: str)
+        str = removeTagBlock(tag: "Last Seen", from: str)
+        return str.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
     
     func getInterests(from aboutText: String?) -> [String: String] {
-        guard let about = aboutText, !about.isEmpty else { return [:] }
-        let pattern = "\\[Interests: ([^\\]]*)\\]"
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return [:] }
-        let nsRange = NSRange(about.startIndex..<about.endIndex, in: about)
-        guard let match = regex.firstMatch(in: about, options: [], range: nsRange),
-              let range = Range(match.range(at: 1), in: about) else { return [:] }
-        let jsonStr = String(about[range]).trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let data = jsonStr.data(using: .utf8),
-              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: String] else {
-            return [:]
+        if let dict = extractJsonBlock(tag: "Interests", from: aboutText) as? [String: String] {
+            return dict
         }
-        return dict
+        return [:]
     }
     
     func setInterests(in aboutText: String?, interests: [String: String]) -> String {
-        var cleanAbout = aboutText ?? ""
-        if let regex = try? NSRegularExpression(pattern: "\\[Interests: [^\\]]*\\]", options: []) {
-            let nsRange = NSRange(cleanAbout.startIndex..<cleanAbout.endIndex, in: cleanAbout)
-            cleanAbout = regex.stringByReplacingMatches(in: cleanAbout, options: [], range: nsRange, withTemplate: "")
-        }
-        cleanAbout = cleanAbout.trimmingCharacters(in: .whitespacesAndNewlines)
+        var cleanAbout = removeTagBlock(tag: "Interests", from: aboutText)
         if let data = try? JSONSerialization.data(withJSONObject: interests, options: []),
            let jsonStr = String(data: data, encoding: .utf8) {
             return cleanAbout.isEmpty ? "[Interests: \(jsonStr)]" : "\(cleanAbout)\n[Interests: \(jsonStr)]"
@@ -472,28 +557,18 @@ class SupabaseClient {
     }
     
     func getSocialLinks(from aboutText: String?) -> [String: String] {
-        guard let about = aboutText, !about.isEmpty else { return [:] }
-        let pattern = "\\[Social Links: ([^\\]]*)\\]"
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return [:] }
-        let nsRange = NSRange(about.startIndex..<about.endIndex, in: about)
-        guard let match = regex.firstMatch(in: about, options: [], range: nsRange),
-              let range = Range(match.range(at: 1), in: about) else { return [:] }
-        let jsonStr = String(about[range]).trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let data = jsonStr.data(using: .utf8),
-              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: String] else {
-            return [:]
+        if let dict = extractJsonBlock(tag: "Social Links", from: aboutText) as? [String: String] {
+            return dict
         }
-        return dict
+        return [:]
     }
     
     func getBiodataLink(from aboutText: String?) -> String {
         guard let about = aboutText, !about.isEmpty else { return "" }
-        let pattern = "\\[Biodata Link: ([^\\]]*)\\]"
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return "" }
-        let nsRange = NSRange(about.startIndex..<about.endIndex, in: about)
-        guard let match = regex.firstMatch(in: about, options: [], range: nsRange),
-              let range = Range(match.range(at: 1), in: about) else { return "" }
-        return String(about[range]).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let startRange = about.range(of: "[Biodata Link: ") else { return "" }
+        let sub = about[startRange.upperBound...]
+        guard let endBracket = sub.firstIndex(of: "]") else { return "" }
+        return String(sub[..<endBracket]).trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
     // Send match interest to a profile (syncs directly with Supabase profiles table)
@@ -692,36 +767,17 @@ class SupabaseClient {
     }
 
     // Parse Chats from profile about string
+    // Parse Chats from profile about string (100% resilient to [Last Seen: ...] and nested JSON)
     func getProfileChats(aboutText: String?) -> [String: [[String: Any]]] {
-        guard let about = aboutText, !about.isEmpty else { return [:] }
-        
-        let pattern = "\\[Chats: ([^\n\r]*)\\]"
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return [:] }
-        
-        let nsRange = NSRange(about.startIndex..<about.endIndex, in: about)
-        if let match = regex.firstMatch(in: about, options: [], range: nsRange),
-           let range = Range(match.range(at: 1), in: about) {
-            let jsonString = String(about[range]).trimmingCharacters(in: .whitespacesAndNewlines)
-            if let data = jsonString.data(using: .utf8),
-               let dict = try? JSONSerialization.jsonObject(with: data) as? [String: [[String: Any]]] {
-                return dict
-            }
+        if let dict = extractJsonBlock(tag: "Chats", from: aboutText) as? [String: [[String: Any]]] {
+            return dict
         }
         return [:]
     }
     
     // Serialize and embed Chats into profile about string
     func setProfileChatsInAbout(aboutText: String?, chatsObj: [String: [[String: Any]]]) -> String {
-        var cleanAbout = aboutText ?? ""
-        
-        // Remove existing [Chats: ...] blocks
-        let pattern = "\\[Chats: [^\n\r]*\\]"
-        if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
-            let nsRange = NSRange(cleanAbout.startIndex..<cleanAbout.endIndex, in: cleanAbout)
-            cleanAbout = regex.stringByReplacingMatches(in: cleanAbout, options: [], range: nsRange, withTemplate: "")
-        }
-        cleanAbout = cleanAbout.trimmingCharacters(in: .whitespacesAndNewlines)
-        
+        var cleanAbout = removeTagBlock(tag: "Chats", from: aboutText)
         if let data = try? JSONSerialization.data(withJSONObject: chatsObj, options: []),
            let jsonString = String(data: data, encoding: .utf8) {
             return (cleanAbout + "\n[Chats: \(jsonString)]").trimmingCharacters(in: .whitespacesAndNewlines)
@@ -772,10 +828,10 @@ class SupabaseClient {
     }
     
     // Send a real-time decentralized message synced with website Supabase database
-    func sendMessage(fromUser: User, toProfile: Profile, text: String, completion: @escaping (Bool) -> Void) {
+    func sendMessage(fromUser: User, toProfile: Profile, text: String, completion: @escaping (Bool, String?) -> Void) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            completion(false)
+            completion(false, nil)
             return
         }
         
@@ -796,15 +852,28 @@ class SupabaseClient {
             conversationList.append(newMsgDict)
             chats[toProfile.id] = conversationList
             
-            let updatedAbout = self.setProfileChatsInAbout(aboutText: baseAbout, chatsObj: chats)
+            // Auto-mark interest as sent if not present
+            var interests = self.getInterests(from: baseAbout)
+            if interests[toProfile.id] == nil {
+                interests[toProfile.id] = "sent"
+            }
+            var updatedAbout = self.setInterests(in: baseAbout, interests: interests)
+            updatedAbout = self.setProfileChatsInAbout(aboutText: updatedAbout, chatsObj: chats)
             
             // 2. PATCH only 'about' column to Supabase profiles row
             self.updateProfileAbout(userId: fromUser.id, about: updatedAbout) { success in
                 if success {
                     self.notifyAdminChatMessageSent(fromUser: fromUser, toProfile: toProfile, text: trimmed)
                 }
-                completion(success)
+                completion(success, success ? updatedAbout : nil)
             }
+        }
+    }
+    
+    // Convenience overload
+    func sendMessage(fromUser: User, toProfile: Profile, text: String, completion: @escaping (Bool) -> Void) {
+        sendMessage(fromUser: fromUser, toProfile: toProfile, text: text) { success, _ in
+            completion(success)
         }
     }
     

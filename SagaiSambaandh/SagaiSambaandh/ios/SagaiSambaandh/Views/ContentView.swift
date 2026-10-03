@@ -238,15 +238,19 @@ class SagaiSessionManager: ObservableObject {
         }
     }
     
+    func updateCurrentUserAbout(_ about: String) {
+        self.currentUser?.about = about
+        if let user = self.currentUser, let data = try? JSONEncoder().encode(user) {
+            UserDefaults.standard.set(data, forKey: "saved_user_session")
+        }
+    }
+    
     func refreshCurrentUserAbout() {
         guard let currentUserId = currentUser?.id else { return }
         SupabaseClient.shared.fetchProfileAbout(profileId: currentUserId) { [weak self] about in
             DispatchQueue.main.async {
                 guard let about = about else { return }
-                self?.currentUser?.about = about
-                if let user = self?.currentUser, let data = try? JSONEncoder().encode(user) {
-                    UserDefaults.standard.set(data, forKey: "saved_user_session")
-                }
+                self?.updateCurrentUserAbout(about)
             }
         }
     }
@@ -486,7 +490,7 @@ struct ContentView: View {
                             
                             // Chat View
                             NavigationView {
-                                ChatView(selectedTab: $selectedTab)
+                                ChatView(selectedTab: $selectedTab, showingRegister: $showingRegister)
                                     .environmentObject(session)
                                     .navigationBarTitleDisplayMode(.inline)
                                     .toolbar {

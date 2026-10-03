@@ -60,20 +60,7 @@ struct ProfileDetailView: View {
     }
     
     private var cleanAboutText: String {
-        guard var bio = profile.about else { return "" }
-        let patterns = [
-            "\\[Social Links: [^\\]]*\\]",
-            "\\[Biodata Link: [^\\]]*\\]",
-            "\\[Interests: [^\\]]*\\]",
-            "\\[Chats: [^\n\r]*\\]"
-        ]
-        for pattern in patterns {
-            if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
-                let nsRange = NSRange(bio.startIndex..<bio.endIndex, in: bio)
-                bio = regex.stringByReplacingMatches(in: bio, options: [], range: nsRange, withTemplate: "")
-            }
-        }
-        return bio.trimmingCharacters(in: .whitespacesAndNewlines)
+        return SupabaseClient.shared.cleanBioText(from: profile.about)
     }
     
     private var isUnlockedOrOwn: Bool {
