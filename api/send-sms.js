@@ -47,27 +47,13 @@ module.exports = async function handler(req, res) {
         ? `Khammaghani! Your verification code for Shree Rajput Sagai Sambandh is ${otp}. Do not share this OTP.` 
         : 'Khammaghani from Shree Rajput Sagai Sambandh.');
 
-      // Try Route 'q' (Quick SMS - active and approved instantly)
-      let f2sResp = await fetch('https://www.fast2sms.com/dev/bulkV2', {
-        method: 'POST',
-        headers: {
-          'authorization': FAST2SMS_API_KEY,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          route: 'q',
-          message: otpText,
-          language: 'english',
-          numbers: cleanPhone
-        })
-      });
+      let f2sResp;
+      let f2sData = {};
 
-      let f2sData = await f2sResp.json();
-
-      // If Route 'q' failed and we have an OTP, try Route 'otp' as fallback
-      if (!f2sData.return && otp) {
+      // 1. Try economical Route 'otp' first (Costs only ₹0.20 - ₹0.25 per SMS)
+      if (otp) {
         try {
-          const fallbackResp = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+          f2sResp = await fetch('https://www.fast2sms.com/dev/bulkV2', {
             method: 'POST',
             headers: {
               'authorization': FAST2SMS_API_KEY,
@@ -79,13 +65,35 @@ module.exports = async function handler(req, res) {
               numbers: cleanPhone
             })
           });
-          const fallbackData = await fallbackResp.json();
-          if (fallbackData.return) {
-            f2sResp = fallbackResp;
-            f2sData = fallbackData;
+          f2sData = await f2sResp.json();
+        } catch (otpErr) {
+          console.warn('Fast2SMS Route otp attempt notice:', otpErr);
+        }
+      }
+
+      // 2. If Route 'otp' was not used or failed (e.g. pending KYC/website verification), fall back to Route 'q'
+      if (!f2sData || !f2sData.return) {
+        try {
+          const quickResp = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+            method: 'POST',
+            headers: {
+              'authorization': FAST2SMS_API_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              route: 'q',
+              message: otpText,
+              language: 'english',
+              numbers: cleanPhone
+            })
+          });
+          const quickData = await quickResp.json();
+          if (quickData) {
+            f2sResp = quickResp;
+            f2sData = quickData;
           }
-        } catch (e) {
-          console.warn('Fallback OTP route error:', e);
+        } catch (qErr) {
+          console.warn('Fast2SMS Route q attempt notice:', qErr);
         }
       }
 
