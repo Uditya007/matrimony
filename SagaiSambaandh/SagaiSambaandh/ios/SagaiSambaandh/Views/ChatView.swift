@@ -378,7 +378,7 @@ struct ChatView: View {
                 if session.currentUser == nil {
                     showingRegister?.wrappedValue = true
                 } else {
-                    selectedTab?.wrappedValue = 1
+                    selectedTab?.wrappedValue = 0
                 }
             }) {
                 HStack(spacing: 6) {

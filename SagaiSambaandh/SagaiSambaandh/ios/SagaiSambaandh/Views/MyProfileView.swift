@@ -55,39 +55,39 @@ struct MyProfileView: View {
     
     var body: some View {
         ZStack {
-            Color.deepMaroon.edgesIgnoringSafeArea(.all)
+            Color.appSurfaceElevated.edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 0) {
-                // Custom Top Navigation Bar
+                // Top Custom Header Bar
                 topHeaderBar
                 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 22) {
-                        // 1. Hero Profile Header & Portrait Card
+                    VStack(spacing: 18) {
+                        // 1. Hero Profile Header Card
                         heroProfileCard
                         
-                        // 2. Partner Preferences Showcase & Editor
+                        // 2. Partner Preferences Showcase & Quick Editor
                         partnerPreferencesCard
                         
-                        // 3. Section 1: Lineage & Identity
+                        // 3. Lineage & Identity Section
                         lineageSection
                         
-                        // 4. Section 2: Astrology & Specifications
+                        // 4. Astrological & Physical Attributes Section
                         astrologySection
                         
-                        // 5. Section 3: Professional & Contact
+                        // 5. Professional & Contact Details Section
                         professionalSection
                         
-                        // 6. Section 4: Social Links & Ancestral Biodata
+                        // 6. Socials & Biodata Link Section
                         socialsSection
                         
-                        // 7. Section 5: Biography & Partner Expectations
+                        // 7. Bio & Alignment Expectations Section
                         bioSection
                         
-                        // 8. Primary Save Changes Button
+                        // 8. Save Changes Button
                         saveChangesButton
                         
-                        // 9. Quick Actions (Biodata, Premium, Logout)
+                        // 9. Quick Actions (Biodata, Plans, Logout)
                         quickActionsFooter
                     }
                     .padding(.horizontal, 16)
@@ -95,29 +95,29 @@ struct MyProfileView: View {
                 }
             }
             
-            // Success Toast Overlay
+            // Floating Success Notification Toast
             if showSavedToast {
                 VStack {
                     Spacer()
-                    HStack(spacing: 12) {
+                    HStack(spacing: 10) {
                         Image(systemName: "checkmark.seal.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(.deepMaroon)
+                            .font(.system(size: 18))
+                            .foregroundColor(.white)
                         Text(savedToastMessage)
                             .font(BrandFonts.bodyBold(size: 14))
-                            .foregroundColor(.deepMaroon)
+                            .foregroundColor(.white)
                     }
                     .padding(.horizontal, 22)
                     .padding(.vertical, 14)
                     .background(
                         LinearGradient(
-                            colors: [.royalGold, .lightGold, .royalGold],
+                            colors: [Color.appPrimary, Color.appSecondary],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
                     )
                     .cornerRadius(25)
-                    .shadow(color: Color.black.opacity(0.4), radius: 10, y: 5)
+                    .shadow(color: Color.appPrimary.opacity(0.35), radius: 10, y: 5)
                     .padding(.bottom, 24)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
@@ -129,7 +129,7 @@ struct MyProfileView: View {
                 .environmentObject(session)
         }
         .sheet(isPresented: $showingPartnerPreferencesSheet) {
-            PartnerPreferencesView(selectedTab: selectedTab ?? .constant(1))
+            PartnerPreferencesView(selectedTab: selectedTab ?? .constant(0))
                 .environmentObject(session)
         }
         .sheet(isPresented: $showingBiodataSheet) {
@@ -146,7 +146,12 @@ struct MyProfileView: View {
                 secondaryButton: .cancel()
             )
         }
-        .onAppear(perform: loadUserData)
+        .onAppear {
+            #if canImport(UIKit)
+            UITextView.appearance().backgroundColor = .clear
+            #endif
+            loadUserData()
+        }
     }
     
     // MARK: - Top Header Bar
@@ -159,10 +164,10 @@ struct MyProfileView: View {
                     }
                 }) {
                     Image(systemName: "line.horizontal.3")
-                        .foregroundColor(.sandstoneIvory)
+                        .foregroundColor(Color.appTextPrimary)
                         .font(.title2)
                         .frame(width: 40, height: 40)
-                        .background(Color.white.opacity(0.1))
+                        .background(Color.appCardBackground)
                         .clipShape(Circle())
                 }
             } else if selectedTab == nil {
@@ -171,7 +176,7 @@ struct MyProfileView: View {
                 }) {
                     Text("Close")
                         .font(BrandFonts.bodyBold(size: 15))
-                        .foregroundColor(.lightGold)
+                        .foregroundColor(Color.appPrimary)
                 }
             } else {
                 Color.clear.frame(width: 40, height: 40)
@@ -180,12 +185,12 @@ struct MyProfileView: View {
             Spacer()
             
             HStack(spacing: 6) {
-                Image(systemName: "crown.fill")
-                    .foregroundColor(.royalGold)
-                    .font(.system(size: 14))
+                Image(systemName: "person.crop.circle.fill")
+                    .foregroundColor(Color.appPrimary)
+                    .font(.system(size: 16))
                 Text("My Profile")
                     .font(BrandFonts.displayBold(size: 20))
-                    .foregroundColor(.sandstoneIvory)
+                    .foregroundColor(Color.appTextPrimary)
             }
             
             Spacer()
@@ -193,7 +198,7 @@ struct MyProfileView: View {
             Button(action: saveProfileCard) {
                 if isSaving {
                     ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .lightGold))
+                        .progressViewStyle(CircularProgressViewStyle(tint: Color.appPrimary))
                         .frame(width: 40, height: 40)
                 } else {
                     HStack(spacing: 4) {
@@ -202,24 +207,31 @@ struct MyProfileView: View {
                         Text("Save")
                             .font(BrandFonts.bodyBold(size: 14))
                     }
-                    .foregroundColor(.deepMaroon)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
                     .background(
                         LinearGradient(
-                            colors: [.royalGold, .lightGold],
+                            colors: [Color.appPrimary, Color.appSecondary],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
                     )
-                    .cornerRadius(14)
+                    .cornerRadius(16)
+                    .shadow(color: Color.appPrimary.opacity(0.25), radius: 4, y: 2)
                 }
             }
         }
         .padding(.horizontal, 16)
         .padding(.top, 10)
         .padding(.bottom, 12)
-        .background(Color.deepMaroon)
+        .background(Color.white)
+        .overlay(
+            Rectangle()
+                .frame(height: 1)
+                .foregroundColor(Color.appBorder),
+            alignment: .bottom
+        )
     }
     
     // MARK: - Hero Profile Card
@@ -236,95 +248,97 @@ struct MyProfileView: View {
                 .frame(width: 90, height: 90)
                 .clipShape(Circle())
                 .overlay(Circle().stroke(Color.royalGold, lineWidth: 2.5))
-                .shadow(color: Color.black.opacity(0.3), radius: 6, y: 3)
+                .shadow(color: Color.black.opacity(0.08), radius: 8, y: 4)
                 
                 Button(action: {
                     showingAvatarChooser = true
                 }) {
                     Image(systemName: "camera.fill")
                         .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.deepMaroon)
+                        .foregroundColor(.white)
                         .frame(width: 28, height: 28)
-                        .background(Color.royalGold)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.appPrimary, Color.appSecondary],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                         .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.deepMaroon, lineWidth: 2))
+                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
                 }
             }
             
-            VStack(spacing: 4) {
+            VStack(spacing: 5) {
                 Text(session.currentUser?.name.isEmpty == false ? (session.currentUser?.name ?? "Rajput Member") : "Rajput Member")
                     .font(BrandFonts.displayBold(size: 20))
-                    .foregroundColor(.sandstoneIvory)
+                    .foregroundColor(Color.appTextPrimary)
                 
                 HStack(spacing: 8) {
                     if let clan = session.currentUser?.clan, !clan.isEmpty {
                         Text(clan)
                             .font(BrandFonts.body(size: 13, weight: .bold))
-                            .foregroundColor(.lightGold)
+                            .foregroundColor(Color.appPrimary)
                     }
                     if let gotra = session.currentUser?.gotra, !gotra.isEmpty {
                         Text("•  \(gotra) Gotra")
                             .font(BrandFonts.body(size: 13))
-                            .foregroundColor(.sandstoneIvory.opacity(0.8))
+                            .foregroundColor(Color.appTextSecondary)
                     }
                 }
                 
                 HStack(spacing: 8) {
-                    // Royal Verified Badge
+                    // Verified Badge
                     HStack(spacing: 4) {
                         Image(systemName: "checkmark.seal.fill")
                             .font(.system(size: 11))
-                            .foregroundColor(.royalGold)
-                        Text("Verified Rajput")
+                            .foregroundColor(Color.verifiedBlue)
+                        Text("Verified Profile")
                             .font(BrandFonts.label(size: 10, weight: .bold))
-                            .foregroundColor(.royalGold)
+                            .foregroundColor(Color.verifiedBlue)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(Color.royalGold.opacity(0.15))
+                    .background(Color.verifiedBlue.opacity(0.1))
                     .cornerRadius(12)
                     
                     // Tier Badge
                     HStack(spacing: 4) {
                         Image(systemName: "crown.fill")
                             .font(.system(size: 10))
-                            .foregroundColor(.sandstoneIvory)
+                            .foregroundColor(Color.starGold)
                         Text(session.currentUser?.tier ?? "Starter")
                             .font(BrandFonts.label(size: 10, weight: .bold))
-                            .foregroundColor(.sandstoneIvory)
+                            .foregroundColor(Color.starGold)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(Color.white.opacity(0.12))
+                    .background(Color.starGold.opacity(0.12))
                     .cornerRadius(12)
                 }
                 .padding(.top, 4)
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 18)
-        .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(Color.black.opacity(0.25))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18)
-                        .stroke(Color.royalGold.opacity(0.3), lineWidth: 1)
-                )
-        )
+        .padding(.vertical, 20)
+        .background(Color.white)
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appBorder, lineWidth: 1))
+        .shadow(color: Color.black.opacity(0.03), radius: 6, y: 2)
     }
     
-    // MARK: - Partner Preferences Showcase & Editor
+    // MARK: - Partner Preferences Card
     private var partnerPreferencesCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 HStack(spacing: 8) {
                     Image(systemName: "heart.text.square.fill")
-                        .foregroundColor(.royalGold)
+                        .foregroundColor(Color.appPrimary)
                         .font(.system(size: 18))
                     Text("PARTNER PREFERENCES")
                         .font(BrandFonts.label(size: 11, weight: .bold))
-                        .foregroundColor(.lightGold)
-                        .tracking(1)
+                        .foregroundColor(Color.appTextPrimary)
+                        .tracking(0.8)
                 }
                 
                 Spacer()
@@ -338,23 +352,23 @@ struct MyProfileView: View {
                         Image(systemName: "pencil")
                             .font(.system(size: 11))
                     }
-                    .foregroundColor(.deepMaroon)
+                    .foregroundColor(Color.appPrimary)
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(Color.royalGold)
+                    .padding(.vertical, 5)
+                    .background(Color.appPrimary.opacity(0.1))
                     .cornerRadius(10)
                 }
             }
             
-            Text("Adjust criteria to filter compatible brides and grooms in Discover:")
+            Text("Criteria used to recommend brides and grooms in Discover:")
                 .font(BrandFonts.body(size: 12))
-                .foregroundColor(.sandstoneIvory.opacity(0.75))
+                .foregroundColor(Color.appTextSecondary)
             
-            // Quick Inline "Looking For" Toggle
+            // Quick Segment Switcher
             VStack(alignment: .leading, spacing: 6) {
                 Text("LOOKING FOR IN DISCOVER")
                     .font(BrandFonts.label(size: 9, weight: .bold))
-                    .foregroundColor(.sandstoneIvory.opacity(0.8))
+                    .foregroundColor(Color.appTextSecondary)
                 
                 Picker("Looking For", selection: $lookingFor) {
                     Text("👰 Vadhu (Bride)").tag("Bride")
@@ -366,7 +380,7 @@ struct MyProfileView: View {
                 }
             }
             
-            // Current Preferences Summary Badges
+            // Current Preferences Badges
             HStack(spacing: 8) {
                 prefBadge(title: "Seeking", value: lookingFor)
                 prefBadge(title: "Clan", value: session.searchClan)
@@ -378,44 +392,42 @@ struct MyProfileView: View {
             }) {
                 HStack {
                     Image(systemName: "slider.horizontal.3")
-                    Text("Configure Detailed Preferences (Age, Clan, Manglik, City)")
+                        .foregroundColor(Color.appPrimary)
+                    Text("Configure Age, Clan, Manglik & City")
                         .font(BrandFonts.bodyBold(size: 12.5))
+                        .foregroundColor(Color.appTextPrimary)
                     Spacer()
                     Image(systemName: "chevron.right")
                         .font(.system(size: 12))
+                        .foregroundColor(Color.appTextMuted)
                 }
-                .foregroundColor(.sandstoneIvory)
                 .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .background(Color.white.opacity(0.08))
+                .padding(.vertical, 11)
+                .background(Color.appCardBackground)
                 .cornerRadius(10)
             }
         }
         .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.black.opacity(0.3))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.royalGold.opacity(0.4), lineWidth: 1.2)
-                )
-        )
+        .background(Color.white)
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appBorder, lineWidth: 1))
+        .shadow(color: Color.black.opacity(0.03), radius: 6, y: 2)
     }
     
     private func prefBadge(title: String, value: String) -> some View {
         VStack(spacing: 2) {
             Text(title)
                 .font(BrandFonts.label(size: 8))
-                .foregroundColor(.sandstoneIvory.opacity(0.6))
+                .foregroundColor(Color.appTextMuted)
             Text(value)
                 .font(BrandFonts.bodyBold(size: 11))
-                .foregroundColor(.lightGold)
+                .foregroundColor(Color.appTextPrimary)
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 6)
+        .padding(.vertical, 7)
         .padding(.horizontal, 4)
-        .background(Color.white.opacity(0.06))
+        .background(Color.appCardBackground)
         .cornerRadius(8)
     }
     
@@ -431,7 +443,7 @@ struct MyProfileView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("MY GENDER")
                         .font(BrandFonts.label(size: 9, weight: .bold))
-                        .foregroundColor(.sandstoneIvory.opacity(0.85))
+                        .foregroundColor(Color.appTextSecondary)
                     Picker("Gender", selection: $gender) {
                         ForEach(genderOptions, id: \.self) { opt in
                             Text(opt == "Groom" ? "🤵 Groom" : "👰 Bride").tag(opt)
@@ -441,8 +453,9 @@ struct MyProfileView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white)
-                    .cornerRadius(8)
+                    .background(Color.appCardBackground)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.appBorder, lineWidth: 1))
                     .onChange(of: gender) { newGender in
                         if newGender.lowercased() == "groom" {
                             lookingFor = "Bride"
@@ -455,7 +468,7 @@ struct MyProfileView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("RAJPUT CLAN")
                         .font(BrandFonts.label(size: 9, weight: .bold))
-                        .foregroundColor(.sandstoneIvory.opacity(0.85))
+                        .foregroundColor(Color.appTextSecondary)
                     Picker("Clan", selection: $clan) {
                         ForEach(clansOptions, id: \.self) { opt in
                             Text(opt).tag(opt)
@@ -465,8 +478,9 @@ struct MyProfileView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white)
-                    .cornerRadius(8)
+                    .background(Color.appCardBackground)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.appBorder, lineWidth: 1))
                 }
             }
             
@@ -496,7 +510,7 @@ struct MyProfileView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("ZODIAC / RASHI (राशि)")
                         .font(BrandFonts.label(size: 9, weight: .bold))
-                        .foregroundColor(.sandstoneIvory.opacity(0.85))
+                        .foregroundColor(Color.appTextSecondary)
                     Picker("Rashi", selection: $rashi) {
                         ForEach(rashiOptions, id: \.self) { opt in
                             Text(opt).tag(opt)
@@ -506,8 +520,9 @@ struct MyProfileView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white)
-                    .cornerRadius(8)
+                    .background(Color.appCardBackground)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.appBorder, lineWidth: 1))
                 }
             }
             
@@ -515,7 +530,7 @@ struct MyProfileView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("MANGLIK STATUS")
                         .font(BrandFonts.label(size: 9, weight: .bold))
-                        .foregroundColor(.sandstoneIvory.opacity(0.85))
+                        .foregroundColor(Color.appTextSecondary)
                     Picker("Manglik", selection: $manglik) {
                         ForEach(manglikOptions, id: \.self) { opt in
                             Text(opt).tag(opt)
@@ -525,14 +540,15 @@ struct MyProfileView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white)
-                    .cornerRadius(8)
+                    .background(Color.appCardBackground)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.appBorder, lineWidth: 1))
                 }
                 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("MARITAL STATUS")
                         .font(BrandFonts.label(size: 9, weight: .bold))
-                        .foregroundColor(.sandstoneIvory.opacity(0.85))
+                        .foregroundColor(Color.appTextSecondary)
                     Picker("Marital Status", selection: $maritalStatus) {
                         ForEach(maritalOptions, id: \.self) { opt in
                             Text(opt).tag(opt)
@@ -542,8 +558,9 @@ struct MyProfileView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white)
-                    .cornerRadius(8)
+                    .background(Color.appCardBackground)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.appBorder, lineWidth: 1))
                 }
             }
         }
@@ -586,29 +603,31 @@ struct MyProfileView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("ABOUT ME (संक्षिप्त परिचय)")
                     .font(BrandFonts.label(size: 9, weight: .bold))
-                    .foregroundColor(.sandstoneIvory.opacity(0.85))
+                    .foregroundColor(Color.appTextSecondary)
                 
                 TextEditor(text: $about)
                     .font(BrandFonts.body(size: 14))
-                    .foregroundColor(.black)
-                    .frame(height: 85)
+                    .foregroundColor(Color.appTextPrimary)
+                    .frame(height: 80)
                     .padding(8)
-                    .background(Color.white)
-                    .cornerRadius(8)
+                    .background(Color.appCardBackground)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.appBorder, lineWidth: 1))
             }
             
             VStack(alignment: .leading, spacing: 6) {
                 Text("PARTNER EXPECTATIONS (जीवनसाथी से अपेक्षाएं)")
                     .font(BrandFonts.label(size: 9, weight: .bold))
-                    .foregroundColor(.sandstoneIvory.opacity(0.85))
+                    .foregroundColor(Color.appTextSecondary)
                 
                 TextEditor(text: $expectations)
                     .font(BrandFonts.body(size: 14))
-                    .foregroundColor(.black)
-                    .frame(height: 85)
+                    .foregroundColor(Color.appTextPrimary)
+                    .frame(height: 80)
                     .padding(8)
-                    .background(Color.white)
-                    .cornerRadius(8)
+                    .background(Color.appCardBackground)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.appBorder, lineWidth: 1))
             }
         }
     }
@@ -619,7 +638,7 @@ struct MyProfileView: View {
             HStack(spacing: 8) {
                 if isSaving {
                     ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .deepMaroon))
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     Text("Saving Profile Changes...")
                         .font(BrandFonts.bodyBold(size: 16))
                 } else {
@@ -629,18 +648,18 @@ struct MyProfileView: View {
                         .font(BrandFonts.bodyBold(size: 16))
                 }
             }
-            .foregroundColor(.deepMaroon)
+            .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .frame(height: 52)
             .background(
                 LinearGradient(
-                    colors: [.royalGold, .lightGold, .royalGold],
+                    colors: [Color.appPrimary, Color.appSecondary],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
             )
             .cornerRadius(14)
-            .shadow(color: Color.royalGold.opacity(0.3), radius: 8, y: 4)
+            .shadow(color: Color.appPrimary.opacity(0.3), radius: 8, y: 4)
         }
         .padding(.top, 4)
     }
@@ -649,7 +668,7 @@ struct MyProfileView: View {
     private var quickActionsFooter: some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
-                // Download Biodata Card
+                // View Biodata Card
                 Button(action: {
                     showingBiodataSheet = true
                 }) {
@@ -659,15 +678,12 @@ struct MyProfileView: View {
                         Text("View Biodata")
                             .font(BrandFonts.bodyBold(size: 13))
                     }
-                    .foregroundColor(.lightGold)
+                    .foregroundColor(Color.appTextPrimary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
-                    .background(Color.white.opacity(0.08))
+                    .background(Color.white)
                     .cornerRadius(10)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.royalGold.opacity(0.3), lineWidth: 1)
-                    )
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.appBorder, lineWidth: 1))
                 }
                 
                 // Upgrade to Premium
@@ -682,15 +698,12 @@ struct MyProfileView: View {
                         Text("Royal Plans")
                             .font(BrandFonts.bodyBold(size: 13))
                     }
-                    .foregroundColor(.royalGold)
+                    .foregroundColor(Color.starGold)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
-                    .background(Color.royalGold.opacity(0.12))
+                    .background(Color.starGold.opacity(0.12))
                     .cornerRadius(10)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.royalGold.opacity(0.5), lineWidth: 1)
-                    )
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.starGold.opacity(0.3), lineWidth: 1))
                 }
             }
             
@@ -704,11 +717,11 @@ struct MyProfileView: View {
                     Text("Log Out")
                         .font(BrandFonts.body(size: 13, weight: .semibold))
                 }
-                .foregroundColor(Color.red.opacity(0.85))
+                .foregroundColor(Color.dislikeRed)
                 .padding(.vertical, 8)
             }
         }
-        .padding(.top, 8)
+        .padding(.top, 6)
         .padding(.bottom, 24)
     }
     
@@ -717,40 +730,37 @@ struct MyProfileView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
-                    .foregroundColor(.royalGold)
+                    .foregroundColor(Color.appPrimary)
                     .font(.system(size: 14))
                 Text(title)
                     .font(BrandFonts.label(size: 10, weight: .bold))
-                    .foregroundColor(.lightGold)
-                    .tracking(0.8)
+                    .foregroundColor(Color.appTextPrimary)
+                    .tracking(0.6)
             }
             
             content()
         }
         .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.black.opacity(0.2))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.royalGold.opacity(0.22), lineWidth: 1)
-                )
-        )
+        .background(Color.white)
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appBorder, lineWidth: 1))
+        .shadow(color: Color.black.opacity(0.03), radius: 6, y: 2)
     }
     
     private func profileTextField(label: String, text: Binding<String>, placeholder: String = "") -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label)
                 .font(BrandFonts.label(size: 9, weight: .bold))
-                .foregroundColor(.sandstoneIvory.opacity(0.85))
+                .foregroundColor(Color.appTextSecondary)
             
             TextField(placeholder, text: text)
                 .font(BrandFonts.body(size: 14))
-                .foregroundColor(.black)
-                .padding(.horizontal, 12)
+                .foregroundColor(Color.appTextPrimary)
+                .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(Color.white)
-                .cornerRadius(8)
+                .background(Color.appCardBackground)
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.appBorder, lineWidth: 1))
         }
     }
     

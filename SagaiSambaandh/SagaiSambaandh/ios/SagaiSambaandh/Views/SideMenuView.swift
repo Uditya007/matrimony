@@ -69,7 +69,7 @@ struct SideMenuView: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     withAnimation { isOpen = false }
-                    selectedTab = 0
+                    selectedTab = 4
                 }
             }
             
@@ -81,12 +81,12 @@ struct SideMenuView: View {
                 VStack(alignment: .leading, spacing: 5) {
                     SideMenuItem(icon: "exclamationmark.triangle.fill", title: "Complete Verification", iconColor: .red, hasWarning: true) {
                         withAnimation { isOpen = false }
-                        selectedTab = 0
+                        selectedTab = 4
                     }
                     
                     SideMenuItem(icon: "pencil.line", title: "View and Edit your Profile") {
                         withAnimation { isOpen = false }
-                        selectedTab = 0
+                        selectedTab = 4
                     }
                     
                     SideMenuItem(icon: "arrow.down.doc.fill", title: "Download and Share Profile") {
@@ -109,17 +109,17 @@ struct SideMenuView: View {
                     
                     SideMenuItem(icon: "heart.fill", title: "Discover Matches") {
                         withAnimation { isOpen = false }
+                        selectedTab = 0
+                    }
+                    
+                    SideMenuItem(icon: "bubble.left.and.bubble.right.fill", title: "Messages") {
+                        withAnimation { isOpen = false }
                         selectedTab = 1
                     }
                     
                     SideMenuItem(icon: "envelope.fill", title: "Requests") {
                         withAnimation { isOpen = false }
                         selectedTab = 3
-                    }
-                    
-                    SideMenuItem(icon: "bubble.left.and.bubble.right.fill", title: "Messages") {
-                        withAnimation { isOpen = false }
-                        selectedTab = 4
                     }
                     
                     Text("Options & Settings")

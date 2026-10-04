@@ -297,7 +297,7 @@ class SagaiSessionManager: ObservableObject {
 
 struct ContentView: View {
     @StateObject private var session = SagaiSessionManager()
-    @State private var selectedTab: Int = 1
+    @State private var selectedTab: Int = 0
     @State private var showingRegister: Bool = false
     @State private var isSplashActive: Bool = true
     @State private var isGuestBypassed: Bool = false
@@ -389,18 +389,7 @@ struct ContentView: View {
                     ZStack {
                         // Authenticated view with 5 modern Marriage App tabs
                         TabView(selection: $selectedTab) {
-                            // Tab 0: Profile (Leftmost)
-                            NavigationView {
-                                MyProfileView(selectedTab: $selectedTab, isSideMenuOpen: $isSideMenuOpen)
-                                    .environmentObject(session)
-                                    .navigationBarHidden(true)
-                            }
-                            .tabItem {
-                                Label("Profile", systemImage: "person.crop.circle.fill")
-                            }
-                            .tag(0)
-                            
-                            // Tab 1: Discover
+                            // Tab 0: Discover (1st tab)
                             NavigationView {
                                 MatchesView(selectedTab: $selectedTab, showingRegister: $showingRegister, isSideMenuOpen: $isSideMenuOpen)
                                     .environmentObject(session)
@@ -409,9 +398,20 @@ struct ContentView: View {
                             .tabItem {
                                 Label("Discover", systemImage: "rectangle.stack.fill")
                             }
+                            .tag(0)
+                            
+                            // Tab 1: Messages (2nd tab)
+                            NavigationView {
+                                ChatView(selectedTab: $selectedTab, showingRegister: $showingRegister, isSideMenuOpen: $isSideMenuOpen)
+                                    .environmentObject(session)
+                                    .navigationBarHidden(true)
+                            }
+                            .tabItem {
+                                Label("Messages", systemImage: "bubble.left.and.bubble.right.fill")
+                            }
                             .tag(1)
                             
-                            // Tab 2: Premium (Center / Middle Tab)
+                            // Tab 2: Premium (3rd tab / center)
                             NavigationView {
                                 PlansView()
                                     .environmentObject(session)
@@ -457,7 +457,7 @@ struct ContentView: View {
                             }
                             .tag(2)
                             
-                            // Tab 3: Requests
+                            // Tab 3: Requests (4th tab)
                             NavigationView {
                                 InboxView(isSideMenuOpen: $isSideMenuOpen)
                                     .environmentObject(session)
@@ -468,14 +468,14 @@ struct ContentView: View {
                             }
                             .tag(3)
                             
-                            // Tab 4: Messages
+                            // Tab 4: Profile (5th / last tab)
                             NavigationView {
-                                ChatView(selectedTab: $selectedTab, showingRegister: $showingRegister, isSideMenuOpen: $isSideMenuOpen)
+                                MyProfileView(selectedTab: $selectedTab, isSideMenuOpen: $isSideMenuOpen)
                                     .environmentObject(session)
                                     .navigationBarHidden(true)
                             }
                             .tabItem {
-                                Label("Messages", systemImage: "bubble.left.and.bubble.right.fill")
+                                Label("Profile", systemImage: "person.crop.circle.fill")
                             }
                             .tag(4)
                         }
@@ -523,18 +523,25 @@ struct ContentView: View {
                             .environmentObject(session)
                     }
                     .onAppear {
-                        // Set up a custom appearance for tabs to match the maroon theme!
+                        // Set up a clean white appearance for tabs to match the rest of the app!
                         let appearance = UITabBarAppearance()
                         appearance.configureWithOpaqueBackground()
-                        appearance.backgroundColor = UIColor(Color.deepMaroon)
+                        appearance.backgroundColor = UIColor.white
+                        appearance.shadowColor = UIColor(red: 0.90, green: 0.91, blue: 0.93, alpha: 1.0)
                         
-                        // Unselected item coloring
-                        appearance.stackedLayoutAppearance.normal.iconColor = UIColor(Color.sandstoneIvory.opacity(0.4))
-                        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor(Color.sandstoneIvory.opacity(0.4))]
+                        let normalAttrs: [NSAttributedString.Key: Any] = [
+                            .foregroundColor: UIColor(red: 0.61, green: 0.64, blue: 0.69, alpha: 1.0),
+                            .font: UIFont.systemFont(ofSize: 11, weight: .medium)
+                        ]
+                        let selectedAttrs: [NSAttributedString.Key: Any] = [
+                            .foregroundColor: UIColor(red: 0.91, green: 0.25, blue: 0.34, alpha: 1.0),
+                            .font: UIFont.systemFont(ofSize: 11, weight: .bold)
+                        ]
                         
-                        // Selected item coloring
-                        appearance.stackedLayoutAppearance.selected.iconColor = UIColor(Color.lightGold)
-                        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(Color.lightGold)]
+                        appearance.stackedLayoutAppearance.normal.titleTextAttributes = normalAttrs
+                        appearance.stackedLayoutAppearance.normal.iconColor = UIColor(red: 0.61, green: 0.64, blue: 0.69, alpha: 1.0)
+                        appearance.stackedLayoutAppearance.selected.titleTextAttributes = selectedAttrs
+                        appearance.stackedLayoutAppearance.selected.iconColor = UIColor(red: 0.91, green: 0.25, blue: 0.34, alpha: 1.0)
                         
                         UITabBar.appearance().standardAppearance = appearance
                         if #available(iOS 15.0, *) {

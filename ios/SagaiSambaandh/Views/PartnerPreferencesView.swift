@@ -241,7 +241,7 @@ struct PartnerPreferencesView: View {
         isSavedSuccessfully = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             presentationMode.wrappedValue.dismiss()
-            selectedTab = 1 // Switch to Matches / Discover tab to immediately show tailored profiles
+            selectedTab = 0 // Switch to Matches / Discover tab to immediately show tailored profiles
         }
     }
 }
