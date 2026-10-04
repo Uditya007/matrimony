@@ -2,6 +2,7 @@ package com.sagaisambaandh.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -414,7 +415,8 @@ fun RegisterView(
                                     unfocusedContainerColor = CardBackground,
                                     focusedBorderColor = RoyalGold,
                                     unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
-                                    placeholderColor = Color.Gray.copy(alpha = 0.5f)
+                                    focusedPlaceholderColor = Color.Gray.copy(alpha = 0.5f),
+                                    unfocusedPlaceholderColor = Color.Gray.copy(alpha = 0.5f)
                                 ),
                                 shape = RoundedCornerShape(8.dp),
                                 singleLine = true

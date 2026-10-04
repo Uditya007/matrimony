@@ -2,6 +2,7 @@ package com.sagaisambaandh.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -72,6 +73,8 @@ fun OnboardingView(
     
     val context = LocalContext.current
     val contentResolver = context.contentResolver
+    var isSaving by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -130,16 +133,12 @@ fun OnboardingView(
         }
     }
     
-    var isSaving by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    
     val clans = listOf("Rathore", "Sisodia", "Chauhan", "Kachwaha", "Bhati", "Shekhawat")
     val heights = listOf("5 ft 0 in", "5 ft 2 in", "5 ft 4 in", "5 ft 6 in", "5 ft 8 in", "5 ft 10 in", "6 ft 0 in", "6 ft 2 in")
     
     var clanExpanded by remember { mutableStateOf(false) }
     var heightExpanded by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current
     val calendar = Calendar.getInstance()
     val datePickerDialog = remember {
         android.app.DatePickerDialog(

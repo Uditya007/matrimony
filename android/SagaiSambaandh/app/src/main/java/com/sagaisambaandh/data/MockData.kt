@@ -279,5 +279,5 @@ object MockData {
             isVerified = true,
             img = null
         )
-    ]
+    )
 }

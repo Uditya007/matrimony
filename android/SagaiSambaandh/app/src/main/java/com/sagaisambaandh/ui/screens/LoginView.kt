@@ -49,13 +49,6 @@ import androidx.compose.ui.platform.LocalContext
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.json.JSONArray
-import org.json.JSONObject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -267,16 +260,31 @@ fun LoginView(
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clickable {
+                            emailInput = "12345"
+                            passwordInput = "12345"
+                        }
                         .padding(bottom = 20.dp)
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text(
-                            text = "NOBLE ACCESS DEMO:",
-                            color = LightGold,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 9.sp,
-                            letterSpacing = 1.sp
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "NOBLE ACCESS DEMO:",
+                                color = LightGold,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 9.sp,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = "(Tap to fill)",
+                                color = RoyalGold,
+                                fontSize = 9.sp
+                            )
+                        }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Username: 12345",
@@ -467,7 +475,6 @@ fun LoginView(
                     Text(text = "Sign Up here", color = LightGold, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
             }
-        }
         }
     }
 }

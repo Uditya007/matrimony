@@ -559,7 +559,7 @@ class SagaiSessionManager(private val context: Context) {
         val text = "💌 *Interest Request Sent (Android)* 💌\n\n" +
                    "• *From:* ${fromUser.name} _(${fromUser.clan} Clan)_\n" +
                    "• *To:* ${toProfile.name} _(${toProfile.clan} Clan)_\n\n" +
-                   "📅 _Time: $dateString_"
+                   "📅 _Time: ${dateString}_"
         sendTelegramNotification(text)
     }
 
@@ -571,7 +571,7 @@ class SagaiSessionManager(private val context: Context) {
         val text = "💬 *Chat Opened (Android)* 💬\n\n" +
                    "• *From:* ${fromUser.name} _(${fromUser.clan} Clan)_\n" +
                    "• *To:* $toName$toClan\n\n" +
-                   "📅 _Time: $dateString_"
+                   "📅 _Time: ${dateString}_"
         sendTelegramNotification(text)
     }
 
@@ -815,14 +815,15 @@ class SagaiSessionManager(private val context: Context) {
                             Profile(
                                 id = row.optString("id", ""),
                                 name = row.optString("name", "Noble Member"),
+                                age = 26,
+                                gender = row.optString("gender", "Groom"),
                                 clan = row.optString("clan", "Rathore"),
                                 gotra = row.optString("gotra", "Kashyap"),
+                                kul = row.optString("clan", "Rathore"),
+                                thikana = row.optString("thikana", "Rajasthan"),
                                 location = row.optString("thikana", "Rajasthan"),
-                                age = 26,
-                                profession = row.optString("occupation", "Professional"),
                                 height = row.optString("height", "5'9\""),
-                                maritalStatus = row.optString("maritalStatus", "Never Married"),
-                                religion = "Hindu - Rajput",
+                                occupation = row.optString("occupation", "Professional"),
                                 education = row.optString("education", "Graduate"),
                                 income = row.optString("income", "15-20 LPA"),
                                 isVerified = true,

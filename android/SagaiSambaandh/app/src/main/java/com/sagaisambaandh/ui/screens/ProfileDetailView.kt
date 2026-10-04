@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sagaisambaandh.data.Profile
 import com.sagaisambaandh.data.SagaiSessionManager
-import com.sagaisambaandh.ui.components.JharokhaBorder
 import com.sagaisambaandh.ui.components.JharokhaShape
 import com.sagaisambaandh.ui.components.jharokhaBorder
 import com.sagaisambaandh.ui.theme.*
