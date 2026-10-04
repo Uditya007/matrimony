@@ -27,46 +27,72 @@ struct HomeView: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
                 // Hero Header Banner with Slide Show
-                ZStack(alignment: .bottom) {
-                    // Couples Slideshow Background Image
-                    AsyncImage(url: URL(string: "https://www.shreerajputsagaisambandh.com/images/slide\(activeHeroSlide + 1).jpg")) { image in
-                        image.resizable()
-                             .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Color.appCardBackground
-                    }
-                    .frame(height: 280)
-                    .clipped()
-                    
-                    // Romantic Gradient Overlay
-                    LinearGradient(
-                        colors: [Color.black.opacity(0.2), Color.black.opacity(0.85)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: 280)
-                    
-                    VStack(spacing: 10) {
-                        Text("A UNION OF RAJPUT LINEAGE & LEGACY")
-                            .font(BrandFonts.label(size: 10, weight: .bold))
-                            .foregroundColor(Color.royalGold)
-                            .tracking(2.5)
+                ZStack(alignment: .top) {
+                    ZStack(alignment: .bottom) {
+                        // Couples Slideshow Background Image
+                        AsyncImage(url: URL(string: "https://www.shreerajputsagaisambandh.com/images/slide\(activeHeroSlide + 1).jpg")) { image in
+                            image.resizable()
+                                 .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Color.appCardBackground
+                        }
+                        .frame(height: 280)
+                        .clipped()
                         
-                        Text("Where Lineage\nMeets Sacred Legacy")
-                            .font(BrandFonts.displayBold(size: 26))
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(3)
+                        // Romantic Gradient Overlay
+                        LinearGradient(
+                            colors: [Color.black.opacity(0.35), Color.black.opacity(0.85)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: 280)
                         
-                        Text("The most authentic, verified matrimony network for Rajput families.")
-                            .font(BrandFonts.body(size: 13))
-                            .foregroundColor(.white.opacity(0.85))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 30)
-                            .padding(.bottom, 16)
+                        VStack(spacing: 10) {
+                            Text("A UNION OF RAJPUT LINEAGE & LEGACY")
+                                .font(BrandFonts.label(size: 10, weight: .bold))
+                                .foregroundColor(Color.royalGold)
+                                .tracking(2.5)
+                            
+                            Text("Where Lineage\nMeets Sacred Legacy")
+                                .font(BrandFonts.displayBold(size: 26))
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                                .lineSpacing(3)
+                            
+                            Text("The most authentic, verified matrimony network for Rajput families.")
+                                .font(BrandFonts.body(size: 13))
+                                .foregroundColor(.white.opacity(0.85))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 30)
+                                .padding(.bottom, 16)
+                        }
+                        .padding(.top, 40)
+                        .padding(.bottom, 36)
                     }
-                    .padding(.top, 40)
-                    .padding(.bottom, 36)
+                    
+                    // Prominent Top Navigation Row with Menu Icon
+                    HStack {
+                        Button(action: {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                isSideMenuOpen = true
+                            }
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "line.horizontal.3")
+                                    .font(.system(size: 17, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                            .frame(width: 42, height: 42)
+                            .background(Color.black.opacity(0.45))
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.royalGold.opacity(0.6), lineWidth: 1.5))
+                            .shadow(color: Color.black.opacity(0.3), radius: 6, x: 0, y: 2)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 10)
                 }
                 .onReceive(timer) { _ in
                     activeHeroSlide = (activeHeroSlide + 1) % 3

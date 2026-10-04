@@ -438,10 +438,15 @@ struct RegisterView: View {
     
     private func handleRegister() {
         let tempId = "U\(Int.random(in: 100...999))"
+        let cleanPhone = phoneInput.filter { $0.isNumber }
+        let resolvedEmail = emailInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? (!cleanPhone.isEmpty ? "\(cleanPhone)@shreerajput.com" : "noble@clan.com")
+            : emailInput.trimmingCharacters(in: .whitespacesAndNewlines)
+            
         let newUser = User(
             id: tempId,
             name: nameInput.isEmpty ? "Kunwar" : nameInput,
-            email: emailInput.isEmpty ? "noble@clan.com" : emailInput,
+            email: resolvedEmail,
             gender: genderInput == "Bride" ? "Bride" : "Groom",
             clan: selectedClan == "Other (Please Specify)" ? customClanInput : selectedClan,
             tier: "Starter",

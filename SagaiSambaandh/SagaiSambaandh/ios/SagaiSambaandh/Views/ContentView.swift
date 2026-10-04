@@ -14,8 +14,12 @@ class SagaiSessionManager: ObservableObject {
     @Published var notificationsList: [RoyalNotification] = []
     @Published var connections: [ConnectionRecord] = []
     private var connectionTimer: Timer? = nil
+    private var knownConnectionKeys: Set<String> = []
+    private var lastKnownMessageTimes: [String: Double] = [:]
+    private var hasSeededNotifications: Bool = false
     
     init() {
+        NotificationManager.shared.requestAuthorization()
         if let data = UserDefaults.standard.data(forKey: "saved_user_session"),
            let user = try? JSONDecoder().decode(User.self, from: data) {
             self.currentUser = user
@@ -202,9 +206,10 @@ class SagaiSessionManager: ObservableObject {
             guard let self = self else { return }
             guard case .success(let records) = result else { return }
             
-            // Build notifications list
+            // Build notifications list & trigger local push alerts
             var list: [RoyalNotification] = []
             for record in records {
+                let recKey = "\(record.sender_id)_\(record.receiver_id)_\(record.status)"
                 if record.receiver_id == currentUserId && record.status == "pending" {
                     let senderProfile = self.profiles.first(where: { $0.id == record.sender_id })
                     let senderName = senderProfile?.name ?? "Noble Member"
@@ -216,6 +221,10 @@ class SagaiSessionManager: ObservableObject {
                         timestamp: "Just now",
                         read: false
                     ))
+                    
+                    if self.hasSeededNotifications && !self.knownConnectionKeys.contains(recKey) {
+                        NotificationManager.shared.notifyConnectionRequest(senderName: senderName, senderId: record.sender_id)
+                    }
                 } else if record.status == "accepted" {
                     let otherId = record.sender_id == currentUserId ? record.receiver_id : record.sender_id
                     let otherProfile = self.profiles.first(where: { $0.id == otherId })
@@ -228,8 +237,14 @@ class SagaiSessionManager: ObservableObject {
                         timestamp: "Just now",
                         read: false
                     ))
+                    
+                    if self.hasSeededNotifications && !self.knownConnectionKeys.contains(recKey) {
+                        NotificationManager.shared.notifyConnectionAccepted(partnerName: otherName, partnerId: otherId)
+                    }
                 }
+                self.knownConnectionKeys.insert(recKey)
             }
+            self.hasSeededNotifications = true
             
             DispatchQueue.main.async {
                 self.connections = records
@@ -242,6 +257,30 @@ class SagaiSessionManager: ObservableObject {
         self.currentUser?.about = about
         if let user = self.currentUser, let data = try? JSONEncoder().encode(user) {
             UserDefaults.standard.set(data, forKey: "saved_user_session")
+        }
+        
+        // Detect and trigger notification for new incoming messages
+        if let currentUserId = self.currentUser?.id {
+            for profile in self.profiles {
+                if let lastMsg = SupabaseClient.shared.getLastMessage(
+                    userAbout: about,
+                    userId: currentUserId,
+                    profileAbout: profile.about,
+                    profileId: profile.id
+                ) {
+                    let prevTime = self.lastKnownMessageTimes[profile.id] ?? 0
+                    if prevTime == 0 {
+                        self.lastKnownMessageTimes[profile.id] = lastMsg.time
+                    } else if lastMsg.time > prevTime && !lastMsg.isFromMe {
+                        self.lastKnownMessageTimes[profile.id] = lastMsg.time
+                        NotificationManager.shared.notifyNewMessage(
+                            senderName: profile.name,
+                            senderId: profile.id,
+                            messageText: lastMsg.text
+                        )
+                    }
+                }
+            }
         }
     }
     

@@ -285,6 +285,97 @@ class SupabaseClient {
         }.resume()
     }
 
+    // Fetch profile matching phone number
+    func fetchUserProfileByPhone(phone: String, completion: @escaping (Result<User?, Error>) -> Void) {
+        let clean = phone.trimmingCharacters(in: .whitespacesAndNewlines)
+                         .replacingOccurrences(of: "+91", with: "")
+                         .replacingOccurrences(of: " ", with: "")
+                         .replacingOccurrences(of: "-", with: "")
+        
+        guard let url = URL(string: "\(supabaseURL)/rest/v1/profiles?or=(phone.ilike.*\(clean)*)&select=*") else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue(apiKey, forHTTPHeaderField: "apikey")
+        request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            guard let data = data else {
+                completion(.success(nil))
+                return
+            }
+            do {
+                if let rows = try JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+                   let first = rows.first {
+                    let uid = first["id"] as? String ?? UUID().uuidString.lowercased()
+                    let name = first["name"] as? String ?? "Noble User"
+                    let email = first["email"] as? String ?? ""
+                    let gender = first["gender"] as? String ?? "Groom"
+                    let clan = first["clan"] as? String ?? "Rathore"
+                    let tier = first["tier"] as? String ?? "Starter"
+                    let gotra = first["gotra"] as? String ?? ""
+                    let motherGotra = first["motherGotra"] as? String ?? ""
+                    let thikana = first["thikana"] as? String ?? ""
+                    let matchedPhone = first["phone"] as? String ?? phone
+                    let dob = first["dob"] as? String ?? ""
+                    let education = first["education"] as? String ?? ""
+                    let occupation = first["occupation"] as? String ?? ""
+                    let income = first["income"] as? String ?? ""
+                    let height = first["height"] as? String ?? ""
+                    let maritalStatus = first["maritalStatus"] as? String ?? "Never Married"
+                    let rawPic = (first["profilePic"] as? String)?.isEmpty == false ? (first["profilePic"] as? String) : (first["img"] as? String)
+                    let about = first["about"] as? String ?? ""
+                    let location = first["location"] as? String ?? ""
+                    let rashi = first["rashi"] as? String ?? ""
+                    let manglik = first["manglik"] as? String ?? "Non-Manglik"
+                    let expectations = first["expectations"] as? String ?? ""
+                    let instagram = first["instagram"] as? String ?? ""
+                    let facebook = first["facebook"] as? String ?? ""
+                    let biodataUrl = first["biodataUrl"] as? String ?? ""
+                    
+                    let user = User(
+                        id: uid,
+                        name: name,
+                        email: email,
+                        gender: gender,
+                        clan: clan,
+                        tier: tier,
+                        shortlistedIds: [],
+                        unlockedIds: [],
+                        gotra: gotra,
+                        motherGotra: motherGotra,
+                        thikana: thikana,
+                        phone: matchedPhone,
+                        dob: dob,
+                        education: education,
+                        occupation: occupation,
+                        income: income,
+                        height: height,
+                        maritalStatus: maritalStatus,
+                        profilePic: rawPic,
+                        about: about,
+                        location: location,
+                        rashi: rashi,
+                        manglik: manglik,
+                        expectations: expectations,
+                        instagram: instagram,
+                        facebook: facebook,
+                        biodataUrl: biodataUrl
+                    )
+                    completion(.success(user))
+                } else {
+                    completion(.success(nil))
+                }
+            } catch {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+
     // Insert a new profile record
     func insertProfile(profile: User, completion: @escaping (Result<User, Error>) -> Void) {
         guard let url = URL(string: "\(supabaseURL)/rest/v1/profiles") else { return }

@@ -7,6 +7,7 @@ struct SideMenuView: View {
     @Binding var showingBiodata: Bool
     @EnvironmentObject var session: SagaiSessionManager
     @State private var showingAvatarSelection: Bool = false
+    @State private var showingPartnerPreferences: Bool = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -98,11 +99,6 @@ struct SideMenuView: View {
                         selectedTab = 4
                     }
                     
-                    SideMenuItem(icon: "tag.fill", title: "VIPSHAADI") {
-                        withAnimation { isOpen = false }
-                        selectedTab = 4
-                    }
-                    
                     Text("Discover Your Matches")
                         .font(BrandFonts.label(size: 10))
                         .foregroundColor(.sandstoneIvory.opacity(0.5))
@@ -116,12 +112,7 @@ struct SideMenuView: View {
                         selectedTab = 1
                     }
                     
-                    SideMenuItem(icon: "envelope.fill", title: "Inbox") {
-                        withAnimation { isOpen = false }
-                        selectedTab = 2
-                    }
-                    
-                    SideMenuItem(icon: "bubble.left.and.bubble.right.fill", title: "Chat") {
+                    SideMenuItem(icon: "bubble.left.and.bubble.right.fill", title: "Messages") {
                         withAnimation { isOpen = false }
                         selectedTab = 3
                     }
@@ -136,6 +127,7 @@ struct SideMenuView: View {
                     
                     SideMenuItem(icon: "person.2.fill", title: "Partner Preferences") {
                         withAnimation { isOpen = false }
+                        showingPartnerPreferences = true
                     }
                     
                     SideMenuItem(icon: "slider.horizontal.3", title: "Contact Filters") {
@@ -155,6 +147,10 @@ struct SideMenuView: View {
         .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
         .sheet(isPresented: $showingAvatarSelection) {
             AvatarSelectionView()
+                .environmentObject(session)
+        }
+        .sheet(isPresented: $showingPartnerPreferences) {
+            PartnerPreferencesView(selectedTab: $selectedTab)
                 .environmentObject(session)
         }
     }
