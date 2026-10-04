@@ -3519,8 +3519,10 @@ let chatPollingInterval = null;
 function renderConversation(messagesContainer, conversation, profile) {
   if (conversation.length === 0) {
     messagesContainer.innerHTML = `
-      <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 20px; width: 100%;">
-        This is the beginning of your connection with ${profile.name}.
+      <div style="text-align: center; color: #718096; font-size: 0.82rem; padding: 30px 15px; width: 100%;">
+        <div style="font-size: 1.8rem; margin-bottom: 6px;">👑</div>
+        <div style="font-weight: 600; color: #2D3748; margin-bottom: 4px;">Direct Connection with ${profile.name}</div>
+        <div>Send a message to begin your conversation.</div>
       </div>
     `;
     return;
@@ -3529,10 +3531,11 @@ function renderConversation(messagesContainer, conversation, profile) {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   messagesContainer.innerHTML = conversation.map(msg => {
     const isMe = msg.s === currentUser.id;
+    const safeText = (msg.t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return `
-      <div class="message ${isMe ? 'user-message' : 'bot-message'}" style="margin-bottom: 10px; align-self: ${isMe ? 'flex-end' : 'flex-start'};">
-        <div class="message-bubble" style="padding: 8px 12px; border-radius: 12px; max-width: 80%; word-break: break-word; background-color: ${isMe ? 'var(--primary-color)' : '#EDF2F7'}; color: ${isMe ? 'var(--text-white)' : '#2D3748'};">
-          ${msg.t}
+      <div class="message ${isMe ? 'user-message' : 'bot-message'}" style="margin-bottom: 6px; align-self: ${isMe ? 'flex-end' : 'flex-start'}; max-width: 82%;">
+        <div class="message-bubble" style="padding: 9px 13px; border-radius: 14px; word-break: break-word; font-size: 0.86rem; line-height: 1.4; box-shadow: 0 1px 3px rgba(0,0,0,0.06); background: ${isMe ? 'linear-gradient(135deg, #6B1220, #8A1A2B)' : '#FFFFFF'}; color: ${isMe ? '#FFFFFF' : '#1A202C'}; border: ${isMe ? 'none' : '1px solid #E2E8F0'}; ${isMe ? 'border-bottom-right-radius: 2px;' : 'border-bottom-left-radius: 2px;'}">
+          ${safeText}
         </div>
       </div>
     `;
@@ -3576,29 +3579,32 @@ window.openOneOnOneChat = function(profileId) {
   } else if (profile.img) {
     avatarHtml = `<img src="${profile.img}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
   } else {
-    avatarHtml = `<div class="profile-avatar-placeholder" style="font-size: 1.1rem; color: var(--text-white); font-weight: bold; width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${profile.initials}</div>`;
+    avatarHtml = `<div class="profile-avatar-placeholder" style="font-size: 1.1rem; color: #FFFFFF; font-weight: bold; width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${profile.initials || 'NM'}</div>`;
   }
 
   // Setup the layout
   chatBox.innerHTML = `
-    <div class="chat-header">
-      <div class="header-avatar" style="background: ${getAvatarGradient(profile.clan)}; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; border: 1.5px solid var(--gold-antique); overflow:hidden;">
+    <div class="chat-header" style="background: linear-gradient(135deg, #6B1220, #4A0D18); border-bottom: 1.5px solid var(--gold-antique); padding: 12px 16px; display: flex; align-items: center; gap: 12px; color: white;">
+      <div class="header-avatar" style="background: ${getAvatarGradient(profile.clan)}; display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%; border: 1.5px solid var(--gold-antique); overflow:hidden; cursor:pointer;" onclick="openProfileDetailModal('${profileId}')" title="View Full Profile">
         ${avatarHtml}
       </div>
-      <div class="header-info">
-        <h3>${profile.name}</h3>
-        <span class="header-status">Online</span>
+      <div class="header-info" style="flex:1; cursor:pointer;" onclick="openProfileDetailModal('${profileId}')" title="View Full Profile">
+        <h3 style="margin:0; font-size:0.95rem; color:#FFFFFF; font-family:var(--font-royal); letter-spacing:0.5px;">${profile.name}</h3>
+        <span class="header-status" style="font-size:0.75rem; color:var(--gold-bright); display:flex; align-items:center; gap:4px;">
+          <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#2ECC71;"></span>
+          Active Match • Tap to view profile
+        </span>
       </div>
-      <button onclick="closeOneOnOneChat()" class="btn-close-chat" aria-label="Close Chat">×</button>
+      <button onclick="closeOneOnOneChat()" class="btn-close-chat" style="background:none; border:none; color:white; font-size:1.4rem; cursor:pointer; line-height:1;" aria-label="Close Chat">×</button>
     </div>
     
-    <div id="oneOnOneMessages" class="chat-messages" style="height: 280px; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px;">
+    <div id="oneOnOneMessages" class="chat-messages" style="height: 310px; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background-color: #F8FAFC;">
       <!-- Conversation loaded dynamically -->
     </div>
 
-    <div class="chat-input-area" style="padding: 10px; display: flex; gap: 8px; border-top: 1px solid rgba(170,124,17,0.15); background-color: var(--bg-dark);">
-      <input type="text" id="oneOnOneInput" placeholder="Write to ${profile.name.split(' ')[0]}..." style="flex: 1; padding: 8px 12px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.3); background-color: var(--bg-card); color: var(--text-dark); font-size: 0.85rem;" onkeypress="handleOneOnOneKeyPress(event, '${profileId}')">
-      <button onclick="sendOneOnOneMessage('${profileId}')" class="btn btn-royal" style="padding: 8px 15px; font-size: 0.8rem;" aria-label="Send Message">
+    <div class="chat-input-area" style="padding: 12px; display: flex; gap: 8px; border-top: 1px solid #E2E8F0; background-color: #FFFFFF;">
+      <input type="text" id="oneOnOneInput" placeholder="Write to ${profile.name.split(' ')[0]}..." style="flex: 1; padding: 10px 14px; border-radius: 20px; border: 1.5px solid #CBD5E0; background-color: #FFFFFF; color: #1A202C; font-size: 0.88rem; outline: none;" onkeypress="handleOneOnOneKeyPress(event, '${profileId}')">
+      <button onclick="sendOneOnOneMessage('${profileId}')" class="btn btn-royal" style="padding: 9px 18px; font-size: 0.85rem; border-radius: 20px; background: linear-gradient(135deg, #6B1220, #4A0D18); color: #FFFFFF; border: none; font-weight: 600; cursor: pointer;" aria-label="Send Message">
         Send
       </button>
     </div>
@@ -4295,12 +4301,15 @@ function populateOnlineSidebar(currentUser) {
     const locationCity = p.location ? p.location.split(',')[0].trim() : 'Rajasthan';
 
     return `
-      <div class="online-match-item" onclick="openProfileDetailModal('${p.id}')">
+      <div class="online-match-item" onclick="openOneOnOneChat('${p.id}')" title="Click to chat with ${p.name}">
         <div class="online-match-avatar ${status.statusClass}" style="background: ${getAvatarGradient(p.clan)}">
           ${avatarHtml}
         </div>
         <div class="online-match-info">
-          <div class="online-match-name">${p.name}</div>
+          <div class="online-match-name" style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px;">${p.name}</span>
+            <span style="font-size: 0.85rem;" title="Chat with ${p.name}">💬</span>
+          </div>
           <div class="online-match-meta">${p.clan || 'Rajput'} • ${p.age || '24'} Yrs • ${locationCity}</div>
           <div class="online-match-status ${status.statusClass}">
             <span class="status-dot-mini ${status.statusClass}"></span>
