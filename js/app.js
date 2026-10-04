@@ -373,8 +373,8 @@ function openPhoneVerificationModal(options = {}) {
         <div id="otpStepVerify" style="display: none;">
           <div style="background: rgba(39, 174, 96, 0.12); border: 1px solid rgba(39, 174, 96, 0.35); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 0.82rem; color: #A7F3D0;">
             OTP sent to <strong id="displayOtpSentPhone" style="color: #FFF;">+91</strong>.
-            <div id="otpCodeDemoBadge" style="margin-top: 6px; font-weight: 700; color: #FCD34D; font-size: 0.9rem;">
-              👑 Verification Code: <span id="demoOtpNumber">123456</span>
+            <div style="margin-top: 5px; font-size: 0.78rem; color: #CBD5E0;">
+              Please check your phone's SMS messages and enter the 6-digit OTP below.
             </div>
           </div>
 
@@ -434,15 +434,12 @@ window.handleSendVerificationOtp = function(isResend = false) {
   const displayPhoneEl = document.getElementById('displayOtpSentPhone');
   if (displayPhoneEl) displayPhoneEl.textContent = `+91 ${rawNumber}`;
 
-  const demoOtpEl = document.getElementById('demoOtpNumber');
-  if (demoOtpEl) demoOtpEl.textContent = generatedOtp;
-
   // Switch steps
   document.getElementById('otpStepPhone').style.display = 'none';
   document.getElementById('otpStepVerify').style.display = 'block';
 
-  // Show royal toast with OTP
-  showToast(`👑 Royal SMS Gateway: Your verification code is ${generatedOtp}`, 'gold');
+  // Show royal notification without revealing OTP code
+  showToast('📱 SMS verification code dispatched. Please check your handset messages!', 'gold');
 
   // Trigger backend SMS dispatch (Fast2SMS / SMS Gateway)
   fetch('/api/send-sms', {
@@ -1289,9 +1286,6 @@ window.handleSendLoginOtp = async function(channel) {
   const displayEl = document.getElementById('loginOtpTargetDisplay');
   if (displayEl) displayEl.textContent = displayTarget;
 
-  const demoCodeEl = document.getElementById('loginOtpDemoCode');
-  if (demoCodeEl) demoCodeEl.textContent = generatedOtp;
-
   const codeInput = document.getElementById('loginOtpCodeInput');
   if (codeInput) codeInput.value = '';
 
@@ -1306,7 +1300,7 @@ window.handleSendLoginOtp = async function(channel) {
 
   // Provide notification and trigger dispatch
   if (selectedChannel === 'phone') {
-    showToast(`👑 Royal SMS Gateway: Verification code is ${generatedOtp}`, 'gold');
+    showToast('📱 SMS verification code dispatched. Please check your mobile messages!', 'gold');
 
     // Call Fast2SMS backend
     fetch('/api/send-sms', {
@@ -1319,7 +1313,7 @@ window.handleSendLoginOtp = async function(channel) {
       }
     }).catch(e => console.warn('Fast2SMS dispatch warning:', e));
   } else {
-    showToast(`👑 Royal Email Gateway: Verification code is ${generatedOtp}`, 'gold');
+    showToast('✉️ Verification code dispatched. Please check your email inbox!', 'gold');
 
     if (window.supabaseActive && window.supabaseClient) {
       window.supabaseClient.auth.signInWithOtp({ email: target }).catch(e => {
