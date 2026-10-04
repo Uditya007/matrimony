@@ -1,314 +1,399 @@
 package com.sagaisambaandh.ui.screens
 
-import android.widget.Toast
 import androidx.compose.animation.*
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.PaperPlane
-import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import org.json.JSONObject
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.sagaisambaandh.R
 import com.sagaisambaandh.data.Profile
 import com.sagaisambaandh.data.SagaiSessionManager
-import com.sagaisambaandh.ui.components.ProfileCard
+import com.sagaisambaandh.ui.components.RoyalBackground
 import com.sagaisambaandh.ui.theme.*
-import coil.compose.AsyncImage
-import androidx.compose.ui.layout.ContentScale
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatchesView(
     session: SagaiSessionManager,
     onNavigateToRegister: () -> Unit,
     onProfileDetailSelect: (Profile) -> Unit,
+    onNotificationTap: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val profiles = session.profiles.value
-    var activeFilterTab by remember { mutableStateOf(0) } // 0 = All, 1 = Compatible Gotras
+    var activeFilterTab by remember { mutableStateOf(0) } // 0 = All Matches, 1 = Gotra Compatible
     val searchGender by session.searchGender
     val searchClan by session.searchClan
 
-    var viewMode by remember { mutableStateOf(0) } // 0 = Swipe Cards, 1 = List Feed
+    var viewMode by remember { mutableStateOf(0) } // 0 = Swipe Deck, 1 = Grid Feed
     var showingConnectSuccess by remember { mutableStateOf(false) }
     var successProfileName by remember { mutableStateOf("") }
 
     val user = session.currentUser.value
+    val isProfileLocked = user == null
+
     val filteredMatches = remember(profiles, activeFilterTab, user, searchGender, searchClan) {
         val searched = profiles.filter {
-            val genderMatch = it.gender == searchGender
-            val clanMatch = searchClan == "All Clans" || it.clan.lowercase() == searchClan.lowercase()
+            val genderMatch = it.gender.equals(searchGender, ignoreCase = true)
+            val clanMatch = searchClan == "All Clans" || it.clan.equals(searchClan, ignoreCase = true)
             genderMatch && clanMatch
         }
 
-        if (activeFilterTab == 1 && user != null) {
+        if (activeFilterTab == 1 && user != null && user.gotra.isNotEmpty()) {
             searched.filter {
-                it.gotra.lowercase() != user.gotra.lowercase()
+                !it.gotra.equals(user.gotra, ignoreCase = true)
             }
         } else {
             searched
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            // Top Toolbar
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = "Matches",
-                        fontFamily = FontFamily.Serif,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = LightGold
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = DeepMaroon
-                )
-            )
+    val allMatchesCount = remember(profiles, searchGender, searchClan) {
+        profiles.count {
+            val genderMatch = it.gender.equals(searchGender, ignoreCase = true)
+            val clanMatch = searchClan == "All Clans" || it.clan.equals(searchClan, ignoreCase = true)
+            genderMatch && clanMatch
+        }
+    }
 
-            // View Mode switcher tabs
-            TabRow(
-                selectedTabIndex = viewMode,
-                containerColor = DeepMaroon,
-                contentColor = LightGold,
-                divider = {},
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Tab(selected = viewMode == 0, onClick = { viewMode = 0 }) {
-                    Text(
-                        text = "Swipe Cards",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (viewMode == 0) LightGold else SandstoneIvory.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                }
-                Tab(selected = viewMode == 1, onClick = { viewMode = 1 }) {
-                    Text(
-                        text = "List Feed",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (viewMode == 1) LightGold else SandstoneIvory.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                }
-            }
+    val gotraMatchesCount = remember(profiles, searchGender, searchClan, user) {
+        val base = profiles.filter {
+            val genderMatch = it.gender.equals(searchGender, ignoreCase = true)
+            val clanMatch = searchClan == "All Clans" || it.clan.equals(searchClan, ignoreCase = true)
+            genderMatch && clanMatch
+        }
+        if (user != null && user.gotra.isNotEmpty()) {
+            base.count { !it.gotra.equals(user.gotra, ignoreCase = true) }
+        } else {
+            base.size
+        }
+    }
 
-            // Sub Filter Tabs
-            TabRow(
-                selectedTabIndex = activeFilterTab,
-                containerColor = DeepMaroon,
-                contentColor = LightGold,
-                divider = {},
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Tab(
-                    selected = activeFilterTab == 0,
-                    onClick = { activeFilterTab = 0 }
-                ) {
-                    Text(
-                        text = "All Matches",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (activeFilterTab == 0) LightGold else SandstoneIvory.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                }
-                Tab(
-                    selected = activeFilterTab == 1,
-                    onClick = { activeFilterTab = 1 }
-                ) {
-                    Text(
-                        text = "Gotra Compatible",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (activeFilterTab == 1) LightGold else SandstoneIvory.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                }
-            }
+    val coroutineScope = rememberCoroutineScope()
 
-            if (viewMode == 0) {
-                // Swipe Card Deck Mode
-                Box(
+    fun handleConnectTap(profile: Profile) {
+        if (isProfileLocked) {
+            onNavigateToRegister()
+            return
+        }
+        val currentUser = user ?: return
+        successProfileName = profile.name
+        showingConnectSuccess = true
+        session.sendConnection(currentUser.id, profile.id) {
+            session.refreshCurrentUserAbout()
+        }
+        session.notifyAdminInterestSent(currentUser, profile)
+        coroutineScope.launch {
+            delay(2800)
+            showingConnectSuccess = false
+        }
+    }
+
+    RoyalBackground(modifier = modifier) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Top Custom Header (Matches iOS Discover Header)
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
+                        .padding(horizontal = 20.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    SwipeDeckDeck(
-                        profiles = filteredMatches,
-                        isLocked = user == null,
-                        onUnlock = onNavigateToRegister,
-                        onConnect = { profile ->
-                            successProfileName = profile.name
-                            showingConnectSuccess = true
-                            user?.let { fromUser ->
-                                fromUser.id?.let { senderId ->
-                                    sendConnectionRequest(senderId, profile.id)
-                                    session.notifyAdminInterestSent(fromUser, profile)
-                                }
-                            }
+                    // Royal Crown Crest Circle
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.White.copy(alpha = 0.15f), shape = CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.WorkspacePremium,
+                            contentDescription = "Royal Crest",
+                            tint = RoyalGold,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    // Center Title & Location Pin
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Discover",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Serif
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Place,
+                                contentDescription = "Location",
+                                tint = LightGold,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = "Rajasthan • Showing ${searchGender}s",
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
+                    }
+
+                    // View Mode Toggle (Deck vs Grid)
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.White.copy(alpha = 0.18f), shape = CircleShape)
+                            .clickable {
+                                viewMode = if (viewMode == 0) 1 else 0
+                            }
+                    ) {
+                        Icon(
+                            imageVector = if (viewMode == 0) Icons.Default.GridView else Icons.Default.Layers,
+                            contentDescription = "Toggle View Mode",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                // Filter Capsule Pills Bar
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 20.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Quick Gender Switcher Pill
+                    Row(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.18f))
+                            .border(1.2.dp, RoyalGold.copy(alpha = 0.6f), CircleShape)
+                            .clickable {
+                                val next = if (searchGender.equals("Bride", ignoreCase = true)) "Groom" else "Bride"
+                                session.setLookingForGender(next)
+                            }
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (searchGender.equals("Bride", ignoreCase = true)) "👰 Brides" else "🤵 Grooms",
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.Sync,
+                            contentDescription = "Switch",
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+
+                    // All Matches Pill
+                    FilterPill(
+                        title = "All ${searchGender}s",
+                        count = allMatchesCount,
+                        isSelected = activeFilterTab == 0,
+                        onClick = { activeFilterTab = 0 }
+                    )
+
+                    // Gotra Compatible Pill
+                    FilterPill(
+                        title = "Gotra Compatible",
+                        count = gotraMatchesCount,
+                        isSelected = activeFilterTab == 1,
+                        onClick = { activeFilterTab = 1 }
                     )
                 }
-            } else {
-                // Scrollable matches list mode
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    filteredMatches.forEach { match ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = DeepMaroon),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                ProfileCard(
-                                    profile = match,
-                                    isLocked = user == null,
-                                    onUnlockTap = onNavigateToRegister,
-                                    onDetailTap = {
-                                        if (user == null) onNavigateToRegister()
-                                        else onProfileDetailSelect(match)
-                                    }
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Button(
-                                    onClick = {
-                                        if (user == null) {
-                                            onNavigateToRegister()
-                                        } else {
-                                            successProfileName = match.name
-                                            showingConnectSuccess = true
-                                            user.id?.let { senderId ->
-                                                sendConnectionRequest(senderId, match.id)
-                                                session.notifyAdminInterestSent(user, match)
-                                            }
-                                        }
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = RoyalMaroon),
-                                    border = BorderStroke(1.dp, RoyalGold),
-                                    shape = RoundedCornerShape(22.dp),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(44.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = "Checkmark",
-                                        tint = LightGold,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Connect Now", color = LightGold, fontWeight = FontWeight.Bold)
-                                }
-                            }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                if (viewMode == 0) {
+                    // 3D Swipe Deck Mode
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        SwipeDeckDeck(
+                            profiles = filteredMatches,
+                            isLocked = isProfileLocked,
+                            onUnlock = onNavigateToRegister,
+                            onOpenDetail = { onProfileDetailSelect(it) },
+                            onConnect = { handleConnectTap(it) }
+                        )
+                    }
+                } else {
+                    // Modern 2-Column Grid Feed Mode
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        items(filteredMatches) { profile ->
+                            GridCardItem(
+                                profile = profile,
+                                isLocked = isProfileLocked,
+                                onCardClick = {
+                                    if (isProfileLocked) onNavigateToRegister()
+                                    else onProfileDetailSelect(profile)
+                                },
+                                onConnectClick = { handleConnectTap(profile) }
+                            )
                         }
+                    }
+                }
+            }
+
+            // Connection Sent Toast Popover
+            AnimatedVisibility(
+                visible = showingConnectSuccess,
+                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = 20.dp, vertical = 24.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(Color(0xFF7D1526), Color(0xFF4A0D18))
+                            )
+                        )
+                        .border(
+                            1.5.dp,
+                            Brush.horizontalGradient(listOf(LightGold, RoyalGold)),
+                            RoundedCornerShape(20.dp)
+                        )
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(RoyalGold.copy(alpha = 0.2f), shape = CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = "Heart",
+                            tint = LightGold,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    Column {
+                        Text(
+                            text = "Rishta Expressed!",
+                            color = LightGold,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Serif
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Notified $successProfileName of your interest.",
+                            color = Color.White.copy(alpha = 0.9f),
+                            fontSize = 12.sp
+                        )
                     }
                 }
             }
         }
+    }
+}
 
-        // Connection Notification Alert popup
-        if (showingConnectSuccess) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f))
-                    .clickable { showingConnectSuccess = false },
-                contentAlignment = Alignment.Center
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    border = borderStroke(2.dp, LightGold),
-                    color = DeepMaroon,
-                    modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .padding(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PaperPlane,
-                            contentDescription = "Sent",
-                            tint = LightGold,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Text(
-                            text = "Connection Sent!",
-                            color = LightGold,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Serif
-                        )
-                        Text(
-                            text = "$successProfileName has been notified of your interest. You will be alerted once they accept.",
-                            color = SandstoneIvory,
-                            fontSize = 13.sp,
-                            textAlign = TextAlign.Center,
-                            lineHeight = 18.sp
-                        )
-                    }
+@Composable
+fun FilterPill(
+    title: String,
+    count: Int,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(
+                if (isSelected) {
+                    Brush.horizontalGradient(listOf(AppPrimary, AppSecondary))
+                } else {
+                    Brush.linearGradient(listOf(Color.White.copy(alpha = 0.18f), Color.White.copy(alpha = 0.18f)))
                 }
-            }
-
-            LaunchedEffect(showingConnectSuccess) {
-                delay(2500)
-                showingConnectSuccess = false
-            }
+            )
+            .border(
+                1.dp,
+                if (isSelected) Color.Transparent else Color.White.copy(alpha = 0.25f),
+                CircleShape
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            color = Color.White,
+            fontSize = 13.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Box(
+            modifier = Modifier
+                .background(
+                    if (isSelected) Color.White.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.15f),
+                    shape = CircleShape
+                )
+                .padding(horizontal = 6.dp, vertical = 2.dp)
+        ) {
+            Text(
+                text = "$count",
+                color = Color.White,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
@@ -318,77 +403,119 @@ fun SwipeDeckDeck(
     profiles: List<Profile>,
     isLocked: Boolean,
     onUnlock: () -> Unit,
+    onOpenDetail: (Profile) -> Unit,
     onConnect: (Profile) -> Unit
 ) {
     var currentIndex by remember { mutableStateOf(0) }
     var offsetX by remember { mutableStateOf(0f) }
     val coroutineScope = rememberCoroutineScope()
-    
+
     if (currentIndex < profiles.size) {
         val profile = profiles[currentIndex]
-        
+
         Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(20.dp)
+            verticalArrangement = Arrangement.Center
         ) {
-            // Swipeable Card
+            // Main Candidate Card
             Box(
                 modifier = Modifier
-                    .size(310.dp, 400.dp)
+                    .fillMaxWidth()
+                    .aspectRatio(0.72f)
                     .offset { IntOffset(offsetX.roundToInt(), 0) }
+                    .rotate(offsetX / 40f)
                     .draggable(
                         orientation = Orientation.Horizontal,
                         state = rememberDraggableState { delta ->
                             offsetX += delta
                         },
-                        onDragStopped = { velocity ->
-                            if (offsetX > 300f) {
-                                // Swiped right -> Like
+                        onDragStopped = {
+                            if (offsetX > 250) {
+                                // Swipe right: Send Rishta
                                 onConnect(profile)
                                 currentIndex++
-                            } else if (offsetX < -300f) {
-                                // Swiped left -> Reject
+                            } else if (offsetX < -250) {
+                                // Swipe left: Pass
                                 currentIndex++
                             }
                             offsetX = 0f
                         }
                     )
-                    .background(Color.Black.copy(alpha = 0.2f), shape = RoundedCornerShape(24.dp))
-                    .border(1.5.dp, LightGold.copy(alpha = 0.4f), RoundedCornerShape(24.dp))
-                    .clip(RoundedCornerShape(24.dp))
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(Color.Black.copy(alpha = 0.3f))
+                    .border(1.5.dp, LightGold.copy(alpha = 0.35f), RoundedCornerShape(28.dp))
             ) {
                 if (isLocked) {
+                    // Lineage Portrait Secured Backdrop
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(LightGold.copy(alpha = 0.05f))
-                            .padding(20.dp),
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(Color(0xFF2B1810), Color(0xFF1B1B1E))
+                                )
+                            )
+                            .padding(24.dp),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = "Locked",
-                            tint = LightGold,
-                            modifier = Modifier.size(64.dp)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(80.dp)
+                                .background(Color.White.copy(alpha = 0.1f), shape = CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Shield,
+                                contentDescription = "Locked",
+                                tint = RoyalGold,
+                                modifier = Modifier.size(40.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(14.dp))
                         Text(
-                            text = "Lineage Card Locked",
-                            color = LightGold,
+                            text = "Lineage Portrait Secured",
+                            color = Color.White,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
+                            fontSize = 20.sp,
+                            fontFamily = FontFamily.Serif
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Complete your registration to unlock member portraits.",
-                            color = SandstoneIvory.copy(alpha = 0.7f),
-                            fontSize = 12.sp,
+                            text = "Log in or create a profile to view authentic portraits.",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 13.sp,
                             textAlign = TextAlign.Center
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = onUnlock,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                            contentPadding = PaddingValues(),
+                            shape = CircleShape
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        Brush.horizontalGradient(listOf(AppPrimary, AppSecondary)),
+                                        shape = CircleShape
+                                    )
+                                    .padding(horizontal = 24.dp, vertical = 10.dp)
+                            ) {
+                                Text(
+                                    text = "Unlock Lineage",
+                                    color = Color.White,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                     }
                 } else {
-                    // Unlocked State Image or Monogram fallback
+                    // Candidate Photo View
                     if (!profile.img.isNullOrEmpty()) {
                         val imageUrl = if (profile.img.startsWith("http")) {
                             profile.img
@@ -397,204 +524,418 @@ fun SwipeDeckDeck(
                         }
                         AsyncImage(
                             model = imageUrl,
-                            contentDescription = "Profile Picture",
+                            contentDescription = "Candidate Photo",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
                     } else {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(DeepMaroon)
                         ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier
-                                    .size(120.dp)
-                                    .background(LightGold, shape = CircleShape)
-                            ) {
-                                Text(
-                                    text = profile.name.take(1),
-                                    color = DeepMaroon,
-                                    fontSize = 48.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                            Text(
+                                text = profile.name.take(1),
+                                color = LightGold,
+                                fontSize = 72.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
 
-                // Shadow overlay at bottom
+                // Multi-stop Deep Gradient Overlay
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(160.dp)
-                        .align(Alignment.BottomCenter)
+                        .fillMaxSize()
                         .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.9f))
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.6f),
+                                    Color.Black.copy(alpha = 0.95f)
+                                )
                             )
                         )
                 )
 
-                // Details Text
+                // Bottom Candidate Information Card
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "${profile.name}, ${profile.age}",
-                            color = Color.White,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        if (profile.isVerified) {
-                            Spacer(modifier = Modifier.width(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = if (isLocked) "Lineage Member" else "${profile.name}, ${profile.age}",
+                                color = Color.White,
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Serif
+                            )
+                            if (profile.isVerified) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Verified,
+                                    contentDescription = "Verified",
+                                    tint = VerifiedBlue,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+
+                        // Info Up-Arrow Button
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(38.dp)
+                                .background(Color.White.copy(alpha = 0.22f), shape = CircleShape)
+                                .border(1.5.dp, Color.White.copy(alpha = 0.45f), shape = CircleShape)
+                                .clickable { onOpenDetail(profile) }
+                        ) {
                             Icon(
-                                imageVector = Icons.Default.Verified,
-                                contentDescription = "Verified",
-                                tint = Color(0xFF00B0FF),
-                                modifier = Modifier.size(16.dp)
+                                imageVector = Icons.Default.ArrowUpward,
+                                contentDescription = "View Details",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
-                    Text(
-                        text = "${profile.clan} Clan • Gotra: ${profile.gotra}",
-                        color = LightGold,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "${profile.height} • ${profile.education}",
-                        color = Color.White.copy(alpha = 0.9f),
-                        fontSize = 11.sp
-                    )
-                    Text(
-                        text = "Native: ${profile.thikana}",
-                        color = LightGold.copy(alpha = 0.8f),
-                        fontSize = 11.sp
-                    )
+
+                    // Clan & Gotra Pill Tags
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .background(Color.White.copy(alpha = 0.16f), shape = CircleShape)
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "${profile.clan} Clan",
+                                color = RoyalGold,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .background(Color.White.copy(alpha = 0.16f), shape = CircleShape)
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "${profile.gotra} Gotra",
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    // Profession
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Work,
+                            contentDescription = "Career",
+                            tint = Color.White.copy(alpha = 0.8f),
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "${profile.occupation} • ${profile.education}",
+                            color = Color.White.copy(alpha = 0.92f),
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    // Native Thikana
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Place,
+                            contentDescription = "Thikana",
+                            tint = AppSecondary,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Thikana: ${profile.thikana}",
+                            color = Color.White.copy(alpha = 0.8f),
+                            fontSize = 12.sp
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Check / Cross Action Controls
+            // 3D Neumorphic Floating Action Buttons Row
             Row(
-                horizontalArrangement = Arrangement.spacedBy(32.dp),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(36.dp),
+                verticalAlignment = Alignment.Bottom,
+                modifier = Modifier.padding(top = 4.dp)
             ) {
-                // Skip Cross Button
-                IconButton(
+                // PASS Button (Neumorphic)
+                NeumorphicActionButton(
+                    icon = Icons.Default.Close,
+                    iconColor = DislikeRed,
+                    label = "PASS",
+                    size = 58,
                     onClick = {
-                        coroutineScope.launch {
-                            currentIndex++
-                        }
-                    },
-                    modifier = Modifier
-                        .size(60.dp)
-                        .background(Color.White, shape = CircleShape)
-                        .border(1.dp, Color.LightGray, CircleShape)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Skip",
-                        tint = Color.Red,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                        coroutineScope.launch { currentIndex++ }
+                    }
+                )
 
-                // Connect Tick Button
-                IconButton(
+                // Elevated RISHTA Hero Button (Royal Maroon & Gold)
+                HeroRishtaButton(
                     onClick = {
                         onConnect(profile)
-                        coroutineScope.launch {
-                            currentIndex++
-                        }
-                    },
-                    modifier = Modifier
-                        .size(60.dp)
-                        .background(Color.White, shape = CircleShape)
-                        .border(1.dp, Color.LightGray, CircleShape)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Like",
-                        tint = Color(0xFF4CAF50),
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                        coroutineScope.launch { currentIndex++ }
+                    }
+                )
+
+                // SHORTLIST Button (Neumorphic)
+                NeumorphicActionButton(
+                    icon = Icons.Default.Star,
+                    iconColor = StarPurple,
+                    label = "SHORTLIST",
+                    size = 58,
+                    onClick = {
+                        coroutineScope.launch { currentIndex++ }
+                    }
+                )
             }
         }
     } else {
-        // Deck complete state
+        // Deck Completed State
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(32.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Verified,
-                contentDescription = "Done",
-                tint = LightGold,
-                modifier = Modifier.size(56.dp)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(80.dp)
+                    .background(Color.White.copy(alpha = 0.15f), shape = CircleShape)
+                    .border(2.dp, RoyalGold, shape = CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Verified,
+                    contentDescription = "Done",
+                    tint = LightGold,
+                    modifier = Modifier.size(44.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "Noble Deck Completed!",
                 color = LightGold,
-                fontSize = 18.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Serif
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "You have viewed all matching members of your clan.",
-                color = SandstoneIvory.copy(alpha = 0.7f),
-                fontSize = 12.sp,
+                text = "You have browsed all compatible lineage matches for today. Reset filters to review more Rajput brides and grooms.",
+                color = SandstoneIvory.copy(alpha = 0.8f),
+                fontSize = 13.sp,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Button(
                 onClick = { currentIndex = 0 },
-                colors = ButtonDefaults.buttonColors(containerColor = LightGold)
+                colors = ButtonDefaults.buttonColors(containerColor = LightGold),
+                shape = CircleShape
             ) {
-                Text("Start Over", color = DeepMaroon, fontWeight = FontWeight.Bold)
+                Text("Revisit Profiles", color = RoyalMaroon, fontWeight = FontWeight.Bold)
             }
         }
     }
 }
 
-// Border utility wrapper
-private fun borderStroke(width: androidx.compose.ui.unit.Dp, color: Color) = androidx.compose.foundation.BorderStroke(width, color)
+@Composable
+fun NeumorphicActionButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconColor: Color,
+    label: String,
+    size: Int,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(size.dp)
+                .clip(CircleShape)
+                .background(
+                    Brush.linearGradient(
+                        listOf(Color.White, Color(0xFFF6F7FB), Color(0xFFE9EBF1))
+                    )
+                )
+                .border(2.dp, Color.White, CircleShape)
+                .clickable(onClick = onClick)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = iconColor,
+                modifier = Modifier.size((size * 0.42).dp)
+            )
+        }
 
-fun sendConnectionRequest(senderId: String, receiverId: String) {
-    CoroutineScope(Dispatchers.IO).launch {
-        try {
-            val client = OkHttpClient()
-            val mediaType = "application/json; charset=utf-8".toMediaType()
-            val url = "https://afbrznllcfgfcjuinnlf.supabase.co/rest/v1/connections"
-            val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
-            
-            val json = JSONObject().apply {
-                put("sender_id", senderId)
-                put("receiver_id", receiverId)
-                put("status", "pending")
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.85f),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.6.sp
+        )
+    }
+}
+
+@Composable
+fun HeroRishtaButton(onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(76.dp)
+                .clip(CircleShape)
+                .background(
+                    Brush.linearGradient(
+                        listOf(Color(0xFF7D1526), Color(0xFF4A0D18))
+                    )
+                )
+                .border(
+                    3.dp,
+                    Brush.linearGradient(listOf(LightGold, RoyalGold, LightGold)),
+                    CircleShape
+                )
+                .clickable(onClick = onClick)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Favorite,
+                contentDescription = "RISHTA",
+                tint = LightGold,
+                modifier = Modifier.size(34.dp)
+            )
+        }
+
+        Text(
+            text = "RISHTA",
+            color = LightGold,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 0.8.sp
+        )
+    }
+}
+
+@Composable
+fun GridCardItem(
+    profile: Profile,
+    isLocked: Boolean,
+    onCardClick: () -> Unit,
+    onConnectClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(230.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color.White.copy(alpha = 0.18f))
+            .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(20.dp))
+            .clickable(onClick = onCardClick)
+    ) {
+        if (!isLocked && !profile.img.isNullOrEmpty()) {
+            val imageUrl = if (profile.img.startsWith("http")) profile.img else "https://shreerajputsagaisambandh.com/images/${profile.img}.png"
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = profile.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Shield,
+                    contentDescription = "Secured",
+                    tint = RoyalGold,
+                    modifier = Modifier.size(40.dp)
+                )
             }
-            
-            val request = Request.Builder()
-                .url(url)
-                .addHeader("apikey", apiKey)
-                .addHeader("Authorization", "Bearer $apiKey")
-                .post(json.toString().toRequestBody(mediaType))
-                .build()
-            
-            client.newCall(request).execute()
-        } catch (e: Exception) {
-            e.printStackTrace()
+        }
+
+        // Gradient overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))
+                    )
+                )
+        )
+
+        // Details
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(12.dp)
+        ) {
+            Text(
+                text = if (isLocked) "Lineage Member" else "${profile.name}, ${profile.age}",
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "${profile.clan} Clan",
+                color = LightGold,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            // Quick Rishta button
+            Button(
+                onClick = onConnectClick,
+                colors = ButtonDefaults.buttonColors(containerColor = LightGold),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                shape = CircleShape,
+                modifier = Modifier.height(26.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Favorite,
+                        contentDescription = null,
+                        tint = RoyalMaroon,
+                        modifier = Modifier.size(10.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Rishta", color = RoyalMaroon, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                }
+            }
         }
     }
 }

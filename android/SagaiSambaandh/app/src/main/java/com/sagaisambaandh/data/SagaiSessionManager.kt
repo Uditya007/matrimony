@@ -33,6 +33,15 @@ class SagaiSessionManager(private val context: Context) {
     private val _notificationsList = mutableStateOf<List<RoyalNotification>>(emptyList())
     val notificationsList: State<List<RoyalNotification>> = _notificationsList
 
+    private val _connectionsList = mutableStateOf<List<ConnectionRecord>>(emptyList())
+    val connectionsList: State<List<ConnectionRecord>> = _connectionsList
+
+    private val _searchGender = mutableStateOf<String>("Bride")
+    val searchGender: State<String> = _searchGender
+
+    private val _searchClan = mutableStateOf<String>("All Clans")
+    val searchClan: State<String> = _searchClan
+
     private var connectionPollingJob: kotlinx.coroutines.Job? = null
 
     init {
@@ -44,8 +53,14 @@ class SagaiSessionManager(private val context: Context) {
                 _currentUser.value = user
                 _shortlistedIds.value = user.shortlistedIds
                 _unlockedIds.value = user.unlockedIds
+                updateSearchGenderForUser(user)
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+        } else {
+            val guestPref = sharedPrefs.getString("search_gender_pref_guest", null)
+            if (!guestPref.isNullOrEmpty()) {
+                _searchGender.value = guestPref
             }
         }
         
@@ -55,11 +70,35 @@ class SagaiSessionManager(private val context: Context) {
         }
     }
 
+    fun updateSearchGenderForUser(user: User) {
+        val savedPref = sharedPrefs.getString("search_gender_pref_${user.id}", null)
+        if (!savedPref.isNullOrEmpty()) {
+            _searchGender.value = savedPref
+        } else {
+            if (user.gender.lowercase() == "groom") {
+                _searchGender.value = "Bride"
+            } else if (user.gender.lowercase() == "bride") {
+                _searchGender.value = "Groom"
+            }
+        }
+    }
+
+    fun setLookingForGender(gender: String) {
+        _searchGender.value = gender
+        val userId = _currentUser.value?.id
+        if (userId != null) {
+            sharedPrefs.edit().putString("search_gender_pref_$userId", gender).apply()
+        } else {
+            sharedPrefs.edit().putString("search_gender_pref_guest", gender).apply()
+        }
+    }
+
     fun login(user: User, isNew: Boolean = false) {
         this.isNewlyRegistered.value = isNew
         _currentUser.value = user
         _shortlistedIds.value = user.shortlistedIds
         _unlockedIds.value = user.unlockedIds
+        updateSearchGenderForUser(user)
         
         try {
             val userJson = serializeUser(user)
@@ -75,6 +114,7 @@ class SagaiSessionManager(private val context: Context) {
         _shortlistedIds.value = emptySet()
         _unlockedIds.value = emptySet()
         _notificationsList.value = emptyList()
+        _connectionsList.value = emptyList()
         stopConnectionPolling()
         sharedPrefs.edit().remove("saved_user").apply()
     }
@@ -135,24 +175,58 @@ class SagaiSessionManager(private val context: Context) {
         }
     }
 
-    // Search filters state
-    private val _searchGender = mutableStateOf<String>("Bride")
-    val searchGender: State<String> = _searchGender
-
-    private val _searchClan = mutableStateOf<String>("All Clans")
-    val searchClan: State<String> = _searchClan
-
     fun setSearchFilters(gender: String, clan: String) {
-        _searchGender.value = gender
+        setLookingForGender(gender)
         _searchClan.value = clan
     }
 
     fun updateCurrentUser(updated: User) {
         _currentUser.value = updated
+        updateSearchGenderForUser(updated)
         try {
             sharedPrefs.edit().putString("saved_user", serializeUser(updated)).apply()
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    fun areConnected(profileId: String): Boolean {
+        val user = _currentUser.value ?: return false
+        val conn = _connectionsList.value.firstOrNull {
+            (it.sender_id == user.id && it.receiver_id == profileId && it.status == "accepted") ||
+            (it.sender_id == profileId && it.receiver_id == user.id && it.status == "accepted")
+        }
+        if (conn != null) return true
+        
+        val pattern = java.util.regex.Pattern.compile("\\[Interests: ([^\n\r]*)\\]")
+        val matcher = pattern.matcher(user.about ?: "")
+        if (matcher.find()) {
+            try {
+                val obj = JSONObject(matcher.group(1)?.trim() ?: "")
+                if (obj.optString(profileId) == "accepted") return true
+            } catch (e: Exception) {}
+        }
+        return false
+    }
+
+    fun refreshProfiles(onComplete: (() -> Unit)? = null) {
+        fetchSupabaseProfiles(onComplete)
+    }
+
+    fun refreshCurrentUserAbout() {
+        val userId = _currentUser.value?.id ?: return
+        fetchProfileAbout(userId) { about ->
+            if (about != null) {
+                _currentUser.value?.let { user ->
+                    val updated = user.copy(about = about)
+                    _currentUser.value = updated
+                    try {
+                        sharedPrefs.edit().putString("saved_user", serializeUser(updated)).apply()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
         }
     }
 
@@ -227,7 +301,7 @@ class SagaiSessionManager(private val context: Context) {
         )
     }
 
-    private fun fetchSupabaseProfiles() {
+    private fun fetchSupabaseProfiles(onComplete: (() -> Unit)? = null) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val client = OkHttpClient()
@@ -300,8 +374,159 @@ class SagaiSessionManager(private val context: Context) {
                         }
                     }
                 }
-            } catch (e: java.lang.Exception) {
+            } catch (e: Exception) {
                 e.printStackTrace()
+            } finally {
+                CoroutineScope(Dispatchers.Main).launch {
+                    onComplete?.invoke()
+                }
+            }
+        }
+    }
+
+    fun sendConnection(senderId: String, receiverId: String, onComplete: ((Boolean) -> Unit)? = null) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = OkHttpClient()
+                val mediaType = "application/json; charset=utf-8".toMediaType()
+                val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
+                val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+                
+                // Delete existing to avoid duplicates
+                val delReq = Request.Builder()
+                    .url("$url/rest/v1/connections?or=(and(sender_id.eq.$senderId,receiver_id.eq.$receiverId),and(sender_id.eq.$receiverId,receiver_id.eq.$senderId))")
+                    .addHeader("apikey", apiKey)
+                    .addHeader("Authorization", "Bearer $apiKey")
+                    .delete()
+                    .build()
+                client.newCall(delReq).execute()
+                
+                val json = JSONObject().apply {
+                    put("sender_id", senderId)
+                    put("receiver_id", receiverId)
+                    put("status", "pending")
+                }
+                val insReq = Request.Builder()
+                    .url("$url/rest/v1/connections")
+                    .addHeader("apikey", apiKey)
+                    .addHeader("Authorization", "Bearer $apiKey")
+                    .addHeader("Prefer", "return=minimal")
+                    .post(json.toString().toRequestBody(mediaType))
+                    .build()
+                val resp = client.newCall(insReq).execute()
+                
+                // Also update sender [Interests: ...] tag
+                fetchProfileAbout(senderId) { curAbout ->
+                    val cleanAbout = curAbout ?: ""
+                    var interestsObj = JSONObject()
+                    val p = java.util.regex.Pattern.compile("\\[Interests: ([^\n\r]*)\\]")
+                    val m = p.matcher(cleanAbout)
+                    if (m.find()) {
+                        try { interestsObj = JSONObject(m.group(1)?.trim() ?: "") } catch (e: Exception) {}
+                    }
+                    interestsObj.put(receiverId, "pending")
+                    val newAbout = cleanAbout.replace(Regex("\\[Interests: [^\n\r]*\\]"), "").trim() + "\n[Interests: ${interestsObj}]"
+                    _currentUser.value?.let { u ->
+                        updateProfile(u.copy(about = newAbout)) {}
+                    }
+                }
+                
+                fetchConnectionsAndGenerateNotifications(senderId)
+                CoroutineScope(Dispatchers.Main).launch {
+                    onComplete?.invoke(resp.isSuccessful)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                CoroutineScope(Dispatchers.Main).launch {
+                    onComplete?.invoke(false)
+                }
+            }
+        }
+    }
+
+    fun updateConnection(senderId: String, receiverId: String, status: String, onComplete: ((Boolean) -> Unit)? = null) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = OkHttpClient()
+                val mediaType = "application/json; charset=utf-8".toMediaType()
+                val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
+                val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+                
+                val json = JSONObject().apply {
+                    put("status", status)
+                }
+                val patchReq = Request.Builder()
+                    .url("$url/rest/v1/connections?sender_id.eq.$senderId&receiver_id.eq.$receiverId")
+                    .addHeader("apikey", apiKey)
+                    .addHeader("Authorization", "Bearer $apiKey")
+                    .patch(json.toString().toRequestBody(mediaType))
+                    .build()
+                val resp = client.newCall(patchReq).execute()
+                
+                // Update receiver [Interests]
+                fetchProfileAbout(receiverId) { curAbout ->
+                    val cleanAbout = curAbout ?: ""
+                    var interestsObj = JSONObject()
+                    val p = java.util.regex.Pattern.compile("\\[Interests: ([^\n\r]*)\\]")
+                    val m = p.matcher(cleanAbout)
+                    if (m.find()) {
+                        try { interestsObj = JSONObject(m.group(1)?.trim() ?: "") } catch (e: Exception) {}
+                    }
+                    interestsObj.put(senderId, status)
+                    val newAbout = cleanAbout.replace(Regex("\\[Interests: [^\n\r]*\\]"), "").trim() + "\n[Interests: ${interestsObj}]"
+                    _currentUser.value?.let { u ->
+                        if (u.id == receiverId) {
+                            updateProfile(u.copy(about = newAbout)) {}
+                        }
+                    }
+                }
+                
+                _currentUser.value?.id?.let {
+                    fetchConnectionsAndGenerateNotifications(it)
+                }
+                CoroutineScope(Dispatchers.Main).launch {
+                    onComplete?.invoke(resp.isSuccessful)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                CoroutineScope(Dispatchers.Main).launch {
+                    onComplete?.invoke(false)
+                }
+            }
+        }
+    }
+
+    fun sendMessage(fromUser: User, toProfile: Profile, text: String, onComplete: ((Boolean) -> Unit)? = null) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                fetchProfileAbout(fromUser.id) { senderAbout ->
+                    val chatsObj = getProfileChats(senderAbout)
+                    val partnerChatArray = chatsObj.optJSONArray(toProfile.id) ?: JSONArray()
+                    val newMsgObj = JSONObject().apply {
+                        put("s", fromUser.id)
+                        put("t", text)
+                        put("time", System.currentTimeMillis().toDouble())
+                    }
+                    partnerChatArray.put(newMsgObj)
+                    chatsObj.put(toProfile.id, partnerChatArray)
+                    val updatedAbout = setProfileChatsInAbout(senderAbout, chatsObj)
+                    updateProfile(fromUser.copy(about = updatedAbout)) { success ->
+                        if (success) {
+                            _currentUser.value = fromUser.copy(about = updatedAbout)
+                            try {
+                                sharedPrefs.edit().putString("saved_user", serializeUser(_currentUser.value!!)).apply()
+                            } catch (e: Exception) {}
+                        }
+                        CoroutineScope(Dispatchers.Main).launch {
+                            onComplete?.invoke(success)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                CoroutineScope(Dispatchers.Main).launch {
+                    onComplete?.invoke(false)
+                }
             }
         }
     }
@@ -355,7 +580,7 @@ class SagaiSessionManager(private val context: Context) {
     }
 
     fun notifyAdminChatOpened(fromUser: User, toProfile: Profile?) {
-        val formatter = java.util.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+        val formatter = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
         val dateString = formatter.format(java.util.Date())
         val toName = toProfile?.name ?: "Matchmaker Bot"
         val toClan = toProfile?.let { " _(${it.clan} Clan)_" } ?: ""
@@ -395,12 +620,12 @@ class SagaiSessionManager(private val context: Context) {
     }
 
     // Merge two conversations and sort chronologically
-    fun getCombinedConversation(user: User, profile: Profile): List<JSONObject> {
-        val chatsA = getProfileChats(user.about)
-        val chatsB = getProfileChats(profile.about)
+    fun getCombinedConversation(userAbout: String?, userId: String, profileAbout: String?, profileId: String): List<SupabaseMessage> {
+        val chatsA = getProfileChats(userAbout)
+        val chatsB = getProfileChats(profileAbout)
         
-        val listA = chatsA.optJSONArray(profile.id) ?: JSONArray()
-        val listB = chatsB.optJSONArray(user.id) ?: JSONArray()
+        val listA = chatsA.optJSONArray(profileId) ?: JSONArray()
+        val listB = chatsB.optJSONArray(userId) ?: JSONArray()
         
         val combined = mutableListOf<JSONObject>()
         for (i in 0 until listA.length()) {
@@ -424,7 +649,22 @@ class SagaiSessionManager(private val context: Context) {
         }
         
         unique.sortBy { it.optDouble("time", 0.0) }
-        return unique
+        return unique.map { obj ->
+            val s = obj.optString("s")
+            val t = obj.optString("t")
+            val time = obj.optDouble("time", 0.0)
+            SupabaseMessage(
+                id = "${s}_${time}",
+                senderId = s,
+                text = t,
+                time = time
+            )
+        }
+    }
+
+    fun getLastMessage(userAbout: String?, userId: String, profileAbout: String?, profileId: String): SupabaseMessage? {
+        val list = getCombinedConversation(userAbout, userId, profileAbout, profileId)
+        return list.lastOrNull()
     }
 
     fun fetchProfileAbout(profileId: String, onComplete: (String?) -> Unit) {
@@ -509,7 +749,7 @@ class SagaiSessionManager(private val context: Context) {
         connectionPollingJob = null
     }
 
-    private fun fetchConnectionsAndGenerateNotifications(userId: String) {
+    fun fetchConnectionsAndGenerateNotifications(userId: String) {
         try {
             val client = OkHttpClient()
             val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
@@ -526,31 +766,34 @@ class SagaiSessionManager(private val context: Context) {
             if (response.isSuccessful && body.isNotEmpty()) {
                 val records = JSONArray(body)
                 val list = mutableListOf<RoyalNotification>()
+                val connList = mutableListOf<ConnectionRecord>()
                 for (i in 0 until records.length()) {
                     val record = records.getJSONObject(i)
                     val senderId = record.optString("sender_id", "")
                     val receiverId = record.optString("receiver_id", "")
                     val status = record.optString("status", "")
+                    connList.add(ConnectionRecord(senderId, receiverId, status))
                     
-                    if (receiverId == userId) {
+                    if (receiverId == userId && status == "pending") {
                         val senderProfile = profiles.value.firstOrNull { it.id == senderId }
                         val senderName = senderProfile?.name ?: "Noble Member"
                         list.add(RoyalNotification(
-                            id = "${senderId}_${status}",
+                            id = "${senderId}_pending",
                             notifKey = "interest_from_$senderId",
-                            message = "$senderName sent you a Match Interest! Chat is now unlocked.",
+                            message = "$senderName sent you a Royal Match Interest! Accept to reveal mobile number.",
                             profileId = senderId,
                             timestamp = "Just now",
                             read = false
                         ))
-                    } else if (senderId == userId && status == "accepted") {
-                        val receiverProfile = profiles.value.firstOrNull { it.id == receiverId }
-                        val receiverName = receiverProfile?.name ?: "Noble Member"
+                    } else if (status == "accepted") {
+                        val otherId = if (senderId == userId) receiverId else senderId
+                        val otherProfile = profiles.value.firstOrNull { it.id == otherId }
+                        val otherName = otherProfile?.name ?: "Noble Member"
                         list.add(RoyalNotification(
-                            id = "${receiverId}_accepted",
-                            notifKey = "accepted_from_$receiverId",
-                            message = "$receiverName accepted your Royal Interest! Click to chat.",
-                            profileId = receiverId,
+                            id = "${otherId}_accepted",
+                            notifKey = "accepted_from_$otherId",
+                            message = "$otherName connected with you! Contact details & chat are unlocked.",
+                            profileId = otherId,
                             timestamp = "Just now",
                             read = false
                         ))
@@ -558,6 +801,7 @@ class SagaiSessionManager(private val context: Context) {
                 }
                 
                 CoroutineScope(Dispatchers.Main).launch {
+                    _connectionsList.value = connList
                     _notificationsList.value = list
                 }
             }

@@ -40,7 +40,6 @@ import coil.compose.AsyncImage
 import okhttp3.MediaType.Companion.toMediaType
 import java.util.Calendar
 import androidx.compose.foundation.clickable
-import org.json.JSONObject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

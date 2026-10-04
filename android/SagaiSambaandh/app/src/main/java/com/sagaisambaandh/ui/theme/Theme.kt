@@ -21,6 +21,13 @@ val SandstoneIvory = Color(0xFFF5EDE0)
 val JodhpurIndigo = Color(0xFF1D2B53)
 val InkBrown = Color(0xFF2B1810)
 val CardBackground = Color(0xFFFCFBF7)
+val AppPrimary = Color(0xFFE94057)
+val AppSecondary = Color(0xFFF27121)
+val SuccessGreen = Color(0xFF4CAF50)
+val DislikeRed = Color(0xFFFF4B63)
+val StarPurple = Color(0xFF8B5CF6)
+val StarGold = Color(0xFFF59E0B)
+val VerifiedBlue = Color(0xFF00B0FF)
 
 val LightColorScheme = lightColorScheme(
     primary = RoyalMaroon,

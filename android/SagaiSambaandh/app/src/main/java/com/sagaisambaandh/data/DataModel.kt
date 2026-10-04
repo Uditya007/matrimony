@@ -48,3 +48,16 @@ data class User(
     val profilePic: String? = null,
     val about: String? = null
 )
+
+data class ConnectionRecord(
+    val sender_id: String,
+    val receiver_id: String,
+    val status: String
+)
+
+data class SupabaseMessage(
+    val id: String,
+    val senderId: String,
+    val text: String,
+    val time: Double
+)

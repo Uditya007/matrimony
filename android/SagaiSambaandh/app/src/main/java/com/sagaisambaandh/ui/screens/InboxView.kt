@@ -10,296 +10,176 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Message
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.sagaisambaandh.data.ConnectionRecord
 import com.sagaisambaandh.data.Profile
 import com.sagaisambaandh.data.SagaiSessionManager
+import com.sagaisambaandh.ui.components.RoyalBackground
 import com.sagaisambaandh.ui.theme.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONArray
-import org.json.JSONObject
-import coil.compose.AsyncImage
-import androidx.compose.ui.layout.ContentScale
 
-data class ConnectionRecord(
-    val sender_id: String,
-    val receiver_id: String,
-    val status: String
-)
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InboxView(
     session: SagaiSessionManager,
     modifier: Modifier = Modifier
 ) {
     var selectedSubTab by remember { mutableStateOf(0) } // 0 = Received, 1 = Accepted, 2 = Sent
-    var connections by remember { mutableStateOf<List<ConnectionRecord>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(false) }
     var activeChatProfile by remember { mutableStateOf<Profile?>(null) }
-    
+
     val user = session.currentUser.value
     val profiles = session.profiles.value
+    val connections = session.connectionsList.value
 
-    fun loadConnections() {
-        if (user == null) return
-        isLoading = true
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val client = OkHttpClient()
-                val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
-                val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
-                
-                val request = Request.Builder()
-                    .url("$url/rest/v1/connections?or=(sender_id.eq.${user.id},receiver_id.eq.${user.id})")
-                    .addHeader("apikey", apiKey)
-                    .addHeader("Authorization", "Bearer $apiKey")
-                    .build()
-                
-                val response = client.newCall(request).execute()
-                val body = response.body?.string() ?: ""
-                if (response.isSuccessful && body.isNotEmpty()) {
-                    val arr = JSONArray(body)
-                    val list = mutableListOf<ConnectionRecord>()
-                    for (i in 0 until arr.length()) {
-                        val obj = arr.getJSONObject(i)
-                        list.add(
-                            ConnectionRecord(
-                                sender_id = obj.getString("sender_id"),
-                                receiver_id = obj.getString("receiver_id"),
-                                status = obj.getString("status")
-                            )
-                        )
-                    }
-                    CoroutineScope(Dispatchers.Main).launch {
-                        connections = list
-                        isLoading = false
-                    }
-                } else {
-                    CoroutineScope(Dispatchers.Main).launch { isLoading = false }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                CoroutineScope(Dispatchers.Main).launch { isLoading = false }
-            }
+    LaunchedEffect(user?.id) {
+        user?.id?.let {
+            session.fetchConnectionsAndGenerateNotifications(it)
         }
     }
 
-    LaunchedEffect(user) {
-        loadConnections()
-    }
-
-    val filtered = remember(connections, selectedSubTab, user) {
-        if (user == null) return@remember emptyList<ConnectionRecord>()
+    val filteredConnections = remember(connections, selectedSubTab, user?.id) {
+        val currentUserId = user?.id ?: return@remember emptyList<ConnectionRecord>()
         when (selectedSubTab) {
-            0 -> connections.filter { it.receiver_id == user.id && it.status == "pending" }
+            0 -> connections.filter { it.receiver_id == currentUserId && it.status == "pending" }
             1 -> connections.filter { it.status == "accepted" }
-            2 -> connections.filter { it.sender_id == user.id && it.status == "pending" }
+            2 -> connections.filter { it.sender_id == currentUserId && it.status == "pending" }
             else -> emptyList()
         }
     }
 
+    fun lookupProfile(record: ConnectionRecord): Profile? {
+        val currentUserId = user?.id ?: return null
+        val targetId = if (record.sender_id == currentUserId) record.receiver_id else record.sender_id
+        return profiles.firstOrNull { it.id == targetId }
+    }
+
     fun handleAccept(record: ConnectionRecord) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val client = OkHttpClient()
-                val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
-                
-                // Get connection row ID
-                val getRequest = Request.Builder()
-                    .url("https://afbrznllcfgfcjuinnlf.supabase.co/rest/v1/connections?sender_id=eq.${record.sender_id}&receiver_id=eq.${record.receiver_id}")
-                    .addHeader("apikey", apiKey)
-                    .build()
-                
-                val getResponse = client.newCall(getRequest).execute()
-                val getBody = getResponse.body?.string() ?: ""
-                val rows = JSONArray(getBody)
-                if (rows.length() > 0) {
-                    val cid = rows.getJSONObject(0).getString("id")
-                    
-                    // Update connection row status to accepted
-                    val mediaType = "application/json; charset=utf-8".toMediaType()
-                    val updateJson = JSONObject().apply { put("status", "accepted") }
-                    val updateRequest = Request.Builder()
-                        .url("https://afbrznllcfgfcjuinnlf.supabase.co/rest/v1/connections?id=eq.$cid")
-                        .addHeader("apikey", apiKey)
-                        .addHeader("Authorization", "Bearer $apiKey")
-                        .patch(updateJson.toString().toRequestBody(mediaType))
-                        .build()
-                    
-                    client.newCall(updateRequest).execute()
-                    CoroutineScope(Dispatchers.Main).launch { loadConnections() }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+        val currentUserId = user?.id ?: return
+        val otherUserId = if (record.sender_id == currentUserId) record.receiver_id else record.sender_id
+        session.updateConnection(otherUserId, currentUserId, "accepted") {
+            session.refreshCurrentUserAbout()
         }
     }
 
     fun handleDecline(record: ConnectionRecord) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val client = OkHttpClient()
-                val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
-                
-                val getRequest = Request.Builder()
-                    .url("https://afbrznllcfgfcjuinnlf.supabase.co/rest/v1/connections?sender_id=eq.${record.sender_id}&receiver_id=eq.${record.receiver_id}")
-                    .addHeader("apikey", apiKey)
-                    .build()
-                
-                val getResponse = client.newCall(getRequest).execute()
-                val getBody = getResponse.body?.string() ?: ""
-                val rows = JSONArray(getBody)
-                if (rows.length() > 0) {
-                    val cid = rows.getJSONObject(0).getString("id")
-                    
-                    val mediaType = "application/json; charset=utf-8".toMediaType()
-                    val updateJson = JSONObject().apply { put("status", "rejected") }
-                    val updateRequest = Request.Builder()
-                        .url("https://afbrznllcfgfcjuinnlf.supabase.co/rest/v1/connections?id=eq.$cid")
-                        .addHeader("apikey", apiKey)
-                        .addHeader("Authorization", "Bearer $apiKey")
-                        .patch(updateJson.toString().toRequestBody(mediaType))
-                        .build()
-                    
-                    client.newCall(updateRequest).execute()
-                    CoroutineScope(Dispatchers.Main).launch { loadConnections() }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+        val currentUserId = user?.id ?: return
+        val otherUserId = if (record.sender_id == currentUserId) record.receiver_id else record.sender_id
+        session.updateConnection(otherUserId, currentUserId, "declined") {
+            session.refreshCurrentUserAbout()
         }
     }
 
-    if (activeChatProfile != null) {
-        ChatDetailModal(
-            profile = activeChatProfile!!,
-            session = session,
-            onBack = { activeChatProfile = null }
-        )
-    } else {
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = "Inbox & Connections",
-                        fontFamily = FontFamily.Serif,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = LightGold
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = DeepMaroon
-                )
-            )
-
-            // Sub Tabs
-            TabRow(
-                selectedTabIndex = selectedSubTab,
-                containerColor = DeepMaroon,
-                contentColor = LightGold,
-                divider = {},
-                modifier = Modifier.fillMaxWidth()
+    RoyalBackground(modifier = modifier) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Top Custom Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Tab(selected = selectedSubTab == 0, onClick = { selectedSubTab = 0 }) {
-                    Text(
-                        text = "Received",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (selectedSubTab == 0) LightGold else SandstoneIvory.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                }
-                Tab(selected = selectedSubTab == 1, onClick = { selectedSubTab = 1 }) {
-                    Text(
-                        text = "Accepted",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (selectedSubTab == 1) LightGold else SandstoneIvory.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                }
-                Tab(selected = selectedSubTab == 2, onClick = { selectedSubTab = 2 }) {
-                    Text(
-                        text = "Sent",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (selectedSubTab == 2) LightGold else SandstoneIvory.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
+                Text(
+                    text = "Requests",
+                    color = Color.White,
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Serif
+                )
+            }
+
+            // Sub Tabs Selection (Capsule segment bar)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf("Received", "Accepted", "Sent").forEachIndexed { index, title ->
+                    val isSelected = selectedSubTab == index
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(CircleShape)
+                            .background(if (isSelected) LightGold else Color.White.copy(alpha = 0.18f))
+                            .border(
+                                1.dp,
+                                if (isSelected) Color.Transparent else Color.White.copy(alpha = 0.25f),
+                                CircleShape
+                            )
+                            .clickable { selectedSubTab = index }
+                            .padding(vertical = 9.dp)
+                    ) {
+                        Text(
+                            text = title,
+                            color = if (isSelected) RoyalMaroon else Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                        )
+                    }
                 }
             }
 
-            if (isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = RoyalGold)
-                }
-            } else if (filtered.isEmpty()) {
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Body content
+            if (filteredConnections.isEmpty()) {
                 // Empty state
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(24.dp),
+                        .fillMaxSize()
+                        .padding(horizontal = 36.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(100.dp)
-                            .background(DeepMaroon, shape = CircleShape),
-                        contentAlignment = Alignment.Center
+                            .size(80.dp)
+                            .background(Color.White.copy(alpha = 0.15f), shape = CircleShape)
                     ) {
                         Icon(
                             imageVector = Icons.Default.MailOutline,
                             contentDescription = null,
                             tint = LightGold,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(36.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = if (selectedSubTab == 0) "No Pending Requests" else (if (selectedSubTab == 1) "No Active Connections" else "No Sent Requests"),
-                        color = LightGold,
+                        text = when (selectedSubTab) {
+                            0 -> "No Pending Requests"
+                            1 -> "No Active Connections"
+                            else -> "No Sent Requests"
+                        },
+                        color = Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Serif,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Lineage compatibility checks are run in real-time. Invite other members to connect and establish family trust.",
-                        color = SandstoneIvory.copy(alpha = 0.7f),
+                        color = Color.White.copy(alpha = 0.85f),
                         fontSize = 13.sp,
                         lineHeight = 18.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        textAlign = TextAlign.Center
                     )
                 }
             } else {
@@ -307,330 +187,202 @@ fun InboxView(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
+                        .padding(horizontal = 20.dp, vertical = 6.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    filtered.forEach { record ->
-                        val targetId = if (record.sender_id == user?.id) record.receiver_id else record.sender_id
-                        val matchProfile = profiles.firstOrNull { it.id == targetId }
-                        if (matchProfile != null) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(DeepMaroon, shape = RoundedCornerShape(12.dp))
-                                    .border(1.dp, RoyalGold.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
-                                    .padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier
-                                        .size(54.dp)
-                                        .clip(CircleShape)
-                                        .background(RoyalGold)
-                                ) {
-                                    if (!matchProfile.img.isNullOrEmpty()) {
-                                        val imageUrl = if (matchProfile.img.startsWith("http")) {
-                                            matchProfile.img
-                                        } else {
-                                            "https://shreerajputsagaisambandh.com/images/${matchProfile.img}.png"
-                                        }
-                                        AsyncImage(
-                                            model = imageUrl,
-                                            contentDescription = "Profile Picture",
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier.fillMaxSize()
-                                        )
-                                    } else {
-                                        Text(
-                                            text = matchProfile.name.take(1),
-                                            color = DeepMaroon,
-                                            fontSize = 20.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = matchProfile.name,
-                                        color = LightGold,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
-                                    Text(
-                                        text = "${matchProfile.clan} Clan • ${matchProfile.gotra} Gotra",
-                                        color = SandstoneIvory,
-                                        fontSize = 12.sp
-                                    )
-                                    Text(
-                                        text = "Native: ${matchProfile.thikana}",
-                                        color = SandstoneIvory.copy(alpha = 0.6f),
-                                        fontSize = 11.sp
-                                    )
-                                }
-                                if (selectedSubTab == 0) {
-                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        Icon(
-                                            imageVector = Icons.Default.Close,
-                                            contentDescription = "Decline",
-                                            tint = Color.Red,
-                                            modifier = Modifier
-                                                .size(28.dp)
-                                                .clickable { handleDecline(record) }
-                                        )
-                                        Icon(
-                                            imageVector = Icons.Default.CheckCircle,
-                                            contentDescription = "Accept",
-                                            tint = Color.Green,
-                                            modifier = Modifier
-                                                .size(28.dp)
-                                                .clickable { handleAccept(record) }
-                                        )
-                                    }
-                                } else if (selectedSubTab == 1) {
-                                    Button(
-                                        onClick = { activeChatProfile = matchProfile },
-                                        colors = ButtonDefaults.buttonColors(containerColor = RoyalGold),
-                                        shape = RoundedCornerShape(12.dp),
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Message,
-                                            contentDescription = "Chat",
-                                            tint = DeepMaroon,
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Chat", color = DeepMaroon, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                } else {
-                                    Text(
-                                        text = "Pending",
-                                        color = RoyalGold,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier
-                                            .background(RoyalGold.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
-                                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                                    )
-                                }
-                            }
+                    filteredConnections.forEach { record ->
+                        val profile = lookupProfile(record)
+                        if (profile != null) {
+                            ConnectionCard(
+                                record = record,
+                                profile = profile,
+                                selectedSubTab = selectedSubTab,
+                                onAccept = { handleAccept(record) },
+                                onDecline = { handleDecline(record) },
+                                onChat = { activeChatProfile = profile }
+                            )
                         }
                     }
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }
+    }
+
+    // Chat detail screen dialog when Chat is clicked
+    if (activeChatProfile != null) {
+        ChatDetailScreen(
+            profile = activeChatProfile!!,
+            session = session,
+            onDismiss = { activeChatProfile = null }
+        )
     }
 }
 
 @Composable
-fun ChatDetailModal(
+fun ConnectionCard(
+    record: ConnectionRecord,
     profile: Profile,
-    session: SagaiSessionManager,
-    onBack: () -> Unit
+    selectedSubTab: Int,
+    onAccept: () -> Unit,
+    onDecline: () -> Unit,
+    onChat: () -> Unit
 ) {
-    var messageText by remember { mutableStateOf("") }
-    val messagesList = remember { mutableStateListOf<JSONObject>() }
-    val user = session.currentUser.value
-
-    LaunchedEffect(profile) {
-        val currentUserVal = session.currentUser.value ?: return@LaunchedEffect
-        session.notifyAdminChatOpened(currentUserVal, profile)
-        
-        // Initial load
-        messagesList.clear()
-        messagesList.addAll(session.getCombinedConversation(currentUserVal, profile))
-        
-        // Polling loop
-        while (true) {
-            kotlinx.coroutines.delay(4000)
-            session.fetchProfileAbout(profile.id) { updatedAbout ->
-                if (updatedAbout != null) {
-                    val freshConv = session.getCombinedConversation(currentUserVal, profile.copy(about = updatedAbout))
-                    CoroutineScope(Dispatchers.Main).launch {
-                        messagesList.clear()
-                        messagesList.addAll(freshConv)
-                    }
-                }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White.copy(alpha = 0.18f))
+            .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(16.dp))
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Avatar
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(52.dp)
+                .clip(CircleShape)
+                .background(DeepMaroon)
+        ) {
+            if (!profile.img.isNullOrEmpty()) {
+                val imageUrl = if (profile.img.startsWith("http")) profile.img else "https://shreerajputsagaisambandh.com/images/${profile.img}.png"
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = profile.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Text(
+                    text = profile.name.take(1),
+                    color = LightGold,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
-    }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(DeepMaroon)
-    ) {
-        // Chat Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(DeepMaroon)
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Back",
-                tint = LightGold,
-                modifier = Modifier
-                    .size(24.dp)
-                    .clickable { onBack() }
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(RoyalGold)
-            ) {
-                if (!profile.img.isNullOrEmpty()) {
-                    val imageUrl = if (profile.img.startsWith("http")) {
-                        profile.img
-                    } else {
-                        "https://shreerajputsagaisambandh.com/images/${profile.img}.png"
-                    }
-                    AsyncImage(
-                        model = imageUrl,
-                        contentDescription = "Profile Picture",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Text(
-                        text = profile.name.take(1),
-                        color = DeepMaroon,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
+        Spacer(modifier = Modifier.width(14.dp))
+
+        // Profile Info
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = profile.name,
-                    color = LightGold,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold
                 )
-                Text(
-                    text = "Online",
-                    color = Color.Green,
-                    fontSize = 10.sp
-                )
+                if (profile.isVerified) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.Default.Verified,
+                        contentDescription = "Verified",
+                        tint = VerifiedBlue,
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+                text = "${profile.clan} Clan • ${profile.gotra} Gotra",
+                color = Color.White.copy(alpha = 0.85f),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium
+            )
+
+            Text(
+                text = "Native: ${profile.thikana}",
+                color = LightGold,
+                fontSize = 11.sp
+            )
         }
 
-        // Message Feed area
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(RoyalGold.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
-                    .padding(12.dp)
-            ) {
-                Text(
-                    text = "Lineage check verified! You are now connected with ${profile.name}. Say hello!",
-                    color = RoyalGold,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+        Spacer(modifier = Modifier.width(10.dp))
 
-            messagesList.forEach { msg ->
-                val isMe = msg.optString("s") == user?.id
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = if (isMe) Arrangement.End else Arrangement.Start
-                ) {
+        // Action Buttons based on subtab
+        when (selectedSubTab) {
+            0 -> {
+                // Received: Decline & Accept
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Decline Button
                     Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .background(
-                                if (isMe) RoyalGold else Color.White.copy(alpha = 0.1f),
-                                RoundedCornerShape(16.dp)
-                            )
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.18f))
+                            .clickable(onClick = onDecline)
                     ) {
-                        Text(
-                            text = msg.optString("t"),
-                            color = if (isMe) DeepMaroon else SandstoneIvory,
-                            fontSize = 14.sp
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Decline",
+                            tint = DislikeRed,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    // Accept Button
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(LightGold)
+                            .clickable(onClick = onAccept)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Accept",
+                            tint = RoyalMaroon,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
             }
-        }
-
-        // Input Row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(DeepMaroon)
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = messageText,
-                onValueChange = { messageText = it },
-                placeholder = { Text("Write noble message...", color = Color.Gray) },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
-                    focusedContainerColor = CardBackground,
-                    unfocusedContainerColor = CardBackground
-                ),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.weight(1f)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            IconButton(
-                onClick = {
-                    if (user != null && messageText.trim().isNotEmpty()) {
-                        val textToSend = messageText
-                        messageText = ""
-                        val timestamp = System.currentTimeMillis().toDouble()
-                        val newMsg = JSONObject().apply {
-                            put("s", user.id)
-                            put("t", textToSend)
-                            put("time", timestamp)
-                        }
-                        
-                        val chats = session.getProfileChats(user.about)
-                        val conversationList = chats.optJSONArray(profile.id) ?: JSONArray()
-                        conversationList.put(newMsg)
-                        chats.put(profile.id, conversationList)
-                        
-                        val newAbout = session.setProfileChatsInAbout(user.about, chats)
-                        val updatedUser = user.copy(about = newAbout)
-                        session.updateCurrentUser(updatedUser)
-                        
-                        session.updateProfile(updatedUser) { success ->
-                            if (success) {
-                                println("Message synced successfully!")
-                            }
-                        }
-                        
-                        val freshConv = session.getCombinedConversation(updatedUser, profile)
-                        messagesList.clear()
-                        messagesList.addAll(freshConv)
-                    }
+            1 -> {
+                // Accepted: Chat Button
+                Row(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(LightGold)
+                        .clickable(onClick = onChat)
+                        .padding(horizontal = 14.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Message,
+                        contentDescription = "Chat",
+                        tint = RoyalMaroon,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(
+                        text = "Chat",
+                        color = RoyalMaroon,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Send,
-                    contentDescription = "Send",
-                    tint = RoyalGold,
-                    modifier = Modifier.size(24.dp)
-                )
+            }
+            else -> {
+                // Sent: Pending pill badge
+                Box(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.2f))
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                ) {
+                    Text(
+                        text = "Pending",
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }

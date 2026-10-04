@@ -9,10 +9,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Crown
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,7 +38,7 @@ fun BiodataDialog(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val currentUser = session.currentUser
+    val currentUser = session.currentUser.value
     
     var isDownloading by remember { mutableStateOf(false) }
     var downloadSuccess by remember { mutableStateOf(false) }
@@ -67,7 +67,7 @@ fun BiodataDialog(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Crown,
+                        imageVector = Icons.Default.WorkspacePremium,
                         contentDescription = "Crest",
                         tint = LightGold,
                         modifier = Modifier.size(24.dp)
