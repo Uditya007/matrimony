@@ -86,12 +86,12 @@
         <!-- Phone Input Group -->
         <div id="otpInputGroupPhone">
           <div class="form-group">
-            <label for="loginOtpPhone">Contact Mobile Number <span style="color: #e53e3e;">*</span></label>
+            <label for="loginOtpPhone" style="color: #FCD34D; font-weight: 600; font-size: 0.82rem; letter-spacing: 0.5px;">Contact Mobile Number <span style="color: #ff6b6b;">*</span></label>
             <div style="display: flex; gap: 8px;">
-              <span style="background: rgba(0,0,0,0.06); border: 1px solid rgba(170,124,17,0.3); padding: 10px 14px; border-radius: var(--border-radius); font-weight: 700; color: var(--primary-color); display: flex; align-items: center; font-size: 0.95rem;">+91</span>
+              <span class="auth-prefix-badge">+91</span>
               <input type="tel" id="loginOtpPhone" maxlength="10" placeholder="10-digit mobile number" style="flex: 1;" inputmode="numeric">
             </div>
-            <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 5px;">
+            <div style="font-size: 0.76rem; color: #E2E8F0; margin-top: 6px; opacity: 0.9;">
               🔒 Instant SMS OTP will be delivered directly to your handset via Fast2SMS.
             </div>
           </div>
@@ -103,9 +103,9 @@
         <!-- Email Input Group -->
         <div id="otpInputGroupEmail" style="display: none;">
           <div class="form-group">
-            <label for="loginOtpEmail">Registered Email Address <span style="color: #e53e3e;">*</span></label>
+            <label for="loginOtpEmail" style="color: #FCD34D; font-weight: 600; font-size: 0.82rem; letter-spacing: 0.5px;">Registered Email Address <span style="color: #ff6b6b;">*</span></label>
             <input type="email" id="loginOtpEmail" placeholder="e.g. kunwar@shreerajputsagaisambandh.com">
-            <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 5px;">
+            <div style="font-size: 0.76rem; color: #E2E8F0; margin-top: 6px; opacity: 0.9;">
               🔒 A 6-digit royal verification code will be sent to your email address.
             </div>
           </div>
@@ -117,27 +117,27 @@
 
       <!-- STEP 2: Enter & Verify OTP -->
       <div id="loginOtpStep2" style="display: none;">
-        <div style="background: rgba(39, 174, 96, 0.1); border: 1px solid rgba(39, 174, 96, 0.35); border-radius: var(--border-radius); padding: 14px; margin-bottom: 16px; font-size: 0.84rem; text-align: left;">
-          <div>✓ Verification code dispatched to <strong id="loginOtpTargetDisplay" style="color: var(--primary-color);">+91 9928592159</strong></div>
-          <div id="loginOtpLiveBadge" style="margin-top: 8px; font-weight: 700; color: #AA7C11; font-size: 0.92rem; background: rgba(212, 175, 55, 0.15); border: 1px dashed rgba(212, 175, 55, 0.45); padding: 6px 10px; border-radius: 6px;">
-            👑 Royal Verification Code: <span id="loginOtpDemoCode" style="letter-spacing: 2px;">123456</span>
+        <div style="background: rgba(39, 174, 96, 0.18); border: 1.5px solid rgba(39, 174, 96, 0.45); border-radius: var(--border-radius); padding: 14px; margin-bottom: 16px; font-size: 0.86rem; text-align: left; color: #E2E8F0;">
+          <div>✓ Verification code dispatched to <strong id="loginOtpTargetDisplay" style="color: #FCD34D;">+91 9928592159</strong></div>
+          <div id="loginOtpLiveBadge" style="margin-top: 8px; font-weight: 700; color: #FCD34D; font-size: 0.92rem; background: rgba(212, 175, 55, 0.15); border: 1px dashed rgba(212, 175, 55, 0.45); padding: 6px 10px; border-radius: 6px;">
+            👑 Royal Verification Code: <span id="loginOtpDemoCode" style="letter-spacing: 2px; color: #FFFFFF;">123456</span>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="loginOtpCodeInput" style="font-weight: 600; margin-bottom: 6px; display: block;">Enter 6-Digit OTP</label>
+          <label for="loginOtpCodeInput" style="font-weight: 600; margin-bottom: 6px; display: block; color: #FCD34D; font-size: 0.84rem;">Enter 6-Digit OTP</label>
           <input type="text" id="loginOtpCodeInput" class="auth-otp-input" maxlength="6" inputmode="numeric" placeholder="• • • • • •">
-          <span id="loginOtpCodeError" style="color: #e53e3e; font-size: 0.78rem; display: none; margin-top: 5px;">Invalid OTP code. Please enter the valid 6-digit code.</span>
+          <span id="loginOtpCodeError" style="color: #ff6b6b; font-size: 0.8rem; display: none; margin-top: 5px; font-weight: 600;">Invalid OTP code. Please enter the valid 6-digit code.</span>
         </div>
 
         <button type="button" class="btn btn-primary" id="btnVerifyLoginOtp" onclick="handleVerifyLoginOtp()" style="width: 100%; margin-top: 8px; padding: 12px; font-weight: 700;">
           🛡️ Verify OTP & Access Dashboard
         </button>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 0.8rem;">
-          <span id="loginOtpCountdown" style="color: var(--text-muted);">Resend in 45s</span>
-          <button type="button" id="btnResendLoginOtp" onclick="handleResendLoginOtp()" style="background: none; border: none; color: var(--primary-color); font-weight: 700; cursor: pointer; text-decoration: underline; display: none;">Resend OTP</button>
-          <a href="javascript:void(0)" onclick="resetLoginOtpStep()" style="color: var(--primary-color); font-weight: 600; text-decoration: underline;">← Change Mobile / Email</a>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 0.82rem;">
+          <span id="loginOtpCountdown" style="color: #CBD5E0;">Resend in 45s</span>
+          <button type="button" id="btnResendLoginOtp" onclick="handleResendLoginOtp()" style="background: none; border: none; color: #FCD34D; font-weight: 700; cursor: pointer; text-decoration: underline; display: none;">Resend OTP</button>
+          <a href="javascript:void(0)" onclick="resetLoginOtpStep()" style="color: #FCD34D; font-weight: 600; text-decoration: underline;">← Change Mobile / Email</a>
         </div>
       </div>
     </div>
@@ -146,14 +146,14 @@
     <div id="panelPasswordLogin" style="display: none;">
       <form id="loginForm">
         <div class="form-group">
-          <label for="loginEmail">Email Address or Mobile Number</label>
+          <label for="loginEmail" style="color: #FCD34D; font-weight: 600; font-size: 0.82rem;">Email Address or Mobile Number</label>
           <input type="text" id="loginEmail" placeholder="e.g. 9928592159 or royal@shreerajputsagaisambandh.com" required>
         </div>
 
         <div class="form-group">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label for="loginPassword" style="margin: 0;">Regal Password</label>
-            <a href="javascript:void(0)" onclick="handleForgotPasswordClick()" style="font-size: 0.78rem; color: var(--primary-color); text-decoration: underline;">Forgot Password?</a>
+            <label for="loginPassword" style="margin: 0; color: #FCD34D; font-weight: 600; font-size: 0.82rem;">Regal Password</label>
+            <a href="javascript:void(0)" onclick="handleForgotPasswordClick()" style="font-size: 0.78rem; color: #FCD34D; text-decoration: underline; font-weight: 600;">Forgot Password?</a>
           </div>
           <input type="password" id="loginPassword" placeholder="••••••••" required>
         </div>
