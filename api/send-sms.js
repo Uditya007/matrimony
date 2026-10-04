@@ -43,33 +43,53 @@ module.exports = async function handler(req, res) {
 
     // 1. If Fast2SMS Key is configured
     if (FAST2SMS_API_KEY) {
-      let payload;
-      if (otp) {
-        payload = {
-          route: 'otp',
-          variables_values: String(otp),
-          numbers: cleanPhone
-        };
-      } else {
-        payload = {
-          route: 'q',
-          message: message || 'Khammaghani from Shree Rajput Sagai Sambandh.',
-          language: 'english',
-          numbers: cleanPhone
-        };
-      }
+      const otpText = message || (otp 
+        ? `Khammaghani! Your verification code for Shree Rajput Sagai Sambandh is ${otp}. Do not share this OTP.` 
+        : 'Khammaghani from Shree Rajput Sagai Sambandh.');
 
-      const f2sResp = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+      // Try Route 'q' (Quick SMS - active and approved instantly)
+      let f2sResp = await fetch('https://www.fast2sms.com/dev/bulkV2', {
         method: 'POST',
         headers: {
           'authorization': FAST2SMS_API_KEY,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          route: 'q',
+          message: otpText,
+          language: 'english',
+          numbers: cleanPhone
+        })
       });
 
-      const f2sData = await f2sResp.json();
-      if (f2sResp.ok && f2sData.return) {
+      let f2sData = await f2sResp.json();
+
+      // If Route 'q' failed and we have an OTP, try Route 'otp' as fallback
+      if (!f2sData.return && otp) {
+        try {
+          const fallbackResp = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+            method: 'POST',
+            headers: {
+              'authorization': FAST2SMS_API_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              route: 'otp',
+              variables_values: String(otp),
+              numbers: cleanPhone
+            })
+          });
+          const fallbackData = await fallbackResp.json();
+          if (fallbackData.return) {
+            f2sResp = fallbackResp;
+            f2sData = fallbackData;
+          }
+        } catch (e) {
+          console.warn('Fallback OTP route error:', e);
+        }
+      }
+
+      if (f2sData.return) {
         return res.status(200).json({
           success: true,
           provider: 'Fast2SMS',
