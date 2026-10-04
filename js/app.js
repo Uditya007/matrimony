@@ -178,12 +178,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 900);
 
-  // Mandatory first-time login mobile number & OTP verification check
-  setTimeout(() => {
-    if (typeof checkMandatoryPhoneVerification === 'function') {
-      checkMandatoryPhoneVerification();
+  // Mobile verification check: only on authenticated member dashboard/profile pages, NEVER on front page (index.html) or public landing pages
+  const currentPath = window.location.pathname;
+  const currentPage = (currentPath.split('/').pop() || 'index.html').split('?')[0].split('#')[0];
+  const isMemberDashboard = currentPage === 'dashboard.html' || currentPage === 'dashboard' || currentPage === 'profile.html' || currentPage === 'profile';
+
+  if (isMemberDashboard) {
+    setTimeout(() => {
+      if (typeof checkMandatoryPhoneVerification === 'function') {
+        checkMandatoryPhoneVerification();
+      }
+    }, 1100);
+  }
+
+  // Intercept click on Sign Up buttons across public pages to initiate noble phone OTP verification
+  document.addEventListener('click', (e) => {
+    const signUpBtn = e.target.closest('#navSignUpBtn, #signUpNavBtn, #ctaRegisterBtn');
+    if (signUpBtn) {
+      const path = window.location.pathname;
+      const page = (path.split('/').pop() || 'index.html').split('?')[0].split('#')[0];
+      if (page !== 'register.html' && page !== 'register') {
+        e.preventDefault();
+        openPhoneVerificationModal({
+          isSignUpInitiation: true,
+          redirectOnSuccess: 'register.html'
+        });
+      }
     }
-  }, 1100);
+  });
 
   // Hook tab/subnav transitions across dashboard/profile pages to trigger notification alerts
   document.querySelectorAll('.subnav-tab, .filter-tab-btn, .dashboard-tab-btn, #shortlistToggleBtn').forEach(tab => {
@@ -213,34 +235,61 @@ document.addEventListener('DOMContentLoaded', () => {
 // 1. HELPER FUNCTIONS
 // ==========================================
 
-// ─── Mandatory Mobile Number & OTP Verification on First Login ─────────────
+// ─── Mandatory Mobile Number & OTP Verification ─────────────────────────────
 let otpCountdownInterval = null;
 
 function checkMandatoryPhoneVerification() {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   if (!currentUser) return; // Not logged in
 
-  // Don't show on admin.html or login.html
+  // STRICT CHECK: NEVER show automatically on index.html / home page, login.html, admin.html, or register.html
   const path = window.location.pathname;
-  if (path.includes('admin.html') || path.includes('login.html')) return;
+  const page = (path.split('/').pop() || 'index.html').split('?')[0].split('#')[0];
+  if (page === 'index.html' || page === '' || page === 'index' || page === 'login.html' || page === 'admin.html' || page === 'register.html') {
+    return;
+  }
 
-  // Check if user already has a valid phone number
+  // Check if user already has a valid verified phone number
   const rawDigits = (currentUser.phone || '').replace(/[^0-9]/g, '');
   if (rawDigits.length >= 10 && currentUser.phoneVerified) return; // Already verified!
 
-  // If already in DOM, don't recreate
-  if (document.getElementById('mandatoryPhoneVerificationModal')) return;
+  openPhoneVerificationModal({
+    phone: currentUser.phone,
+    name: currentUser.name,
+    isSignUpInitiation: false
+  });
+}
+
+function openPhoneVerificationModal(options = {}) {
+  // If already in DOM, remove old one first
+  const existing = document.getElementById('mandatoryPhoneVerificationModal');
+  if (existing) existing.remove();
+
+  const isSignUp = options.isSignUpInitiation || false;
+  const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+  const defaultPhone = (options.phone || currentUser.phone || '').replace(/[^0-9]/g, '').slice(-10);
+  const defaultName = options.name || currentUser.name || '';
+
+  const titleText = isSignUp ? '👑 Royal Rajputana Sign Up' : '👑 Mobile Verification Required';
+  const subText = defaultName
+    ? `Khammaghani, <strong>${defaultName}</strong>! To uphold Rajputana lineage integrity and activate your profile, please verify your contact mobile number via OTP.`
+    : `Khammaghani! To uphold Rajputana lineage integrity and activate your noble profile, please verify your contact mobile number via OTP to begin registration.`;
 
   const modalHtml = `
     <div id="mandatoryPhoneVerificationModal" style="position: fixed; inset: 0; background: rgba(10, 2, 5, 0.96); z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px);">
       <div style="background: #1C070D; border: 1.5px solid #D4AF37; box-shadow: 0 10px 40px rgba(0,0,0,0.85), 0 0 35px rgba(212, 175, 55, 0.25); border-radius: 12px; max-width: 460px; width: 100%; padding: 32px 28px; text-align: center; color: #E2E8F0; position: relative;">
         
+        <!-- Close Button (✕) -->
+        <button type="button" onclick="closePhoneVerificationModal()" aria-label="Close" style="position: absolute; top: 14px; right: 16px; background: none; border: none; color: #D4AF37; font-size: 1.4rem; cursor: pointer; line-height: 1; padding: 4px; transition: transform 0.2s ease;">
+          ✕
+        </button>
+
         <div style="font-size: 2.8rem; margin-bottom: 6px;">👑</div>
         <h2 style="font-family: var(--font-royal, 'Cinzel', serif); color: #D4AF37; margin: 0 0 8px; font-size: 1.35rem; letter-spacing: 0.5px;">
-          Mobile Verification Required
+          ${titleText}
         </h2>
         <p style="font-size: 0.85rem; color: #CBD5E0; line-height: 1.5; margin: 0 0 20px;">
-          Khammaghani, <strong>${currentUser.name || 'Noble Member'}</strong>! To uphold Rajputana lineage integrity and activate your profile, please verify your contact mobile number via OTP.
+          ${subText}
         </p>
 
         <!-- STEP 1: Phone Input -->
@@ -249,7 +298,7 @@ function checkMandatoryPhoneVerification() {
             <label style="display: block; font-size: 0.82rem; color: #D4AF37; font-weight: 600; margin-bottom: 6px;">Contact Mobile Number</label>
             <div style="display: flex; gap: 8px;">
               <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(170,124,17,0.3); padding: 10px 14px; border-radius: 6px; font-weight: 700; color: #D4AF37; font-size: 0.95rem; display: flex; align-items: center;">+91</span>
-              <input type="tel" id="mandatoryPhoneInput" maxlength="10" placeholder="10-digit mobile" value="${(currentUser.phone || '').replace(/[^0-9]/g, '').slice(-10)}" style="flex: 1; padding: 10px 14px; border-radius: 6px; border: 1.5px solid rgba(170,124,17,0.35); background: rgba(0,0,0,0.45); color: #FFF; font-size: 1rem; letter-spacing: 1px; outline: none;">
+              <input type="tel" id="mandatoryPhoneInput" maxlength="10" placeholder="10-digit mobile" value="${defaultPhone}" style="flex: 1; padding: 10px 14px; border-radius: 6px; border: 1.5px solid rgba(170,124,17,0.35); background: rgba(0,0,0,0.45); color: #FFF; font-size: 1rem; letter-spacing: 1px; outline: none;">
             </div>
             <span id="phoneValidationError" style="color: #fc8181; font-size: 0.75rem; display: none; margin-top: 5px;">Please enter a valid 10-digit mobile number</span>
           </div>
@@ -257,6 +306,14 @@ function checkMandatoryPhoneVerification() {
           <button type="button" id="btnSendPhoneOtp" onclick="handleSendVerificationOtp()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%); color: #1A050B; font-weight: 700; border: none; border-radius: 6px; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease;">
             📱 Send Verification Code (OTP)
           </button>
+
+          ${isSignUp ? `
+            <div style="margin-top: 14px; text-align: center;">
+              <a href="register.html" onclick="closePhoneVerificationModal()" style="color: #D4AF37; font-size: 0.8rem; text-decoration: underline; opacity: 0.9;">
+                Or fill the complete registration form directly &rarr;
+              </a>
+            </div>
+          ` : ''}
         </div>
 
         <!-- STEP 2: OTP Input (Hidden initially) -->
@@ -292,7 +349,17 @@ function checkMandatoryPhoneVerification() {
   `;
 
   document.body.insertAdjacentHTML('beforeend', modalHtml);
+  window._phoneVerificationContext = options;
 }
+
+window.closePhoneVerificationModal = function() {
+  const modal = document.getElementById('mandatoryPhoneVerificationModal');
+  if (modal) modal.remove();
+  if (otpCountdownInterval) {
+    clearInterval(otpCountdownInterval);
+    otpCountdownInterval = null;
+  }
+};
 
 window.handleSendVerificationOtp = function(isResend = false) {
   const phoneInput = document.getElementById('mandatoryPhoneInput');
@@ -367,44 +434,91 @@ window.handleConfirmVerificationOtp = async function() {
   }
   if (errorEl) errorEl.style.display = 'none';
 
-  // Verification successful!
-  const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
-  currentUser.phone = verifiedPhone;
-  currentUser.phoneVerified = true;
-  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+  // Mark session verified for signup
+  sessionStorage.setItem('royal_verified_signup_phone', verifiedPhone);
+  window.registrationPhoneVerified = true;
 
-  // Update in localStorage 'users' array
-  const users = JSON.parse(localStorage.getItem('users')) || [];
-  const updatedUsers = users.map(u => {
-    if (u.email && currentUser.email && u.email.toLowerCase() === currentUser.email.toLowerCase()) {
-      return { ...u, phone: verifiedPhone, phoneVerified: true };
+  // If on register.html, update the UI and input
+  const rawNumber = verifiedPhone.replace(/[^0-9]/g, '').slice(-10);
+  const regPhoneInput = document.getElementById('regPhone');
+  if (regPhoneInput) {
+    regPhoneInput.value = rawNumber;
+    regPhoneInput.dataset.verifiedNumber = rawNumber;
+  }
+  const badge = document.getElementById('regPhoneVerifiedBadge');
+  if (badge) badge.style.display = 'inline-block';
+  const verifyBtn = document.getElementById('btnVerifyRegPhone');
+  if (verifyBtn) {
+    verifyBtn.textContent = '✓ Verified';
+    verifyBtn.style.color = '#2ecc71';
+    verifyBtn.style.borderColor = 'rgba(46, 204, 113, 0.4)';
+  }
+
+  // Update currentUser only if an authenticated user profile already exists
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (currentUser && currentUser.email) {
+    currentUser.phone = verifiedPhone;
+    currentUser.phoneVerified = true;
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const updatedUsers = users.map(u => {
+      if (u.email && currentUser.email && u.email.toLowerCase() === currentUser.email.toLowerCase()) {
+        return { ...u, phone: verifiedPhone, phoneVerified: true };
+      }
+      return u;
+    });
+    localStorage.setItem('users', JSON.stringify(updatedUsers));
+
+    if (window.supabaseActive && window.supabaseClient && currentUser.email) {
+      try {
+        await window.supabaseClient
+          .from('profiles')
+          .update({ phone: verifiedPhone, phone_verified: true })
+          .eq('email', currentUser.email);
+      } catch (e) {
+        console.warn('Supabase phone update warning:', e);
+      }
     }
-    return u;
+
+    if (typeof notifyAdminNewRegistration === 'function') {
+      notifyAdminNewRegistration(currentUser);
+    }
+  }
+
+  // Close modal
+  closePhoneVerificationModal();
+
+  showToast('👑 Khammaghani! Mobile number verified successfully!', 'gold');
+
+  // Trigger optional callback or redirect
+  const ctx = window._phoneVerificationContext || {};
+  if (typeof ctx.onVerified === 'function') {
+    ctx.onVerified(verifiedPhone);
+  } else if (ctx.redirectOnSuccess) {
+    setTimeout(() => {
+      window.location.href = `${ctx.redirectOnSuccess}?phone=${rawNumber}&verified=true`;
+    }, 700);
+  }
+};
+
+window.triggerRegistrationPhoneOtpModal = function() {
+  const regPhoneInput = document.getElementById('regPhone');
+  const regNameInput = document.getElementById('regName');
+  const rawDigits = (regPhoneInput?.value || '').replace(/[^0-9]/g, '').slice(-10);
+  if (rawDigits.length !== 10) {
+    showToast('Please enter a valid 10-digit mobile number first');
+    if (regPhoneInput) regPhoneInput.focus();
+    return;
+  }
+  openPhoneVerificationModal({
+    phone: rawDigits,
+    name: regNameInput?.value || '',
+    isSignUpInitiation: true,
+    onVerified: () => {
+      window.registrationPhoneVerified = true;
+    }
   });
-  localStorage.setItem('users', JSON.stringify(updatedUsers));
-
-  // Update in Supabase profiles table
-  if (window.supabaseActive && window.supabaseClient && currentUser.email) {
-    try {
-      await window.supabaseClient
-        .from('profiles')
-        .update({ phone: verifiedPhone, phone_verified: true })
-        .eq('email', currentUser.email);
-    } catch (e) {
-      console.warn('Supabase phone update warning:', e);
-    }
-  }
-
-  // Notify admin of verified phone
-  if (typeof notifyAdminNewRegistration === 'function') {
-    notifyAdminNewRegistration(currentUser);
-  }
-
-  // Remove modal
-  const modal = document.getElementById('mandatoryPhoneVerificationModal');
-  if (modal) modal.remove();
-
-  showToast('👑 Khammaghani! Mobile number verified & activated successfully!', 'gold');
 };
 
 // ─── Registration Profile Photo Upload Handler ─────────────────────────────
@@ -1095,8 +1209,53 @@ function initRegisterPage() {
   const btnGoogle = document.getElementById('btnGoogleAuth');
   let currentStep = 0;
 
-  // Reset photo state for new registration
+  // Reset photo & verification state for new registration
   window.uploadedProfilePhotoBase64 = null;
+  window.registrationPhoneVerified = false;
+
+  // Check if arriving with verified mobile number from query params or sessionStorage
+  const regUrlParams = new URLSearchParams(window.location.search);
+  const paramPhone = regUrlParams.get('phone');
+  const paramVerified = regUrlParams.get('verified');
+  const sessionVerified = sessionStorage.getItem('royal_verified_signup_phone');
+
+  const regPhoneInput = document.getElementById('regPhone');
+  const regBadge = document.getElementById('regPhoneVerifiedBadge');
+  const regVerifyBtn = document.getElementById('btnVerifyRegPhone');
+
+  if ((paramPhone && paramVerified === 'true') || sessionVerified) {
+    const rawNum = (paramPhone || sessionVerified).replace(/[^0-9]/g, '').slice(-10);
+    if (rawNum.length === 10) {
+      if (regPhoneInput) {
+        regPhoneInput.value = rawNum;
+        regPhoneInput.dataset.verifiedNumber = rawNum;
+      }
+      window.registrationPhoneVerified = true;
+      if (regBadge) regBadge.style.display = 'inline-block';
+      if (regVerifyBtn) {
+        regVerifyBtn.textContent = '✓ Verified';
+        regVerifyBtn.style.color = '#2ecc71';
+        regVerifyBtn.style.borderColor = 'rgba(46, 204, 113, 0.4)';
+      }
+    }
+  }
+
+  // Detect input changes to reset verification if the number is altered
+  if (regPhoneInput) {
+    regPhoneInput.addEventListener('input', () => {
+      const currentDigits = regPhoneInput.value.replace(/[^0-9]/g, '').slice(-10);
+      const verifiedDigits = (regPhoneInput.dataset.verifiedNumber || '').replace(/[^0-9]/g, '').slice(-10);
+      if (verifiedDigits && currentDigits !== verifiedDigits) {
+        window.registrationPhoneVerified = false;
+        if (regBadge) regBadge.style.display = 'none';
+        if (regVerifyBtn) {
+          regVerifyBtn.textContent = '📱 Verify OTP';
+          regVerifyBtn.style.color = '';
+          regVerifyBtn.style.borderColor = '';
+        }
+      }
+    });
+  }
 
   // Google Login redirect prefill check
   const tempGoogleUser = JSON.parse(localStorage.getItem('tempGoogleUser'));
@@ -1214,12 +1373,26 @@ function initRegisterPage() {
       return;
     }
 
+    if (!window.registrationPhoneVerified) {
+      showToast('👑 Mobile number verification is required to complete registration!', 'gold');
+      currentStep = 0;
+      updateRegisterSteps();
+      if (typeof triggerRegistrationPhoneOtpModal === 'function') {
+        triggerRegistrationPhoneOtpModal();
+      }
+      return;
+    }
+
+    const regPhoneRaw = (document.getElementById('regPhone')?.value.trim() || '').replace(/[^0-9]/g, '').slice(-10);
+
     const newUser = {
       id: `U_${Date.now()}`,
       name: document.getElementById('regName').value.trim(),
       gender: document.getElementById('regGender').value,
       email: email,
-      phone: document.getElementById('regPhone')?.value.trim() || '',
+      phone: `+91 ${regPhoneRaw}`,
+      phoneVerified: true,
+      phone_verified: true,
       password: document.getElementById('regPassword').value,
       img: window.uploadedProfilePhotoBase64 || '',
       profilePic: window.uploadedProfilePhotoBase64 || '',
@@ -1350,6 +1523,27 @@ function initRegisterPage() {
         showToast('👑 Profile Photo is mandatory! Please upload your portrait photo.', 'gold');
         return false;
       }
+
+      const rawDigits = phone.replace(/[^0-9]/g, '').slice(-10);
+      if (rawDigits.length !== 10) {
+        showToast('Please enter a valid 10-digit mobile number');
+        return false;
+      }
+
+      if (!window.registrationPhoneVerified) {
+        openPhoneVerificationModal({
+          phone: rawDigits,
+          name: name,
+          isSignUpInitiation: true,
+          onVerified: () => {
+            window.registrationPhoneVerified = true;
+            currentStep++;
+            updateRegisterSteps();
+          }
+        });
+        return false;
+      }
+
       return true;
     } else if (stepIdx === 1) {
       const clanSelect = document.getElementById('regCaste').value;

@@ -118,8 +118,17 @@
         </div>
 
         <div class="form-group">
-          <label for="regPhone">Contact Mobile Number</label>
-          <input type="tel" id="regPhone" placeholder="e.g. +91 98765 43210" pattern="[0-9+ -]{10,15}" required>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label for="regPhone" style="margin: 0;">Contact Mobile Number <span style="color: #fc8181; font-size: 0.8rem; font-weight: 700;">* OTP Mandatory</span></label>
+            <span id="regPhoneVerifiedBadge" style="display: none; font-size: 0.75rem; color: #2ecc71; font-weight: 700; background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.4); padding: 2px 8px; border-radius: 4px;">✓ Verified via OTP</span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="tel" id="regPhone" placeholder="e.g. 98765 43210" maxlength="15" required style="flex: 1;">
+            <button type="button" id="btnVerifyRegPhone" class="btn btn-minimal" style="padding: 8px 14px; font-size: 0.8rem; white-space: nowrap; border-color: rgba(212, 175, 55, 0.5); font-weight: 600;" onclick="triggerRegistrationPhoneOtpModal()">📱 Verify OTP</button>
+          </div>
+          <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+            🔒 Lineage Verification: An OTP will be sent to confirm your number during registration.
+          </div>
         </div>
 
         <div class="form-group">
