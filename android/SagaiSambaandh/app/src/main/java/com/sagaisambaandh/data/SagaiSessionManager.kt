@@ -192,20 +192,11 @@ class SagaiSessionManager(private val context: Context) {
 
     fun areConnected(profileId: String): Boolean {
         val user = _currentUser.value ?: return false
-        val conn = _connectionsList.value.firstOrNull {
-            (it.sender_id == user.id && it.receiver_id == profileId && it.status == "accepted") ||
-            (it.sender_id == profileId && it.receiver_id == user.id && it.status == "accepted")
-        }
-        if (conn != null) return true
-        
-        val pattern = java.util.regex.Pattern.compile("\\[Interests: ([^\n\r]*)\\]")
-        val matcher = pattern.matcher(user.about ?: "")
-        if (matcher.find()) {
-            try {
-                val obj = JSONObject(matcher.group(1)?.trim() ?: "")
-                if (obj.optString(profileId) == "accepted") return true
-            } catch (e: Exception) {}
-        }
+        val myInterests = getInterests(user.about)
+        if (myInterests[profileId] == "accepted") return true
+        val otherProfile = _profiles.value.firstOrNull { it.id == profileId }
+        val otherInterests = getInterests(otherProfile?.about)
+        if (otherInterests[user.id] == "accepted") return true
         return false
     }
 
@@ -384,56 +375,65 @@ class SagaiSessionManager(private val context: Context) {
         }
     }
 
+    // Parse Interests from profile about string (matches website & iOS)
+    fun getInterests(aboutText: String?): Map<String, String> {
+        if (aboutText.isNullOrEmpty()) return emptyMap()
+        val pattern = java.util.regex.Pattern.compile("\\[Interests: ([^\n\r]*)\\]")
+        val matcher = pattern.matcher(aboutText)
+        if (matcher.find()) {
+            val jsonString = matcher.group(1)?.trim() ?: ""
+            try {
+                val obj = JSONObject(jsonString)
+                val map = mutableMapOf<String, String>()
+                val keys = obj.keys()
+                while (keys.hasNext()) {
+                    val key = keys.next()
+                    map[key] = obj.optString(key, "")
+                }
+                return map
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        return emptyMap()
+    }
+
+    // Embed Interests into profile about string
+    fun setInterests(aboutText: String?, interests: Map<String, String>): String {
+        var cleanAbout = aboutText ?: ""
+        cleanAbout = cleanAbout.replace(Regex("\\[Interests: [^\n\r]*\\]"), "").trim()
+        val obj = JSONObject(interests)
+        return if (cleanAbout.isEmpty()) {
+            "[Interests: $obj]"
+        } else {
+            "$cleanAbout\n[Interests: $obj]"
+        }
+    }
+
     fun sendConnection(senderId: String, receiverId: String, onComplete: ((Boolean) -> Unit)? = null) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val client = OkHttpClient()
-                val mediaType = "application/json; charset=utf-8".toMediaType()
-                val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
-                val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
-                
-                // Delete existing to avoid duplicates
-                val delReq = Request.Builder()
-                    .url("$url/rest/v1/connections?or=(and(sender_id.eq.$senderId,receiver_id.eq.$receiverId),and(sender_id.eq.$receiverId,receiver_id.eq.$senderId))")
-                    .addHeader("apikey", apiKey)
-                    .addHeader("Authorization", "Bearer $apiKey")
-                    .delete()
-                    .build()
-                client.newCall(delReq).execute()
-                
-                val json = JSONObject().apply {
-                    put("sender_id", senderId)
-                    put("receiver_id", receiverId)
-                    put("status", "pending")
-                }
-                val insReq = Request.Builder()
-                    .url("$url/rest/v1/connections")
-                    .addHeader("apikey", apiKey)
-                    .addHeader("Authorization", "Bearer $apiKey")
-                    .addHeader("Prefer", "return=minimal")
-                    .post(json.toString().toRequestBody(mediaType))
-                    .build()
-                val resp = client.newCall(insReq).execute()
-                
-                // Also update sender [Interests: ...] tag
                 fetchProfileAbout(senderId) { curAbout ->
-                    val cleanAbout = curAbout ?: ""
-                    var interestsObj = JSONObject()
-                    val p = java.util.regex.Pattern.compile("\\[Interests: ([^\n\r]*)\\]")
-                    val m = p.matcher(cleanAbout)
-                    if (m.find()) {
-                        try { interestsObj = JSONObject(m.group(1)?.trim() ?: "") } catch (e: Exception) {}
-                    }
-                    interestsObj.put(receiverId, "pending")
-                    val newAbout = cleanAbout.replace(Regex("\\[Interests: [^\n\r]*\\]"), "").trim() + "\n[Interests: ${interestsObj}]"
+                    val interests = getInterests(curAbout).toMutableMap()
+                    interests[receiverId] = "sent"
+                    val newAbout = setInterests(curAbout, interests)
+
                     _currentUser.value?.let { u ->
-                        updateProfile(u.copy(about = newAbout)) {}
+                        if (u.id == senderId) {
+                            val updated = u.copy(about = newAbout)
+                            _currentUser.value = updated
+                            try {
+                                sharedPrefs.edit().putString("saved_user", serializeUser(updated)).apply()
+                            } catch (e: Exception) {}
+                        }
                     }
-                }
-                
-                fetchConnectionsAndGenerateNotifications(senderId)
-                CoroutineScope(Dispatchers.Main).launch {
-                    onComplete?.invoke(resp.isSuccessful)
+
+                    updateProfileAboutOnly(senderId, newAbout) { success ->
+                        fetchConnectionsAndGenerateNotifications(senderId)
+                        CoroutineScope(Dispatchers.Main).launch {
+                            onComplete?.invoke(success)
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -447,45 +447,29 @@ class SagaiSessionManager(private val context: Context) {
     fun updateConnection(senderId: String, receiverId: String, status: String, onComplete: ((Boolean) -> Unit)? = null) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val client = OkHttpClient()
-                val mediaType = "application/json; charset=utf-8".toMediaType()
-                val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
-                val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
-                
-                val json = JSONObject().apply {
-                    put("status", status)
-                }
-                val patchReq = Request.Builder()
-                    .url("$url/rest/v1/connections?sender_id.eq.$senderId&receiver_id.eq.$receiverId")
-                    .addHeader("apikey", apiKey)
-                    .addHeader("Authorization", "Bearer $apiKey")
-                    .patch(json.toString().toRequestBody(mediaType))
-                    .build()
-                val resp = client.newCall(patchReq).execute()
-                
-                // Update receiver [Interests]
                 fetchProfileAbout(receiverId) { curAbout ->
-                    val cleanAbout = curAbout ?: ""
-                    var interestsObj = JSONObject()
-                    val p = java.util.regex.Pattern.compile("\\[Interests: ([^\n\r]*)\\]")
-                    val m = p.matcher(cleanAbout)
-                    if (m.find()) {
-                        try { interestsObj = JSONObject(m.group(1)?.trim() ?: "") } catch (e: Exception) {}
-                    }
-                    interestsObj.put(senderId, status)
-                    val newAbout = cleanAbout.replace(Regex("\\[Interests: [^\n\r]*\\]"), "").trim() + "\n[Interests: ${interestsObj}]"
+                    val interests = getInterests(curAbout).toMutableMap()
+                    interests[senderId] = status
+                    val newAbout = setInterests(curAbout, interests)
+
                     _currentUser.value?.let { u ->
                         if (u.id == receiverId) {
-                            updateProfile(u.copy(about = newAbout)) {}
+                            val updated = u.copy(about = newAbout)
+                            _currentUser.value = updated
+                            try {
+                                sharedPrefs.edit().putString("saved_user", serializeUser(updated)).apply()
+                            } catch (e: Exception) {}
                         }
                     }
-                }
-                
-                _currentUser.value?.id?.let {
-                    fetchConnectionsAndGenerateNotifications(it)
-                }
-                CoroutineScope(Dispatchers.Main).launch {
-                    onComplete?.invoke(resp.isSuccessful)
+
+                    updateProfileAboutOnly(receiverId, newAbout) { success ->
+                        _currentUser.value?.id?.let {
+                            fetchConnectionsAndGenerateNotifications(it)
+                        }
+                        CoroutineScope(Dispatchers.Main).launch {
+                            onComplete?.invoke(success)
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -619,6 +603,20 @@ class SagaiSessionManager(private val context: Context) {
         }
     }
 
+    fun preserveMetadataInAbout(originalAbout: String?, newCleanAbout: String): String {
+        if (originalAbout.isNullOrEmpty()) return newCleanAbout
+        val chats = getProfileChats(originalAbout)
+        val interests = getInterests(originalAbout)
+        var result = newCleanAbout.trim()
+        if (chats.length() > 0) {
+            result = setProfileChatsInAbout(result, chats)
+        }
+        if (interests.isNotEmpty()) {
+            result = setInterests(result, interests)
+        }
+        return result
+    }
+
     // Merge two conversations and sort chronologically
     fun getCombinedConversation(userAbout: String?, userId: String, profileAbout: String?, profileId: String): List<SupabaseMessage> {
         val chatsA = getProfileChats(userAbout)
@@ -733,6 +731,49 @@ class SagaiSessionManager(private val context: Context) {
         }
     }
 
+    fun updateProfileAboutOnly(userId: String, newAbout: String, onComplete: ((Boolean) -> Unit)? = null) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = OkHttpClient()
+                val mediaType = "application/json; charset=utf-8".toMediaType()
+                val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
+                val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+                
+                val fields = JSONObject().apply {
+                    put("about", newAbout)
+                }
+                
+                val request = Request.Builder()
+                    .url("$url/rest/v1/profiles?id=eq.$userId")
+                    .addHeader("apikey", apiKey)
+                    .addHeader("Authorization", "Bearer $apiKey")
+                    .patch(fields.toString().toRequestBody(mediaType))
+                    .build()
+                
+                val response = client.newCall(request).execute()
+                CoroutineScope(Dispatchers.Main).launch {
+                    onComplete?.invoke(response.isSuccessful)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                CoroutineScope(Dispatchers.Main).launch {
+                    onComplete?.invoke(false)
+                }
+            }
+        }
+    }
+
+    fun cleanBioText(aboutText: String?): String {
+        if (aboutText.isNullOrEmpty()) return ""
+        var str = aboutText
+        str = str.replace(Regex("\\[Chats: [^\n\r]*\\]"), "")
+        str = str.replace(Regex("\\[Interests: [^\n\r]*\\]"), "")
+        str = str.replace(Regex("\\[Social Links: [^\n\r]*\\]"), "")
+        str = str.replace(Regex("\\[Biodata Link: [^\n\r]*\\]"), "")
+        str = str.replace(Regex("\\[Last Seen: [^\n\r]*\\]"), "")
+        return str.trim()
+    }
+
     fun startConnectionPolling() {
         connectionPollingJob?.cancel()
         val userId = _currentUser.value?.id ?: return
@@ -750,63 +791,110 @@ class SagaiSessionManager(private val context: Context) {
     }
 
     fun fetchConnectionsAndGenerateNotifications(userId: String) {
-        try {
-            val client = OkHttpClient()
-            val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
-            val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
-            
-            val request = Request.Builder()
-                .url("$url/rest/v1/connections?or=(sender_id.eq.$userId,receiver_id.eq.$userId)")
-                .addHeader("apikey", apiKey)
-                .addHeader("Authorization", "Bearer $apiKey")
-                .build()
-            
-            val response = client.newCall(request).execute()
-            val body = response.body?.string() ?: ""
-            if (response.isSuccessful && body.isNotEmpty()) {
-                val records = JSONArray(body)
-                val list = mutableListOf<RoyalNotification>()
-                val connList = mutableListOf<ConnectionRecord>()
-                for (i in 0 until records.length()) {
-                    val record = records.getJSONObject(i)
-                    val senderId = record.optString("sender_id", "")
-                    val receiverId = record.optString("receiver_id", "")
-                    val status = record.optString("status", "")
-                    connList.add(ConnectionRecord(senderId, receiverId, status))
-                    
-                    if (receiverId == userId && status == "pending") {
-                        val senderProfile = profiles.value.firstOrNull { it.id == senderId }
-                        val senderName = senderProfile?.name ?: "Noble Member"
-                        list.add(RoyalNotification(
-                            id = "${senderId}_pending",
-                            notifKey = "interest_from_$senderId",
-                            message = "$senderName sent you a Royal Match Interest! Accept to reveal mobile number.",
-                            profileId = senderId,
-                            timestamp = "Just now",
-                            read = false
-                        ))
-                    } else if (status == "accepted") {
-                        val otherId = if (senderId == userId) receiverId else senderId
-                        val otherProfile = profiles.value.firstOrNull { it.id == otherId }
-                        val otherName = otherProfile?.name ?: "Noble Member"
-                        list.add(RoyalNotification(
-                            id = "${otherId}_accepted",
-                            notifKey = "accepted_from_$otherId",
-                            message = "$otherName connected with you! Contact details & chat are unlocked.",
-                            profileId = otherId,
-                            timestamp = "Just now",
-                            read = false
-                        ))
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = OkHttpClient()
+                val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
+                val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+                
+                val request = Request.Builder()
+                    .url("$url/rest/v1/profiles?select=*")
+                    .addHeader("apikey", apiKey)
+                    .addHeader("Authorization", "Bearer $apiKey")
+                    .build()
+                
+                val response = client.newCall(request).execute()
+                val body = response.body?.string() ?: ""
+                val allProfiles = mutableListOf<Profile>()
+                
+                if (response.isSuccessful && body.isNotEmpty()) {
+                    val array = JSONArray(body)
+                    for (i in 0 until array.length()) {
+                        val row = array.getJSONObject(i)
+                        allProfiles.add(
+                            Profile(
+                                id = row.optString("id", ""),
+                                name = row.optString("name", "Noble Member"),
+                                clan = row.optString("clan", "Rathore"),
+                                gotra = row.optString("gotra", "Kashyap"),
+                                location = row.optString("thikana", "Rajasthan"),
+                                age = 26,
+                                profession = row.optString("occupation", "Professional"),
+                                height = row.optString("height", "5'9\""),
+                                maritalStatus = row.optString("maritalStatus", "Never Married"),
+                                religion = "Hindu - Rajput",
+                                education = row.optString("education", "Graduate"),
+                                income = row.optString("income", "15-20 LPA"),
+                                isVerified = true,
+                                img = row.optString("profilePic", "").ifEmpty { "groom_ranveer" },
+                                about = row.optString("about", "")
+                            )
+                        )
                     }
                 }
-                
-                CoroutineScope(Dispatchers.Main).launch {
-                    _connectionsList.value = connList
-                    _notificationsList.value = list
+
+                val finalProfiles = if (allProfiles.isNotEmpty()) allProfiles else _profiles.value
+                val myProfile = finalProfiles.firstOrNull { it.id == userId }
+                val myAbout = myProfile?.about ?: _currentUser.value?.about
+                val myInterests = getInterests(myAbout)
+                val connList = mutableListOf<ConnectionRecord>()
+                val notifList = mutableListOf<RoyalNotification>()
+
+                for (p in finalProfiles) {
+                    if (p.id == userId) continue
+                    val otherInterests = getInterests(p.about)
+
+                    if (myInterests[p.id] == "accepted" || otherInterests[userId] == "accepted") {
+                        connList.add(ConnectionRecord(p.id, userId, "accepted"))
+                        notifList.add(
+                            RoyalNotification(
+                                id = "${p.id}_accepted",
+                                notifKey = "accepted_from_${p.id}",
+                                message = "${p.name} connected with you! Contact details & chat are unlocked.",
+                                profileId = p.id,
+                                timestamp = "Active",
+                                read = false
+                            )
+                        )
+                    } else if (otherInterests[userId] == "sent" && myInterests[p.id] != "declined") {
+                        connList.add(ConnectionRecord(p.id, userId, "pending"))
+                        notifList.add(
+                            RoyalNotification(
+                                id = "${p.id}_pending",
+                                notifKey = "interest_from_${p.id}",
+                                message = "${p.name} sent you a Royal Match Interest! Accept to reveal mobile number.",
+                                profileId = p.id,
+                                timestamp = "Just now",
+                                read = false
+                            )
+                        )
+                    } else if (myInterests[p.id] == "sent" && otherInterests[userId] != "declined") {
+                        connList.add(ConnectionRecord(userId, p.id, "pending"))
+                    }
                 }
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    if (allProfiles.isNotEmpty()) {
+                        _profiles.value = allProfiles + MockData.profiles.filter { mock ->
+                            allProfiles.none { it.id == mock.id }
+                        }
+                    }
+                    _connectionsList.value = connList
+                    _notificationsList.value = notifList
+
+                    if (myProfile != null && !myProfile.about.isNullOrEmpty() && _currentUser.value != null) {
+                        if (_currentUser.value?.about != myProfile.about) {
+                            val updatedUser = _currentUser.value!!.copy(about = myProfile.about)
+                            _currentUser.value = updatedUser
+                            try {
+                                sharedPrefs.edit().putString("saved_user", serializeUser(updatedUser)).apply()
+                            } catch (e: Exception) {}
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
     }
 }

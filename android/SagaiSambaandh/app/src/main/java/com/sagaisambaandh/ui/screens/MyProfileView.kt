@@ -74,7 +74,7 @@ fun MyProfileView(
     var instagram by remember { mutableStateOf("") }
     var facebook by remember { mutableStateOf("") }
     var biodataUrl by remember { mutableStateOf("") }
-    var about by remember(user) { mutableStateOf(user?.about ?: "") }
+    var about by remember(user) { mutableStateOf(session.cleanBioText(user?.about)) }
     var gender by remember(user) { mutableStateOf(user?.gender?.ifEmpty { "Groom" } ?: "Groom") }
     var lookingFor by remember { mutableStateOf(session.searchGender.value) }
 
@@ -153,7 +153,7 @@ fun MyProfileView(
             income = income.trim(),
             height = height.trim(),
             maritalStatus = maritalStatus,
-            about = about
+            about = session.preserveMetadataInAbout(user.about, about)
         )
 
         session.updateCurrentUser(updated)
