@@ -2,6 +2,7 @@ import SwiftUI
 
 struct InboxView: View {
     @EnvironmentObject var session: SagaiSessionManager
+    var isSideMenuOpen: Binding<Bool>? = nil
     @State private var selectedSubTab: Int = 0 // 0 = Received, 1 = Accepted, 2 = Sent
     @State private var connections: [ConnectionRecord] = []
     @State private var isLoading: Bool = false
@@ -12,7 +13,21 @@ struct InboxView: View {
             
             VStack(spacing: 0) {
                 // Top Custom Header
-                HStack {
+                HStack(spacing: 12) {
+                    if let isSideMenuOpen = isSideMenuOpen {
+                        Button(action: {
+                            withAnimation {
+                                isSideMenuOpen.wrappedValue = true
+                            }
+                        }) {
+                            Image(systemName: "line.horizontal.3")
+                                .foregroundColor(Color.appTextPrimary)
+                                .font(.title2)
+                                .frame(width: 40, height: 40)
+                                .background(Color.appCardBackground)
+                                .clipShape(Circle())
+                        }
+                    }
                     Text("Requests")
                         .font(BrandFonts.displayBold(size: 26))
                         .foregroundColor(Color.appTextPrimary)

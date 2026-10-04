@@ -4,6 +4,7 @@ struct ChatView: View {
     @EnvironmentObject var session: SagaiSessionManager
     var selectedTab: Binding<Int>? = nil
     var showingRegister: Binding<Bool>? = nil
+    var isSideMenuOpen: Binding<Bool>? = nil
     
     @State private var searchText: String = ""
     @State private var activeChatProfile: Profile? = nil
@@ -69,7 +70,21 @@ struct ChatView: View {
             
             VStack(spacing: 0) {
                 // Top Header Title
-                HStack {
+                HStack(spacing: 12) {
+                    if let isSideMenuOpen = isSideMenuOpen {
+                        Button(action: {
+                            withAnimation {
+                                isSideMenuOpen.wrappedValue = true
+                            }
+                        }) {
+                            Image(systemName: "line.horizontal.3")
+                                .foregroundColor(Color.appTextPrimary)
+                                .font(.title2)
+                                .frame(width: 40, height: 40)
+                                .background(Color.appCardBackground)
+                                .clipShape(Circle())
+                        }
+                    }
                     Text("Messages")
                         .font(BrandFonts.displayBold(size: 28))
                         .foregroundColor(Color.appTextPrimary)

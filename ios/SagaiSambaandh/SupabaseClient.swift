@@ -474,6 +474,7 @@ class SupabaseClient {
         
         var fields: [String: Any] = [
             "name": user.name,
+            "gender": user.gender,
             "clan": user.clan,
             "gotra": user.gotra,
             "motherGotra": user.motherGotra,

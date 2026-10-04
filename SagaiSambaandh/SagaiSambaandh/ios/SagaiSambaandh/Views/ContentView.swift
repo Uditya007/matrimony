@@ -297,7 +297,7 @@ class SagaiSessionManager: ObservableObject {
 
 struct ContentView: View {
     @StateObject private var session = SagaiSessionManager()
-    @State private var selectedTab: Int = 0
+    @State private var selectedTab: Int = 1
     @State private var showingRegister: Bool = false
     @State private var isSplashActive: Bool = true
     @State private var isGuestBypassed: Bool = false
@@ -389,174 +389,29 @@ struct ContentView: View {
                     ZStack {
                         // Authenticated view with 5 modern Marriage App tabs
                         TabView(selection: $selectedTab) {
-                            // Home View
+                            // Tab 0: Profile (Leftmost)
                             NavigationView {
-                                HomeView(selectedTab: $selectedTab, showingRegister: $showingRegister, isSideMenuOpen: $isSideMenuOpen)
+                                MyProfileView(selectedTab: $selectedTab, isSideMenuOpen: $isSideMenuOpen)
                                     .environmentObject(session)
-                                    .navigationBarTitleDisplayMode(.inline)
-                                    .toolbar {
-                                        ToolbarItem(placement: .navigationBarLeading) {
-                                            Button(action: {
-                                                withAnimation {
-                                                    isSideMenuOpen = true
-                                                }
-                                            }) {
-                                                Image(systemName: "line.horizontal.3")
-                                                    .foregroundColor(.appTextPrimary)
-                                                    .font(.title2)
-                                            }
-                                        }
-                                        ToolbarItem(placement: .principal) {
-                                            Text("Sagai Sambaandh")
-                                                .font(BrandFonts.displayBold(size: 18))
-                                                .foregroundColor(.appTextPrimary)
-                                        }
-                                        ToolbarItem(placement: .navigationBarTrailing) {
-                                            Button(action: {
-                                                showingNotificationsSheet = true
-                                            }) {
-                                                ZStack {
-                                                    Image(systemName: "bell.fill")
-                                                        .foregroundColor(.appTextPrimary)
-                                                        .font(.title2)
-                                                    if !session.notificationsList.isEmpty {
-                                                        Circle()
-                                                            .fill(Color.appPrimary)
-                                                            .frame(width: 8, height: 8)
-                                                            .offset(x: 8, y: -8)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                                    .navigationBarHidden(true)
                             }
                             .tabItem {
-                                Label("Home", systemImage: "house.fill")
+                                Label("Profile", systemImage: "person.crop.circle.fill")
                             }
                             .tag(0)
                             
-                            // Matches View
+                            // Tab 1: Discover
                             NavigationView {
                                 MatchesView(selectedTab: $selectedTab, showingRegister: $showingRegister, isSideMenuOpen: $isSideMenuOpen)
                                     .environmentObject(session)
-                                    .navigationBarTitleDisplayMode(.inline)
-                                    .toolbar {
-                                        ToolbarItem(placement: .navigationBarLeading) {
-                                            Button(action: {
-                                                withAnimation {
-                                                    isSideMenuOpen = true
-                                                }
-                                            }) {
-                                                Image(systemName: "line.horizontal.3")
-                                                    .foregroundColor(.appTextPrimary)
-                                                    .font(.title2)
-                                            }
-                                        }
-                                        ToolbarItem(placement: .principal) {
-                                            Text("Discover")
-                                                .font(BrandFonts.displayBold(size: 18))
-                                                .foregroundColor(.appTextPrimary)
-                                        }
-                                        ToolbarItem(placement: .navigationBarTrailing) {
-                                            Button(action: {
-                                                showingNotificationsSheet = true
-                                            }) {
-                                                ZStack {
-                                                    Image(systemName: "bell.fill")
-                                                        .foregroundColor(.appTextPrimary)
-                                                        .font(.title2)
-                                                    if !session.notificationsList.isEmpty {
-                                                        Circle()
-                                                            .fill(Color.appPrimary)
-                                                            .frame(width: 8, height: 8)
-                                                            .offset(x: 8, y: -8)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                                    .navigationBarHidden(true)
                             }
                             .tabItem {
                                 Label("Discover", systemImage: "rectangle.stack.fill")
                             }
                             .tag(1)
                             
-                            // Inbox View
-                            NavigationView {
-                                InboxView()
-                                    .environmentObject(session)
-                                    .navigationBarTitleDisplayMode(.inline)
-                                    .toolbar {
-                                        ToolbarItem(placement: .navigationBarLeading) {
-                                            Button(action: {
-                                                withAnimation {
-                                                    isSideMenuOpen = true
-                                                }
-                                            }) {
-                                                Image(systemName: "line.horizontal.3")
-                                                    .foregroundColor(.appTextPrimary)
-                                                    .font(.title2)
-                                            }
-                                        }
-                                        ToolbarItem(placement: .principal) {
-                                            Text("Requests")
-                                                .font(BrandFonts.displayBold(size: 18))
-                                                .foregroundColor(.appTextPrimary)
-                                        }
-                                        ToolbarItem(placement: .navigationBarTrailing) {
-                                            Button(action: {
-                                                showingNotificationsSheet = true
-                                            }) {
-                                                ZStack {
-                                                    Image(systemName: "bell.fill")
-                                                        .foregroundColor(.appTextPrimary)
-                                                        .font(.title2)
-                                                    if !session.notificationsList.isEmpty {
-                                                        Circle()
-                                                            .fill(Color.appPrimary)
-                                                            .frame(width: 8, height: 8)
-                                                            .offset(x: 8, y: -8)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                            }
-                            .tabItem {
-                                Label("Requests", systemImage: "envelope.fill")
-                            }
-                            .tag(2)
-                            
-                            // Chat View
-                            NavigationView {
-                                ChatView(selectedTab: $selectedTab, showingRegister: $showingRegister)
-                                    .environmentObject(session)
-                                    .navigationBarTitleDisplayMode(.inline)
-                                    .toolbar {
-                                        ToolbarItem(placement: .navigationBarLeading) {
-                                            Button(action: {
-                                                withAnimation {
-                                                    isSideMenuOpen = true
-                                                }
-                                            }) {
-                                                Image(systemName: "line.horizontal.3")
-                                                    .foregroundColor(.appTextPrimary)
-                                                    .font(.title2)
-                                            }
-                                        }
-                                        ToolbarItem(placement: .principal) {
-                                            Text("Messages")
-                                                .font(BrandFonts.displayBold(size: 18))
-                                                .foregroundColor(.appTextPrimary)
-                                        }
-                                    }
-                            }
-                            .tabItem {
-                                Label("Messages", systemImage: "bubble.left.and.bubble.right.fill")
-                            }
-                            .tag(3)
-                            
-                            // Premium plans view
+                            // Tab 2: Premium (Center / Middle Tab)
                             NavigationView {
                                 PlansView()
                                     .environmentObject(session)
@@ -578,10 +433,49 @@ struct ContentView: View {
                                                 .font(BrandFonts.displayBold(size: 18))
                                                 .foregroundColor(.appTextPrimary)
                                         }
+                                        ToolbarItem(placement: .navigationBarTrailing) {
+                                            Button(action: {
+                                                showingNotificationsSheet = true
+                                            }) {
+                                                ZStack {
+                                                    Image(systemName: "bell.fill")
+                                                        .foregroundColor(.appTextPrimary)
+                                                        .font(.title2)
+                                                    if !session.notificationsList.isEmpty {
+                                                        Circle()
+                                                            .fill(Color.appPrimary)
+                                                            .frame(width: 8, height: 8)
+                                                            .offset(x: 8, y: -8)
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                             }
                             .tabItem {
                                 Label("Premium", systemImage: "crown.fill")
+                            }
+                            .tag(2)
+                            
+                            // Tab 3: Requests
+                            NavigationView {
+                                InboxView(isSideMenuOpen: $isSideMenuOpen)
+                                    .environmentObject(session)
+                                    .navigationBarHidden(true)
+                            }
+                            .tabItem {
+                                Label("Requests", systemImage: "envelope.fill")
+                            }
+                            .tag(3)
+                            
+                            // Tab 4: Messages
+                            NavigationView {
+                                ChatView(selectedTab: $selectedTab, showingRegister: $showingRegister, isSideMenuOpen: $isSideMenuOpen)
+                                    .environmentObject(session)
+                                    .navigationBarHidden(true)
+                            }
+                            .tabItem {
+                                Label("Messages", systemImage: "bubble.left.and.bubble.right.fill")
                             }
                             .tag(4)
                         }
