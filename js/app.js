@@ -1629,7 +1629,7 @@ function initLoginPage() {
         window.location.href = 'dashboard.html';
       }, 1200);
     } else {
-      showToast('Invalid credentials. Try royal@shreerajputsagaisambandh.com / royal123 or use OTP Login!', 'normal');
+      showToast('Invalid credentials. Please verify your details or use Instant OTP Login.', 'normal');
     }
   });
 }
