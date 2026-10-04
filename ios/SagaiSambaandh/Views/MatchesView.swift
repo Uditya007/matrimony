@@ -124,17 +124,17 @@ struct MatchesView: View {
                     HStack(spacing: 14) {
                         ZStack {
                             Circle()
-                                .fill(Color.white)
+                                .fill(Color.royalGold.opacity(0.2))
                                 .frame(width: 44, height: 44)
                             Image(systemName: "heart.fill")
                                 .font(.system(size: 22))
-                                .foregroundColor(Color.appPrimary)
+                                .foregroundColor(Color.lightGold)
                         }
                         
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Rishta Expressed!")
                                 .font(BrandFonts.displayBold(size: 15))
-                                .foregroundColor(.white)
+                                .foregroundColor(Color.lightGold)
                             Text("Notified \(successProfileName) of your interest.")
                                 .font(BrandFonts.body(size: 12))
                                 .foregroundColor(.white.opacity(0.9))
@@ -144,13 +144,20 @@ struct MatchesView: View {
                     .padding(16)
                     .background(
                         LinearGradient(
-                            colors: [Color.appPrimary, Color.appSecondary],
+                            colors: [Color(hex: "#7D1526"), Color(hex: "#4A0D18")],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
                     )
                     .cornerRadius(20)
-                    .shadow(color: Color.appPrimary.opacity(0.35), radius: 16, y: 8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(
+                                LinearGradient(colors: [Color.lightGold, Color.royalGold], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                lineWidth: 1.5
+                            )
+                    )
+                    .shadow(color: Color.black.opacity(0.4), radius: 16, y: 8)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 24)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -736,7 +743,7 @@ struct SwipeDeckView: View {
                 
                 Text(label)
                     .font(BrandFonts.label(size: 11, weight: .bold))
-                    .foregroundColor(Color.appTextSecondary)
+                    .foregroundColor(Color.white.opacity(0.85))
                     .tracking(0.6)
             }
         }
@@ -750,24 +757,34 @@ struct SwipeDeckView: View {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [Color.appPrimary, Color.appSecondary],
+                                colors: [Color(hex: "#7D1526"), Color(hex: "#4A0D18")],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                         .frame(width: 76, height: 76)
-                        .overlay(Circle().stroke(Color.white.opacity(0.3), lineWidth: 2.5))
-                        .shadow(color: Color.appPrimary.opacity(0.4), radius: 16, x: 0, y: 8)
-                        .shadow(color: Color.white.opacity(0.6), radius: 6, x: -3, y: -3)
+                        .overlay(
+                            Circle()
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [Color.lightGold, Color.royalGold, Color.lightGold],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 3
+                                )
+                        )
+                        .shadow(color: Color.royalGold.opacity(0.45), radius: 14, x: 0, y: 6)
+                        .shadow(color: Color.black.opacity(0.4), radius: 8, x: 0, y: 4)
                     
                     Image(systemName: "heart.fill")
                         .font(.system(size: 34))
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.lightGold)
                 }
                 
                 Text("RISHTA")
                     .font(BrandFonts.label(size: 12, weight: .heavy))
-                    .foregroundColor(Color.appPrimary)
+                    .foregroundColor(Color.lightGold)
                     .tracking(0.8)
             }
         }

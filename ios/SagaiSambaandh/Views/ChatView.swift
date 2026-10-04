@@ -80,28 +80,39 @@ struct ChatView: View {
                 .padding(.top, 14)
                 .padding(.bottom, 10)
                 
-                // Clean Search Field (Matching UI Kit)
+                // Clean Translucent Search Field
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(Color.appTextMuted)
+                        .foregroundColor(Color.white.opacity(0.75))
                     
-                    TextField("Search chats by name, gotra...", text: $searchText)
-                        .font(BrandFonts.body(size: 14))
-                        .foregroundColor(Color.appTextPrimary)
+                    ZStack(alignment: .leading) {
+                        if searchText.isEmpty {
+                            Text("Search chats by name, gotra...")
+                                .font(BrandFonts.body(size: 14))
+                                .foregroundColor(Color.white.opacity(0.6))
+                        }
+                        TextField("", text: $searchText)
+                            .font(BrandFonts.body(size: 14))
+                            .foregroundColor(.white)
+                    }
                     
                     if !searchText.isEmpty {
                         Button(action: { searchText = "" }) {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(size: 16))
-                                .foregroundColor(Color.appTextMuted)
+                                .foregroundColor(Color.white.opacity(0.75))
                         }
                     }
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
-                .background(Color.white)
+                .background(Color.white.opacity(0.18))
                 .cornerRadius(14)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                )
                 .padding(.horizontal, 20)
                 .padding(.bottom, 12)
                 
@@ -113,7 +124,7 @@ struct ChatView: View {
                             newMatchesSection
                             
                             Divider()
-                                .background(Color.appDivider)
+                                .background(Color.white.opacity(0.2))
                                 .padding(.horizontal, 20)
                         }
                         
@@ -153,7 +164,7 @@ struct ChatView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("New Matches")
                 .font(BrandFonts.displayBold(size: 15))
-                .foregroundColor(Color.appTextPrimary)
+                .foregroundColor(Color.lightGold)
                 .padding(.horizontal, 20)
             
             ScrollView(.horizontal, showsIndicators: false) {
@@ -221,7 +232,7 @@ struct ChatView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(searchText.isEmpty ? "Conversations" : "Results")
                 .font(BrandFonts.displayBold(size: 15))
-                .foregroundColor(.white)
+                .foregroundColor(Color.lightGold)
                 .padding(.horizontal, 20)
             
             if conversationProfiles.isEmpty {
@@ -233,14 +244,18 @@ struct ChatView: View {
                         
                         if index < conversationProfiles.count - 1 {
                             Divider()
-                                .background(Color.appDivider)
+                                .background(Color.white.opacity(0.18))
                                 .padding(.leading, 84)
                                 .padding(.trailing, 20)
                         }
                     }
                 }
-                .background(Color.white)
+                .background(Color.white.opacity(0.18))
                 .cornerRadius(16)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                )
                 .padding(.horizontal, 16)
                 .shadow(color: Color.black.opacity(0.12), radius: 8, y: 3)
             }
@@ -276,7 +291,7 @@ struct ChatView: View {
                     HStack(spacing: 4) {
                         Text(profile.name)
                             .font(BrandFonts.body(size: 15.5, weight: isUnread ? .bold : .semibold))
-                            .foregroundColor(Color.appTextPrimary)
+                            .foregroundColor(.white)
                             .lineLimit(1)
                         
                         if profile.isVerified {
@@ -291,7 +306,7 @@ struct ChatView: View {
                             let date = Date(timeIntervalSince1970: time / 1000)
                             Text(formatTimestamp(date))
                                 .font(BrandFonts.body(size: 11.5, weight: isUnread ? .bold : .regular))
-                                .foregroundColor(isUnread ? Color.appPrimary : Color.appTextMuted)
+                                .foregroundColor(isUnread ? Color.lightGold : Color.white.opacity(0.75))
                         }
                     }
                     
@@ -300,12 +315,12 @@ struct ChatView: View {
                             let prefix = last.isFromMe ? "You: " : ""
                             Text("\(prefix)\(last.text)")
                                 .font(BrandFonts.body(size: 13.5, weight: isUnread ? .semibold : .regular))
-                                .foregroundColor(isUnread ? Color.appTextPrimary : Color.appTextSecondary)
+                                .foregroundColor(isUnread ? .white : Color.white.opacity(0.85))
                                 .lineLimit(1)
                         } else {
                             Text("Connected. Tap to message!")
                                 .font(BrandFonts.body(size: 13))
-                                .foregroundColor(Color.appPrimary)
+                                .foregroundColor(Color.lightGold)
                                 .italic()
                                 .lineLimit(1)
                         }
@@ -314,7 +329,7 @@ struct ChatView: View {
                         
                         if isUnread {
                             Circle()
-                                .fill(Color.appPrimary)
+                                .fill(Color.lightGold)
                                 .frame(width: 8, height: 8)
                         }
                     }
@@ -347,21 +362,21 @@ struct ChatView: View {
         VStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(Color.appCardBackground)
+                    .fill(Color.white.opacity(0.15))
                     .frame(width: 72, height: 72)
                 Image(systemName: session.currentUser == nil ? "lock.shield.fill" : "bubble.left.and.bubble.right")
                     .font(.system(size: 30))
-                    .foregroundColor(Color.appPrimary)
+                    .foregroundColor(Color.lightGold)
             }
             .padding(.top, 30)
             
             Text(session.currentUser == nil ? "Sign In to Access Real Chats" : "No Active Conversations Yet")
                 .font(BrandFonts.displayBold(size: 16))
-                .foregroundColor(Color.appTextPrimary)
+                .foregroundColor(.white)
             
             Text(session.currentUser == nil ? "Log in to chat in real-time with verified Rajput brides and grooms across the web and app." : "Express a Rishta in Discover or accept connection requests to start real-time messaging.")
                 .font(BrandFonts.body(size: 13))
-                .foregroundColor(Color.appTextSecondary)
+                .foregroundColor(Color.white.opacity(0.85))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             
@@ -377,25 +392,23 @@ struct ChatView: View {
                     Text(session.currentUser == nil ? "Log In / Register" : "Explore Discover Deck")
                         .font(BrandFonts.bodyBold(size: 13.5))
                 }
-                .foregroundColor(.white)
+                .foregroundColor(Color.royalMaroon)
                 .padding(.horizontal, 22)
                 .padding(.vertical, 10)
-                .background(
-                    LinearGradient(
-                        colors: [Color.appPrimary, Color.appSecondary],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
+                .background(Color.lightGold)
                 .clipShape(Capsule())
-                .shadow(color: Color.appPrimary.opacity(0.3), radius: 6, y: 3)
+                .shadow(color: Color.royalGold.opacity(0.3), radius: 6, y: 3)
             }
             .padding(.top, 4)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)
-        .background(Color.white)
+        .background(Color.white.opacity(0.18))
         .cornerRadius(18)
+        .overlay(
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(Color.white.opacity(0.25), lineWidth: 1)
+        )
         .padding(.horizontal, 16)
         .shadow(color: Color.black.opacity(0.1), radius: 8, y: 3)
     }

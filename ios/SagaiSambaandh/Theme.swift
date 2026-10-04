@@ -191,10 +191,9 @@ struct RoyalBackgroundView: View {
                 // Base royal maroon tone (#6B1220 matches --bg-warm in website styles.css)
                 Color(hex: "#6B1220")
                 
-                // Heritage Peacock & Arch Wallpaper Pattern
+                // Heritage Peacock & Arch Wallpaper Pattern (HD 1:1 Pixel Fidelity Tiled Pattern)
                 Image("royal_wallpaper")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .resizable(resizingMode: .tile)
                     .frame(width: geo.size.width, height: geo.size.height)
                     .clipped()
                     .opacity(opacity)

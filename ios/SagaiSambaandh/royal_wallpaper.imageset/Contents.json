@@ -1,15 +1,17 @@
 {
   "images": [
     {
-      "filename": "royal_wallpaper.jpg",
+      "filename": "royal_wallpaper@1x.jpg",
       "idiom": "universal",
       "scale": "1x"
     },
     {
+      "filename": "royal_wallpaper@2x.jpg",
       "idiom": "universal",
       "scale": "2x"
     },
     {
+      "filename": "royal_wallpaper.jpg",
       "idiom": "universal",
       "scale": "3x"
     }

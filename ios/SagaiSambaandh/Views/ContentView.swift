@@ -339,15 +339,15 @@ struct ContentView: View {
         }
         
         let navAppearance = UINavigationBarAppearance()
-        navAppearance.configureWithOpaqueBackground()
-        navAppearance.backgroundColor = UIColor.white
-        navAppearance.shadowColor = UIColor(red: 0.90, green: 0.91, blue: 0.93, alpha: 1.0)
+        navAppearance.configureWithTransparentBackground()
+        navAppearance.backgroundColor = .clear
+        navAppearance.shadowColor = .clear
         navAppearance.titleTextAttributes = [
-            .foregroundColor: UIColor(red: 0.11, green: 0.11, blue: 0.12, alpha: 1.0),
+            .foregroundColor: UIColor.white,
             .font: UIFont.systemFont(ofSize: 18, weight: .bold)
         ]
         navAppearance.largeTitleTextAttributes = [
-            .foregroundColor: UIColor(red: 0.11, green: 0.11, blue: 0.12, alpha: 1.0),
+            .foregroundColor: UIColor.white,
             .font: UIFont.systemFont(ofSize: 28, weight: .bold)
         ]
         UINavigationBar.appearance().standardAppearance = navAppearance
@@ -355,7 +355,7 @@ struct ContentView: View {
         if #available(iOS 15.0, *) {
             UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
         }
-        UINavigationBar.appearance().tintColor = UIColor(red: 0.91, green: 0.25, blue: 0.34, alpha: 1.0)
+        UINavigationBar.appearance().tintColor = UIColor.white
         #endif
     }
     
@@ -413,33 +413,11 @@ struct ContentView: View {
                             
                             // Tab 2: Premium (3rd tab / center)
                             NavigationView {
-                                PlansView()
-                                    .environmentObject(session)
-                                    .navigationBarTitleDisplayMode(.inline)
-                                    .toolbar {
-                                        ToolbarItem(placement: .principal) {
-                                            Text("Premium")
-                                                .font(BrandFonts.displayBold(size: 18))
-                                                .foregroundColor(.white)
-                                        }
-                                        ToolbarItem(placement: .navigationBarTrailing) {
-                                            Button(action: {
-                                                showingNotificationsSheet = true
-                                            }) {
-                                                ZStack {
-                                                    Image(systemName: "bell.fill")
-                                                        .foregroundColor(.white)
-                                                        .font(.title2)
-                                                    if !session.notificationsList.isEmpty {
-                                                        Circle()
-                                                            .fill(Color.appPrimary)
-                                                            .frame(width: 8, height: 8)
-                                                            .offset(x: 8, y: -8)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                                PlansView(onNotificationsTap: {
+                                    showingNotificationsSheet = true
+                                })
+                                .environmentObject(session)
+                                .navigationBarHidden(true)
                             }
                             .tabItem {
                                 Label("Premium", systemImage: "crown.fill")

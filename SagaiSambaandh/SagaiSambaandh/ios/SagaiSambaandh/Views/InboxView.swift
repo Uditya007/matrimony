@@ -140,7 +140,7 @@ struct InboxView: View {
                 HStack(spacing: 4) {
                     Text(profile.name)
                         .font(BrandFonts.displayBold(size: 15))
-                        .foregroundColor(Color.appTextPrimary)
+                        .foregroundColor(.white)
                     if profile.isVerified {
                         Image(systemName: "checkmark.seal.fill")
                             .font(.system(size: 12))
@@ -150,11 +150,11 @@ struct InboxView: View {
                 
                 Text("\(profile.clan) Clan • \(profile.gotra) Gotra")
                     .font(BrandFonts.body(size: 12, weight: .medium))
-                    .foregroundColor(Color.appTextSecondary)
+                    .foregroundColor(.white.opacity(0.85))
                 
                 Text("Native: \(profile.thikana)")
                     .font(BrandFonts.body(size: 11))
-                    .foregroundColor(Color.appTextMuted)
+                    .foregroundColor(Color.lightGold)
             }
             
             Spacer()
@@ -166,15 +166,15 @@ struct InboxView: View {
                             .font(.system(size: 14, weight: .bold))
                             .foregroundColor(Color.dislikeRed)
                             .frame(width: 36, height: 36)
-                            .background(Color.dislikeRed.opacity(0.1))
+                            .background(Color.white.opacity(0.18))
                             .clipShape(Circle())
                     }
                     Button(action: { handleAccept(record: record) }) {
                         Image(systemName: "checkmark")
                             .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(Color.successGreen)
+                            .foregroundColor(Color.royalMaroon)
                             .frame(width: 36, height: 36)
-                            .background(Color.successGreen.opacity(0.12))
+                            .background(Color.lightGold)
                             .clipShape(Circle())
                     }
                 }
@@ -186,34 +186,28 @@ struct InboxView: View {
                         Text("Chat")
                             .font(BrandFonts.bodyBold(size: 12))
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.royalMaroon)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 7)
-                    .background(
-                        LinearGradient(
-                            colors: [Color.appPrimary, Color.appSecondary],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .background(Color.lightGold)
                     .clipShape(Capsule())
-                    .shadow(color: Color.appPrimary.opacity(0.3), radius: 4, y: 2)
+                    .shadow(color: Color.royalGold.opacity(0.3), radius: 4, y: 2)
                 }
             } else {
                 Text("Pending")
                     .font(BrandFonts.body(size: 11, weight: .semibold))
-                    .foregroundColor(Color.appTextSecondary)
+                    .foregroundColor(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Color.appCardBackground)
+                    .background(Color.white.opacity(0.2))
                     .clipShape(Capsule())
             }
         }
         .padding(14)
-        .background(Color.white)
+        .background(Color.white.opacity(0.18))
         .cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.appBorder, lineWidth: 1))
-        .shadow(color: Color.black.opacity(0.03), radius: 6, y: 2)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.25), lineWidth: 1))
+        .shadow(color: Color.black.opacity(0.1), radius: 6, y: 2)
     }
     
     private var emptyState: some View {
@@ -222,21 +216,21 @@ struct InboxView: View {
             VStack(spacing: 14) {
                 ZStack {
                     Circle()
-                        .fill(Color.appCardBackground)
+                        .fill(Color.white.opacity(0.15))
                         .frame(width: 80, height: 80)
                     
                     Image(systemName: "envelope.open.fill")
                         .font(.system(size: 34))
-                        .foregroundColor(Color.appTextMuted)
+                        .foregroundColor(Color.lightGold)
                 }
                 
                 Text(selectedSubTab == 0 ? "No Pending Requests" : (selectedSubTab == 1 ? "No Active Connections" : "No Sent Requests"))
                     .font(BrandFonts.displayBold(size: 17))
-                    .foregroundColor(Color.appTextPrimary)
+                    .foregroundColor(.white)
                 
                 Text("Lineage compatibility checks are run in real-time. Invite other members to connect and establish family trust.")
                     .font(BrandFonts.body(size: 13))
-                    .foregroundColor(Color.appTextSecondary)
+                    .foregroundColor(.white.opacity(0.85))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 36)
             }
