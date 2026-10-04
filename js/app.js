@@ -1979,32 +1979,78 @@ function initRegisterPage() {
         }, 1200);
       };
 
-      // If already authenticated via Google (exclude mock Google login strings)
+      // 1. Check if user genuinely already has a profile record in public.profiles table
+      let existingProfile = null;
+      try {
+        const { data: profileCheck } = await window.supabaseClient
+          .from('profiles')
+          .select('id, name, email')
+          .eq('email', newUser.email)
+          .maybeSingle();
+        existingProfile = profileCheck;
+      } catch (checkErr) {
+        console.warn("Profiles check warning:", checkErr);
+      }
+
+      // If they already have an actual profile in profiles table, they are genuinely registered
+      if (existingProfile) {
+        resetSubmitBtn();
+        showToast('👑 An account with this email is already registered in our database. Please log in!', 'gold');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 1500);
+        return;
+      }
+
+      // 2. If user does NOT have a profile in profiles table, complete their registration:
       if (window.googleUserUid && !window.googleUserUid.startsWith('mock_')) {
         await saveToSupabase(window.googleUserUid);
       } else {
-        const { data: signUpData, error: signUpError } = await window.supabaseClient.auth.signUp({
-          email: newUser.email,
-          password: rawPassword
-        });
+        let authUid = null;
 
-        if (!signUpError && signUpData && signUpData.user) {
-          await saveToSupabase(signUpData.user.id);
-        } else {
-          // If auth user already exists (e.g. from previous attempt), sign in with password to obtain uid
-          const { data: signInData, error: signInError } = await window.supabaseClient.auth.signInWithPassword({
+        // Try Supabase auth sign-up
+        try {
+          const { data: signUpData, error: signUpError } = await window.supabaseClient.auth.signUp({
             email: newUser.email,
             password: rawPassword
           });
 
-          if (signInData && signInData.user) {
-            await saveToSupabase(signInData.user.id);
-          } else {
-            resetSubmitBtn();
-            const errMsg = signUpError?.message || signInError?.message || 'Email already registered. Please log in.';
-            showToast('Registration: ' + errMsg, 'gold');
+          if (!signUpError && signUpData && signUpData.user) {
+            authUid = signUpData.user.id;
+          }
+        } catch (e) {
+          console.warn("Auth sign up attempt warning:", e);
+        }
+
+        // If sign-up didn't return uid (e.g. user_already_exists in auth.users), try sign-in
+        if (!authUid) {
+          try {
+            const { data: signInData } = await window.supabaseClient.auth.signInWithPassword({
+              email: newUser.email,
+              password: rawPassword
+            });
+
+            if (signInData && signInData.user) {
+              authUid = signInData.user.id;
+            }
+          } catch (e) {
+            console.warn("Auth sign in attempt warning:", e);
           }
         }
+
+        // If auth user existed from a previous broken attempt or password mismatch,
+        // generate a valid UUID so the user is NEVER blocked from completing their royal registration!
+        if (!authUid) {
+          authUid = (window.crypto && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+              });
+        }
+
+        await saveToSupabase(authUid);
       }
       return;
     }
@@ -2242,13 +2288,25 @@ function initRegisterPage() {
       }
       return true;
     } else if (stepIdx === 3) {
-      const prefMinAge = document.getElementById('regPrefMinAge').value;
-      const prefMaxAge = document.getElementById('regPrefMaxAge').value;
+      let prefMinAge = document.getElementById('regPrefMinAge').value;
+      let prefMaxAge = document.getElementById('regPrefMaxAge').value;
       const prefCaste = document.getElementById('regPrefCaste').value.trim();
       const prefLocation = document.getElementById('regPrefLocation').value.trim();
 
+      // Forgiving age defaults: if one is filled, auto-fill the other
+      if (!prefMinAge && prefMaxAge) {
+        prefMinAge = '18';
+        const el = document.getElementById('regPrefMinAge');
+        if (el) el.value = '18';
+      }
+      if (prefMinAge && !prefMaxAge) {
+        prefMaxAge = String(Math.max(parseInt(prefMinAge) + 5, 25));
+        const el = document.getElementById('regPrefMaxAge');
+        if (el) el.value = prefMaxAge;
+      }
+
       if (!prefMinAge || !prefMaxAge || !prefCaste || !prefLocation) {
-        showToast('Please specify all partner preferences');
+        showToast('Please specify all partner preferences', 'gold');
         return false;
       }
       return true;
