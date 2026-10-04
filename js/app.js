@@ -1859,6 +1859,10 @@ function initRegisterPage() {
     }
 
     const regPhoneRaw = (document.getElementById('regPhone')?.value.trim() || '').replace(/[^0-9]/g, '').slice(-10);
+    const rawPassword = document.getElementById('regPassword').value;
+
+    const rawPrefMin = parseInt(document.getElementById('regPrefMinAge').value) || 21;
+    const rawPrefMax = parseInt(document.getElementById('regPrefMaxAge').value) || 29;
 
     const newUser = {
       id: `U_${Date.now()}`,
@@ -1868,14 +1872,14 @@ function initRegisterPage() {
       phone: `+91 ${regPhoneRaw}`,
       phoneVerified: true,
       phone_verified: true,
-      password: document.getElementById('regPassword').value,
+      password: rawPassword,
       img: window.uploadedProfilePhotoBase64 || '',
       profilePic: window.uploadedProfilePhotoBase64 || '',
       age: parseInt(document.getElementById('regAge').value) || 25,
       dob: document.getElementById('regDOB').value,
       religion: document.getElementById('regReligion').value,
       caste: document.getElementById('regCasteType').value,
-      clan: document.getElementById('regCaste').value === 'Other' ? document.getElementById('regCasteOther').value.trim() : document.getElementById('regCaste').value,
+      clan: document.getElementById('regCaste').value === 'Other' ? (document.getElementById('regCasteOther')?.value || '').trim() : document.getElementById('regCaste').value,
       pob: document.getElementById('regPOB').value.trim(),
       gotra: document.getElementById('regGotra').value.trim(),
       motherGotra: document.getElementById('regMotherGotra').value.trim(),
@@ -1886,8 +1890,8 @@ function initRegisterPage() {
       income: document.getElementById('regIncome').value.trim(),
       location: document.getElementById('regLocation').value.trim(),
       familyType: document.getElementById('regFamilyType').value,
-      prefMinAge: parseInt(document.getElementById('regPrefMinAge').value) || 21,
-      prefMaxAge: parseInt(document.getElementById('regPrefMaxAge').value) || 29,
+      prefMinAge: Math.min(rawPrefMin, rawPrefMax),
+      prefMaxAge: Math.max(rawPrefMin, rawPrefMax),
       prefCaste: document.getElementById('regPrefCaste').value.trim(),
       prefLocation: document.getElementById('regPrefLocation').value.trim(),
       about: document.getElementById('regAbout').value.trim(),
@@ -1895,51 +1899,111 @@ function initRegisterPage() {
       tier: 'Starter' // Default to Starter Tier on registration
     };
 
+    const submitBtn = document.getElementById('btnSubmitRegister');
+    const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Publish Royal Profile';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '👑 Creating Royal Profile...';
+    }
+
+    const resetSubmitBtn = () => {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+      }
+    };
+
     if (window.supabaseActive) {
       const saveToSupabase = async (uid) => {
         newUser.id = uid;
         delete newUser.password; // Don't save cleartext password to DB
-        
-        const { error: dbError } = await window.supabaseClient
+
+        // Whitelist database columns that strictly exist in Supabase 'profiles' table
+        // Note: 'img', 'phoneVerified' and 'phone_verified' are local-only and excluded from the DB insert payload
+        const ALLOWED_PROFILE_COLUMNS = [
+          'id', 'name', 'gender', 'email', 'age', 'dob', 'religion', 'caste', 'clan',
+          'pob', 'gotra', 'motherGotra', 'rashi', 'manglik', 'education', 'occupation',
+          'income', 'location', 'familyType', 'prefMinAge', 'prefMaxAge', 'prefCaste',
+          'prefLocation', 'about', 'expectations', 'tier', 'phone', 'thikana', 'height',
+          'profilePic', 'maritalStatus'
+        ];
+
+        const dbPayload = {};
+        for (const col of ALLOWED_PROFILE_COLUMNS) {
+          if (newUser[col] !== undefined && newUser[col] !== null) {
+            dbPayload[col] = newUser[col];
+          }
+        }
+
+        // Upsert into Supabase profiles table
+        let { error: dbError } = await window.supabaseClient
           .from('profiles')
-          .insert([newUser]);
+          .upsert([dbPayload], { onConflict: 'id' });
+
+        if (dbError && dbError.message && dbError.message.includes('onConflict')) {
+          const insertRes = await window.supabaseClient
+            .from('profiles')
+            .insert([dbPayload]);
+          dbError = insertRes.error;
+        }
 
         if (dbError) {
-          console.error(dbError);
-          if (dbError.code === '23503') {
-            showToast('This email is already registered. Please log in!', 'gold');
+          console.error("Supabase profile save error:", dbError);
+          resetSubmitBtn();
+          if (dbError.code === '23503' || dbError.code === '23505') {
+            showToast('This profile is already registered. Please log in!', 'gold');
           } else {
             showToast('Error saving profile: ' + dbError.message, 'normal');
           }
           return;
         }
 
+        // Keep local object complete with both img and profilePic for client components
+        newUser.img = newUser.profilePic;
         localStorage.setItem('currentUser', JSON.stringify(newUser));
+
+        // Save into local users cache
+        const localUsers = JSON.parse(localStorage.getItem('users')) || [];
+        const existingIdx = localUsers.findIndex(u => (u.email && u.email.toLowerCase() === newUser.email.toLowerCase()) || u.id === newUser.id);
+        if (existingIdx >= 0) {
+          localUsers[existingIdx] = newUser;
+        } else {
+          localUsers.push(newUser);
+        }
+        localStorage.setItem('users', JSON.stringify(localUsers));
+
         notifyAdminNewRegistration(newUser); // Notify admin on WhatsApp
-        showToast('Royal Profile Created successfully!', 'gold');
+        showToast('👑 Royal Profile Created successfully!', 'gold');
         setTimeout(() => {
           window.location.href = 'dashboard.html';
-        }, 1500);
+        }, 1200);
       };
 
       // If already authenticated via Google (exclude mock Google login strings)
       if (window.googleUserUid && !window.googleUserUid.startsWith('mock_')) {
         await saveToSupabase(window.googleUserUid);
       } else {
-        const { data, error } = await window.supabaseClient.auth.signUp({
+        const { data: signUpData, error: signUpError } = await window.supabaseClient.auth.signUp({
           email: newUser.email,
-          password: newUser.password
+          password: rawPassword
         });
 
-        if (error) {
-          showToast('Registration failed: ' + error.message, 'normal');
-          return;
-        }
-
-        if (data && data.user) {
-          await saveToSupabase(data.user.id);
+        if (!signUpError && signUpData && signUpData.user) {
+          await saveToSupabase(signUpData.user.id);
         } else {
-          showToast('This email is already registered. Please log in!', 'gold');
+          // If auth user already exists (e.g. from previous attempt), sign in with password to obtain uid
+          const { data: signInData, error: signInError } = await window.supabaseClient.auth.signInWithPassword({
+            email: newUser.email,
+            password: rawPassword
+          });
+
+          if (signInData && signInData.user) {
+            await saveToSupabase(signInData.user.id);
+          } else {
+            resetSubmitBtn();
+            const errMsg = signUpError?.message || signInError?.message || 'Email already registered. Please log in.';
+            showToast('Registration: ' + errMsg, 'gold');
+          }
         }
       }
       return;
