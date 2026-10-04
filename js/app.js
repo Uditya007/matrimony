@@ -1787,6 +1787,17 @@ function initRegisterPage() {
 
   if (!registerForm) return;
 
+  registerForm.addEventListener('input', (e) => {
+    if (e.target && e.target.style) {
+      e.target.style.borderColor = '';
+    }
+  });
+  registerForm.addEventListener('change', (e) => {
+    if (e.target && e.target.style) {
+      e.target.style.borderColor = '';
+    }
+  });
+
   nextBtns.forEach(btn => {
     btn.addEventListener('click', async () => {
       const isValid = await validateStep(currentStep);
@@ -1968,29 +1979,82 @@ function initRegisterPage() {
       const phoneInput = document.getElementById('regPhone');
       const phone = phoneInput ? phoneInput.value.trim() : '';
 
-      if (!name || !email || !pass || !gender || (phoneInput && !phone)) {
-        showToast('Please fill all credentials including mobile number');
-        return false;
-      }
-      if (pass.length < 6) {
-        showToast('Password should be at least 6 characters');
-        return false;
-      }
+      // 1. Mandatory Profile Portrait Photo
       if (!window.uploadedProfilePhotoBase64) {
         const errorText = document.getElementById('photoErrorText');
         if (errorText) errorText.style.display = 'block';
         const previewContainer = document.getElementById('photoPreviewContainer');
         if (previewContainer) {
-          previewContainer.style.borderColor = '#fc8181';
+          previewContainer.style.borderColor = '#ff4d4d';
+          previewContainer.style.boxShadow = '0 0 20px rgba(255, 77, 77, 0.7)';
           previewContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-        showToast('👑 Profile Photo is mandatory! Please upload your portrait photo.', 'gold');
+        showToast('📸 Profile portrait photo is strictly mandatory! Please upload your photo.', 'gold');
+        return false;
+      }
+
+      // 2. Mandatory Full Noble Name
+      if (!name) {
+        const nameInput = document.getElementById('regName');
+        if (nameInput) {
+          nameInput.focus();
+          nameInput.style.borderColor = '#ff4d4d';
+        }
+        showToast('👑 Please enter your Full Noble Name.', 'gold');
+        return false;
+      }
+
+      // 3. Mandatory Gender
+      if (!gender) {
+        const genderSelect = document.getElementById('regGender');
+        if (genderSelect) {
+          genderSelect.focus();
+          genderSelect.style.borderColor = '#ff4d4d';
+        }
+        showToast('Please select your Gender (Groom / Bride).', 'gold');
+        return false;
+      }
+
+      // 4. Mandatory Authentic Email Address
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
+        const emailInput = document.getElementById('regEmail');
+        if (emailInput) {
+          emailInput.focus();
+          emailInput.style.borderColor = '#ff4d4d';
+        }
+        showToast('Please enter a valid authentic Email Address.', 'gold');
+        return false;
+      }
+
+      // 5. Mandatory Mobile Number
+      if (!phone) {
+        if (phoneInput) {
+          phoneInput.focus();
+          phoneInput.style.borderColor = '#ff4d4d';
+        }
+        showToast('Please enter your Contact Mobile Number.', 'gold');
         return false;
       }
 
       const rawDigits = phone.replace(/[^0-9]/g, '').slice(-10);
       if (rawDigits.length !== 10) {
-        showToast('Please enter a valid 10-digit mobile number');
+        if (phoneInput) {
+          phoneInput.focus();
+          phoneInput.style.borderColor = '#ff4d4d';
+        }
+        showToast('Please enter a valid 10-digit mobile number.', 'gold');
+        return false;
+      }
+
+      // 6. Mandatory Password
+      if (!pass || pass.length < 6) {
+        const passInput = document.getElementById('regPassword');
+        if (passInput) {
+          passInput.focus();
+          passInput.style.borderColor = '#ff4d4d';
+        }
+        showToast('Password must be at least 6 characters long.', 'gold');
         return false;
       }
 
@@ -2026,16 +2090,80 @@ function initRegisterPage() {
       return true;
     } else if (stepIdx === 1) {
       const clanSelect = document.getElementById('regCaste').value;
-      const clan = clanSelect === 'Other' ? document.getElementById('regCasteOther').value.trim() : clanSelect;
-      const gotra = document.getElementById('regGotra').value.trim();
+      const clan = clanSelect === 'Other' ? (document.getElementById('regCasteOther')?.value || '').trim() : clanSelect;
       const age = document.getElementById('regAge').value;
-      const religion = document.getElementById('regReligion').value;
-      const casteType = document.getElementById('regCasteType').value;
       const dob = document.getElementById('regDOB').value;
       const pob = document.getElementById('regPOB').value.trim();
+      const gotra = document.getElementById('regGotra').value.trim();
+      const religion = document.getElementById('regReligion').value;
+      const casteType = document.getElementById('regCasteType').value;
 
-      if (!clan || !gotra || !age || !religion || !casteType || !dob || !pob) {
-        showToast('Please fill all lineage, heritage and birth details');
+      // 1. Mandatory Clan
+      if (!clanSelect) {
+        const clanEl = document.getElementById('regCaste');
+        if (clanEl) {
+          clanEl.focus();
+          clanEl.style.borderColor = '#ff4d4d';
+        }
+        showToast('👑 Rajput Clan is mandatory. Please select your Clan.', 'gold');
+        return false;
+      }
+      if (clanSelect === 'Other' && !clan) {
+        const clanOtherEl = document.getElementById('regCasteOther');
+        if (clanOtherEl) {
+          clanOtherEl.focus();
+          clanOtherEl.style.borderColor = '#ff4d4d';
+        }
+        showToast('Please specify your Rajput Clan name.', 'gold');
+        return false;
+      }
+
+      // 2. Mandatory Age
+      if (!age || parseInt(age) < 18) {
+        const ageEl = document.getElementById('regAge');
+        if (ageEl) {
+          ageEl.focus();
+          ageEl.style.borderColor = '#ff4d4d';
+        }
+        showToast('Please enter a valid age (minimum 18 years).', 'gold');
+        return false;
+      }
+
+      // 3. Mandatory Date of Birth (DOB)
+      if (!dob) {
+        const dobEl = document.getElementById('regDOB');
+        if (dobEl) {
+          dobEl.focus();
+          dobEl.style.borderColor = '#ff4d4d';
+        }
+        showToast('👑 Date of Birth is mandatory. Please select your birth date.', 'gold');
+        return false;
+      }
+
+      // 4. Mandatory Place of Birth (POB)
+      if (!pob) {
+        const pobEl = document.getElementById('regPOB');
+        if (pobEl) {
+          pobEl.focus();
+          pobEl.style.borderColor = '#ff4d4d';
+        }
+        showToast('👑 Place of Birth is mandatory. Please enter your birth location.', 'gold');
+        return false;
+      }
+
+      // 5. Mandatory Father's Gotra
+      if (!gotra) {
+        const gotraEl = document.getElementById('regGotra');
+        if (gotraEl) {
+          gotraEl.focus();
+          gotraEl.style.borderColor = '#ff4d4d';
+        }
+        showToast('👑 Father\'s Gotra is mandatory for royal lineage verification.', 'gold');
+        return false;
+      }
+
+      if (!religion || !casteType) {
+        showToast('Please complete your religion and caste details.', 'gold');
         return false;
       }
       return true;

@@ -5377,4 +5377,48 @@ body:has(.dashboard-subnav) {
   background: rgba(0, 0, 0, 0.8) !important;
 }
 
+/* Auth Card Contrast Fixes - Make All Minimal / Back Buttons & Footer Links White */
+.auth-card .btn-minimal,
+.auth-card .btn-prev,
+.btn-minimal.btn-prev {
+  color: #FFFFFF !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.55) !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  font-weight: 600 !important;
+  transition: all 0.25s ease !important;
+}
+
+.auth-card .btn-minimal:hover,
+.auth-card .btn-prev:hover,
+.btn-minimal.btn-prev:hover {
+  color: #FCD34D !important;
+  border-color: #FCD34D !important;
+  background: rgba(0, 0, 0, 0.65) !important;
+  transform: translateY(-1px);
+}
+
+.auth-card .auth-footer,
+.auth-footer {
+  color: rgba(245, 237, 224, 0.85) !important;
+}
+
+.auth-card .auth-footer p,
+.auth-footer p {
+  color: rgba(245, 237, 224, 0.85) !important;
+}
+
+.auth-card .auth-footer a,
+.auth-footer a {
+  color: #FFFFFF !important;
+  text-decoration: underline !important;
+  font-weight: 700 !important;
+  transition: color 0.2s ease !important;
+}
+
+.auth-card .auth-footer a:hover,
+.auth-footer a:hover {
+  color: #FCD34D !important;
+}
+
+
 
