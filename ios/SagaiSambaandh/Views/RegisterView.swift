@@ -105,10 +105,12 @@ struct RegisterView: View {
                 }
                 .padding(24)
             }
+            .scrollDismissesKeyboard(.immediately)
             Spacer()
         }
         .background(Color.deepMaroon.edgesIgnoringSafeArea(.all))
         .navigationBarHidden(true)
+        .addKeyboardOkButton()
     }
     
     // STEP 1 Layout: Personal Info

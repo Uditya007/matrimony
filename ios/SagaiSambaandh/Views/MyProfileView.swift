@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct MyProfileView: View {
     @EnvironmentObject var session: SagaiSessionManager
@@ -31,7 +32,11 @@ struct MyProfileView: View {
     @State private var gender: String = "Groom"
     @State private var lookingFor: String = "Bride"
     
-    @State private var showingAvatarChooser: Bool = false
+    // Gallery & Camera Photo Pickers
+    @State private var showingPhotoActionSheet: Bool = false
+    @State private var showingImagePicker: Bool = false
+    @State private var pickerSourceType: UIImagePickerController.SourceType = .photoLibrary
+    
     @State private var showingPartnerPreferencesSheet: Bool = false
     @State private var showingBiodataSheet: Bool = false
     @State private var showingLogoutAlert: Bool = false
@@ -55,7 +60,14 @@ struct MyProfileView: View {
     
     var body: some View {
         ZStack {
-            Color.appSurfaceElevated.edgesIgnoringSafeArea(.all)
+            // Dismiss keyboard when tapping on background
+            Color.appSurfaceElevated
+                .edgesIgnoringSafeArea(.all)
+                .onTapGesture {
+                    #if canImport(UIKit)
+                    UIApplication.shared.endEditing()
+                    #endif
+                }
             
             VStack(spacing: 0) {
                 // Top Custom Header Bar
@@ -63,7 +75,7 @@ struct MyProfileView: View {
                 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 18) {
-                        // 1. Hero Profile Header Card
+                        // 1. Hero Profile Header Card with Direct Phone Gallery Photo Picker
                         heroProfileCard
                         
                         // 2. Partner Preferences Showcase & Quick Editor
@@ -93,6 +105,7 @@ struct MyProfileView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 16)
                 }
+                .scrollDismissesKeyboard(.immediately)
             }
             
             // Floating Success Notification Toast
@@ -124,9 +137,30 @@ struct MyProfileView: View {
                 .zIndex(20)
             }
         }
-        .sheet(isPresented: $showingAvatarChooser) {
-            AvatarSelectionView()
-                .environmentObject(session)
+        .actionSheet(isPresented: $showingPhotoActionSheet) {
+            var buttons: [ActionSheet.Button] = [
+                .default(Text("Choose from Phone Gallery")) {
+                    pickerSourceType = .photoLibrary
+                    showingImagePicker = true
+                }
+            ]
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                buttons.append(.default(Text("Take Photo with Camera")) {
+                    pickerSourceType = .camera
+                    showingImagePicker = true
+                })
+            }
+            buttons.append(.cancel())
+            return ActionSheet(
+                title: Text("Change Profile Picture"),
+                message: Text("Select an authentic photo from your phone gallery to update your Rajput profile."),
+                buttons: buttons
+            )
+        }
+        .sheet(isPresented: $showingImagePicker) {
+            PhoneGalleryPicker(sourceType: pickerSourceType, isPresented: $showingImagePicker) { image in
+                self.handleGalleryPhotoPicked(image)
+            }
         }
         .sheet(isPresented: $showingPartnerPreferencesSheet) {
             PartnerPreferencesView(selectedTab: selectedTab ?? .constant(0))
@@ -152,6 +186,36 @@ struct MyProfileView: View {
             #endif
             loadUserData()
         }
+        .addKeyboardOkButton()
+    }
+    
+    // MARK: - Photo Gallery Picker Handler
+    private func handleGalleryPhotoPicked(_ image: UIImage) {
+        guard var user = session.currentUser else { return }
+        guard let base64Data = image.toBase64Jpeg(maxDimension: 600, compressionQuality: 0.75) else { return }
+        
+        user.profilePic = base64Data
+        session.updateCurrentUser(updated: user)
+        
+        SupabaseClient.shared.updateProfile(user: user) { success in
+            DispatchQueue.main.async {
+                self.savedToastMessage = success ? "Profile picture updated from Gallery!" : "Photo updated locally"
+                withAnimation {
+                    self.showSavedToast = true
+                }
+                
+                #if canImport(UIKit)
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(success ? .success : .warning)
+                #endif
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                    withAnimation {
+                        self.showSavedToast = false
+                    }
+                }
+            }
+        }
     }
     
     // MARK: - Top Header Bar
@@ -159,6 +223,9 @@ struct MyProfileView: View {
         HStack {
             if let isSideMenuOpen = isSideMenuOpen {
                 Button(action: {
+                    #if canImport(UIKit)
+                    UIApplication.shared.endEditing()
+                    #endif
                     withAnimation {
                         isSideMenuOpen.wrappedValue = true
                     }
@@ -172,6 +239,9 @@ struct MyProfileView: View {
                 }
             } else if selectedTab == nil {
                 Button(action: {
+                    #if canImport(UIKit)
+                    UIApplication.shared.endEditing()
+                    #endif
                     presentationMode.wrappedValue.dismiss()
                 }) {
                     Text("Close")
@@ -234,29 +304,40 @@ struct MyProfileView: View {
         )
     }
     
-    // MARK: - Hero Profile Card
+    // MARK: - Hero Profile Card (Tap Avatar to Open Phone Gallery)
     private var heroProfileCard: some View {
         VStack(spacing: 14) {
             ZStack(alignment: .bottomTrailing) {
-                AvatarImageView(
-                    imageSource: session.currentUser?.profilePic,
-                    name: session.currentUser?.name ?? "Member",
-                    clan: session.currentUser?.clan ?? "",
-                    contentMode: .fill,
-                    fallbackFontSize: 32
-                )
-                .frame(width: 90, height: 90)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color.royalGold, lineWidth: 2.5))
-                .shadow(color: Color.black.opacity(0.08), radius: 8, y: 4)
+                Button(action: {
+                    #if canImport(UIKit)
+                    UIApplication.shared.endEditing()
+                    #endif
+                    showingPhotoActionSheet = true
+                }) {
+                    AvatarImageView(
+                        imageSource: session.currentUser?.profilePic,
+                        name: session.currentUser?.name ?? "Member",
+                        clan: session.currentUser?.clan ?? "",
+                        contentMode: .fill,
+                        fallbackFontSize: 32
+                    )
+                    .frame(width: 96, height: 96)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.royalGold, lineWidth: 2.5))
+                    .shadow(color: Color.black.opacity(0.08), radius: 8, y: 4)
+                }
+                .buttonStyle(PlainButtonStyle())
                 
                 Button(action: {
-                    showingAvatarChooser = true
+                    #if canImport(UIKit)
+                    UIApplication.shared.endEditing()
+                    #endif
+                    showingPhotoActionSheet = true
                 }) {
                     Image(systemName: "camera.fill")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.white)
-                        .frame(width: 28, height: 28)
+                        .frame(width: 30, height: 30)
                         .background(
                             LinearGradient(
                                 colors: [Color.appPrimary, Color.appSecondary],
@@ -265,7 +346,8 @@ struct MyProfileView: View {
                             )
                         )
                         .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                        .overlay(Circle().stroke(Color.white, lineWidth: 2.2))
+                        .shadow(color: Color.black.opacity(0.15), radius: 3, y: 1)
                 }
             }
             
@@ -286,6 +368,26 @@ struct MyProfileView: View {
                             .foregroundColor(Color.appTextSecondary)
                     }
                 }
+                
+                Button(action: {
+                    #if canImport(UIKit)
+                    UIApplication.shared.endEditing()
+                    #endif
+                    showingPhotoActionSheet = true
+                }) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "photo.badge.plus")
+                            .font(.system(size: 11))
+                        Text("Change Photo from Phone Gallery")
+                            .font(BrandFonts.bodyBold(size: 12))
+                    }
+                    .foregroundColor(Color.appPrimary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 5)
+                    .background(Color.appPrimary.opacity(0.08))
+                    .cornerRadius(12)
+                }
+                .padding(.top, 4)
                 
                 HStack(spacing: 8) {
                     // Verified Badge
@@ -316,7 +418,7 @@ struct MyProfileView: View {
                     .background(Color.starGold.opacity(0.12))
                     .cornerRadius(12)
                 }
-                .padding(.top, 4)
+                .padding(.top, 2)
             }
         }
         .frame(maxWidth: .infinity)
@@ -344,6 +446,9 @@ struct MyProfileView: View {
                 Spacer()
                 
                 Button(action: {
+                    #if canImport(UIKit)
+                    UIApplication.shared.endEditing()
+                    #endif
                     showingPartnerPreferencesSheet = true
                 }) {
                     HStack(spacing: 4) {
@@ -388,6 +493,9 @@ struct MyProfileView: View {
             }
             
             Button(action: {
+                #if canImport(UIKit)
+                UIApplication.shared.endEditing()
+                #endif
                 showingPartnerPreferencesSheet = true
             }) {
                 HStack {
@@ -670,6 +778,9 @@ struct MyProfileView: View {
             HStack(spacing: 12) {
                 // View Biodata Card
                 Button(action: {
+                    #if canImport(UIKit)
+                    UIApplication.shared.endEditing()
+                    #endif
                     showingBiodataSheet = true
                 }) {
                     HStack(spacing: 6) {
@@ -688,6 +799,9 @@ struct MyProfileView: View {
                 
                 // Upgrade to Premium
                 Button(action: {
+                    #if canImport(UIKit)
+                    UIApplication.shared.endEditing()
+                    #endif
                     if let selectedTab = selectedTab {
                         selectedTab.wrappedValue = 2 // Tab 2 is Premium in the middle
                     }
@@ -709,6 +823,9 @@ struct MyProfileView: View {
             
             // Log Out Button
             Button(action: {
+                #if canImport(UIKit)
+                UIApplication.shared.endEditing()
+                #endif
                 showingLogoutAlert = true
             }) {
                 HStack(spacing: 6) {
@@ -761,6 +878,12 @@ struct MyProfileView: View {
                 .background(Color.appCardBackground)
                 .cornerRadius(10)
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.appBorder, lineWidth: 1))
+                .submitLabel(.done)
+                .onSubmit {
+                    #if canImport(UIKit)
+                    UIApplication.shared.endEditing()
+                    #endif
+                }
         }
     }
     
@@ -793,6 +916,10 @@ struct MyProfileView: View {
     }
     
     private func saveProfileCard() {
+        #if canImport(UIKit)
+        UIApplication.shared.endEditing()
+        #endif
+        
         guard let user = session.currentUser else { return }
         isSaving = true
         session.setLookingForGender(lookingFor)

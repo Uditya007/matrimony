@@ -481,6 +481,7 @@ struct ContentView: View {
                         }
                         .accentColor(.appPrimary)
                         .disabled(isSideMenuOpen)
+                        .addKeyboardOkButton()
                         
                         // Dimmed overlay when side menu drawer is open
                         if isSideMenuOpen {

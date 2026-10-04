@@ -159,6 +159,7 @@ struct ChatView: View {
             pollTimer?.invalidate()
             pollTimer = nil
         }
+        .addKeyboardOkButton()
     }
     
     // MARK: - New Matches Section (UI Kit Activity Story Tray)

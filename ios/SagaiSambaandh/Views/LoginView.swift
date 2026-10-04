@@ -348,6 +348,7 @@ struct LoginView: View {
         }
         .background(Color.white.edgesIgnoringSafeArea(.all))
         .navigationBarHidden(true)
+        .addKeyboardOkButton()
     }
     
     // MARK: - Phone OTP Authentication

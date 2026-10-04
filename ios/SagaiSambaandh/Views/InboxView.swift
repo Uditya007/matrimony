@@ -520,6 +520,7 @@ struct ChatDetailView: View {
             timer?.invalidate()
             timer = nil
         }
+        .addKeyboardOkButton()
     }
     
     private func formatMessageTime(_ date: Date) -> String {

@@ -129,3 +129,55 @@ struct BrandFonts {
         return Font.system(size: size, weight: .bold, design: .default)
     }
 }
+
+// MARK: - Global Keyboard Dismissal & OK Button Modifier
+#if canImport(UIKit)
+extension UIApplication {
+    func endEditing() {
+        sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+#endif
+
+struct KeyboardOkBarModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button(action: {
+                        #if canImport(UIKit)
+                        UIApplication.shared.endEditing()
+                        #endif
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 13, weight: .bold))
+                            Text("OK")
+                                .font(BrandFonts.bodyBold(size: 15))
+                        }
+                        .foregroundColor(Color.appPrimary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .background(Color.appPrimary.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                }
+            }
+    }
+}
+
+extension View {
+    func addKeyboardOkButton() -> some View {
+        self.modifier(KeyboardOkBarModifier())
+    }
+    
+    func hideKeyboardOnTap() -> some View {
+        self.onTapGesture {
+            #if canImport(UIKit)
+            UIApplication.shared.endEditing()
+            #endif
+        }
+    }
+}
+

@@ -330,6 +330,7 @@ struct OnboardingView: View {
                 profilePicInput = user.profilePic ?? ""
             }
         }
+        .addKeyboardOkButton()
     }
     
     private func loadImage() {
