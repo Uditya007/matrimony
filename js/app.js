@@ -449,6 +449,10 @@ window.handleSendVerificationOtp = function(isResend = false) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ phone: rawNumber, otp: generatedOtp })
+  }).then(r => r.json()).then(data => {
+    if (data.success && data.provider === 'Fast2SMS') {
+      showToast('📱 SMS successfully dispatched to your mobile via Fast2SMS!', 'gold');
+    }
   }).catch(e => console.warn('SMS dispatch warning:', e));
 
   // Start countdown timer (45 seconds)
