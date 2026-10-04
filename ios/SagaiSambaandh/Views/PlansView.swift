@@ -24,11 +24,11 @@ struct PlansView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Regal Memberships")
                         .font(BrandFonts.displayBold(size: 26))
-                        .foregroundColor(.royalMaroon)
+                        .foregroundColor(.white)
                     
                     Text("Select a Rajputana subscription tier to unlock premium features and direct family contact lines.")
                         .font(BrandFonts.body(size: 13))
-                        .foregroundColor(.gray)
+                        .foregroundColor(.white.opacity(0.85))
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 15)
@@ -98,7 +98,7 @@ struct PlansView: View {
                 .padding(.bottom, 30)
             }
         }
-        .background(Color.sandstoneIvory.edgesIgnoringSafeArea(.all))
+        .background(RoyalBackgroundView())
         .navigationTitle("Regal Plans")
         .navigationBarTitleDisplayMode(.inline)
         .alert(item: Binding<AlertItem?>(

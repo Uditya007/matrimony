@@ -4,7 +4,7 @@ struct MatchesView: View {
     @EnvironmentObject var session: SagaiSessionManager
     @Binding var selectedTab: Int
     @Binding var showingRegister: Bool
-    @Binding var isSideMenuOpen: Bool
+    var isSideMenuOpen: Binding<Bool>? = nil
     
     @State private var activeFilterTab: Int = 0 // 0 = All Matches, 1 = Gotra Compatible
     @State private var selectedProfileForDetail: Profile? = nil
@@ -85,7 +85,7 @@ struct MatchesView: View {
     
     var body: some View {
         ZStack {
-            Color.white.edgesIgnoringSafeArea(.all)
+            RoyalBackgroundView()
             
             VStack(spacing: 0) {
                 // Top Header with Location & Controls
@@ -175,19 +175,13 @@ struct MatchesView: View {
     // MARK: - Header Bar
     private var topHeaderBar: some View {
         HStack {
-            // Side Drawer Trigger
-            Button(action: {
-                withAnimation {
-                    isSideMenuOpen = true
-                }
-            }) {
-                Image(systemName: "line.horizontal.3")
-                    .foregroundColor(Color.appTextPrimary)
-                    .font(.title2)
-                    .frame(width: 40, height: 40)
-                    .background(Color.appCardBackground)
-                    .clipShape(Circle())
-            }
+            // Royal Crest Monogram
+            Image(systemName: "crown.fill")
+                .foregroundColor(Color.royalGold)
+                .font(.system(size: 18))
+                .frame(width: 40, height: 40)
+                .background(Color.white.opacity(0.15))
+                .clipShape(Circle())
             
             Spacer()
             
@@ -195,15 +189,15 @@ struct MatchesView: View {
             VStack(spacing: 2) {
                 Text("Discover")
                     .font(BrandFonts.displayBold(size: 20))
-                    .foregroundColor(Color.appTextPrimary)
+                    .foregroundColor(.white)
                 
                 HStack(spacing: 4) {
                     Image(systemName: "mappin.circle.fill")
                         .font(.system(size: 12))
-                        .foregroundColor(Color.appPrimary)
+                        .foregroundColor(Color.lightGold)
                     Text("Rajasthan • Showing \(session.searchGender)s")
                         .font(BrandFonts.body(size: 12, weight: .semibold))
-                        .foregroundColor(Color.appTextSecondary)
+                        .foregroundColor(.white.opacity(0.85))
                 }
             }
             
@@ -216,10 +210,10 @@ struct MatchesView: View {
                 }
             }) {
                 Image(systemName: viewMode == 0 ? "square.grid.2x2.fill" : "rectangle.stack.fill")
-                    .foregroundColor(Color.appTextPrimary)
+                    .foregroundColor(.white)
                     .font(.system(size: 16, weight: .semibold))
                     .frame(width: 40, height: 40)
-                    .background(Color.appCardBackground)
+                    .background(Color.white.opacity(0.18))
                     .clipShape(Circle())
             }
         }
@@ -245,14 +239,14 @@ struct MatchesView: View {
                         Image(systemName: "arrow.triangle.2.circlepath")
                             .font(.system(size: 11, weight: .bold))
                     }
-                    .foregroundColor(Color.appPrimary)
+                    .foregroundColor(.white)
                     .padding(.horizontal, 13)
                     .padding(.vertical, 8)
-                    .background(Color.appPrimary.opacity(0.12))
+                    .background(Color.white.opacity(0.18))
                     .clipShape(Capsule())
                     .overlay(
                         Capsule()
-                            .stroke(Color.appPrimary.opacity(0.35), lineWidth: 1)
+                            .stroke(Color.royalGold.opacity(0.6), lineWidth: 1.2)
                     )
                 }
                 
@@ -277,10 +271,10 @@ struct MatchesView: View {
                     .font(BrandFonts.body(size: 11, weight: .bold))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(isSelected ? Color.white.opacity(0.25) : Color.black.opacity(0.06))
+                    .background(isSelected ? Color.white.opacity(0.25) : Color.white.opacity(0.15))
                     .clipShape(Capsule())
             }
-            .foregroundColor(isSelected ? .white : Color.appTextSecondary)
+            .foregroundColor(.white)
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
             .background(
@@ -292,14 +286,14 @@ struct MatchesView: View {
                             endPoint: .trailing
                         )
                     } else {
-                        Color.appCardBackground
+                        Color.white.opacity(0.18)
                     }
                 }
             )
             .clipShape(Capsule())
             .overlay(
                 Capsule()
-                    .stroke(isSelected ? Color.clear : Color.appBorder, lineWidth: 1)
+                    .stroke(isSelected ? Color.clear : Color.white.opacity(0.25), lineWidth: 1)
             )
         }
     }

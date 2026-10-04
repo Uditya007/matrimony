@@ -9,28 +9,14 @@ struct InboxView: View {
     
     var body: some View {
         ZStack {
-            Color.white.edgesIgnoringSafeArea(.all)
+            RoyalBackgroundView()
             
             VStack(spacing: 0) {
                 // Top Custom Header
                 HStack(spacing: 12) {
-                    if let isSideMenuOpen = isSideMenuOpen {
-                        Button(action: {
-                            withAnimation {
-                                isSideMenuOpen.wrappedValue = true
-                            }
-                        }) {
-                            Image(systemName: "line.horizontal.3")
-                                .foregroundColor(Color.appTextPrimary)
-                                .font(.title2)
-                                .frame(width: 40, height: 40)
-                                .background(Color.appCardBackground)
-                                .clipShape(Circle())
-                        }
-                    }
                     Text("Requests")
                         .font(BrandFonts.displayBold(size: 26))
-                        .foregroundColor(Color.appTextPrimary)
+                        .foregroundColor(.white)
                     Spacer()
                 }
                 .padding(.horizontal, 20)

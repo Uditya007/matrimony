@@ -221,23 +221,7 @@ struct MyProfileView: View {
     // MARK: - Top Header Bar
     private var topHeaderBar: some View {
         HStack {
-            if let isSideMenuOpen = isSideMenuOpen {
-                Button(action: {
-                    #if canImport(UIKit)
-                    UIApplication.shared.endEditing()
-                    #endif
-                    withAnimation {
-                        isSideMenuOpen.wrappedValue = true
-                    }
-                }) {
-                    Image(systemName: "line.horizontal.3")
-                        .foregroundColor(Color.appTextPrimary)
-                        .font(.title2)
-                        .frame(width: 40, height: 40)
-                        .background(Color.appCardBackground)
-                        .clipShape(Circle())
-                }
-            } else if selectedTab == nil {
+            if selectedTab == nil {
                 Button(action: {
                     #if canImport(UIKit)
                     UIApplication.shared.endEditing()
@@ -715,12 +699,13 @@ struct MyProfileView: View {
                 
                 TextEditor(text: $about)
                     .font(BrandFonts.body(size: 14))
-                    .foregroundColor(Color.appTextPrimary)
-                    .frame(height: 80)
-                    .padding(8)
-                    .background(Color.appCardBackground)
+                    .foregroundColor(Color(hex: "#1B1B1E"))
+                    .scrollContentBackground(.hidden)
+                    .padding(6)
+                    .background(Color.white)
                     .cornerRadius(10)
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.appBorder, lineWidth: 1))
+                    .frame(height: 85)
             }
             
             VStack(alignment: .leading, spacing: 6) {
@@ -730,12 +715,13 @@ struct MyProfileView: View {
                 
                 TextEditor(text: $expectations)
                     .font(BrandFonts.body(size: 14))
-                    .foregroundColor(Color.appTextPrimary)
-                    .frame(height: 80)
-                    .padding(8)
-                    .background(Color.appCardBackground)
+                    .foregroundColor(Color(hex: "#1B1B1E"))
+                    .scrollContentBackground(.hidden)
+                    .padding(6)
+                    .background(Color.white)
                     .cornerRadius(10)
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.appBorder, lineWidth: 1))
+                    .frame(height: 85)
             }
         }
     }

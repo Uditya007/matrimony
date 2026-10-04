@@ -5,7 +5,7 @@ struct HomeView: View {
     @EnvironmentObject var session: SagaiSessionManager
     @Binding var selectedTab: Int
     @Binding var showingRegister: Bool
-    @Binding var isSideMenuOpen: Bool
+    var isSideMenuOpen: Binding<Bool>? = nil
     
     @State private var lookingFor: String = "Bride"
     @State private var selectedClan: String = "All Clans"
@@ -70,23 +70,25 @@ struct HomeView: View {
                         .padding(.bottom, 36)
                     }
                     
-                    // Prominent Top Navigation Row with Menu Icon
+                    // Prominent Top Navigation Row
                     HStack {
-                        Button(action: {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                isSideMenuOpen = true
+                        if let isSideMenuOpen = isSideMenuOpen {
+                            Button(action: {
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                    isSideMenuOpen.wrappedValue = true
+                                }
+                            }) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "line.horizontal.3")
+                                        .font(.system(size: 17, weight: .bold))
+                                        .foregroundColor(.white)
+                                }
+                                .frame(width: 42, height: 42)
+                                .background(Color.black.opacity(0.45))
+                                .clipShape(Circle())
+                                .overlay(Circle().stroke(Color.royalGold.opacity(0.6), lineWidth: 1.5))
+                                .shadow(color: Color.black.opacity(0.3), radius: 6, x: 0, y: 2)
                             }
-                        }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "line.horizontal.3")
-                                    .font(.system(size: 17, weight: .bold))
-                                    .foregroundColor(.white)
-                            }
-                            .frame(width: 42, height: 42)
-                            .background(Color.black.opacity(0.45))
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.royalGold.opacity(0.6), lineWidth: 1.5))
-                            .shadow(color: Color.black.opacity(0.3), radius: 6, x: 0, y: 2)
                         }
                         
                         Spacer()

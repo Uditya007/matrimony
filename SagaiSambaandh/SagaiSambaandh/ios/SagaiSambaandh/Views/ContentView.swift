@@ -391,7 +391,7 @@ struct ContentView: View {
                         TabView(selection: $selectedTab) {
                             // Tab 0: Discover (1st tab)
                             NavigationView {
-                                MatchesView(selectedTab: $selectedTab, showingRegister: $showingRegister, isSideMenuOpen: $isSideMenuOpen)
+                                MatchesView(selectedTab: $selectedTab, showingRegister: $showingRegister)
                                     .environmentObject(session)
                                     .navigationBarHidden(true)
                             }
@@ -402,7 +402,7 @@ struct ContentView: View {
                             
                             // Tab 1: Messages (2nd tab)
                             NavigationView {
-                                ChatView(selectedTab: $selectedTab, showingRegister: $showingRegister, isSideMenuOpen: $isSideMenuOpen)
+                                ChatView(selectedTab: $selectedTab, showingRegister: $showingRegister)
                                     .environmentObject(session)
                                     .navigationBarHidden(true)
                             }
@@ -417,21 +417,10 @@ struct ContentView: View {
                                     .environmentObject(session)
                                     .navigationBarTitleDisplayMode(.inline)
                                     .toolbar {
-                                        ToolbarItem(placement: .navigationBarLeading) {
-                                            Button(action: {
-                                                withAnimation {
-                                                    isSideMenuOpen = true
-                                                }
-                                            }) {
-                                                Image(systemName: "line.horizontal.3")
-                                                    .foregroundColor(.appTextPrimary)
-                                                    .font(.title2)
-                                            }
-                                        }
                                         ToolbarItem(placement: .principal) {
                                             Text("Premium")
                                                 .font(BrandFonts.displayBold(size: 18))
-                                                .foregroundColor(.appTextPrimary)
+                                                .foregroundColor(.white)
                                         }
                                         ToolbarItem(placement: .navigationBarTrailing) {
                                             Button(action: {
@@ -439,7 +428,7 @@ struct ContentView: View {
                                             }) {
                                                 ZStack {
                                                     Image(systemName: "bell.fill")
-                                                        .foregroundColor(.appTextPrimary)
+                                                        .foregroundColor(.white)
                                                         .font(.title2)
                                                     if !session.notificationsList.isEmpty {
                                                         Circle()
@@ -459,7 +448,7 @@ struct ContentView: View {
                             
                             // Tab 3: Requests (4th tab)
                             NavigationView {
-                                InboxView(isSideMenuOpen: $isSideMenuOpen)
+                                InboxView()
                                     .environmentObject(session)
                                     .navigationBarHidden(true)
                             }
@@ -470,7 +459,7 @@ struct ContentView: View {
                             
                             // Tab 4: Profile (5th / last tab)
                             NavigationView {
-                                MyProfileView(selectedTab: $selectedTab, isSideMenuOpen: $isSideMenuOpen)
+                                MyProfileView(selectedTab: $selectedTab)
                                     .environmentObject(session)
                                     .navigationBarHidden(true)
                             }
@@ -480,36 +469,7 @@ struct ContentView: View {
                             .tag(4)
                         }
                         .accentColor(.appPrimary)
-                        .disabled(isSideMenuOpen)
                         .addKeyboardOkButton()
-                        
-                        // Dimmed overlay when side menu drawer is open
-                        if isSideMenuOpen {
-                            Color.black.opacity(0.5)
-                                .edgesIgnoringSafeArea(.all)
-                                .onTapGesture {
-                                    withAnimation {
-                                        isSideMenuOpen = false
-                                    }
-                                }
-                        }
-                        
-                        // Sliding Side Menu
-                        HStack {
-                            SideMenuView(
-                                isOpen: $isSideMenuOpen,
-                                showingMyProfile: $showingMyProfileSheet,
-                                selectedTab: $selectedTab,
-                                showingBiodata: $showingBiodataSheet
-                            )
-                            .environmentObject(session)
-                            .frame(width: 280)
-                            .offset(x: isSideMenuOpen ? 0 : -280)
-                            .transition(.move(edge: .leading))
-                            
-                            Spacer()
-                        }
-                        .edgesIgnoringSafeArea(.vertical)
                     }
                     .sheet(isPresented: $showingMyProfileSheet) {
                         MyProfileView()
@@ -552,6 +512,7 @@ struct ContentView: View {
                 }
             }
         }
+        .preferredColorScheme(.light)
     }
     
     struct SplashView: View {

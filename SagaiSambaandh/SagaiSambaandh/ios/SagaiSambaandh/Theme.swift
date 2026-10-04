@@ -181,3 +181,35 @@ extension View {
     }
 }
 
+// MARK: - Royal Wallpaper Background (Matches Website Heritage Theme)
+struct RoyalBackgroundView: View {
+    var opacity: Double = 0.85
+    
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                // Base royal maroon tone (#6B1220 matches --bg-warm in website styles.css)
+                Color(hex: "#6B1220")
+                
+                // Heritage Peacock & Arch Wallpaper Pattern
+                Image("royal_wallpaper")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
+                    .opacity(opacity)
+                
+                // Deep maroon overlay matching linear-gradient(rgba(74, 13, 24, 0.45)...)
+                Color(hex: "#4A0D18").opacity(0.45)
+            }
+        }
+        .edgesIgnoringSafeArea(.all)
+    }
+}
+
+extension View {
+    func royalBackground(opacity: Double = 0.85) -> some View {
+        self.background(RoyalBackgroundView(opacity: opacity))
+    }
+}
+

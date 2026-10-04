@@ -66,28 +66,14 @@ struct ChatView: View {
     
     var body: some View {
         ZStack {
-            Color.white.edgesIgnoringSafeArea(.all)
+            RoyalBackgroundView()
             
             VStack(spacing: 0) {
                 // Top Header Title
                 HStack(spacing: 12) {
-                    if let isSideMenuOpen = isSideMenuOpen {
-                        Button(action: {
-                            withAnimation {
-                                isSideMenuOpen.wrappedValue = true
-                            }
-                        }) {
-                            Image(systemName: "line.horizontal.3")
-                                .foregroundColor(Color.appTextPrimary)
-                                .font(.title2)
-                                .frame(width: 40, height: 40)
-                                .background(Color.appCardBackground)
-                                .clipShape(Circle())
-                        }
-                    }
                     Text("Messages")
                         .font(BrandFonts.displayBold(size: 28))
-                        .foregroundColor(Color.appTextPrimary)
+                        .foregroundColor(.white)
                     Spacer()
                 }
                 .padding(.horizontal, 20)
@@ -114,7 +100,7 @@ struct ChatView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
-                .background(Color.appCardBackground)
+                .background(Color.white)
                 .cornerRadius(14)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 12)
@@ -204,7 +190,7 @@ struct ChatView: View {
                                 
                                 Text(profile.name.components(separatedBy: " ").first ?? profile.name)
                                     .font(BrandFonts.body(size: 12, weight: .semibold))
-                                    .foregroundColor(Color.appTextPrimary)
+                                    .foregroundColor(.white)
                                     .lineLimit(1)
                                     .frame(width: 66)
                             }
@@ -235,7 +221,7 @@ struct ChatView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(searchText.isEmpty ? "Conversations" : "Results")
                 .font(BrandFonts.displayBold(size: 15))
-                .foregroundColor(Color.appTextPrimary)
+                .foregroundColor(.white)
                 .padding(.horizontal, 20)
             
             if conversationProfiles.isEmpty {
@@ -253,6 +239,10 @@ struct ChatView: View {
                         }
                     }
                 }
+                .background(Color.white)
+                .cornerRadius(16)
+                .padding(.horizontal, 16)
+                .shadow(color: Color.black.opacity(0.12), radius: 8, y: 3)
             }
         }
     }
@@ -403,6 +393,10 @@ struct ChatView: View {
             .padding(.top, 4)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 20)
+        .padding(.vertical, 24)
+        .background(Color.white)
+        .cornerRadius(18)
+        .padding(.horizontal, 16)
+        .shadow(color: Color.black.opacity(0.1), radius: 8, y: 3)
     }
 }
