@@ -3,9 +3,11 @@ import SwiftUI
 struct ChatView: View {
     @EnvironmentObject var session: SagaiSessionManager
     var selectedTab: Binding<Int>? = nil
+    var showingRegister: Binding<Bool>? = nil
     
     @State private var searchText: String = ""
     @State private var activeChatProfile: Profile? = nil
+    @State private var pollTimer: Timer? = nil
     
     // Connected profiles (either party accepted connection)
     private var connectedProfiles: [Profile] {
@@ -133,6 +135,14 @@ struct ChatView: View {
         .onAppear {
             session.refreshCurrentUserAbout()
             session.fetchConnectionsAndGenerateNotifications()
+            pollTimer?.invalidate()
+            pollTimer = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: true) { _ in
+                session.refreshCurrentUserAbout()
+            }
+        }
+        .onDisappear {
+            pollTimer?.invalidate()
+            pollTimer = nil
         }
     }
     
@@ -193,39 +203,13 @@ struct ChatView: View {
     }
     
     private func storyAvatarImage(for profile: Profile, size: CGFloat) -> some View {
-        Group {
-            if let imgName = profile.img, !imgName.isEmpty {
-                if imgName.hasPrefix("http") {
-                    AsyncImage(url: URL(string: imgName)) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Color.appCardBackground
-                    }
-                } else {
-                    let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
-                    AsyncImage(url: URL(string: localUrl)) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Color.appCardBackground
-                    }
-                }
-            } else {
-                LinearGradient(
-                    colors: [Color.appPrimary, Color.appSecondary],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .overlay(
-                    Text(String(profile.name.prefix(1)))
-                        .font(BrandFonts.displayBold(size: size * 0.42))
-                        .foregroundColor(.white)
-                )
-            }
-        }
+        AvatarImageView(
+            imageSource: profile.img,
+            name: profile.name,
+            clan: profile.clan,
+            contentMode: .fill,
+            fallbackFontSize: size * 0.42
+        )
         .frame(width: size, height: size)
         .clipShape(Circle())
     }
@@ -359,28 +343,32 @@ struct ChatView: View {
                 Circle()
                     .fill(Color.appCardBackground)
                     .frame(width: 72, height: 72)
-                Image(systemName: "bubble.left.and.bubble.right")
+                Image(systemName: session.currentUser == nil ? "lock.shield.fill" : "bubble.left.and.bubble.right")
                     .font(.system(size: 30))
-                    .foregroundColor(Color.appTextMuted)
+                    .foregroundColor(Color.appPrimary)
             }
             .padding(.top, 30)
             
-            Text("No Conversations Yet")
+            Text(session.currentUser == nil ? "Sign In to Access Real Chats" : "No Active Conversations Yet")
                 .font(BrandFonts.displayBold(size: 16))
                 .foregroundColor(Color.appTextPrimary)
             
-            Text("Send a Rishta in Discover or accept pending requests to start communicating.")
+            Text(session.currentUser == nil ? "Log in to chat in real-time with verified Rajput brides and grooms across the web and app." : "Express a Rishta in Discover or accept connection requests to start real-time messaging.")
                 .font(BrandFonts.body(size: 13))
                 .foregroundColor(Color.appTextSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             
             Button(action: {
-                selectedTab?.wrappedValue = 1
+                if session.currentUser == nil {
+                    showingRegister?.wrappedValue = true
+                } else {
+                    selectedTab?.wrappedValue = 1
+                }
             }) {
                 HStack(spacing: 6) {
-                    Image(systemName: "rectangle.stack.fill")
-                    Text("Explore Discover Deck")
+                    Image(systemName: session.currentUser == nil ? "person.crop.circle.badge.plus" : "rectangle.stack.fill")
+                    Text(session.currentUser == nil ? "Log In / Register" : "Explore Discover Deck")
                         .font(BrandFonts.bodyBold(size: 13.5))
                 }
                 .foregroundColor(.white)

@@ -21,6 +21,9 @@ class SagaiSessionManager: ObservableObject {
             self.currentUser = user
             self.shortlistedIds = Set(user.shortlistedIds)
             self.unlockedIds = Set(user.unlockedIds)
+            self.updateSearchGenderForUser(user)
+        } else if let guestPref = UserDefaults.standard.string(forKey: "search_gender_pref_guest"), !guestPref.isEmpty {
+            self.searchGender = guestPref
         }
         
         SupabaseClient.shared.fetchProfiles { result in
@@ -67,11 +70,34 @@ class SagaiSessionManager: ObservableObject {
         return false
     }
     
+    func updateSearchGenderForUser(_ user: User) {
+        // If a customized looking-for preference was saved by user, use it; otherwise default to opposite gender
+        if let savedPref = UserDefaults.standard.string(forKey: "search_gender_pref_\(user.id)"), !savedPref.isEmpty {
+            self.searchGender = savedPref
+        } else {
+            if user.gender.lowercased() == "groom" {
+                self.searchGender = "Bride"
+            } else if user.gender.lowercased() == "bride" {
+                self.searchGender = "Groom"
+            }
+        }
+    }
+    
+    func setLookingForGender(_ gender: String) {
+        self.searchGender = gender
+        if let userId = currentUser?.id {
+            UserDefaults.standard.set(gender, forKey: "search_gender_pref_\(userId)")
+        } else {
+            UserDefaults.standard.set(gender, forKey: "search_gender_pref_guest")
+        }
+    }
+    
     func login(user: User, isNew: Bool = false) {
         self.isNewlyRegistered = isNew
         self.currentUser = user
         self.shortlistedIds = Set(user.shortlistedIds)
         self.unlockedIds = Set(user.unlockedIds)
+        self.updateSearchGenderForUser(user)
         
         if let data = try? JSONEncoder().encode(user) {
             UserDefaults.standard.set(data, forKey: "saved_user_session")
@@ -110,12 +136,13 @@ class SagaiSessionManager: ObservableObject {
     }
     
     func setSearchFilters(gender: String, clan: String) {
-        self.searchGender = gender
+        setLookingForGender(gender)
         self.searchClan = clan
     }
     
     func updateCurrentUser(updated: User) {
         self.currentUser = updated
+        self.updateSearchGenderForUser(updated)
         if let data = try? JSONEncoder().encode(updated) {
             UserDefaults.standard.set(data, forKey: "saved_user_session")
         }
@@ -211,15 +238,19 @@ class SagaiSessionManager: ObservableObject {
         }
     }
     
+    func updateCurrentUserAbout(_ about: String) {
+        self.currentUser?.about = about
+        if let user = self.currentUser, let data = try? JSONEncoder().encode(user) {
+            UserDefaults.standard.set(data, forKey: "saved_user_session")
+        }
+    }
+    
     func refreshCurrentUserAbout() {
         guard let currentUserId = currentUser?.id else { return }
         SupabaseClient.shared.fetchProfileAbout(profileId: currentUserId) { [weak self] about in
             DispatchQueue.main.async {
                 guard let about = about else { return }
-                self?.currentUser?.about = about
-                if let user = self?.currentUser, let data = try? JSONEncoder().encode(user) {
-                    UserDefaults.standard.set(data, forKey: "saved_user_session")
-                }
+                self?.updateCurrentUserAbout(about)
             }
         }
     }
@@ -459,7 +490,7 @@ struct ContentView: View {
                             
                             // Chat View
                             NavigationView {
-                                ChatView(selectedTab: $selectedTab)
+                                ChatView(selectedTab: $selectedTab, showingRegister: $showingRegister)
                                     .environmentObject(session)
                                     .navigationBarTitleDisplayMode(.inline)
                                     .toolbar {

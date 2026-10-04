@@ -68,44 +68,13 @@ struct ProfileCard: View {
                     }
                 } else {
                     // Unlocked Image state
-                    Group {
-                        if let imgName = profile.img, !imgName.isEmpty {
-                            if imgName.hasPrefix("http") {
-                                AsyncImage(url: URL(string: imgName)) { image in
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                } placeholder: {
-                                    ZStack {
-                                        Color.deepMaroon
-                                        ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
-                                    }
-                                }
-                            } else {
-                                let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
-                                AsyncImage(url: URL(string: localUrl)) { image in
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                } placeholder: {
-                                    ZStack {
-                                        Color.deepMaroon
-                                        ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .royalGold))
-                                    }
-                                }
-                            }
-                        } else {
-                            // Monogram avatar initials fallback
-                            clanGradient
-                                .overlay(
-                                    Text(profile.name.components(separatedBy: " ").map { String($0.prefix(1)) }.joined())
-                                        .font(BrandFonts.displayBold(size: 40))
-                                        .foregroundColor(.sandstoneIvory)
-                                )
-                        }
-                    }
+                    AvatarImageView(
+                        imageSource: profile.img,
+                        name: profile.name,
+                        clan: profile.clan,
+                        contentMode: .fill,
+                        fallbackFontSize: 40
+                    )
                     .frame(height: 240)
                     .clipShape(JharokhaShape())
                     .overlay(JharokhaBorder())

@@ -18,37 +18,16 @@ struct SideMenuView: View {
                         Button(action: {
                             showingAvatarSelection = true
                         }) {
-                            if let pic = user.profilePic, !pic.isEmpty {
-                                if pic.contains("http") {
-                                    AsyncImage(url: URL(string: pic)) { phase in
-                                        switch phase {
-                                        case .success(let image):
-                                            image.resizable()
-                                                 .aspectRatio(contentMode: .fill)
-                                                 .frame(width: 60, height: 60)
-                                                 .clipShape(Circle())
-                                        default:
-                                            Image(systemName: "person.crop.circle.fill")
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fit)
-                                                .frame(width: 60, height: 60)
-                                                .foregroundColor(.sandstoneIvory.opacity(0.8))
-                                        }
-                                    }
-                                } else {
-                                    Image(pic)
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                        .frame(width: 60, height: 60)
-                                        .clipShape(Circle())
-                                }
-                            } else {
-                                Image(systemName: "person.crop.circle.fill")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 60, height: 60)
-                                    .foregroundColor(.sandstoneIvory.opacity(0.8))
-                            }
+                            AvatarImageView(
+                                imageSource: user.profilePic,
+                                name: user.name,
+                                clan: user.clan,
+                                contentMode: .fill,
+                                fallbackFontSize: 22
+                            )
+                            .frame(width: 60, height: 60)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.royalGold, lineWidth: 1.5))
                         }
                         
                         Circle()

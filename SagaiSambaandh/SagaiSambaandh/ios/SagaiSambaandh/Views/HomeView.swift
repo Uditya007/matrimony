@@ -29,7 +29,7 @@ struct HomeView: View {
                 // Hero Header Banner with Slide Show
                 ZStack(alignment: .bottom) {
                     // Couples Slideshow Background Image
-                    AsyncImage(url: URL(string: "https://shreerajputsagaisambandh.com/images/slide\(activeHeroSlide + 1).jpg")) { image in
+                    AsyncImage(url: URL(string: "https://www.shreerajputsagaisambandh.com/images/slide\(activeHeroSlide + 1).jpg")) { image in
                         image.resizable()
                              .aspectRatio(contentMode: .fill)
                     } placeholder: {

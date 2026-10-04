@@ -47,37 +47,16 @@ struct MyProfileView: View {
                     
                     // Portrait Selection
                     VStack(spacing: 8) {
-                        if let pic = session.currentUser?.profilePic, !pic.isEmpty {
-                            if pic.contains("http") {
-                                AsyncImage(url: URL(string: pic)) { phase in
-                                    switch phase {
-                                    case .success(let image):
-                                        image.resizable()
-                                             .aspectRatio(contentMode: .fill)
-                                             .frame(width: 80, height: 80)
-                                             .clipShape(Circle())
-                                    default:
-                                        Image(systemName: "person.crop.circle.fill")
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 80, height: 80)
-                                            .foregroundColor(.sandstoneIvory.opacity(0.8))
-                                    }
-                                }
-                            } else {
-                                Image(pic)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 80, height: 80)
-                                    .clipShape(Circle())
-                            }
-                        } else {
-                            Image(systemName: "person.crop.circle.fill")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 80, height: 80)
-                                .foregroundColor(.sandstoneIvory.opacity(0.8))
-                        }
+                        AvatarImageView(
+                            imageSource: session.currentUser?.profilePic,
+                            name: session.currentUser?.name ?? "Member",
+                            clan: session.currentUser?.clan ?? "",
+                            contentMode: .fill,
+                            fallbackFontSize: 28
+                        )
+                        .frame(width: 80, height: 80)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.royalGold, lineWidth: 2))
                         
                         Button("Change Portrait") {
                             showingAvatarChooser = true

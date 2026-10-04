@@ -60,20 +60,7 @@ struct ProfileDetailView: View {
     }
     
     private var cleanAboutText: String {
-        guard var bio = profile.about else { return "" }
-        let patterns = [
-            "\\[Social Links: [^\\]]*\\]",
-            "\\[Biodata Link: [^\\]]*\\]",
-            "\\[Interests: [^\\]]*\\]",
-            "\\[Chats: [^\n\r]*\\]"
-        ]
-        for pattern in patterns {
-            if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
-                let nsRange = NSRange(bio.startIndex..<bio.endIndex, in: bio)
-                bio = regex.stringByReplacingMatches(in: bio, options: [], range: nsRange, withTemplate: "")
-            }
-        }
-        return bio.trimmingCharacters(in: .whitespacesAndNewlines)
+        return SupabaseClient.shared.cleanBioText(from: profile.about)
     }
     
     private var isUnlockedOrOwn: Bool {
@@ -160,39 +147,13 @@ struct ProfileDetailView: View {
     private var heroHeaderSection: some View {
         ZStack(alignment: .top) {
             // Photo or Fallback
-            Group {
-                if let imgName = profile.img, !imgName.isEmpty {
-                    if imgName.hasPrefix("http") {
-                        AsyncImage(url: URL(string: imgName)) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Color.appCardBackground
-                        }
-                    } else {
-                        let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
-                        AsyncImage(url: URL(string: localUrl)) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Color.appCardBackground
-                        }
-                    }
-                } else {
-                    LinearGradient(
-                        colors: [Color.appPrimary, Color.appSecondary],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    .overlay(
-                        Text(String(profile.name.prefix(1)))
-                            .font(BrandFonts.displayBold(size: 80))
-                            .foregroundColor(.white)
-                    )
-                }
-            }
+            AvatarImageView(
+                imageSource: profile.img,
+                name: profile.name,
+                clan: profile.clan,
+                contentMode: .fill,
+                fallbackFontSize: 80
+            )
             .frame(height: 380)
             .clipped()
             

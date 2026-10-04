@@ -203,39 +203,13 @@ struct ChatView: View {
     }
     
     private func storyAvatarImage(for profile: Profile, size: CGFloat) -> some View {
-        Group {
-            if let imgName = profile.img, !imgName.isEmpty {
-                if imgName.hasPrefix("http") {
-                    AsyncImage(url: URL(string: imgName)) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Color.appCardBackground
-                    }
-                } else {
-                    let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
-                    AsyncImage(url: URL(string: localUrl)) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Color.appCardBackground
-                    }
-                }
-            } else {
-                LinearGradient(
-                    colors: [Color.appPrimary, Color.appSecondary],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .overlay(
-                    Text(String(profile.name.prefix(1)))
-                        .font(BrandFonts.displayBold(size: size * 0.42))
-                        .foregroundColor(.white)
-                )
-            }
-        }
+        AvatarImageView(
+            imageSource: profile.img,
+            name: profile.name,
+            clan: profile.clan,
+            contentMode: .fill,
+            fallbackFontSize: size * 0.42
+        )
         .frame(width: size, height: size)
         .clipShape(Circle())
     }

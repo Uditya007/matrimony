@@ -125,39 +125,13 @@ struct InboxView: View {
     
     private func connectionRow(for record: ConnectionRecord, profile: Profile) -> some View {
         HStack(spacing: 14) {
-            Group {
-                if let imgName = profile.img, !imgName.isEmpty {
-                    if imgName.hasPrefix("http") {
-                        AsyncImage(url: URL(string: imgName)) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Color.appCardBackground
-                        }
-                    } else {
-                        let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
-                        AsyncImage(url: URL(string: localUrl)) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Color.appCardBackground
-                        }
-                    }
-                } else {
-                    LinearGradient(
-                        colors: [Color.appPrimary, Color.appSecondary],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    .overlay(
-                        Text(String(profile.name.prefix(1)))
-                            .font(BrandFonts.displayBold(size: 22))
-                            .foregroundColor(.white)
-                    )
-                }
-            }
+            AvatarImageView(
+                imageSource: profile.img,
+                name: profile.name,
+                clan: profile.clan,
+                contentMode: .fill,
+                fallbackFontSize: 20
+            )
             .frame(width: 52, height: 52)
             .clipShape(Circle())
             
@@ -307,39 +281,13 @@ struct ChatDetailView: View {
                         .clipShape(Circle())
                 }
                 
-                Group {
-                    if let imgName = profile.img, !imgName.isEmpty {
-                        if imgName.hasPrefix("http") {
-                            AsyncImage(url: URL(string: imgName)) { image in
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                            } placeholder: {
-                                Color.appCardBackground
-                            }
-                        } else {
-                            let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
-                            AsyncImage(url: URL(string: localUrl)) { image in
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                            } placeholder: {
-                                Color.appCardBackground
-                            }
-                        }
-                    } else {
-                        LinearGradient(
-                            colors: [Color.appPrimary, Color.appSecondary],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        .overlay(
-                            Text(String(profile.name.prefix(1)))
-                                .font(BrandFonts.displayBold(size: 16))
-                                .foregroundColor(.white)
-                        )
-                    }
-                }
+                AvatarImageView(
+                    imageSource: profile.img,
+                    name: profile.name,
+                    clan: profile.clan,
+                    contentMode: .fill,
+                    fallbackFontSize: 18
+                )
                 .frame(width: 42, height: 42)
                 .clipShape(Circle())
                 
@@ -546,14 +494,16 @@ struct ChatDetailView: View {
         }
         .background(Color.white.edgesIgnoringSafeArea(.all))
         .onAppear {
-            if let user = currentUser {
+            if let user = session.currentUser ?? currentUser {
                 SupabaseClient.shared.notifyAdminChatOpened(fromUser: user, toProfile: profile)
                 loadMessages()
+                fetchFreshMessages()
                 startPolling()
             }
         }
         .onDisappear {
             timer?.invalidate()
+            timer = nil
         }
     }
     
@@ -564,11 +514,12 @@ struct ChatDetailView: View {
     }
     
     private func loadMessages() {
-        guard let user = session.currentUser ?? currentUser else { return }
+        guard let currentUserId = session.currentUser?.id ?? currentUser?.id else { return }
+        let currentAbout = session.currentUser?.about ?? currentUser?.about
         let currentProfile = session.profiles.first(where: { $0.id == profile.id }) ?? profile
         let combinedDicts = SupabaseClient.shared.getCombinedConversation(
-            aboutA: user.about,
-            idA: user.id,
+            aboutA: currentAbout,
+            idA: currentUserId,
             aboutB: currentProfile.about,
             idB: currentProfile.id
         )
@@ -580,30 +531,31 @@ struct ChatDetailView: View {
         }
     }
     
-    private func startPolling() {
-        timer = Timer.scheduledTimer(withTimeInterval: 3.5, repeats: true) { _ in
-            // Poll both partner's profile and current user's profile for live message parity
-            SupabaseClient.shared.fetchProfileAbout(profileId: profile.id) { updatedPartnerAbout in
-                DispatchQueue.main.async {
-                    if let updatedPartnerAbout = updatedPartnerAbout {
-                        if let index = session.profiles.firstIndex(where: { $0.id == profile.id }) {
-                            session.profiles[index].about = updatedPartnerAbout
-                        }
+    private func fetchFreshMessages() {
+        guard let myId = session.currentUser?.id ?? currentUser?.id else { return }
+        SupabaseClient.shared.fetchProfileAbout(profileId: profile.id) { updatedPartnerAbout in
+            DispatchQueue.main.async {
+                if let updatedPartnerAbout = updatedPartnerAbout {
+                    if let index = session.profiles.firstIndex(where: { $0.id == profile.id }) {
+                        session.profiles[index].about = updatedPartnerAbout
                     }
-                    if let myId = session.currentUser?.id {
-                        SupabaseClient.shared.fetchProfileAbout(profileId: myId) { myUpdatedAbout in
-                            DispatchQueue.main.async {
-                                if let myUpdatedAbout = myUpdatedAbout {
-                                    session.currentUser?.about = myUpdatedAbout
-                                }
-                                loadMessages()
-                            }
+                }
+                SupabaseClient.shared.fetchProfileAbout(profileId: myId) { myUpdatedAbout in
+                    DispatchQueue.main.async {
+                        if let myUpdatedAbout = myUpdatedAbout {
+                            session.updateCurrentUserAbout(myUpdatedAbout)
                         }
-                    } else {
                         loadMessages()
                     }
                 }
             }
+        }
+    }
+    
+    private func startPolling() {
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { _ in
+            fetchFreshMessages()
         }
     }
     
@@ -620,12 +572,14 @@ struct ChatDetailView: View {
         self.messages.append(newMsg)
         
         // Send via SupabaseClient
-        SupabaseClient.shared.sendMessage(fromUser: user, toProfile: profile, text: textToSend) { success in
+        SupabaseClient.shared.sendMessage(fromUser: user, toProfile: profile, text: textToSend) { success, updatedAbout in
             DispatchQueue.main.async {
                 self.isSending = false
                 if success {
-                    // Refresh current user's about from Supabase to stay 100% in sync
-                    self.session.refreshCurrentUserAbout()
+                    if let updatedAbout = updatedAbout {
+                        self.session.updateCurrentUserAbout(updatedAbout)
+                    }
+                    self.loadMessages()
                 } else {
                     print("Error syncing message to Supabase.")
                 }

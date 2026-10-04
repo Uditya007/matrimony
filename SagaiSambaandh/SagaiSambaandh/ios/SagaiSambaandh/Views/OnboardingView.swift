@@ -85,21 +85,15 @@ struct OnboardingView: View {
                         }) {
                             ZStack {
                                 if !profilePicInput.isEmpty {
-                                    if #available(iOS 15.0, *) {
-                                        AsyncImage(url: URL(string: profilePicInput)) { image in
-                                            image.resizable().scaledToFill()
-                                        } placeholder: {
-                                            ProgressView()
-                                        }
-                                        .frame(width: 100, height: 100)
-                                        .clipShape(Circle())
-                                    } else {
-                                        Image("groom_ranveer")
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 100, height: 100)
-                                            .clipShape(Circle())
-                                    }
+                                    AvatarImageView(
+                                        imageSource: profilePicInput,
+                                        name: session.currentUser?.name ?? "Member",
+                                        clan: selectedClan,
+                                        contentMode: .fill,
+                                        fallbackFontSize: 32
+                                    )
+                                    .frame(width: 100, height: 100)
+                                    .clipShape(Circle())
                                 } else {
                                     Circle()
                                         .fill(Color.white.opacity(0.1))

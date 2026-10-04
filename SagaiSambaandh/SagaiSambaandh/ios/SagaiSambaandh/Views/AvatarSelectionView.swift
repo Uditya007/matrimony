@@ -126,16 +126,19 @@ struct AvatarSelectionView: View {
             selectedAvatar = name
             customUrl = "" // clear custom url if preset selected
         }) {
-            Image(name)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 80, height: 80)
-                .clipShape(Circle())
-                .overlay(
-                    Circle()
-                        .stroke(selectedAvatar == name ? Color.lightGold : Color.clear, lineWidth: 3)
-                )
-                .shadow(radius: 4)
+            AvatarImageView(
+                imageSource: name,
+                name: name,
+                contentMode: .fill,
+                fallbackFontSize: 24
+            )
+            .frame(width: 80, height: 80)
+            .clipShape(Circle())
+            .overlay(
+                Circle()
+                    .stroke(selectedAvatar == name ? Color.lightGold : Color.clear, lineWidth: 3)
+            )
+            .shadow(radius: 4)
         }
     }
     

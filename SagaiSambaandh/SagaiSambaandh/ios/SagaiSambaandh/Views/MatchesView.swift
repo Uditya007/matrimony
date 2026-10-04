@@ -632,48 +632,13 @@ struct SwipeDeckView: View {
     
     // Photo View
     private func candidatePhotoView(for profile: Profile) -> some View {
-        Group {
-            if let imgName = profile.img, !imgName.isEmpty {
-                if imgName.hasPrefix("http") {
-                    AsyncImage(url: URL(string: imgName)) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        ZStack {
-                            Color.appCardBackground
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: Color.appPrimary))
-                        }
-                    }
-                } else {
-                    let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
-                    AsyncImage(url: URL(string: localUrl)) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        ZStack {
-                            Color.appCardBackground
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: Color.appPrimary))
-                        }
-                    }
-                }
-            } else {
-                // Fallback Monogram
-                ZStack {
-                    LinearGradient(
-                        colors: [Color.appPrimary.opacity(0.85), Color.appSecondary.opacity(0.85)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    Text(String(profile.name.prefix(1)))
-                        .font(BrandFonts.displayBold(size: 84))
-                        .foregroundColor(.white)
-                }
-            }
-        }
+        AvatarImageView(
+            imageSource: profile.img,
+            name: profile.name,
+            clan: profile.clan,
+            contentMode: .fill,
+            fallbackFontSize: 80
+        )
     }
     
     // Locked Card Backdrop
@@ -919,25 +884,14 @@ struct ModernGridCardItem: View {
                 ZStack(alignment: .bottomLeading) {
                     // Photo
                     Group {
-                        if !isLocked, let imgName = profile.img, !imgName.isEmpty {
-                            if imgName.hasPrefix("http") {
-                                AsyncImage(url: URL(string: imgName)) { image in
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                } placeholder: {
-                                    Color.appCardBackground
-                                }
-                            } else {
-                                let localUrl = "https://shreerajputsagaisambandh.com/images/\(imgName).png"
-                                AsyncImage(url: URL(string: localUrl)) { image in
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                } placeholder: {
-                                    Color.appCardBackground
-                                }
-                            }
+                        if !isLocked {
+                            AvatarImageView(
+                                imageSource: profile.img,
+                                name: profile.name,
+                                clan: profile.clan,
+                                contentMode: .fill,
+                                fallbackFontSize: 38
+                            )
                         } else {
                             LinearGradient(
                                 colors: [Color.appPrimary.opacity(0.8), Color.appSecondary.opacity(0.8)],
