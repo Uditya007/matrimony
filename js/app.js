@@ -191,21 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1100);
   }
 
-  // Intercept click on Sign Up buttons across public pages to initiate noble phone OTP verification
-  document.addEventListener('click', (e) => {
-    const signUpBtn = e.target.closest('#navSignUpBtn, #signUpNavBtn, #ctaRegisterBtn');
-    if (signUpBtn) {
-      const path = window.location.pathname;
-      const page = (path.split('/').pop() || 'index.html').split('?')[0].split('#')[0];
-      if (page !== 'register.html' && page !== 'register') {
-        e.preventDefault();
-        openPhoneVerificationModal({
-          isSignUpInitiation: true,
-          redirectOnSuccess: 'register.html'
-        });
-      }
-    }
-  });
 
   // Hook tab/subnav transitions across dashboard/profile pages to trigger notification alerts
   document.querySelectorAll('.subnav-tab, .filter-tab-btn, .dashboard-tab-btn, #shortlistToggleBtn').forEach(tab => {
@@ -235,6 +220,40 @@ document.addEventListener('DOMContentLoaded', () => {
 // 1. HELPER FUNCTIONS
 // ==========================================
 
+// ─── Check if Phone Exists in Database ─────────────────────────────────────
+async function checkPhoneExistsInDatabase(phoneStr) {
+  if (!phoneStr) return false;
+  const last10 = String(phoneStr).replace(/[^0-9]/g, '').slice(-10);
+  if (last10.length !== 10) return false;
+
+  // 1. Check local storage users
+  const localUsers = JSON.parse(localStorage.getItem('users')) || [];
+  const foundLocal = localUsers.some(u => {
+    const pDigits = (u.phone || '').replace(/[^0-9]/g, '').slice(-10);
+    return pDigits === last10;
+  });
+  if (foundLocal) return true;
+
+  // 2. Check Supabase profiles table
+  if (window.supabaseActive && window.supabaseClient) {
+    try {
+      const { data, error } = await window.supabaseClient
+        .from('profiles')
+        .select('id, phone')
+        .ilike('phone', `%${last10}%`)
+        .limit(1);
+
+      if (!error && data && data.length > 0) {
+        return true;
+      }
+    } catch (e) {
+      console.warn('Database phone check warning:', e);
+    }
+  }
+
+  return false;
+}
+
 // ─── Mandatory Mobile Number & OTP Verification ─────────────────────────────
 let otpCountdownInterval = null;
 
@@ -249,15 +268,49 @@ function checkMandatoryPhoneVerification() {
     return;
   }
 
-  // Check if user already has a valid verified phone number
+  // Check if user already has a valid phone number in the database
   const rawDigits = (currentUser.phone || '').replace(/[^0-9]/g, '');
-  if (rawDigits.length >= 10 && currentUser.phoneVerified) return; // Already verified!
+  if (rawDigits.length >= 10) {
+    // Number is already there in database! Do NOT ask them!
+    currentUser.phoneVerified = true;
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    return;
+  }
 
-  openPhoneVerificationModal({
-    phone: currentUser.phone,
-    name: currentUser.name,
-    isSignUpInitiation: false
-  });
+  // If phone is missing in currentUser, double check Supabase profiles table
+  if (window.supabaseActive && window.supabaseClient && currentUser.id) {
+    window.supabaseClient
+      .from('profiles')
+      .select('phone')
+      .eq('id', currentUser.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        const dbDigits = (data?.phone || '').replace(/[^0-9]/g, '');
+        if (dbDigits.length >= 10) {
+          currentUser.phone = data.phone;
+          currentUser.phoneVerified = true;
+          localStorage.setItem('currentUser', JSON.stringify(currentUser));
+          return; // Number is already in database! Do not ask!
+        }
+        // ONLY ask those whose number isn't there in database
+        openPhoneVerificationModal({
+          phone: '',
+          name: currentUser.name,
+          isSignUpInitiation: false
+        });
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // Local fallback: only ask those whose number isn't there in database
+  if (rawDigits.length < 10) {
+    openPhoneVerificationModal({
+      phone: '',
+      name: currentUser.name,
+      isSignUpInitiation: false
+    });
+  }
 }
 
 function openPhoneVerificationModal(options = {}) {
@@ -502,7 +555,7 @@ window.handleConfirmVerificationOtp = async function() {
   }
 };
 
-window.triggerRegistrationPhoneOtpModal = function() {
+window.triggerRegistrationPhoneOtpModal = async function() {
   const regPhoneInput = document.getElementById('regPhone');
   const regNameInput = document.getElementById('regName');
   const rawDigits = (regPhoneInput?.value || '').replace(/[^0-9]/g, '').slice(-10);
@@ -511,6 +564,16 @@ window.triggerRegistrationPhoneOtpModal = function() {
     if (regPhoneInput) regPhoneInput.focus();
     return;
   }
+
+  // Check if number is ALREADY in database
+  if (typeof checkPhoneExistsInDatabase === 'function') {
+    const exists = await checkPhoneExistsInDatabase(rawDigits);
+    if (exists) {
+      showToast(`⚠️ Mobile number +91 ${rawDigits} is already registered in our database! Please log in.`, 'gold');
+      return;
+    }
+  }
+
   openPhoneVerificationModal({
     phone: rawDigits,
     name: regNameInput?.value || '',
@@ -1333,8 +1396,9 @@ function initRegisterPage() {
   if (!registerForm) return;
 
   nextBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (validateStep(currentStep)) {
+    btn.addEventListener('click', async () => {
+      const isValid = await validateStep(currentStep);
+      if (isValid) {
         currentStep++;
         updateRegisterSteps();
       }
@@ -1374,6 +1438,14 @@ function initRegisterPage() {
     }
 
     if (!window.registrationPhoneVerified) {
+      const regPhoneRaw = (document.getElementById('regPhone')?.value.trim() || '').replace(/[^0-9]/g, '').slice(-10);
+      if (typeof checkPhoneExistsInDatabase === 'function') {
+        const exists = await checkPhoneExistsInDatabase(regPhoneRaw);
+        if (exists) {
+          showToast(`⚠️ Mobile number +91 ${regPhoneRaw} is already registered in our database! Please log in.`, 'gold');
+          return;
+        }
+      }
       showToast('👑 Mobile number verification is required to complete registration!', 'gold');
       currentStep = 0;
       updateRegisterSteps();
@@ -1495,7 +1567,7 @@ function initRegisterPage() {
     });
   }
 
-  function validateStep(stepIdx) {
+  async function validateStep(stepIdx) {
     if (stepIdx === 0) {
       const name = document.getElementById('regName').value.trim();
       const email = document.getElementById('regEmail').value.trim();
@@ -1530,6 +1602,21 @@ function initRegisterPage() {
         return false;
       }
 
+      // Check if number is ALREADY in database
+      if (typeof checkPhoneExistsInDatabase === 'function') {
+        const exists = await checkPhoneExistsInDatabase(rawDigits);
+        if (exists) {
+          showToast(`⚠️ Mobile number +91 ${rawDigits} is already registered in our database! Please log in.`, 'gold');
+          const errorEl = document.getElementById('regPhoneError');
+          if (errorEl) {
+            errorEl.textContent = 'This number is already registered in our database. Please log in.';
+            errorEl.style.display = 'block';
+          }
+          return false;
+        }
+      }
+
+      // ONLY ask those whose number isn't there in database!
       if (!window.registrationPhoneVerified) {
         openPhoneVerificationModal({
           phone: rawDigits,
