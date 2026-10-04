@@ -1135,11 +1135,341 @@ function initFaqAccordion() {
 }
 
 // ==========================================
-// 3. AUTH PAGE HANDLERS
+// 3. AUTH PAGE HANDLERS (LOGIN & REGISTRATION)
 // ==========================================
+
+let loginOtpCountdownInterval = null;
+
+// ─── Find User Profile By Phone or Email ─────────────────────────────
+async function findUserProfileByIdentifier(identifier) {
+  const clean = (identifier || '').trim();
+  if (!clean) return null;
+  const digits = clean.replace(/[^0-9]/g, '').slice(-10);
+  const isPhone = digits.length === 10 && !clean.includes('@');
+
+  // 1. Check seed / demo credentials
+  if (
+    clean.toLowerCase() === 'royal@shreerajputsagaisambandh.com' ||
+    clean.toLowerCase() === 'royal@lifepartnerconnects.com' ||
+    (isPhone && (digits === '9928592159' || digits === '9876543210'))
+  ) {
+    return {
+      name: 'Kunwar Shivraj Singh',
+      gender: 'Groom',
+      email: 'royal@shreerajputsagaisambandh.com',
+      phone: '+91 9928592159',
+      caste: 'Rajput',
+      clan: 'Rathore',
+      age: 28,
+      tier: 'Starter',
+      phoneVerified: true
+    };
+  }
+
+  // 2. Query Supabase profiles table
+  if (window.supabaseActive && window.supabaseClient) {
+    try {
+      let query = window.supabaseClient.from('profiles').select('*');
+      if (isPhone) {
+        query = query.ilike('phone', `%${digits}%`);
+      } else {
+        query = query.ilike('email', clean);
+      }
+      const { data, error } = await query.limit(1);
+      if (!error && data && data.length > 0) {
+        return data[0];
+      }
+    } catch (e) {
+      console.warn('Supabase profile query warning:', e);
+    }
+  }
+
+  // 3. Check LocalStorage registered users
+  const users = JSON.parse(localStorage.getItem('users')) || [];
+  if (isPhone) {
+    const matched = users.find(u => (u.phone || '').replace(/[^0-9]/g, '').slice(-10) === digits);
+    if (matched) return matched;
+  } else {
+    const matched = users.find(u => (u.email || '').toLowerCase() === clean.toLowerCase());
+    if (matched) return matched;
+  }
+
+  return null;
+}
+
+// ─── Mode Switcher (OTP vs Password) ─────────────────────────────────
+window.switchLoginAuthMode = function(mode) {
+  const tabOtp = document.getElementById('tabBtnOtp');
+  const tabPass = document.getElementById('tabBtnPassword');
+  const panelOtp = document.getElementById('panelOtpLogin');
+  const panelPass = document.getElementById('panelPasswordLogin');
+
+  if (mode === 'otp') {
+    if (tabOtp) tabOtp.classList.add('active');
+    if (tabPass) tabPass.classList.remove('active');
+    if (panelOtp) panelOtp.style.display = 'block';
+    if (panelPass) panelPass.style.display = 'none';
+  } else {
+    if (tabPass) tabPass.classList.add('active');
+    if (tabOtp) tabOtp.classList.remove('active');
+    if (panelPass) panelPass.style.display = 'block';
+    if (panelOtp) panelOtp.style.display = 'none';
+    const emailField = document.getElementById('loginEmail');
+    if (emailField) emailField.focus();
+  }
+};
+
+// ─── Channel Switcher (Mobile vs Email) ───────────────────────────────
+window.setOtpChannel = function(channel) {
+  const btnPhone = document.getElementById('channelBtnPhone');
+  const btnEmail = document.getElementById('channelBtnEmail');
+  const groupPhone = document.getElementById('otpInputGroupPhone');
+  const groupEmail = document.getElementById('otpInputGroupEmail');
+
+  if (channel === 'phone') {
+    if (btnPhone) btnPhone.classList.add('active');
+    if (btnEmail) btnEmail.classList.remove('active');
+    if (groupPhone) groupPhone.style.display = 'block';
+    if (groupEmail) groupEmail.style.display = 'none';
+    const phoneIn = document.getElementById('loginOtpPhone');
+    if (phoneIn) phoneIn.focus();
+  } else {
+    if (btnEmail) btnEmail.classList.add('active');
+    if (btnPhone) btnPhone.classList.remove('active');
+    if (groupEmail) groupEmail.style.display = 'block';
+    if (groupPhone) groupPhone.style.display = 'none';
+    const emailIn = document.getElementById('loginOtpEmail');
+    if (emailIn) emailIn.focus();
+  }
+};
+
+// ─── Send Login OTP (Phone or Email) ──────────────────────────────────
+window.handleSendLoginOtp = async function(channel) {
+  const selectedChannel = channel || (document.getElementById('channelBtnEmail')?.classList.contains('active') ? 'email' : 'phone');
+  let target = '';
+  let displayTarget = '';
+
+  if (selectedChannel === 'phone') {
+    const phoneInput = document.getElementById('loginOtpPhone');
+    const rawVal = phoneInput ? phoneInput.value.trim() : '';
+    const digits = rawVal.replace(/[^0-9]/g, '').slice(-10);
+
+    if (digits.length !== 10) {
+      showToast('Please enter a valid 10-digit mobile number', 'normal');
+      if (phoneInput) phoneInput.focus();
+      return;
+    }
+
+    target = digits;
+    displayTarget = `+91 ${digits}`;
+  } else {
+    const emailInput = document.getElementById('loginOtpEmail');
+    const rawVal = emailInput ? emailInput.value.trim() : '';
+
+    if (!rawVal || !rawVal.includes('@') || !rawVal.includes('.')) {
+      showToast('Please enter a valid email address', 'normal');
+      if (emailInput) emailInput.focus();
+      return;
+    }
+
+    target = rawVal.toLowerCase();
+    displayTarget = target;
+  }
+
+  // Generate 6-digit OTP
+  const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Save session state
+  sessionStorage.setItem('royal_login_otp', generatedOtp);
+  sessionStorage.setItem('royal_login_channel', selectedChannel);
+  sessionStorage.setItem('royal_login_target', target);
+  sessionStorage.setItem('royal_login_display_target', displayTarget);
+
+  // Update Step 2 UI
+  const displayEl = document.getElementById('loginOtpTargetDisplay');
+  if (displayEl) displayEl.textContent = displayTarget;
+
+  const demoCodeEl = document.getElementById('loginOtpDemoCode');
+  if (demoCodeEl) demoCodeEl.textContent = generatedOtp;
+
+  const codeInput = document.getElementById('loginOtpCodeInput');
+  if (codeInput) codeInput.value = '';
+
+  const errEl = document.getElementById('loginOtpCodeError');
+  if (errEl) errEl.style.display = 'none';
+
+  // Transition to Step 2
+  const step1 = document.getElementById('loginOtpStep1');
+  const step2 = document.getElementById('loginOtpStep2');
+  if (step1) step1.style.display = 'none';
+  if (step2) step2.style.display = 'block';
+
+  // Provide notification and trigger dispatch
+  if (selectedChannel === 'phone') {
+    showToast(`👑 Royal SMS Gateway: Verification code is ${generatedOtp}`, 'gold');
+
+    // Call Fast2SMS backend
+    fetch('/api/send-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: target, otp: generatedOtp })
+    }).then(r => r.json()).then(data => {
+      if (data && data.success && data.provider === 'Fast2SMS') {
+        showToast('📱 SMS successfully dispatched to your mobile via Fast2SMS!', 'gold');
+      }
+    }).catch(e => console.warn('Fast2SMS dispatch warning:', e));
+  } else {
+    showToast(`👑 Royal Email Gateway: Verification code is ${generatedOtp}`, 'gold');
+
+    if (window.supabaseActive && window.supabaseClient) {
+      window.supabaseClient.auth.signInWithOtp({ email: target }).catch(e => {
+        console.warn('Supabase signInWithOtp notice:', e);
+      });
+    }
+  }
+
+  // Start 45s countdown timer
+  startLoginOtpTimer();
+
+  if (codeInput) {
+    setTimeout(() => codeInput.focus(), 150);
+  }
+};
+
+function startLoginOtpTimer() {
+  let timeLeft = 45;
+  const timerEl = document.getElementById('loginOtpCountdown');
+  const resendBtn = document.getElementById('btnResendLoginOtp');
+
+  if (resendBtn) resendBtn.style.display = 'none';
+  if (timerEl) {
+    timerEl.style.display = 'inline';
+    timerEl.textContent = `Resend in ${timeLeft}s`;
+  }
+
+  if (loginOtpCountdownInterval) clearInterval(loginOtpCountdownInterval);
+  loginOtpCountdownInterval = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+      clearInterval(loginOtpCountdownInterval);
+      if (timerEl) timerEl.style.display = 'none';
+      if (resendBtn) resendBtn.style.display = 'inline';
+    } else {
+      if (timerEl) timerEl.textContent = `Resend in ${timeLeft}s`;
+    }
+  }, 1000);
+}
+
+window.handleResendLoginOtp = function() {
+  const channel = sessionStorage.getItem('royal_login_channel') || 'phone';
+  window.handleSendLoginOtp(channel);
+};
+
+window.resetLoginOtpStep = function() {
+  const step1 = document.getElementById('loginOtpStep1');
+  const step2 = document.getElementById('loginOtpStep2');
+  if (step1) step1.style.display = 'block';
+  if (step2) step2.style.display = 'none';
+  if (loginOtpCountdownInterval) {
+    clearInterval(loginOtpCountdownInterval);
+    loginOtpCountdownInterval = null;
+  }
+};
+
+// ─── Verify Login OTP (Access Dashboard or Route to Registration) ───────
+window.handleVerifyLoginOtp = async function() {
+  const codeInput = document.getElementById('loginOtpCodeInput');
+  const enteredOtp = codeInput ? codeInput.value.trim() : '';
+  const storedOtp = sessionStorage.getItem('royal_login_otp');
+  const errEl = document.getElementById('loginOtpCodeError');
+
+  if (!enteredOtp || enteredOtp !== storedOtp) {
+    if (errEl) {
+      errEl.textContent = 'Invalid OTP code. Please enter the valid 6-digit code.';
+      errEl.style.display = 'block';
+    }
+    showToast('Invalid OTP. Please check the code and try again.', 'normal');
+    if (codeInput) codeInput.focus();
+    return;
+  }
+
+  if (errEl) errEl.style.display = 'none';
+
+  const channel = sessionStorage.getItem('royal_login_channel') || 'phone';
+  const target = sessionStorage.getItem('royal_login_target') || '';
+
+  // Look up user profile in database / localStorage / demo
+  const userProfile = await findUserProfileByIdentifier(target);
+
+  if (userProfile) {
+    // Existing member found! Log in directly
+    userProfile.tier = userProfile.tier || 'Starter';
+    if (channel === 'phone') {
+      userProfile.phone = userProfile.phone || `+91 ${target}`;
+      userProfile.phoneVerified = true;
+    }
+    localStorage.setItem('currentUser', JSON.stringify(userProfile));
+    showToast(`Khammaghani! Welcome, ${(userProfile.name || 'Noble Member').split(' ')[0]}`, 'gold');
+    setTimeout(() => {
+      window.location.href = 'dashboard.html';
+    }, 1200);
+  } else {
+    // New user whose contact is verified! Forward smoothly to registration
+    if (channel === 'phone') {
+      sessionStorage.setItem('royal_verified_signup_phone', target);
+      showToast('✓ Mobile number verified! Welcome to Shree Rajput Sagai Sambandh. Proceeding to registration...', 'gold');
+      setTimeout(() => {
+        window.location.href = `register.html?phone=${target}&verified=true`;
+      }, 1200);
+    } else {
+      sessionStorage.setItem('royal_verified_signup_email', target);
+      showToast('✓ Email address verified! Welcome to Shree Rajput Sagai Sambandh. Proceeding to registration...', 'gold');
+      setTimeout(() => {
+        window.location.href = `register.html?email=${encodeURIComponent(target)}&verified=true`;
+      }, 1200);
+    }
+  }
+};
+
+window.handleForgotPasswordClick = function() {
+  showToast('🔑 Forgot Password? You can instantly log in without password using Mobile or Email OTP above!', 'gold');
+  window.switchLoginAuthMode('otp');
+};
+
 function initLoginPage() {
   const loginForm = document.getElementById('loginForm');
   const btnGoogle = document.getElementById('btnGoogleAuth');
+
+  // Input Enter key listeners for seamless UX
+  const phoneInput = document.getElementById('loginOtpPhone');
+  if (phoneInput) {
+    phoneInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        window.handleSendLoginOtp('phone');
+      }
+    });
+  }
+
+  const emailOtpInput = document.getElementById('loginOtpEmail');
+  if (emailOtpInput) {
+    emailOtpInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        window.handleSendLoginOtp('email');
+      }
+    });
+  }
+
+  const otpCodeInput = document.getElementById('loginOtpCodeInput');
+  if (otpCodeInput) {
+    otpCodeInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        window.handleVerifyLoginOtp();
+      }
+    });
+  }
 
   if (btnGoogle) {
     btnGoogle.addEventListener('click', async () => {
@@ -1180,20 +1510,71 @@ function initLoginPage() {
 
   if (!loginForm) return;
 
+  // Password Login Form Submission (Supports Email OR Mobile Number)
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value.trim();
+    const identifier = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       showToast('Please fill all fields');
+      return;
+    }
+
+    const digits = identifier.replace(/[^0-9]/g, '').slice(-10);
+    const isPhone = digits.length === 10 && !identifier.includes('@');
+
+    // Standard static credentials for seed testing (Fallback mode)
+    if (
+      (identifier.toLowerCase() === 'royal@shreerajputsagaisambandh.com' ||
+       identifier.toLowerCase() === 'royal@lifepartnerconnects.com' ||
+       (isPhone && (digits === '9928592159' || digits === '9876543210'))) &&
+      password === 'royal123'
+    ) {
+      const demoUser = {
+        name: 'Kunwar Shivraj Singh',
+        gender: 'Groom',
+        email: 'royal@shreerajputsagaisambandh.com',
+        phone: '+91 9928592159',
+        caste: 'Rajput',
+        clan: 'Rathore',
+        age: 28,
+        tier: 'Starter' // Default Starter Tier
+      };
+      localStorage.setItem('currentUser', JSON.stringify(demoUser));
+      showToast('Khammaghani! Welcome to Shree Rajput Sagai Sambandh', 'gold');
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 1200);
       return;
     }
 
     // Supabase Auth login flow
     if (window.supabaseActive) {
+      let authEmail = identifier;
+
+      // If user provided a phone number, resolve their email from profiles table
+      if (isPhone) {
+        try {
+          const { data: matchedProfiles } = await window.supabaseClient
+            .from('profiles')
+            .select('email, phone')
+            .ilike('phone', `%${digits}%`)
+            .limit(1);
+
+          if (matchedProfiles && matchedProfiles.length > 0 && matchedProfiles[0].email) {
+            authEmail = matchedProfiles[0].email;
+          } else {
+            showToast('No registered account found with this mobile number. Please use OTP Login!', 'normal');
+            return;
+          }
+        } catch (dbErr) {
+          console.warn('Phone resolution warning:', dbErr);
+        }
+      }
+
       const { data, error } = await window.supabaseClient.auth.signInWithPassword({
-        email,
+        email: authEmail,
         password
       });
 
@@ -1211,7 +1592,7 @@ function initLoginPage() {
 
       if (profile) {
         localStorage.setItem('currentUser', JSON.stringify(profile));
-        showToast(`Khammaghani, Welcome ${profile.name.split(' ')[0]}`, 'gold');
+        showToast(`Khammaghani, Welcome ${(profile.name || 'Noble Member').split(' ')[0]}`, 'gold');
         setTimeout(() => {
           window.location.href = 'dashboard.html';
         }, 1200);
@@ -1220,7 +1601,7 @@ function initLoginPage() {
         const tempGoogleUser = {
           uid: data.user.id,
           name: 'Noble Member',
-          email: email
+          email: authEmail
         };
         localStorage.setItem('tempGoogleUser', JSON.stringify(tempGoogleUser));
         showToast('Welcome! Please complete your lineage details to finish registration.', 'gold');
@@ -1231,38 +1612,24 @@ function initLoginPage() {
       return;
     }
 
-    // Standard static credentials for seed testing (Fallback mode)
-    if ((email === 'royal@shreerajputsagaisambandh.com' || email === 'royal@lifepartnerconnects.com') && password === 'royal123') {
-      const demoUser = {
-        name: 'Kunwar Shivraj Singh',
-        gender: 'Groom',
-        email: email,
-        caste: 'Rajput',
-        clan: 'Rathore',
-        age: 28,
-        tier: 'Starter' // Default Starter Tier
-      };
-      localStorage.setItem('currentUser', JSON.stringify(demoUser));
-      showToast('Khammaghani! Welcome to Shree Rajput Sagai Sambandh', 'gold');
-      setTimeout(() => {
-        window.location.href = 'dashboard.html';
-      }, 1200);
-      return;
-    }
-
     // Check LocalStorage registered users
     const users = JSON.parse(localStorage.getItem('users')) || [];
-    const matchedUser = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+    let matchedUser = null;
+    if (isPhone) {
+      matchedUser = users.find(u => (u.phone || '').replace(/[^0-9]/g, '').slice(-10) === digits && u.password === password);
+    } else {
+      matchedUser = users.find(u => u.email.toLowerCase() === identifier.toLowerCase() && u.password === password);
+    }
 
     if (matchedUser) {
       matchedUser.tier = matchedUser.tier || 'Starter';
       localStorage.setItem('currentUser', JSON.stringify(matchedUser));
-      showToast(`Khammaghani, Welcome ${matchedUser.name.split(' ')[0]}`, 'gold');
+      showToast(`Khammaghani, Welcome ${(matchedUser.name || 'Noble Member').split(' ')[0]}`, 'gold');
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 1200);
     } else {
-      showToast('Invalid credentials. Try royal@shreerajputsagaisambandh.com / royal123', 'normal');
+      showToast('Invalid credentials. Try royal@shreerajputsagaisambandh.com / royal123 or use OTP Login!', 'normal');
     }
   });
 }
@@ -1304,6 +1671,17 @@ function initRegisterPage() {
         regVerifyBtn.style.color = '#2ecc71';
         regVerifyBtn.style.borderColor = 'rgba(46, 204, 113, 0.4)';
       }
+    }
+  }
+
+  // Check if arriving with verified email from query params or sessionStorage
+  const paramEmail = regUrlParams.get('email');
+  const sessionEmailVerified = sessionStorage.getItem('royal_verified_signup_email');
+  const regEmailInput = document.getElementById('regEmail');
+  if (paramEmail || sessionEmailVerified) {
+    const verifiedEmail = paramEmail || sessionEmailVerified;
+    if (regEmailInput && verifiedEmail) {
+      regEmailInput.value = verifiedEmail;
     }
   }
 

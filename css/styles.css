@@ -5247,3 +5247,93 @@ body:has(.dashboard-subnav) {
   align-items: center;
 }
 
+/* ─── Dual Auth Switcher & OTP Login Styles ─── */
+.auth-mode-tabs {
+  display: flex;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1.5px solid rgba(170, 124, 17, 0.3);
+  border-radius: 30px;
+  padding: 4px;
+  margin: 18px 0 22px;
+  gap: 4px;
+}
+
+.auth-mode-tab-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 25px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: transparent;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.auth-mode-tab-btn.active {
+  background: var(--gold-gradient);
+  color: #1A050B;
+  font-weight: 700;
+  box-shadow: 0 3px 12px rgba(212, 175, 55, 0.35);
+}
+
+.auth-channel-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.auth-channel-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(170, 124, 17, 0.3);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.auth-channel-btn:hover {
+  border-color: #D4AF37;
+  color: var(--primary-color);
+}
+
+.auth-channel-btn.active {
+  border-color: #D4AF37;
+  background: rgba(212, 175, 55, 0.16);
+  color: var(--primary-color);
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.18);
+}
+
+.auth-otp-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px;
+  border-radius: 8px;
+  border: 1.5px solid #D4AF37;
+  background: #FFFFFF;
+  color: #1A050B;
+  font-size: 1.45rem;
+  letter-spacing: 8px;
+  text-align: center;
+  font-weight: 700;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.auth-otp-input:focus {
+  border-color: #AA7C11;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
+}
+
+

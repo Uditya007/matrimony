@@ -55,30 +55,119 @@
 
   <div class="auth-card" id="loginCard">
     <div class="auth-header">
-      <h1 class="auth-heading" id="loginMainHeading">Welcome Back</h1>
+      <h1 class="auth-heading" id="loginMainHeading">Member Login</h1>
       <p>Log in to access your royal matchmaking profile</p>
       
-      <!-- Premium Demo Login Alert Panel -->
-      <div style="background: rgba(107, 18, 32, 0.08); border: 1px solid rgba(201, 162, 39, 0.3); padding: 12px 15px; border-radius: var(--border-radius); font-size: 0.8rem; color: var(--text-muted); margin-top: 15px; text-align: left; line-height: 1.5;">
-        <span style="font-weight: 700; color: var(--primary-color);">Regal Demo Credentials:</span><br>
+      <!-- Regal Demo Credentials Alert Panel -->
+      <div style="background: rgba(107, 18, 32, 0.08); border: 1px solid rgba(201, 162, 39, 0.3); padding: 12px 15px; border-radius: var(--border-radius); font-size: 0.8rem; color: var(--text-muted); margin-top: 15px; text-align: left; line-height: 1.6;">
+        <span style="font-weight: 700; color: var(--primary-color);">👑 Regal Demo Credentials:</span><br>
         Email: <strong style="color: var(--primary-color);">royal@shreerajputsagaisambandh.com</strong><br>
-        Password: <strong style="color: var(--primary-color);">royal123</strong>
+        Mobile: <strong style="color: var(--primary-color);">+91 9928592159</strong> | Password: <strong style="color: var(--primary-color);">royal123</strong>
       </div>
     </div>
 
-    <form id="loginForm">
-      <div class="form-group">
-        <label for="loginEmail">Email Address</label>
-        <input type="email" id="loginEmail" placeholder="e.g. kunwar@shreerajputsagaisambandh.com" required>
+    <!-- Mode Switcher: OTP Verification vs Password Login -->
+    <div class="auth-mode-tabs" role="tablist">
+      <button type="button" class="auth-mode-tab-btn active" id="tabBtnOtp" onclick="switchLoginAuthMode('otp')">
+        📱 Instant OTP Login
+      </button>
+      <button type="button" class="auth-mode-tab-btn" id="tabBtnPassword" onclick="switchLoginAuthMode('password')">
+        🔑 Password Login
+      </button>
+    </div>
+
+    <!-- PANEL 1: OTP Verification Login (Mobile or Email) -->
+    <div id="panelOtpLogin">
+      <!-- Channel Selector: Mobile Number vs Email Address -->
+      <div class="auth-channel-selector">
+        <button type="button" class="auth-channel-btn active" id="channelBtnPhone" onclick="setOtpChannel('phone')">
+          <span>📱</span> Mobile Number
+        </button>
+        <button type="button" class="auth-channel-btn" id="channelBtnEmail" onclick="setOtpChannel('email')">
+          <span>✉️</span> Email Address
+        </button>
       </div>
 
-      <div class="form-group">
-        <label for="loginPassword">Regal Password</label>
-        <input type="password" id="loginPassword" placeholder="••••••••" required>
+      <!-- STEP 1: Enter Mobile / Email -->
+      <div id="loginOtpStep1">
+        <!-- Phone Input Group -->
+        <div id="otpInputGroupPhone">
+          <div class="form-group">
+            <label for="loginOtpPhone">Contact Mobile Number <span style="color: #e53e3e;">*</span></label>
+            <div style="display: flex; gap: 8px;">
+              <span style="background: rgba(0,0,0,0.06); border: 1px solid rgba(170,124,17,0.3); padding: 10px 14px; border-radius: var(--border-radius); font-weight: 700; color: var(--primary-color); display: flex; align-items: center; font-size: 0.95rem;">+91</span>
+              <input type="tel" id="loginOtpPhone" maxlength="10" placeholder="10-digit mobile number" style="flex: 1;" inputmode="numeric">
+            </div>
+            <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 5px;">
+              🔒 Instant SMS OTP will be delivered directly to your handset via Fast2SMS.
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary" id="btnSendPhoneOtp" onclick="handleSendLoginOtp('phone')" style="width: 100%; margin-top: 8px; padding: 12px; font-weight: 700;">
+            📱 Send SMS Verification Code
+          </button>
+        </div>
+
+        <!-- Email Input Group -->
+        <div id="otpInputGroupEmail" style="display: none;">
+          <div class="form-group">
+            <label for="loginOtpEmail">Registered Email Address <span style="color: #e53e3e;">*</span></label>
+            <input type="email" id="loginOtpEmail" placeholder="e.g. kunwar@shreerajputsagaisambandh.com">
+            <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 5px;">
+              🔒 A 6-digit royal verification code will be sent to your email address.
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary" id="btnSendEmailOtp" onclick="handleSendLoginOtp('email')" style="width: 100%; margin-top: 8px; padding: 12px; font-weight: 700;">
+            ✉️ Send Email Verification Code
+          </button>
+        </div>
       </div>
 
-      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;" id="loginSubmitBtn">Access Dashboard</button>
-    </form>
+      <!-- STEP 2: Enter & Verify OTP -->
+      <div id="loginOtpStep2" style="display: none;">
+        <div style="background: rgba(39, 174, 96, 0.1); border: 1px solid rgba(39, 174, 96, 0.35); border-radius: var(--border-radius); padding: 14px; margin-bottom: 16px; font-size: 0.84rem; text-align: left;">
+          <div>✓ Verification code dispatched to <strong id="loginOtpTargetDisplay" style="color: var(--primary-color);">+91 9928592159</strong></div>
+          <div id="loginOtpLiveBadge" style="margin-top: 8px; font-weight: 700; color: #AA7C11; font-size: 0.92rem; background: rgba(212, 175, 55, 0.15); border: 1px dashed rgba(212, 175, 55, 0.45); padding: 6px 10px; border-radius: 6px;">
+            👑 Royal Verification Code: <span id="loginOtpDemoCode" style="letter-spacing: 2px;">123456</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="loginOtpCodeInput" style="font-weight: 600; margin-bottom: 6px; display: block;">Enter 6-Digit OTP</label>
+          <input type="text" id="loginOtpCodeInput" class="auth-otp-input" maxlength="6" inputmode="numeric" placeholder="• • • • • •">
+          <span id="loginOtpCodeError" style="color: #e53e3e; font-size: 0.78rem; display: none; margin-top: 5px;">Invalid OTP code. Please enter the valid 6-digit code.</span>
+        </div>
+
+        <button type="button" class="btn btn-primary" id="btnVerifyLoginOtp" onclick="handleVerifyLoginOtp()" style="width: 100%; margin-top: 8px; padding: 12px; font-weight: 700;">
+          🛡️ Verify OTP & Access Dashboard
+        </button>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 0.8rem;">
+          <span id="loginOtpCountdown" style="color: var(--text-muted);">Resend in 45s</span>
+          <button type="button" id="btnResendLoginOtp" onclick="handleResendLoginOtp()" style="background: none; border: none; color: var(--primary-color); font-weight: 700; cursor: pointer; text-decoration: underline; display: none;">Resend OTP</button>
+          <a href="javascript:void(0)" onclick="resetLoginOtpStep()" style="color: var(--primary-color); font-weight: 600; text-decoration: underline;">← Change Mobile / Email</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 2: Password Login (Email or Phone + Password) -->
+    <div id="panelPasswordLogin" style="display: none;">
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginEmail">Email Address or Mobile Number</label>
+          <input type="text" id="loginEmail" placeholder="e.g. 9928592159 or royal@shreerajputsagaisambandh.com" required>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label for="loginPassword" style="margin: 0;">Regal Password</label>
+            <a href="javascript:void(0)" onclick="handleForgotPasswordClick()" style="font-size: 0.78rem; color: var(--primary-color); text-decoration: underline;">Forgot Password?</a>
+          </div>
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;" id="loginSubmitBtn">Access Dashboard</button>
+      </form>
+    </div>
 
     <!-- Divider -->
     <div style="display: flex; align-items: center; margin: 20px 0; text-align: center;">
