@@ -79,7 +79,7 @@ fun HomeView(
         ) {
             // Couples Slide background image
             AsyncImage(
-                model = "https://shreerajputsagaisambandh.com/images/slide${activeHeroSlide + 1}.jpg",
+                model = "https://www.shreerajputsagaisambandh.com/images/slide${activeHeroSlide + 1}.jpg",
                 contentDescription = "Royal Couples Slideshow",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()

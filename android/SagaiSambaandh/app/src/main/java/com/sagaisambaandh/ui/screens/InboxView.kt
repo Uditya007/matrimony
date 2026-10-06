@@ -245,22 +245,15 @@ fun ConnectionCard(
                 .clip(CircleShape)
                 .background(DeepMaroon)
         ) {
-            if (!profile.img.isNullOrEmpty()) {
-                val imageUrl = if (profile.img.startsWith("http")) profile.img else "https://shreerajputsagaisambandh.com/images/${profile.img}.png"
-                AsyncImage(
-                    model = imageUrl,
-                    contentDescription = profile.name,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Text(
-                    text = profile.name.take(1),
-                    color = LightGold,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            com.sagaisambaandh.ui.components.AvatarImageView(
+                source = profile.img,
+                name = profile.name,
+                clan = profile.clan,
+                contentDescription = profile.name,
+                contentScale = ContentScale.Crop,
+                fallbackFontSize = 20.sp,
+                modifier = Modifier.fillMaxSize()
+            )
         }
 
         Spacer(modifier = Modifier.width(14.dp))

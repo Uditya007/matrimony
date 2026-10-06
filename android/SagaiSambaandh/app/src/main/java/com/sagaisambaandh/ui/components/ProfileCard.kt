@@ -115,32 +115,15 @@ fun ProfileCard(
                     }
                 } else {
                     // Unlocked State Image or Monogram
-                    if (!profile.img.isNullOrEmpty()) {
-                        val imageUrl = if (profile.img.startsWith("http")) {
-                            profile.img
-                        } else {
-                            "https://shreerajputsagaisambandh.com/images/${profile.img}.png"
-                        }
-                        AsyncImage(
-                            model = imageUrl,
-                            contentDescription = "Profile Picture",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            Text(
-                                text = profile.name.split(" ").map { it.firstOrNull() ?: "" }.joinToString(""),
-                                color = SandstoneIvory,
-                                fontSize = 44.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Serif
-                            )
-                        }
-                    }
+                    AvatarImageView(
+                        source = profile.img,
+                        name = profile.name,
+                        clan = profile.clan,
+                        contentDescription = "Profile Picture",
+                        contentScale = ContentScale.Crop,
+                        fallbackFontSize = 36.sp,
+                        modifier = Modifier.fillMaxSize()
+                    )
 
                     // Red Wax seal verification badge
                     if (profile.isVerified) {

@@ -284,30 +284,15 @@ fun MyProfileView(
                                     .border(2.5.dp, RoyalGold, CircleShape)
                                     .clickable { galleryLauncher.launch("image/*") }
                             ) {
-                                val pic = user?.profilePic
-                                if (!pic.isNullOrEmpty()) {
-                                    val imageUrl = if (pic.startsWith("data:") || pic.startsWith("http")) pic else "https://shreerajputsagaisambandh.com/images/$pic.png"
-                                    AsyncImage(
-                                        model = imageUrl,
-                                        contentDescription = "Profile Photo",
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                } else {
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(Color(0xFFF3F4F6))
-                                    ) {
-                                        Text(
-                                            text = user?.name?.take(1) ?: "M",
-                                            color = AppPrimary,
-                                            fontSize = 32.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
+                                com.sagaisambaandh.ui.components.AvatarImageView(
+                                    source = user?.profilePic,
+                                    name = user?.name ?: "",
+                                    clan = user?.clan ?: "",
+                                    contentDescription = "Profile Photo",
+                                    contentScale = ContentScale.Crop,
+                                    fallbackFontSize = 36.sp,
+                                    modifier = Modifier.fillMaxSize()
+                                )
                             }
 
                             // Camera badge

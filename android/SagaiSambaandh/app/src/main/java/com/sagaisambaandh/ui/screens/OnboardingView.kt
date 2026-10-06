@@ -38,6 +38,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.filled.Add
 import coil.compose.AsyncImage
+import com.sagaisambaandh.ui.components.AvatarImageView
 import okhttp3.MediaType.Companion.toMediaType
 import java.util.Calendar
 import androidx.compose.foundation.clickable
@@ -317,8 +318,10 @@ fun OnboardingView(
                 contentAlignment = Alignment.Center
             ) {
                 if (profilePicInput.isNotEmpty()) {
-                    AsyncImage(
-                        model = profilePicInput,
+                    AvatarImageView(
+                        source = profilePicInput,
+                        name = currentUser.name,
+                        clan = selectedClan,
                         contentDescription = "Profile Picture",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop

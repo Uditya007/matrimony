@@ -473,32 +473,17 @@ fun ConversationRow(
 
 @Composable
 fun AvatarImage(profile: Profile, size: Int) {
-    if (!profile.img.isNullOrEmpty()) {
-        val imageUrl = if (profile.img.startsWith("http")) profile.img else "https://shreerajputsagaisambandh.com/images/${profile.img}.png"
-        AsyncImage(
-            model = imageUrl,
-            contentDescription = profile.name,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(size.dp)
-                .clip(CircleShape)
-        )
-    } else {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(size.dp)
-                .clip(CircleShape)
-                .background(DeepMaroon)
-        ) {
-            Text(
-                text = profile.name.take(1),
-                color = LightGold,
-                fontSize = (size * 0.45).sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
+    com.sagaisambaandh.ui.components.AvatarImageView(
+        source = profile.img,
+        name = profile.name,
+        clan = profile.clan,
+        contentDescription = profile.name,
+        contentScale = ContentScale.Crop,
+        fallbackFontSize = (size * 0.38).sp,
+        modifier = Modifier
+            .size(size.dp)
+            .clip(CircleShape)
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

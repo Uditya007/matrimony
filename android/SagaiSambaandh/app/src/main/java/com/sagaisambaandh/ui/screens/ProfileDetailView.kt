@@ -101,27 +101,15 @@ fun ProfileDetailView(
                     .jharokhaBorder(3f)
                     .background(clanGradient)
             ) {
-                if (!profile.img.isNullOrEmpty()) {
-                    val imageUrl = if (profile.img.startsWith("http")) {
-                        profile.img
-                    } else {
-                        "https://shreerajputsagaisambandh.com/images/${profile.img}.png"
-                    }
-                    AsyncImage(
-                        model = imageUrl,
-                        contentDescription = "Profile Picture",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Text(
-                        text = profile.name.split(" ").map { it.firstOrNull() ?: "" }.joinToString(""),
-                        color = SandstoneIvory,
-                        fontSize = 36.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Serif
-                    )
-                }
+                com.sagaisambaandh.ui.components.AvatarImageView(
+                    source = profile.img,
+                    name = profile.name,
+                    clan = profile.clan,
+                    contentDescription = "Profile Picture",
+                    contentScale = ContentScale.Crop,
+                    fallbackFontSize = 48.sp,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))

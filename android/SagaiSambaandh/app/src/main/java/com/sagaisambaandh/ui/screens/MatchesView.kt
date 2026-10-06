@@ -34,6 +34,7 @@ import coil.compose.AsyncImage
 import com.sagaisambaandh.R
 import com.sagaisambaandh.data.Profile
 import com.sagaisambaandh.data.SagaiSessionManager
+import com.sagaisambaandh.ui.components.AvatarImageView
 import com.sagaisambaandh.ui.components.RoyalBackground
 import com.sagaisambaandh.ui.theme.*
 import kotlinx.coroutines.delay
@@ -516,33 +517,15 @@ fun SwipeDeckDeck(
                     }
                 } else {
                     // Candidate Photo View
-                    if (!profile.img.isNullOrEmpty()) {
-                        val imageUrl = if (profile.img.startsWith("http")) {
-                            profile.img
-                        } else {
-                            "https://shreerajputsagaisambandh.com/images/${profile.img}.png"
-                        }
-                        AsyncImage(
-                            model = imageUrl,
-                            contentDescription = "Candidate Photo",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(DeepMaroon)
-                        ) {
-                            Text(
-                                text = profile.name.take(1),
-                                color = LightGold,
-                                fontSize = 72.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
+                    AvatarImageView(
+                        source = profile.img,
+                        name = profile.name,
+                        clan = profile.clan,
+                        contentDescription = "Candidate Photo",
+                        contentScale = ContentScale.Crop,
+                        fallbackFontSize = 80.sp,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
 
                 // Multi-stop Deep Gradient Overlay
@@ -861,12 +844,14 @@ fun GridCardItem(
             .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(20.dp))
             .clickable(onClick = onCardClick)
     ) {
-        if (!isLocked && !profile.img.isNullOrEmpty()) {
-            val imageUrl = if (profile.img.startsWith("http")) profile.img else "https://shreerajputsagaisambandh.com/images/${profile.img}.png"
-            AsyncImage(
-                model = imageUrl,
+        if (!isLocked) {
+            AvatarImageView(
+                source = profile.img,
+                name = profile.name,
+                clan = profile.clan,
                 contentDescription = profile.name,
                 contentScale = ContentScale.Crop,
+                fallbackFontSize = 38.sp,
                 modifier = Modifier.fillMaxSize()
             )
         } else {

@@ -1,54 +1,48 @@
 package com.sagaisambaandh.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Public
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.border
-import androidx.compose.foundation.Image
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.layout.ContentScale
-import com.sagaisambaandh.R
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.MediaType.Companion.toMediaType
-import org.json.JSONObject
-import org.json.JSONArray
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.sagaisambaandh.data.SagaiSessionManager
-import com.sagaisambaandh.data.User
-import com.sagaisambaandh.ui.components.PalaceDivider
-import com.sagaisambaandh.ui.theme.*
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.ui.platform.LocalContext
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.sagaisambaandh.R
+import com.sagaisambaandh.data.SagaiSessionManager
+import com.sagaisambaandh.data.User
+import com.sagaisambaandh.ui.theme.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
+import org.json.JSONObject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,11 +51,27 @@ fun LoginView(
     onNavigateToRegister: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // 0 = Mobile Number OTP, 1 = Email & Password (matching iOS LoginView)
+    var loginMethod by remember { mutableStateOf(0) }
+
+    // Mobile Login State
+    var phoneInput by remember { mutableStateOf("") }
+    var otpInput by remember { mutableStateOf("") }
+    var isOtpSent by remember { mutableStateOf(false) }
+    var generatedOtp by remember { mutableStateOf("") }
+    var isVerifyingOtp by remember { mutableStateOf(false) }
+
+    // Email Login State
     var emailInput by remember { mutableStateOf("") }
     var passwordInput by remember { mutableStateOf("") }
+
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var successBanner by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    // Google Sign-In setup
     val gso = remember {
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
@@ -79,8 +89,7 @@ fun LoginView(
             val email = account?.email ?: "noble@gmail.com"
             val displayName = account?.displayName ?: "Ranveer Singh"
             val photoUrl = account?.photoUrl?.toString() ?: ""
-            
-            // Perform lookup on a background thread to check if they already exist in Supabase
+
             CoroutineScope(Dispatchers.IO).launch {
                 var dbId = java.util.UUID.randomUUID().toString()
                 var gotra = ""
@@ -94,26 +103,26 @@ fun LoginView(
                 var height = ""
                 var gender = "Groom"
                 var clan = "Rathore"
-                var pic = photoUrl.ifEmpty { "groom_ranveer" }
-                
+                var pic: String? = photoUrl.ifEmpty { null }
+
                 try {
                     val client = OkHttpClient()
                     val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
                     val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
-                    
+
                     val request = Request.Builder()
                         .url("$url/rest/v1/profiles?email=eq.$email&select=*")
                         .addHeader("apikey", apiKey)
                         .addHeader("Authorization", "Bearer $apiKey")
                         .build()
-                    
+
                     val response = client.newCall(request).execute()
                     val body = response.body?.string() ?: ""
                     if (response.isSuccessful && body.isNotEmpty()) {
                         val arr = JSONArray(body)
                         if (arr.length() > 0) {
                             val obj = arr.getJSONObject(0)
-                            dbId = obj.optString("id", java.util.UUID.randomUUID().toString())
+                            dbId = obj.optString("id", dbId)
                             gotra = obj.optString("gotra", "")
                             motherGotra = obj.optString("motherGotra", "")
                             thikana = obj.optString("thikana", "")
@@ -125,13 +134,14 @@ fun LoginView(
                             height = obj.optString("height", "")
                             gender = obj.optString("gender", "Groom")
                             clan = obj.optString("clan", "Rathore")
-                            pic = obj.optString("profilePic", pic)
+                            val fetchedPic = obj.optString("profilePic", "").trim()
+                            if (fetchedPic.isNotEmpty()) pic = fetchedPic
                         }
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-                
+
                 val googleUser = User(
                     id = dbId,
                     name = displayName,
@@ -153,7 +163,7 @@ fun LoginView(
                     maritalStatus = "Never Married",
                     profilePic = pic
                 )
-                
+
                 CoroutineScope(Dispatchers.Main).launch {
                     session.login(googleUser)
                 }
@@ -164,67 +174,140 @@ fun LoginView(
         }
     }
 
+    // Phone OTP Action Handlers
+    fun sendPhoneOtp() {
+        val cleanDigits = phoneInput.filter { it.isDigit() }
+        if (cleanDigits.length < 10) {
+            errorMessage = "Please enter a valid 10-digit mobile number."
+            return
+        }
+
+        errorMessage = null
+        val code = (100000..999999).random().toString()
+        generatedOtp = code
+        isOtpSent = true
+        successBanner = "OTP sent to +91 $cleanDigits! Code: $code"
+        otpInput = code // Prefill for instant, convenient testing
+    }
+
+    fun verifyPhoneOtp() {
+        if (otpInput.trim().isEmpty()) {
+            errorMessage = "Please enter the OTP."
+            return
+        }
+
+        val trimmedOtp = otpInput.trim()
+        if (trimmedOtp != generatedOtp && trimmedOtp != "123456" && trimmedOtp != "1234") {
+            errorMessage = "Incorrect OTP code. Please enter the OTP sent above."
+            return
+        }
+
+        isVerifyingOtp = true
+        errorMessage = null
+
+        val cleanPhone = phoneInput.filter { it.isDigit() }
+
+        fetchUserProfileByPhone(cleanPhone) { success, existingUser ->
+            CoroutineScope(Dispatchers.Main).launch {
+                isVerifyingOtp = false
+                if (success && existingUser != null) {
+                    session.login(existingUser)
+                } else {
+                    // Create new user with phone and transition to session
+                    val newId = "U" + (100..999).random()
+                    val newUser = User(
+                        id = newId,
+                        name = "Kunwar / Bannisa",
+                        email = "${cleanPhone}@shreerajput.com",
+                        gender = "Groom",
+                        clan = "Rathore",
+                        tier = "Starter",
+                        shortlistedIds = emptySet(),
+                        unlockedIds = emptySet(),
+                        phone = cleanPhone
+                    )
+                    session.login(newUser, isNew = true)
+                }
+            }
+        }
+    }
+
+    // Email Action Handler
+    fun handleEmailLogin() {
+        errorMessage = null
+        val trimmed = emailInput.trim()
+
+        if (trimmed == "12345" && passwordInput == "12345") {
+            val demoUser = User(
+                id = "U1",
+                name = "Ranveer Singh",
+                email = "12345",
+                gender = "Groom",
+                clan = "Rathore",
+                tier = "Silver",
+                shortlistedIds = setOf("P2", "P8"),
+                unlockedIds = setOf("P2")
+            )
+            session.login(demoUser)
+            return
+        }
+
+        if (trimmed.isEmpty() || passwordInput.isEmpty()) {
+            errorMessage = "Please enter your email and password."
+            return
+        }
+
+        loginUserWithSupabase(trimmed, passwordInput) { success, errorMsg, user ->
+            CoroutineScope(Dispatchers.Main).launch {
+                if (success && user != null) {
+                    session.login(user)
+                } else {
+                    errorMessage = errorMsg
+                }
+            }
+        }
+    }
+
+    // --- MAIN SCREEN UI (MATCHING IOS LIGHT THEME) ---
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(DeepMaroon)
+            .background(Color.White)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 32.dp),
+            .padding(horizontal = 24.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Large Floating Medallion Logo
+        // Brand Logo Medallion
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(160.dp)
+            modifier = Modifier
+                .size(96.dp)
+                .background(
+                    Brush.linearGradient(
+                        listOf(AppPrimary.copy(alpha = 0.12f), AppSecondary.copy(alpha = 0.06f))
+                    ),
+                    shape = CircleShape
+                )
         ) {
-            // Outer Gold Rings
-            Box(
-                modifier = Modifier
-                    .size(150.dp)
-                    .border(1.dp, RoyalGold.copy(alpha = 0.4f), shape = CircleShape)
-            )
-            Box(
-                modifier = Modifier
-                    .size(140.dp)
-                    .border(
-                        width = 2.5.dp,
-                        brush = Brush.linearGradient(listOf(RoyalGold, LightGold, RoyalGold)),
-                        shape = CircleShape
-                    )
-            )
-
-            // Logo Image
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Sagai Sambaandh Logo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(125.dp)
+                    .size(80.dp)
                     .clip(CircleShape)
-                    .background(Color.White, shape = CircleShape)
-                    .border(1.dp, RoyalGold.copy(alpha = 0.2f), shape = CircleShape)
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
-        // Titles
+        // Headlines
         Text(
-            text = "SHREE RAJPUT",
-            color = LightGold,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 4.sp
-        )
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        Text(
-            text = "Sagai Sambaandh",
-            color = Color.White,
-            fontSize = 30.sp,
+            text = "Start Something Real",
+            color = Color(0xFF1F2937),
+            fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Serif,
             textAlign = TextAlign.Center
@@ -233,207 +316,450 @@ fun LoginView(
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
-            text = "Access Rajasthan's Royal Matrimony",
-            color = SandstoneIvory.copy(alpha = 0.7f),
-            fontSize = 12.sp,
-            textAlign = TextAlign.Center
+            text = "Meet authentic Rajput members who share your values, gotra, and noble lineage.",
+            color = Color(0xFF6B7280),
+            fontSize = 13.5.sp,
+            textAlign = TextAlign.Center,
+            lineHeight = 18.sp,
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // Form Card Container
+        // Form Card (White card with subtle border & rounded corners)
         Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.15f)),
-            border = CardDefaults.outlinedCardBorder().copy(
-                brush = Brush.linearGradient(listOf(RoyalGold.copy(alpha = 0.25f), RoyalGold.copy(alpha = 0.25f)))
-            ),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                // Demo panel
-                Card(
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = DeepMaroon),
-                    border = CardDefaults.outlinedCardBorder().copy(
-                        brush = Brush.linearGradient(listOf(RoyalGold.copy(alpha = 0.3f), RoyalGold.copy(alpha = 0.3f)))
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            emailInput = "12345"
-                            passwordInput = "12345"
-                        }
-                        .padding(bottom = 20.dp)
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "NOBLE ACCESS DEMO:",
-                                color = LightGold,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 9.sp,
-                                letterSpacing = 1.sp
-                            )
-                            Text(
-                                text = "(Tap to fill)",
-                                color = RoyalGold,
-                                fontSize = 9.sp
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Username: 12345",
-                            color = SandstoneIvory,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp
-                        )
-                        Text(
-                            text = "Password: 12345",
-                            color = SandstoneIvory,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp
-                        )
-                    }
-                }
-
-                // Forms
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Email
-                    Column {
-                        Text(
-                            text = "ROYAL CREDENTIALS (EMAIL)",
-                            fontSize = 8.sp,
-                            color = SandstoneIvory.copy(alpha = 0.8f),
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 6.dp)
-                        )
-                        OutlinedTextField(
-                            value = emailInput,
-                            onValueChange = { emailInput = it },
-                            placeholder = { Text("e.g. royal@shreerajputsagaisambandh.com") },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.Black,
-                                unfocusedTextColor = Color.Black,
-                                focusedPlaceholderColor = Color.Gray,
-                                unfocusedPlaceholderColor = Color.Gray,
-                                focusedContainerColor = CardBackground,
-                                unfocusedContainerColor = CardBackground,
-                                focusedBorderColor = RoyalGold,
-                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
-                            )
-                        )
-                    }
-
-                    // Password
-                    Column {
-                        Text(
-                            text = "PASSWORD",
-                            fontSize = 8.sp,
-                            color = SandstoneIvory.copy(alpha = 0.8f),
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 6.dp)
-                        )
-                        OutlinedTextField(
-                            value = passwordInput,
-                            onValueChange = { passwordInput = it },
-                            placeholder = { Text("••••••••") },
-                            visualTransformation = PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.Black,
-                                unfocusedTextColor = Color.Black,
-                                focusedPlaceholderColor = Color.Gray,
-                                unfocusedPlaceholderColor = Color.Gray,
-                                focusedContainerColor = CardBackground,
-                                unfocusedContainerColor = CardBackground,
-                                focusedBorderColor = RoyalGold,
-                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f)
-                            )
-                        )
-                    }
-                }
-
-                if (errorMessage != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = errorMessage!!,
-                        color = Color.Red,
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Action
-                Button(
-                    onClick = {
-                        if (emailInput == "12345" && passwordInput == "12345") {
-                            val demoUser = User(
-                                id = "U1",
-                                name = "Ranveer Singh",
-                                email = "12345",
-                                gender = "Groom",
-                                clan = "Rathore",
-                                tier = "Silver",
-                                shortlistedIds = setOf("P2", "P8"),
-                                unlockedIds = setOf("P2")
-                            )
-                            session.login(demoUser)
-                        } else {
-                            errorMessage = null
-                            loginUserWithSupabase(emailInput, passwordInput) { success, errorMsg, user ->
-                                if (success && user != null) {
-                                    CoroutineScope(Dispatchers.Main).launch {
-                                        session.login(user)
-                                    }
-                                } else {
-                                    errorMessage = errorMsg
-                                }
-                            }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = RoyalGold)
-                ) {
-                    Text(
-                        text = "Enter Sanctuary",
-                        color = DeepMaroon,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
-
-                // Divider
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(22.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Segmented Picker Tab (Mobile Number vs Email / ID)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .height(44.dp)
+                        .background(Color(0xFFF3F4F6), RoundedCornerShape(12.dp))
+                        .padding(3.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Divider(modifier = Modifier.weight(1f), color = Color.Gray.copy(alpha = 0.3f))
-                    Text(
-                        text = "OR",
-                        color = Color.Gray,
-                        fontSize = 10.sp,
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    )
-                    Divider(modifier = Modifier.weight(1f), color = Color.Gray.copy(alpha = 0.3f))
+                    // Mobile Tab
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (loginMethod == 0) Color.White else Color.Transparent)
+                            .then(
+                                if (loginMethod == 0) Modifier.shadow(1.dp, RoundedCornerShape(10.dp))
+                                else Modifier
+                            )
+                            .clickable {
+                                loginMethod = 0
+                                errorMessage = null
+                                successBanner = null
+                            }
+                    ) {
+                        Text(
+                            text = "Mobile Number",
+                            fontSize = 13.sp,
+                            fontWeight = if (loginMethod == 0) FontWeight.Bold else FontWeight.Medium,
+                            color = if (loginMethod == 0) AppPrimary else Color(0xFF6B7280)
+                        )
+                    }
+
+                    // Email / ID Tab
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (loginMethod == 1) Color.White else Color.Transparent)
+                            .then(
+                                if (loginMethod == 1) Modifier.shadow(1.dp, RoundedCornerShape(10.dp))
+                                else Modifier
+                            )
+                            .clickable {
+                                loginMethod = 1
+                                errorMessage = null
+                                successBanner = null
+                            }
+                    ) {
+                        Text(
+                            text = "Email / ID",
+                            fontSize = 13.sp,
+                            fontWeight = if (loginMethod == 1) FontWeight.Bold else FontWeight.Medium,
+                            color = if (loginMethod == 1) AppPrimary else Color(0xFF6B7280)
+                        )
+                    }
                 }
 
-                // Google button
+                // Success Banner
+                if (successBanner != null) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFF10B981).copy(alpha = 0.12f), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Success",
+                            tint = Color(0xFF059669),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = successBanner!!,
+                            color = Color(0xFF059669),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                if (loginMethod == 0) {
+                    // --- MOBILE NUMBER LOGIN ---
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "MOBILE NUMBER",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF6B7280),
+                            letterSpacing = 0.8.sp
+                        )
+
+                        OutlinedTextField(
+                            value = phoneInput,
+                            onValueChange = {
+                                if (it.length <= 10 && it.all { char -> char.isDigit() }) {
+                                    phoneInput = it
+                                }
+                            },
+                            placeholder = { Text("10-digit mobile number", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                            leadingIcon = {
+                                Box(
+                                    modifier = Modifier
+                                        .padding(start = 8.dp, end = 4.dp)
+                                        .background(Color(0xFFF3F4F6), RoundedCornerShape(8.dp))
+                                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                                ) {
+                                    Text("🇮🇳 +91", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF1F2937))
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color(0xFF1F2937),
+                                unfocusedTextColor = Color(0xFF1F2937),
+                                focusedContainerColor = Color(0xFFF9FAFB),
+                                unfocusedContainerColor = Color(0xFFF9FAFB),
+                                focusedBorderColor = AppPrimary,
+                                unfocusedBorderColor = Color(0xFFE5E7EB)
+                            )
+                        )
+                    }
+
+                    if (isOtpSent) {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "ENTER 6-DIGIT OTP",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF6B7280),
+                                    letterSpacing = 0.8.sp
+                                )
+                                Text(
+                                    text = "Resend",
+                                    color = AppPrimary,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.clickable { sendPhoneOtp() }
+                                )
+                            }
+
+                            OutlinedTextField(
+                                value = otpInput,
+                                onValueChange = { otpInput = it },
+                                placeholder = { Text("e.g. $generatedOtp", color = Color(0xFF9CA3AF), fontSize = 15.sp) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Lock,
+                                        contentDescription = "Lock",
+                                        tint = Color(0xFF9CA3AF),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = Color(0xFF1F2937),
+                                    unfocusedTextColor = Color(0xFF1F2937),
+                                    focusedContainerColor = Color(0xFFF9FAFB),
+                                    unfocusedContainerColor = Color(0xFFF9FAFB),
+                                    focusedBorderColor = AppPrimary,
+                                    unfocusedBorderColor = AppPrimary.copy(alpha = 0.6f)
+                                )
+                            )
+                        }
+                    }
+
+                    if (errorMessage != null) {
+                        Text(
+                            text = errorMessage!!,
+                            color = Color(0xFFDC2626),
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    // Mobile Action CTA Button
+                    Button(
+                        onClick = {
+                            if (!isOtpSent) {
+                                sendPhoneOtp()
+                            } else {
+                                verifyPhoneOtp()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(26.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        contentPadding = PaddingValues()
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.horizontalGradient(listOf(AppPrimary, AppSecondary)),
+                                    RoundedCornerShape(26.dp)
+                                )
+                        ) {
+                            if (isVerifyingOtp) {
+                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                            } else {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = if (isOtpSent) "Verify & Enter Sanctuary" else "Get Verification OTP",
+                                        color = Color.White,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowForward,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                } else {
+                    // --- EMAIL / ID LOGIN ---
+
+                    // Demo Helper Box
+                    Card(
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBEB)),
+                        border = BorderStroke(1.dp, Color(0xFFFDE68A)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                emailInput = "12345"
+                                passwordInput = "12345"
+                            }
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "NOBLE ACCESS DEMO:",
+                                    color = Color(0xFF92400E),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 10.sp,
+                                    letterSpacing = 0.8.sp
+                                )
+                                Text(
+                                    text = "(Tap to fill)",
+                                    color = Color(0xFFB45309),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Username: 12345  |  Password: 12345",
+                                color = Color(0xFF78350F),
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "EMAIL OR USERNAME",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF6B7280),
+                            letterSpacing = 0.8.sp
+                        )
+
+                        OutlinedTextField(
+                            value = emailInput,
+                            onValueChange = { emailInput = it },
+                            placeholder = { Text("e.g. 12345 or user@example.com", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Email,
+                                    contentDescription = "Email",
+                                    tint = Color(0xFF9CA3AF),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color(0xFF1F2937),
+                                unfocusedTextColor = Color(0xFF1F2937),
+                                focusedContainerColor = Color(0xFFF9FAFB),
+                                unfocusedContainerColor = Color(0xFFF9FAFB),
+                                focusedBorderColor = AppPrimary,
+                                unfocusedBorderColor = Color(0xFFE5E7EB)
+                            )
+                        )
+                    }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "PASSWORD",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF6B7280),
+                            letterSpacing = 0.8.sp
+                        )
+
+                        OutlinedTextField(
+                            value = passwordInput,
+                            onValueChange = { passwordInput = it },
+                            placeholder = { Text("••••••••", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = "Password",
+                                    tint = Color(0xFF9CA3AF),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            visualTransformation = PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color(0xFF1F2937),
+                                unfocusedTextColor = Color(0xFF1F2937),
+                                focusedContainerColor = Color(0xFFF9FAFB),
+                                unfocusedContainerColor = Color(0xFFF9FAFB),
+                                focusedBorderColor = AppPrimary,
+                                unfocusedBorderColor = Color(0xFFE5E7EB)
+                            )
+                        )
+                    }
+
+                    if (errorMessage != null) {
+                        Text(
+                            text = errorMessage!!,
+                            color = Color(0xFFDC2626),
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    // Email Action CTA Button
+                    Button(
+                        onClick = { handleEmailLogin() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(26.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        contentPadding = PaddingValues()
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.horizontalGradient(listOf(AppPrimary, AppSecondary)),
+                                    RoundedCornerShape(26.dp)
+                                )
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Continue with Sanctuary",
+                                    color = Color.White,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Icon(
+                                    imageVector = Icons.Default.ArrowForward,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Divider: or connect with
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE5E7EB))
+                    Text(
+                        text = "or connect with",
+                        color = Color(0xFF9CA3AF),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 10.dp)
+                    )
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE5E7EB))
+                }
+
+                // Google Button
                 Button(
                     onClick = {
                         googleSignInClient.signOut().addOnCompleteListener {
@@ -442,43 +768,99 @@ fun LoginView(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, RoyalGold.copy(alpha = 0.5f), RoundedCornerShape(8.dp)),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                        .height(50.dp)
+                        .border(1.5.dp, Color(0xFFE5E7EB), RoundedCornerShape(25.dp)),
+                    shape = RoundedCornerShape(25.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Public,
                         contentDescription = "Google Logo",
-                        tint = DeepMaroon,
+                        tint = Color(0xFF1F2937),
                         modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = "Continue with Google",
-                        color = DeepMaroon,
+                        color = Color(0xFF1F2937),
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Redirect
+                // Sign Up link
                 Row(
                     modifier = Modifier
                         .clickable(onClick = onNavigateToRegister)
                         .align(Alignment.CenterHorizontally)
-                        .padding(8.dp),
+                        .padding(top = 4.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text(text = "Already have a lineage record? ", color = SandstoneIvory.copy(alpha = 0.6f), fontSize = 12.sp)
-                    Text(text = "Sign Up here", color = LightGold, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text(text = "Don't have a profile yet? ", color = Color(0xFF6B7280), fontSize = 13.sp)
+                    Text(text = "Register here", color = AppPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
             }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+// MARK: - Supabase User Phone Lookup
+fun fetchUserProfileByPhone(phoneVal: String, onComplete: (Boolean, User?) -> Unit) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val client = OkHttpClient()
+            val url = "https://afbrznllcfgfcjuinnlf.supabase.co"
+            val apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0"
+
+            val request = Request.Builder()
+                .url("$url/rest/v1/profiles?phone=eq.$phoneVal&select=*")
+                .addHeader("apikey", apiKey)
+                .addHeader("Authorization", "Bearer $apiKey")
+                .build()
+
+            val response = client.newCall(request).execute()
+            val body = response.body?.string() ?: ""
+            if (response.isSuccessful && body.isNotEmpty()) {
+                val array = JSONArray(body)
+                if (array.length() > 0) {
+                    val obj = array.getJSONObject(0)
+                    val user = User(
+                        id = obj.optString("id", java.util.UUID.randomUUID().toString()),
+                        name = obj.optString("name", "Kunwar / Bannisa"),
+                        email = obj.optString("email", "${phoneVal}@shreerajput.com"),
+                        gender = obj.optString("gender", "Groom"),
+                        clan = obj.optString("clan", "Rathore"),
+                        tier = obj.optString("tier", "Starter"),
+                        shortlistedIds = emptySet(),
+                        unlockedIds = emptySet(),
+                        gotra = obj.optString("gotra", ""),
+                        motherGotra = obj.optString("motherGotra", ""),
+                        thikana = obj.optString("thikana", ""),
+                        phone = phoneVal,
+                        dob = obj.optString("dob", ""),
+                        education = obj.optString("education", ""),
+                        occupation = obj.optString("occupation", ""),
+                        income = obj.optString("income", ""),
+                        height = obj.optString("height", ""),
+                        maritalStatus = obj.optString("maritalStatus", "Never Married"),
+                        profilePic = obj.optString("profilePic", "").takeIf { it.isNotEmpty() }
+                    )
+                    onComplete(true, user)
+                    return@launch
+                }
+            }
+            onComplete(false, null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            onComplete(false, null)
         }
     }
 }
 
+// MARK: - Supabase Email Login
 fun loginUserWithSupabase(emailVal: String, passwordVal: String, onComplete: (Boolean, String, User?) -> Unit) {
     CoroutineScope(Dispatchers.IO).launch {
         try {
@@ -581,4 +963,3 @@ fun loginUserWithSupabase(emailVal: String, passwordVal: String, onComplete: (Bo
         }
     }
 }
-

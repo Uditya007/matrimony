@@ -321,7 +321,9 @@ class SagaiSessionManager(private val context: Context) {
                         val education = obj.optString("education", "")
                         val occupation = obj.optString("occupation", "")
                         val income = obj.optString("income", "")
-                        val profilePic = obj.optString("profilePic", "")
+                        val profilePic = obj.optString("profilePic", "").trim()
+                        val imgPic = obj.optString("img", "").trim()
+                        val rawPic = profilePic.ifEmpty { imgPic }.ifEmpty { null }
                         val about = obj.optString("about", "")
                         
                         var ageVal = 25
@@ -351,7 +353,7 @@ class SagaiSessionManager(private val context: Context) {
                                 education = education,
                                 income = income,
                                 isVerified = true,
-                                img = profilePic.ifEmpty { "groom_ranveer" },
+                                img = rawPic,
                                 about = about
                             )
                         )
@@ -827,7 +829,7 @@ class SagaiSessionManager(private val context: Context) {
                                 education = row.optString("education", "Graduate"),
                                 income = row.optString("income", "15-20 LPA"),
                                 isVerified = true,
-                                img = row.optString("profilePic", "").ifEmpty { "groom_ranveer" },
+                                img = row.optString("profilePic", "").trim().ifEmpty { row.optString("img", "").trim() }.ifEmpty { null },
                                 about = row.optString("about", "")
                             )
                         )
