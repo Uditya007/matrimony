@@ -20,16 +20,43 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import com.sagaisambaandh.data.Profile
 import com.sagaisambaandh.data.SagaiSessionManager
 import com.sagaisambaandh.ui.screens.*
 import com.sagaisambaandh.ui.theme.*
+import com.sagaisambaandh.util.RoyalNotificationHelper
 
 class MainActivity : ComponentActivity() {
     private lateinit var sessionManager: SagaiSessionManager
 
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        // Permission result handled
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize notification channel for heads-up alerts
+        RoyalNotificationHelper.createNotificationChannel(applicationContext)
+
+        // Request POST_NOTIFICATIONS permission on Android 13+ (API 33+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
         sessionManager = SagaiSessionManager(applicationContext)
         setContent {
             SagaiSambaandhTheme {

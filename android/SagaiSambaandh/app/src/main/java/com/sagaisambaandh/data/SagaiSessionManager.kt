@@ -12,6 +12,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.sagaisambaandh.util.RoyalNotificationHelper
 
 class SagaiSessionManager(private val context: Context) {
     private val sharedPrefs = context.getSharedPreferences("sagai_prefs", Context.MODE_PRIVATE)
@@ -44,7 +45,18 @@ class SagaiSessionManager(private val context: Context) {
 
     private var connectionPollingJob: kotlinx.coroutines.Job? = null
 
+    private val knownConnectionKeys = mutableSetOf<String>()
+    private val seenMessageKeys = mutableSetOf<String>()
+    private val seenBroadcastIds = mutableSetOf<String>()
+    private var isInitialSyncDone = false
+
     init {
+        // Load persisted notification tracking sets
+        knownConnectionKeys.addAll(sharedPrefs.getStringSet("known_conn_keys", emptySet()) ?: emptySet())
+        seenMessageKeys.addAll(sharedPrefs.getStringSet("seen_msg_keys", emptySet()) ?: emptySet())
+        seenBroadcastIds.addAll(sharedPrefs.getStringSet("seen_bcast_ids", emptySet()) ?: emptySet())
+        isInitialSyncDone = sharedPrefs.getBoolean("initial_sync_done", false)
+
         // Load persisted user session from SharedPreferences
         val savedUserJson = sharedPrefs.getString("saved_user", null)
         if (savedUserJson != null) {
@@ -847,7 +859,9 @@ class SagaiSessionManager(private val context: Context) {
                     if (p.id == userId) continue
                     val otherInterests = getInterests(p.about)
 
+                    // 1. Connection Accepted
                     if (myInterests[p.id] == "accepted" || otherInterests[userId] == "accepted") {
+                        val recKey = "${p.id}_${userId}_accepted"
                         connList.add(ConnectionRecord(p.id, userId, "accepted"))
                         notifList.add(
                             RoyalNotification(
@@ -859,7 +873,14 @@ class SagaiSessionManager(private val context: Context) {
                                 read = false
                             )
                         )
-                    } else if (otherInterests[userId] == "sent" && myInterests[p.id] != "declined") {
+                        if (isInitialSyncDone && !knownConnectionKeys.contains(recKey)) {
+                            RoyalNotificationHelper.notifyConnectionAccepted(context, p.name, p.id)
+                        }
+                        knownConnectionKeys.add(recKey)
+                    }
+                    // 2. Incoming Match Request (Interest)
+                    else if (otherInterests[userId] == "sent" && myInterests[p.id] != "declined") {
+                        val recKey = "${p.id}_${userId}_pending"
                         connList.add(ConnectionRecord(p.id, userId, "pending"))
                         notifList.add(
                             RoyalNotification(
@@ -871,9 +892,59 @@ class SagaiSessionManager(private val context: Context) {
                                 read = false
                             )
                         )
+                        if (isInitialSyncDone && !knownConnectionKeys.contains(recKey)) {
+                            RoyalNotificationHelper.notifyConnectionRequest(context, p.name, p.id)
+                        }
+                        knownConnectionKeys.add(recKey)
                     } else if (myInterests[p.id] == "sent" && otherInterests[userId] != "declined") {
                         connList.add(ConnectionRecord(userId, p.id, "pending"))
                     }
+
+                    // 3. Incoming Chat Messages
+                    val lastMsg = getLastMessage(myAbout, userId, p.about, p.id)
+                    if (lastMsg != null && lastMsg.senderId != userId) {
+                        val msgKey = "${p.id}_${lastMsg.time}"
+                        if (isInitialSyncDone && !seenMessageKeys.contains(msgKey)) {
+                            RoyalNotificationHelper.notifyNewMessage(context, p.name, p.id, lastMsg.text)
+                        }
+                        seenMessageKeys.add(msgKey)
+                    }
+                }
+
+                // 4. Marketing & Royal Community Broadcasts
+                val broadcastProfile = finalProfiles.firstOrNull { it.id == "00000000-0000-0000-0000-000000000001" }
+                if (broadcastProfile != null) {
+                    val broadcasts = getBroadcasts(broadcastProfile.about)
+                    for (bcast in broadcasts) {
+                        val msgDisplay = if (bcast.title.isNotBlank()) "📢 ${bcast.title}: ${bcast.body}" else "📢 ${bcast.body}"
+                        notifList.add(
+                            RoyalNotification(
+                                id = bcast.id,
+                                notifKey = "bcast_${bcast.id}",
+                                message = msgDisplay,
+                                profileId = "broadcast",
+                                timestamp = "Announcement",
+                                read = false
+                            )
+                        )
+                        if (isInitialSyncDone && !seenBroadcastIds.contains(bcast.id)) {
+                            RoyalNotificationHelper.notifyMarketingBroadcast(context, bcast.title, bcast.body, bcast.id)
+                        }
+                        seenBroadcastIds.add(bcast.id)
+                    }
+                }
+
+                // Persist notification tracking
+                isInitialSyncDone = true
+                try {
+                    sharedPrefs.edit()
+                        .putStringSet("known_conn_keys", HashSet(knownConnectionKeys))
+                        .putStringSet("seen_msg_keys", HashSet(seenMessageKeys))
+                        .putStringSet("seen_bcast_ids", HashSet(seenBroadcastIds))
+                        .putBoolean("initial_sync_done", true)
+                        .apply()
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
 
                 CoroutineScope(Dispatchers.Main).launch {
@@ -900,6 +971,31 @@ class SagaiSessionManager(private val context: Context) {
             }
         }
     }
+
+    fun getBroadcasts(aboutText: String?): List<RoyalBroadcast> {
+        if (aboutText.isNullOrEmpty()) return emptyList()
+        val match = Regex("\\[Broadcasts:\\s*(\\[.*?\\])\\]", RegexOption.DOT_MATCHES_ALL).find(aboutText)
+            ?: return emptyList()
+        val jsonStr = match.groupValues[1]
+        val list = mutableListOf<RoyalBroadcast>()
+        try {
+            val array = JSONArray(jsonStr)
+            for (i in 0 until array.length()) {
+                val obj = array.getJSONObject(i)
+                list.add(
+                    RoyalBroadcast(
+                        id = obj.optString("id", "bcast_$i"),
+                        title = obj.optString("title", "Royal Announcement"),
+                        body = obj.optString("body", ""),
+                        timestamp = obj.optLong("timestamp", System.currentTimeMillis())
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return list
+    }
 }
 
 data class RoyalNotification(
@@ -910,3 +1006,11 @@ data class RoyalNotification(
     val timestamp: String,
     val read: Boolean
 )
+
+data class RoyalBroadcast(
+    val id: String,
+    val title: String,
+    val body: String,
+    val timestamp: Long
+)
+

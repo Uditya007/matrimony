@@ -15,11 +15,25 @@ class SagaiSessionManager: ObservableObject {
     @Published var connections: [ConnectionRecord] = []
     private var connectionTimer: Timer? = nil
     private var knownConnectionKeys: Set<String> = []
+    private var seenMessageKeys: Set<String> = []
+    private var seenBroadcastIds: Set<String> = []
     private var lastKnownMessageTimes: [String: Double] = [:]
     private var hasSeededNotifications: Bool = false
     
     init() {
         NotificationManager.shared.requestAuthorization()
+        
+        if let savedKeys = UserDefaults.standard.stringArray(forKey: "known_conn_keys") {
+            self.knownConnectionKeys = Set(savedKeys)
+        }
+        if let savedMsgKeys = UserDefaults.standard.stringArray(forKey: "seen_msg_keys") {
+            self.seenMessageKeys = Set(savedMsgKeys)
+        }
+        if let savedBcastIds = UserDefaults.standard.stringArray(forKey: "seen_bcast_ids") {
+            self.seenBroadcastIds = Set(savedBcastIds)
+        }
+        self.hasSeededNotifications = UserDefaults.standard.bool(forKey: "initial_sync_done")
+
         if let data = UserDefaults.standard.data(forKey: "saved_user_session"),
            let user = try? JSONDecoder().decode(User.self, from: data) {
             self.currentUser = user
@@ -244,7 +258,56 @@ class SagaiSessionManager: ObservableObject {
                 }
                 self.knownConnectionKeys.insert(recKey)
             }
+
+            // 3. Detect and trigger notifications for incoming chat messages
+            let myAbout = self.currentUser?.about
+            for p in self.profiles where p.id != currentUserId {
+                if let lastMsg = SupabaseClient.shared.getLastMessage(
+                    userAbout: myAbout,
+                    userId: currentUserId,
+                    profileAbout: p.about,
+                    profileId: p.id
+                ), !lastMsg.isFromMe {
+                    let msgKey = "\(p.id)_\(Int(lastMsg.time))"
+                    if self.hasSeededNotifications && !self.seenMessageKeys.contains(msgKey) {
+                        NotificationManager.shared.notifyNewMessage(
+                            senderName: p.name,
+                            senderId: p.id,
+                            messageText: lastMsg.text
+                        )
+                    }
+                    self.seenMessageKeys.insert(msgKey)
+                }
+            }
+
+            // 4. Marketing & Royal Community Broadcasts
+            if let broadcastProfile = self.profiles.first(where: { $0.id == "00000000-0000-0000-0000-000000000001" }) {
+                let broadcasts = SupabaseClient.shared.getBroadcasts(from: broadcastProfile.about)
+                for bcast in broadcasts {
+                    let bcastId = bcast["id"] as? String ?? "bcast_\(bcast["timestamp"] ?? 0)"
+                    let bcastTitle = bcast["title"] as? String ?? "Royal Announcement"
+                    let bcastBody = bcast["body"] as? String ?? ""
+                    let msgDisplay = !bcastTitle.isEmpty ? "📢 \(bcastTitle): \(bcastBody)" : "📢 \(bcastBody)"
+                    list.append(RoyalNotification(
+                        id: bcastId,
+                        notifKey: "bcast_\(bcastId)",
+                        message: msgDisplay,
+                        profileId: "broadcast",
+                        timestamp: "Announcement",
+                        read: false
+                    ))
+                    if self.hasSeededNotifications && !self.seenBroadcastIds.contains(bcastId) {
+                        NotificationManager.shared.notifyMarketingBroadcast(title: bcastTitle, body: bcastBody, broadcastId: bcastId)
+                    }
+                    self.seenBroadcastIds.insert(bcastId)
+                }
+            }
+
             self.hasSeededNotifications = true
+            UserDefaults.standard.set(Array(self.knownConnectionKeys), forKey: "known_conn_keys")
+            UserDefaults.standard.set(Array(self.seenMessageKeys), forKey: "seen_msg_keys")
+            UserDefaults.standard.set(Array(self.seenBroadcastIds), forKey: "seen_bcast_ids")
+            UserDefaults.standard.set(true, forKey: "initial_sync_done")
             
             DispatchQueue.main.async {
                 self.connections = records

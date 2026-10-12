@@ -558,6 +558,9 @@
     </a>
 
     <div class="admin-nav-actions">
+      <button class="admin-btn" style="background: linear-gradient(135deg, #d4af37, #aa7c11); color: #000; font-weight: 700; border: none; padding: 9px 16px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;" onclick="openBroadcastModal()">
+        📢 Send Push Notification
+      </button>
       <button class="admin-btn admin-btn-gold" onclick="exportUsersToCSV()">
         📥 Export to Excel (CSV)
       </button>
@@ -738,7 +741,10 @@
       </div>
 
       <!-- Action Buttons -->
-      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+      <div style="display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+        <button class="admin-btn" style="padding: 10px 18px; font-size: 0.88rem; background: rgba(212, 175, 55, 0.25); color: var(--gold-bright); border: 1px solid var(--gold-bright);" onclick="dispatchCandidatePushNotification()">
+          🔔 App Push Alert
+        </button>
         <button class="admin-btn btn-wa" style="padding: 10px 18px; font-size: 0.88rem;" onclick="dispatchWhatsAppMessage()">
           💬 Send on WhatsApp
         </button>
@@ -748,6 +754,60 @@
       </div>
 
       <div id="msgStatusNotification" style="margin-top: 14px; font-size: 0.8rem; display: none;"></div>
+    </div>
+  </div>
+
+  <!-- MARKETING & BROADCAST PUSH NOTIFICATION MODAL -->
+  <div class="admin-modal-overlay" id="adminBroadcastModal" onclick="if(event.target === this) closeBroadcastModal()">
+    <div class="admin-modal-card" style="max-width: 540px;">
+      <button class="modal-close-x" onclick="closeBroadcastModal()">✕</button>
+      <div style="display: flex; gap: 12px; align-items: center; border-bottom: 1.5px solid var(--admin-border); padding-bottom: 14px; margin-bottom: 18px;">
+        <div style="font-size: 2rem;">📢</div>
+        <div>
+          <h2 style="margin: 0; color: var(--gold-bright); font-family: var(--font-royal); font-size: 1.25rem;">Broadcast Marketing Push Notification</h2>
+          <div style="color: #CBD5E0; font-size: 0.8rem; margin-top: 3px;">Instantly notify all Android & iOS app users with a royal banner alert</div>
+        </div>
+      </div>
+
+      <!-- Target Info -->
+      <div style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.82rem; color: #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+        <span>🎯 Audience: <strong>All Android & iOS Mobile Members</strong></span>
+        <span style="color: var(--gold-bright); font-weight: 600;">⚡ Instant Live Sync</span>
+      </div>
+
+      <!-- Quick Template Selector -->
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 0.78rem; color: var(--gold-antique); text-transform: uppercase; font-weight: 600; margin-bottom: 6px;">Marketing / Promo Template:</label>
+        <select id="bcastTemplateSelect" class="admin-select" style="width: 100%; box-sizing: border-box;" onchange="handleBroadcastTemplateSelect()">
+          <option value="promo_matches">💍 New Rajput Matches Live Alert</option>
+          <option value="promo_discount">👑 Royal Membership Exclusive Offer</option>
+          <option value="promo_profile">✨ Complete Your Kundali & Clan Details</option>
+          <option value="promo_welcome">🏰 Welcome to Shree Rajput Sagai Sambandh</option>
+          <option value="custom">✏️ Custom Announcement</option>
+        </select>
+      </div>
+
+      <!-- Notification Title -->
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 0.78rem; color: var(--gold-antique); text-transform: uppercase; font-weight: 600; margin-bottom: 6px;">Notification Title:</label>
+        <input type="text" id="bcastTitleInput" class="admin-search-input" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.45); border: 1px solid var(--admin-border); color: #FFF; padding: 10px 12px; border-radius: 6px;" value="👑 Shree Rajput Sagai Sambandh">
+      </div>
+
+      <!-- Message Text Area -->
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-size: 0.78rem; color: var(--gold-antique); text-transform: uppercase; font-weight: 600; margin-bottom: 6px;">Notification Message (Marketing Text):</label>
+        <textarea id="bcastBodyText" rows="4" style="width: 100%; box-sizing: border-box; padding: 12px; border-radius: 6px; border: 1px solid var(--admin-border); background: rgba(0,0,0,0.45); color: #FFF; font-size: 0.88rem; line-height: 1.5; outline: none; resize: vertical;" placeholder="Enter message to broadcast to all mobile users..."></textarea>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="admin-btn admin-btn-outline" onclick="closeBroadcastModal()">Cancel</button>
+        <button class="admin-btn" id="btnDispatchBroadcast" style="padding: 10px 20px; font-size: 0.9rem; background: linear-gradient(135deg, #d4af37, #aa7c11); color: #000; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;" onclick="dispatchMarketingBroadcast()">
+          🚀 Broadcast Push Notification
+        </button>
+      </div>
+
+      <div id="bcastStatusNotification" style="margin-top: 14px; font-size: 0.85rem; display: none;"></div>
     </div>
   </div>
 
@@ -1222,6 +1282,214 @@
         statusEl.style.color = '#FC8181';
         statusEl.textContent = 'Network error contacting SMS gateway.';
       }
+    }
+
+    // BROADCAST & PUSH NOTIFICATIONS CONTROLLER
+    function openBroadcastModal() {
+      document.getElementById('bcastTemplateSelect').value = 'promo_matches';
+      handleBroadcastTemplateSelect();
+      document.getElementById('bcastStatusNotification').style.display = 'none';
+      document.getElementById('adminBroadcastModal').classList.add('active');
+    }
+
+    function closeBroadcastModal() {
+      document.getElementById('adminBroadcastModal').classList.remove('active');
+    }
+
+    function handleBroadcastTemplateSelect() {
+      const tpl = document.getElementById('bcastTemplateSelect').value;
+      let title = '👑 Shree Rajput Sagai Sambandh';
+      let body = '';
+
+      if (tpl === 'promo_matches') {
+        title = '💍 New Royal Matches Available!';
+        body = 'Khammaghani! Verified noble Rajput profiles from Rathore, Chauhan & Sisodia clans have joined today. Open the app to view your matches!';
+      } else if (tpl === 'promo_discount') {
+        title = '👑 Royal Membership Exclusive Offer';
+        body = 'Unlock unlimited direct contact details & personalized Kundali matchmaking with our exclusive Royal Membership discount!';
+      } else if (tpl === 'promo_profile') {
+        title = '✨ Complete Your Royal Profile';
+        body = 'Add your Gotra, Mother Gotra, and biodata photos to boost your visibility among compatible Rajput families by 300%!';
+      } else if (tpl === 'promo_welcome') {
+        title = '🏰 Shree Rajput Sagai Sambandh';
+        body = 'Welcome to India\'s most trusted matrimonial platform for Rajputana. Find verified royal matches with complete lineage privacy.';
+      } else {
+        title = '👑 Royal Announcement';
+        body = '';
+      }
+
+      document.getElementById('bcastTitleInput').value = title;
+      document.getElementById('bcastBodyText').value = body;
+    }
+
+    async function dispatchMarketingBroadcast() {
+      const title = document.getElementById('bcastTitleInput').value.trim();
+      const body = document.getElementById('bcastBodyText').value.trim();
+      const statusEl = document.getElementById('bcastStatusNotification');
+      const btn = document.getElementById('btnDispatchBroadcast');
+
+      if (!body) {
+        alert('Please enter a notification message.');
+        return;
+      }
+
+      statusEl.style.display = 'block';
+      statusEl.style.color = '#FCD34D';
+      statusEl.textContent = '⏳ Dispatching broadcast to all Android & iOS users via Supabase...';
+      btn.disabled = true;
+
+      try {
+        const broadcastId = 'bcast_' + Date.now();
+        const newBroadcast = {
+          id: broadcastId,
+          title: title || '👑 Royal Announcement',
+          body: body,
+          timestamp: Date.now()
+        };
+
+        const broadcastProfileId = '00000000-0000-0000-0000-000000000001';
+        let currentAbout = '';
+        let existingBroadcasts = [];
+
+        const { data: existingRows } = await window.supabaseClient
+          .from('profiles')
+          .select('about')
+          .eq('id', broadcastProfileId);
+
+        if (existingRows && existingRows.length > 0) {
+          currentAbout = existingRows[0].about || '';
+          const match = currentAbout.match(/\[Broadcasts:\s*(\[.*?\])\]/s);
+          if (match) {
+            try {
+              existingBroadcasts = JSON.parse(match[1]);
+            } catch(e) {}
+          }
+        }
+
+        // Prepend new broadcast (keep last 20 broadcasts)
+        existingBroadcasts.unshift(newBroadcast);
+        if (existingBroadcasts.length > 20) {
+          existingBroadcasts = existingBroadcasts.slice(0, 20);
+        }
+
+        let cleanAbout = currentAbout.replace(/\[Broadcasts:\s*\[.*?\]\]/s, '').trim();
+        const updatedAbout = (cleanAbout ? cleanAbout + '\n' : '') + `[Broadcasts: ${JSON.stringify(existingBroadcasts)}]`;
+
+        const { error: upsertErr } = await window.supabaseClient
+          .from('profiles')
+          .upsert({
+            id: broadcastProfileId,
+            name: 'Royal Community Broadcast',
+            gender: 'System',
+            clan: 'Royal Rajputana',
+            about: updatedAbout
+          });
+
+        if (upsertErr) {
+          throw upsertErr;
+        }
+
+        statusEl.style.color = '#68D391';
+        statusEl.textContent = '✅ Success! Marketing push notification broadcast has been sent to all Android and iOS devices!';
+        
+        sendTelegramAdminNotification(`📢 *Marketing Push Broadcast Dispatched* 📢\n\n• *Title:* ${title}\n• *Message:* ${body}\n• *Timestamp:* ${new Date().toLocaleString('en-IN')}`);
+
+      } catch (err) {
+        console.error('Broadcast error:', err);
+        statusEl.style.color = '#FC8181';
+        statusEl.textContent = '⚠️ Failed to dispatch broadcast: ' + (err.message || err);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function dispatchCandidatePushNotification() {
+      const text = document.getElementById('msgBodyText').value.trim();
+      const statusEl = document.getElementById('msgStatusNotification');
+      const name = currentMsgCandidate.name || 'Member';
+
+      if (!text) {
+        alert('Please enter a message to send as notification.');
+        return;
+      }
+
+      statusEl.style.display = 'block';
+      statusEl.style.color = '#FCD34D';
+      statusEl.textContent = '⏳ Sending push notification to ' + name + '...';
+
+      try {
+        const broadcastId = 'cand_msg_' + Date.now();
+        const newBroadcast = {
+          id: broadcastId,
+          title: `👑 Message for ${name}`,
+          body: text,
+          timestamp: Date.now()
+        };
+
+        const broadcastProfileId = '00000000-0000-0000-0000-000000000001';
+        let currentAbout = '';
+        let existingBroadcasts = [];
+
+        const { data: existingRows } = await window.supabaseClient
+          .from('profiles')
+          .select('about')
+          .eq('id', broadcastProfileId);
+
+        if (existingRows && existingRows.length > 0) {
+          currentAbout = existingRows[0].about || '';
+          const match = currentAbout.match(/\[Broadcasts:\s*(\[.*?\])\]/s);
+          if (match) {
+            try {
+              existingBroadcasts = JSON.parse(match[1]);
+            } catch(e) {}
+          }
+        }
+
+        existingBroadcasts.unshift(newBroadcast);
+        if (existingBroadcasts.length > 20) {
+          existingBroadcasts = existingBroadcasts.slice(0, 20);
+        }
+
+        let cleanAbout = currentAbout.replace(/\[Broadcasts:\s*\[.*?\]\]/s, '').trim();
+        const updatedAbout = (cleanAbout ? cleanAbout + '\n' : '') + `[Broadcasts: ${JSON.stringify(existingBroadcasts)}]`;
+
+        const { error: upsertErr } = await window.supabaseClient
+          .from('profiles')
+          .upsert({
+            id: broadcastProfileId,
+            name: 'Royal Community Broadcast',
+            gender: 'System',
+            clan: 'Royal Rajputana',
+            about: updatedAbout
+          });
+
+        if (upsertErr) throw upsertErr;
+
+        statusEl.style.color = '#68D391';
+        statusEl.textContent = `✅ Push notification alert queued successfully for ${name}!`;
+
+        sendTelegramAdminNotification(`🔔 *Candidate Push Alert Sent* 🔔\n\n• *To:* ${name} (${currentMsgCandidate.clan})\n• *Message:* ${text}\n• *Timestamp:* ${new Date().toLocaleString('en-IN')}`);
+      } catch (err) {
+        console.error('Candidate push error:', err);
+        statusEl.style.color = '#FC8181';
+        statusEl.textContent = '⚠️ Error sending push notification: ' + (err.message || err);
+      }
+    }
+
+    function sendTelegramAdminNotification(text) {
+      try {
+        const tgToken = '8830114400:AAHA6xhuANxZjYu0iie-sAF67A2jRxy_i7U';
+        const tgChatId = '5124029961';
+        fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: tgChatId,
+            text: text,
+            parse_mode: 'Markdown'
+          })
+        }).catch(() => {});
+      } catch(e) {}
     }
 
     // Export all members to CSV for Excel / Google Sheets

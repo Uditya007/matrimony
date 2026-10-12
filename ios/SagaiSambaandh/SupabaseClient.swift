@@ -663,6 +663,13 @@ class SupabaseClient {
         return String(sub[..<endBracket]).trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
+    func getBroadcasts(from aboutText: String?) -> [[String: Any]] {
+        if let list = extractJsonBlock(tag: "Broadcasts", from: aboutText) as? [[String: Any]] {
+            return list
+        }
+        return []
+    }
+    
     // Send match interest to a profile (syncs directly with Supabase profiles table)
     func sendConnection(senderId: String, receiverId: String, completion: @escaping (Result<Void, Error>) -> Void) {
         guard let url = URL(string: "\(supabaseURL)/rest/v1/profiles?id=eq.\(senderId)&select=about") else { return }

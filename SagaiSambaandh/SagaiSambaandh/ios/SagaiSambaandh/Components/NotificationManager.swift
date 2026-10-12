@@ -82,6 +82,17 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         )
     }
     
+    // Trigger when a marketing announcement or royal broadcast arrives
+    func notifyMarketingBroadcast(title: String, body: String, broadcastId: String) {
+        let notifId = "bcast_\(broadcastId)"
+        postNotification(
+            id: notifId,
+            title: title.isEmpty ? "👑 Royal Announcement" : title,
+            body: body,
+            userInfo: ["type": "broadcast", "broadcastId": broadcastId]
+        )
+    }
+    
     // UNUserNotificationCenterDelegate: display banner & play sound EVEN WHEN APP IS OPEN
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
