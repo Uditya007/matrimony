@@ -4760,6 +4760,35 @@ body:has(.dashboard-subnav) {
   box-shadow: 0 6px 15px rgba(107, 18, 32, 0.3) !important;
 }
 
+/* Pending Request Button with Remove state */
+.profile-card .btn-pending-request {
+  background: #5A141E !important;
+  color: #FCD34D !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.45) !important;
+  cursor: pointer !important;
+  transition: all 0.25s ease !important;
+  padding: 8px 10px !important;
+}
+
+.profile-card .btn-pending-request:hover {
+  background: #7A1725 !important;
+  color: #FFFFFF !important;
+  border-color: #FC8181 !important;
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.35) !important;
+}
+
+.profile-card .btn-pending-request .pending-btn-remove {
+  display: none !important;
+}
+
+.profile-card .btn-pending-request:hover .pending-btn-normal {
+  display: none !important;
+}
+
+.profile-card .btn-pending-request:hover .pending-btn-remove {
+  display: inline-block !important;
+}
+
 /* Secondary Action Buttons (Primary: Details) */
 .profile-card .btn-primary {
   background: #FFFFFF !important;

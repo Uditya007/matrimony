@@ -2839,8 +2839,9 @@ function createProfileCardHtml(profile, isDashboard = true) {
     `;
   } else if (hasSentInterest) {
     interestBtnHtml = `
-      <button class="btn btn-royal" style="font-size: 0.8rem; opacity: 0.75; pointer-events: none;" disabled>
-        Pending ⏳
+      <button type="button" onclick="handleCancelInterest('${profile.id}')" class="btn btn-royal btn-pending-request" style="font-size: 0.8rem;" title="Click to withdraw/remove pending request">
+        <span class="pending-btn-normal">Pending ⌛</span>
+        <span class="pending-btn-remove">Remove ✕</span>
       </button>
     `;
   } else {
@@ -3182,6 +3183,82 @@ window.handleDeclineInterest = async function(senderId) {
   const modal = document.getElementById('profileDetailModal');
   if (modal && modal.classList.contains('active')) {
     openProfileDetailModal(senderId);
+  }
+};
+
+// Real-time Cancel / Withdraw Pending Interest Handler
+window.handleCancelInterest = async function(id) {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+    showToast('Please log in to manage match requests');
+    return;
+  }
+
+  const profiles = getAllProfiles();
+  const targetProfile = profiles.find(p => p.id === id);
+  const targetName = targetProfile ? targetProfile.name : 'Match';
+
+  // 1. Remove pending interest from currentUser's local interests mapping
+  const mySentInterests = getProfileInterests(currentUser);
+  delete mySentInterests[id];
+  currentUser.about = setProfileInterestsInAbout(currentUser.about, mySentInterests);
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+  // Update in LocalStorage 'users' list
+  let localUsersList = JSON.parse(localStorage.getItem('users')) || [];
+  const uIdx = localUsersList.findIndex(u => u.id === currentUser.id || u.email === currentUser.email);
+  if (uIdx !== -1) {
+    localUsersList[uIdx].about = currentUser.about;
+    localStorage.setItem('users', JSON.stringify(localUsersList));
+  }
+
+  // Update in-memory firestoreUsers cache
+  if (window.firestoreUsers && Array.isArray(window.firestoreUsers)) {
+    const idx = window.firestoreUsers.findIndex(u => u.id === currentUser.id);
+    if (idx !== -1) window.firestoreUsers[idx].about = currentUser.about;
+  }
+
+  // 2. Remove queued / outgoing notifications
+  let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+  notifications = notifications.filter(n => {
+    if (n.type === 'interest_sent' && n.profileId === id) return false;
+    if (n.notifKey === `interest_from_${currentUser.id}_to_${id}`) return false;
+    if (n.type === 'interest_request' && n.senderId === currentUser.id && (n.recipientId === id || n.profileId === currentUser.id)) return false;
+    return true;
+  });
+  localStorage.setItem('notifications', JSON.stringify(notifications));
+
+  if (typeof renderNotifications === 'function') {
+    renderNotifications();
+  }
+
+  // 3. Sync interest cancellation to Supabase profiles database
+  if (window.supabaseActive && window.supabaseClient) {
+    try {
+      await window.supabaseClient
+        .from('profiles')
+        .update({ about: currentUser.about })
+        .eq('id', currentUser.id);
+    } catch (e) {
+      console.warn("Supabase cancel interest sync error:", e);
+    }
+  }
+
+  showToast(`Pending match request to ${targetName} removed.`, 'gold');
+
+  if (typeof updateDashboardStats === 'function') updateDashboardStats();
+  if (typeof renderMatchesGrid === 'function') renderMatchesGrid();
+
+  // If detailed modal is open for this profile, refresh modal
+  const modal = document.getElementById('profileDetailModal');
+  if (modal && modal.classList.contains('active')) {
+    openProfileDetailModal(id);
+  }
+
+  // If Sent Interests modal is open, refresh it
+  const overlay = document.getElementById('interestsChatsModalOverlay');
+  if (overlay && overlay.classList.contains('active') && typeof openInterestsModal === 'function') {
+    openInterestsModal();
   }
 };
 
@@ -3954,9 +4031,14 @@ window.openProfileDetailModal = function(id) {
               <p style="color: var(--text-muted); font-size: 0.84rem; max-width: 500px; margin: 0 auto 10px; line-height: 1.45;">
                 You have expressed match interest in connecting with <strong>${profile.name}</strong>. In compliance with privacy standards, their phone number and email will be securely revealed as soon as they accept your request.
               </p>
-              <button type="button" class="btn btn-minimal" disabled style="opacity: 0.75; cursor: default; font-size: 0.82rem; padding: 8px 18px; border: 1px solid rgba(170,124,17,0.3);">
-                ⏳ Awaiting Acceptance...
-              </button>
+              <div style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 6px;">
+                <button type="button" class="btn btn-minimal" disabled style="opacity: 0.85; cursor: default; font-size: 0.82rem; padding: 8px 16px; border: 1px solid rgba(170,124,17,0.3);">
+                  ⏳ Awaiting Acceptance...
+                </button>
+                <button type="button" class="btn btn-minimal" onclick="handleCancelInterest('${profile.id}')" style="color: #fc8181; border: 1.5px solid rgba(252, 129, 129, 0.45); font-size: 0.82rem; padding: 8px 18px; border-radius: 6px; font-weight: 600;" title="Withdraw/remove pending match request">
+                  ✕ Remove Request
+                </button>
+              </div>
             </div>
           `;
         } else {
@@ -4900,6 +4982,31 @@ window.renderNotifications = function() {
       `;
     }
 
+    if (n.type === 'interest_sent') {
+      const mySentInterests = getProfileInterests(currentUser);
+      const isStillPending = mySentInterests[targetId] === 'sent';
+      return `
+        <div class="notif-card-item" style="padding: 12px 16px; border-bottom: 1px solid rgba(170,124,17,0.15);">
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <div style="width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold-antique); flex-shrink: 0; overflow: hidden; background: ${avatarGrad}; display: flex; align-items: center; justify-content: center;">
+              ${avatarHtml}
+            </div>
+            <div style="flex-grow: 1; min-width: 0;">
+              <div style="color: var(--text-white); font-size: 0.82rem; line-height: 1.35;">
+                ${n.message}
+              </div>
+              <div style="color: var(--text-muted); font-size: 0.68rem; margin-top: 2px;">${n.timestamp}</div>
+            </div>
+            ${isStillPending ? `
+              <button type="button" class="btn btn-minimal" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 4px; color: #fc8181; border: 1px solid rgba(252, 129, 129, 0.4); white-space: nowrap;" onclick="handleCancelInterest('${targetId}')" title="Withdraw match request">
+                ✕ Remove
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+
     return `
       <div onclick="handleNotificationClick(${n.id}, '${targetId}')" class="notif-card-item" style="cursor: pointer;">
         <div style="color: var(--text-white); font-size: 0.82rem; line-height: 1.3; margin-bottom: 3px;">${n.message}</div>
@@ -5143,9 +5250,14 @@ window.openInterestsModal = function() {
                 Chat Now 💬
               </button>
             ` : `
-              <span style="font-size: 0.72rem; color: var(--gold-bright); font-weight: 500; background: rgba(170,124,17,0.08); padding: 5px 10px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.2); display: inline-block;">
-                Pending Acceptance...
-              </span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 0.72rem; color: var(--gold-bright); font-weight: 500; background: rgba(170,124,17,0.08); padding: 5px 10px; border-radius: 4px; border: 1px solid rgba(170,124,17,0.2); display: inline-block;">
+                  Pending Acceptance...
+                </span>
+                <button onclick="handleCancelInterest('${p.id}')" class="btn btn-minimal" style="padding: 4px 10px; font-size: 0.72rem; color: #fc8181; border: 1px solid rgba(252, 129, 129, 0.4); border-radius: 4px; font-weight: 600;" title="Cancel pending interest request">
+                  Remove ✕
+                </button>
+              </div>
             `}
           </div>
         </div>
