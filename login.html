@@ -59,18 +59,18 @@
       <p>Log in to access your royal matchmaking profile</p>
     </div>
 
-    <!-- Mode Switcher: OTP Verification vs Password Login -->
+    <!-- Mode Switcher: Password Login vs OTP Verification -->
     <div class="auth-mode-tabs" role="tablist">
-      <button type="button" class="auth-mode-tab-btn active" id="tabBtnOtp" onclick="switchLoginAuthMode('otp')">
-        📱 Instant OTP Login
-      </button>
-      <button type="button" class="auth-mode-tab-btn" id="tabBtnPassword" onclick="switchLoginAuthMode('password')">
+      <button type="button" class="auth-mode-tab-btn active" id="tabBtnPassword" onclick="switchLoginAuthMode('password')">
         🔑 Password Login
+      </button>
+      <button type="button" class="auth-mode-tab-btn" id="tabBtnOtp" onclick="switchLoginAuthMode('otp')">
+        📱 Instant OTP Login
       </button>
     </div>
 
     <!-- PANEL 1: OTP Verification Login (Mobile or Email) -->
-    <div id="panelOtpLogin">
+    <div id="panelOtpLogin" style="display: none;">
       <!-- Channel Selector: Mobile Number vs Email Address -->
       <div class="auth-channel-selector">
         <button type="button" class="auth-channel-btn active" id="channelBtnPhone" onclick="setOtpChannel('phone')">
@@ -146,7 +146,7 @@
     </div>
 
     <!-- PANEL 2: Password Login (Email or Phone + Password) -->
-    <div id="panelPasswordLogin" style="display: none;">
+    <div id="panelPasswordLogin">
       <form id="loginForm">
         <div class="form-group">
           <label for="loginEmail" style="color: #FCD34D; font-weight: 600; font-size: 0.82rem;">Email Address or Mobile Number</label>
