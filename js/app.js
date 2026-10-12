@@ -2839,9 +2839,9 @@ function createProfileCardHtml(profile, isDashboard = true) {
     `;
   } else if (hasSentInterest) {
     interestBtnHtml = `
-      <button type="button" onclick="handleCancelInterest('${profile.id}')" class="btn btn-royal btn-pending-request" style="font-size: 0.8rem;" title="Click to withdraw/remove pending request">
-        <span class="pending-btn-normal">Pending ⌛</span>
-        <span class="pending-btn-remove">Remove ✕</span>
+      <button type="button" onclick="handleCancelInterest('${profile.id}')" class="btn btn-royal btn-pending-request" title="Click to Cancel Match Request">
+        <span class="pending-badge-text">⌛ Pending</span>
+        <span class="pending-cancel-text">Cancel Request ✕</span>
       </button>
     `;
   } else {
@@ -4035,8 +4035,8 @@ window.openProfileDetailModal = function(id) {
                 <button type="button" class="btn btn-minimal" disabled style="opacity: 0.85; cursor: default; font-size: 0.82rem; padding: 8px 16px; border: 1px solid rgba(170,124,17,0.3);">
                   ⏳ Awaiting Acceptance...
                 </button>
-                <button type="button" class="btn btn-minimal" onclick="handleCancelInterest('${profile.id}')" style="color: #fc8181; border: 1.5px solid rgba(252, 129, 129, 0.45); font-size: 0.82rem; padding: 8px 18px; border-radius: 6px; font-weight: 600;" title="Withdraw/remove pending match request">
-                  ✕ Remove Request
+                <button type="button" class="btn btn-royal" onclick="handleCancelInterest('${profile.id}')" style="background: #C53030 !important; border: 1.5px solid #FC8181 !important; color: #FFFFFF !important; font-size: 0.84rem; padding: 8px 20px; border-radius: 6px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(197, 48, 48, 0.4);" title="Cancel pending match request">
+                  ✕ Cancel Match Request
                 </button>
               </div>
             </div>
