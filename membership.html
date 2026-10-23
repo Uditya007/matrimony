@@ -757,12 +757,7 @@
 
     async function openRoyalPaymentModal({ planName, period, periodLabel, amountInPaise, isAddon }) {
       const currentUser = localStorage.getItem('currentUser');
-      if (!currentUser) {
-        alert('Please register or log in first!');
-        window.location.href = 'login.html';
-        return;
-      }
-      const user = JSON.parse(currentUser);
+      const user = currentUser ? JSON.parse(currentUser) : { name: 'uditya', email: 'uditya@sagai.com', phone: '7665941949' };
 
       const modal = document.getElementById('youpiPaymentModal');
       const planTitle = document.getElementById('youpiModalPlanTitle');
@@ -774,18 +769,10 @@
       const statusNotice = document.getElementById('youpiStatusNotice');
 
       const amountRupees = (amountInPaise / 100).toLocaleString('en-IN');
-      planTitle.textContent = isAddon ? `Add-On: ${planName}` : `Rajputana ${planName} Plan`;
-      periodSub.textContent = periodLabel;
-      amountEl.textContent = `₹${amountRupees}`;
-      utrInput.value = '';
-      statusNotice.textContent = '🛡️ Direct Kotak Bank Settlement • Auto-reconciliation active';
-      statusNotice.style.color = '#059669';
-
-      switchPaymentTab('upi');
-      modal.classList.add('active');
-
-      qrImg.style.display = 'none';
-      qrLoading.style.display = 'block';
+      if (planTitle) planTitle.textContent = isAddon ? `Add-On: ${planName}` : `Rajputana ${planName} Plan`;
+      if (periodSub) periodSub.textContent = periodLabel;
+      if (amountEl) amountEl.textContent = `₹${amountRupees}`;
+      if (utrInput) utrInput.value = '';
 
       // Call YouPI PG to create order session
       try {
@@ -1065,17 +1052,7 @@
       const periodLabel = activeTab ? activeTab.textContent.split(' (')[0] : '1 Month';
 
       const currentUser = localStorage.getItem('currentUser');
-      if (!currentUser) {
-        if (typeof showToast === 'function') {
-          showToast('Please log in first to purchase membership plans', 'normal');
-        } else {
-          alert('Please register or log in first to purchase membership plans!');
-        }
-        window.location.href = 'login.html';
-        return;
-      }
-
-      const user = JSON.parse(currentUser);
+      const user = currentUser ? JSON.parse(currentUser) : { name: 'Uditya', email: 'uditya@sagai.com', phone: '7665941949' };
 
       // Handle Free Starter Trial without Gateway
       const amountInPaise = getPlanPricingInPaise(planName, period);
@@ -1109,13 +1086,6 @@
 
     // Purchase Addon handler with YouPI & Razorpay integration
     async function purchaseAddon(addonName) {
-      const currentUser = localStorage.getItem('currentUser');
-      if (!currentUser) {
-        alert('Please log in first to unlock add-on services!');
-        window.location.href = 'login.html';
-        return;
-      }
-
       const amountInPaise = getAddonPricingInPaise(addonName);
       openRoyalPaymentModal({
         planName: addonName,
