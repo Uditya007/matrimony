@@ -13,6 +13,48 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
+
+// Reverse Proxy for YouPI PG Checkout Portal & API
+// Ensures that Checkout Portal (7070) and Payment API (6100) are served
+// from the same origin (port 3000) to eliminate cross-origin iframe security issues,
+// browser cookie blocking, and macOS AirPlay port 7000 conflicts.
+const http = require('http');
+
+function createYoupiProxy(targetPort) {
+  return (req, res) => {
+    const proxyReq = http.request({
+      hostname: '127.0.0.1',
+      port: targetPort,
+      path: req.originalUrl || req.url,
+      method: req.method,
+      headers: {
+        ...req.headers,
+        host: `127.0.0.1:${targetPort}`,
+        'x-forwarded-host': req.headers.host || '',
+        'x-forwarded-proto': req.protocol || 'http'
+      }
+    }, (proxyRes) => {
+      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+      proxyRes.pipe(res);
+    });
+
+    proxyReq.on('error', (err) => {
+      if (!res.headersSent) {
+        res.status(502).json({ error: 'YouPI Gateway service unavailable', details: err.message });
+      }
+    });
+
+    req.pipe(proxyReq);
+  };
+}
+
+// Intercept YouPI endpoints BEFORE express.json() so request streams are preserved for streaming & POSTs
+app.use('/checkout', createYoupiProxy(7070));
+app.use('/icons', createYoupiProxy(7070));
+app.get('/css/checkout.css', createYoupiProxy(7070));
+app.get('/js/checkout.js', createYoupiProxy(7070));
+app.use('/api/v1', createYoupiProxy(6100));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

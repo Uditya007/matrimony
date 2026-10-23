@@ -791,15 +791,21 @@
         });
 
         const data = await res.json();
-        const checkoutTargetUrl = data.checkoutUrl ? data.checkoutUrl.replace('localhost:7000', '127.0.0.1:7000') : '';
+        const currentOrigin = window.location.origin;
+        let checkoutTargetUrl = '';
+        if (data.paymentId) {
+          checkoutTargetUrl = `${currentOrigin}/checkout/${data.paymentId}`;
+        } else if (data.checkoutUrl) {
+          checkoutTargetUrl = data.checkoutUrl.replace(':7000', ':7070');
+        }
 
         // Launch Official YouPI 2-Column Portal Modal (Matches screenshot exactly)
         if (checkoutTargetUrl && typeof YoupiCheckout !== 'undefined') {
           modal.classList.remove('active');
           const youpiInstance = new YoupiCheckout({
             checkoutUrl: checkoutTargetUrl,
-            portalUrl: 'http://127.0.0.1:7000',
-            apiUrl: 'http://127.0.0.1:6100',
+            portalUrl: currentOrigin,
+            apiUrl: currentOrigin,
             amount: (amountInPaise / 100).toFixed(2),
             name: 'Shree Rajput Sagai Sambandh',
             description: `Rajputana ${planName} Plan (${periodLabel})`,
@@ -836,8 +842,11 @@
 
           const portalLink = document.getElementById('youpiCheckoutPortalLink');
           if (portalLink) {
-            if (data.checkoutUrl) {
-              portalLink.href = data.checkoutUrl.replace('localhost:7000', '127.0.0.1:7000');
+            if (data.paymentId) {
+              portalLink.href = `${currentOrigin}/checkout/${data.paymentId}`;
+              portalLink.style.display = 'inline';
+            } else if (data.checkoutUrl) {
+              portalLink.href = data.checkoutUrl.replace(':7000', ':7070');
               portalLink.style.display = 'inline';
             } else {
               portalLink.style.display = 'none';

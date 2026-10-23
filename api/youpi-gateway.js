@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 
 const YOUPI_API_BASE = process.env.YOUPI_API_BASE || 'http://127.0.0.1:6100';
-const YOUPI_CHECKOUT_BASE = process.env.YOUPI_CHECKOUT_BASE || 'http://127.0.0.1:7000';
+const YOUPI_CHECKOUT_BASE = process.env.YOUPI_CHECKOUT_BASE || 'http://127.0.0.1:7070';
 const MERCHANT_VPA = process.env.MERCHANT_VPA || '7665941949@kotak';
 const MERCHANT_NAME = process.env.MERCHANT_NAME || 'Shree Rajput Sagai Sambandh';
 
@@ -69,7 +69,7 @@ async function createYoupiOrder({ orderId, amountPaise, planName, customer }) {
       upiId: MERCHANT_VPA,
       payeeName: MERCHANT_NAME,
       upiUri,
-      checkoutUrl: data.checkoutUrl || `${YOUPI_CHECKOUT_BASE}/checkout/${data.paymentId}`
+      checkoutUrl: (data.checkoutUrl ? data.checkoutUrl.replace(':7000', ':7070') : `${YOUPI_CHECKOUT_BASE}/checkout/${data.paymentId}`)
     };
   } catch (err) {
     console.error('Error connecting to YouPI PG API:', err.message);
