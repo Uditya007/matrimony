@@ -6,11 +6,14 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -37,6 +40,11 @@ import com.sagaisambaandh.data.SagaiSessionManager
 import com.sagaisambaandh.ui.components.AvatarImageView
 import com.sagaisambaandh.ui.components.RoyalBackground
 import com.sagaisambaandh.ui.theme.*
+import com.sagaisambaandh.util.AIMatchmaker
+import com.sagaisambaandh.util.ScoredProfile
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -58,22 +66,53 @@ fun MatchesView(
     var showingConnectSuccess by remember { mutableStateOf(false) }
     var successProfileName by remember { mutableStateOf("") }
 
+    // AI Matchmaker States
+    var aiQueryInput by remember { mutableStateOf("") }
+    var isAIFilterActive by remember { mutableStateOf(false) }
+    var activeAITitle by remember { mutableStateOf("") }
+    var showingAIChatDialog by remember { mutableStateOf(false) }
+
     val user = session.currentUser.value
     val isProfileLocked = user == null
 
-    val filteredMatches = remember(profiles, activeFilterTab, user, searchGender, searchClan) {
-        val searched = profiles.filter {
-            val genderMatch = it.gender.equals(searchGender, ignoreCase = true)
-            val clanMatch = searchClan == "All Clans" || it.clan.equals(searchClan, ignoreCase = true)
-            genderMatch && clanMatch
-        }
+    val allScoredProfiles = remember(profiles, user, isAIFilterActive, activeAITitle, aiQueryInput) {
+        val query = if (isAIFilterActive) (if (activeAITitle.isNotEmpty()) activeAITitle else aiQueryInput) else null
+        AIMatchmaker.searchDatabase(query, user, profiles)
+    }
 
-        if (activeFilterTab == 1 && user != null && user.gotra.isNotEmpty()) {
-            searched.filter {
-                !it.gotra.equals(user.gotra, ignoreCase = true)
-            }
+    val scoredMap = remember(allScoredProfiles) {
+        allScoredProfiles.associateBy { it.profile.id }
+    }
+
+    fun executeAISearch(query: String, title: String) {
+        aiQueryInput = query
+        activeAITitle = title
+        isAIFilterActive = true
+    }
+
+    fun clearAISearch() {
+        isAIFilterActive = false
+        aiQueryInput = ""
+        activeAITitle = ""
+    }
+
+    val filteredMatches = remember(profiles, activeFilterTab, user, searchGender, searchClan, isAIFilterActive, allScoredProfiles) {
+        if (isAIFilterActive) {
+            allScoredProfiles.map { it.profile }
         } else {
-            searched
+            val searched = profiles.filter {
+                val genderMatch = it.gender.equals(searchGender, ignoreCase = true)
+                val clanMatch = searchClan == "All Clans" || it.clan.equals(searchClan, ignoreCase = true)
+                genderMatch && clanMatch
+            }
+
+            if (activeFilterTab == 1 && user != null && user.gotra.isNotEmpty()) {
+                searched.filter {
+                    !it.gotra.equals(user.gotra, ignoreCase = true)
+                }
+            } else {
+                searched
+            }
         }
     }
 
@@ -189,12 +228,24 @@ fun MatchesView(
                     }
                 }
 
+                // AI Lineage Matchmaker Header Card
+                AIMatchmakerHeaderCard(
+                    aiQueryInput = aiQueryInput,
+                    onQueryChange = { aiQueryInput = it },
+                    onSearch = { q, title -> executeAISearch(q, title) },
+                    isFilterActive = isAIFilterActive,
+                    activeTitle = activeAITitle,
+                    matchCount = filteredMatches.size,
+                    onReset = { clearAISearch() },
+                    onOpenAIChat = { showingAIChatDialog = true }
+                )
+
                 // Filter Capsule Pills Bar
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp, vertical = 6.dp),
+                        .padding(horizontal = 20.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -255,6 +306,7 @@ fun MatchesView(
                     ) {
                         SwipeDeckDeck(
                             profiles = filteredMatches,
+                            scoredMap = scoredMap,
                             isLocked = isProfileLocked,
                             onUnlock = onNavigateToRegister,
                             onOpenDetail = { onProfileDetailSelect(it) },
@@ -274,6 +326,7 @@ fun MatchesView(
                             GridCardItem(
                                 profile = profile,
                                 isLocked = isProfileLocked,
+                                scoreInfo = scoredMap[profile.id],
                                 onCardClick = {
                                     if (isProfileLocked) onNavigateToRegister()
                                     else onProfileDetailSelect(profile)
@@ -344,6 +397,20 @@ fun MatchesView(
                     }
                 }
             }
+
+            // Kunwar AI Chat Dialog
+            if (showingAIChatDialog) {
+                KunwarAIChatDialog(
+                    session = session,
+                    onDismiss = { showingAIChatDialog = false },
+                    onApplyQueryToDeck = { query, title ->
+                        executeAISearch(query, title)
+                    },
+                    onOpenProfile = { profile ->
+                        onProfileDetailSelect(profile)
+                    }
+                )
+            }
         }
     }
 }
@@ -402,6 +469,7 @@ fun FilterPill(
 @Composable
 fun SwipeDeckDeck(
     profiles: List<Profile>,
+    scoredMap: Map<String, ScoredProfile> = emptyMap(),
     isLocked: Boolean,
     onUnlock: () -> Unit,
     onOpenDetail: (Profile) -> Unit,
@@ -544,6 +612,36 @@ fun SwipeDeckDeck(
                         )
                 )
 
+                // Top Right AI Compatibility Score Badge
+                val match = scoredMap[profile.id]
+                if (match != null) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp)
+                            .clip(CircleShape)
+                            .background(Brush.horizontalGradient(listOf(RoyalGold, Color(0xFFB8860B))))
+                            .border(1.dp, Color.White.copy(alpha = 0.6f), CircleShape)
+                            .padding(horizontal = 10.dp, vertical = 5.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = "AI Match",
+                                tint = Color.White,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "${match.matchScore}% Match",
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
                 // Bottom Candidate Information Card
                 Column(
                     modifier = Modifier
@@ -589,6 +687,34 @@ fun SwipeDeckDeck(
                                 contentDescription = "View Details",
                                 tint = Color.White,
                                 modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    // AI Match Reason Pill
+                    if (match != null && match.reasons.isNotEmpty()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(Color.Black.copy(alpha = 0.55f))
+                                .border(0.8.dp, RoyalGold.copy(alpha = 0.7f), CircleShape)
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = "Reason",
+                                tint = RoyalGold,
+                                modifier = Modifier.size(10.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = match.reasons.first(),
+                                color = LightGold,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -832,6 +958,7 @@ fun HeroRishtaButton(onClick: () -> Unit) {
 fun GridCardItem(
     profile: Profile,
     isLocked: Boolean,
+    scoreInfo: ScoredProfile? = null,
     onCardClick: () -> Unit,
     onConnectClick: () -> Unit
 ) {
@@ -881,6 +1008,34 @@ fun GridCardItem(
                 )
         )
 
+        // Top Right AI Match Score Badge
+        if (scoreInfo != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+                    .clip(CircleShape)
+                    .background(Brush.horizontalGradient(listOf(RoyalGold, Color(0xFFB8860B))))
+                    .padding(horizontal = 7.dp, vertical = 3.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = "Match",
+                        tint = Color.White,
+                        modifier = Modifier.size(9.dp)
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = "${scoreInfo.matchScore}%",
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
         // Details
         Column(
             modifier = Modifier
@@ -901,6 +1056,18 @@ fun GridCardItem(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold
             )
+
+            if (scoreInfo != null && scoreInfo.reasons.isNotEmpty()) {
+                Text(
+                    text = scoreInfo.reasons.first(),
+                    color = LightGold.copy(alpha = 0.9f),
+                    fontSize = 9.5.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
             Spacer(modifier = Modifier.height(4.dp))
             // Quick Rishta button
             Button(
@@ -924,3 +1091,663 @@ fun GridCardItem(
         }
     }
 }
+
+// MARK: - AI Matchmaker Header Card
+@Composable
+fun AIMatchmakerHeaderCard(
+    aiQueryInput: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: (String, String) -> Unit,
+    isFilterActive: Boolean,
+    activeTitle: String,
+    matchCount: Int,
+    onReset: () -> Unit,
+    onOpenAIChat: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        border = BorderStroke(
+            1.2.dp,
+            Brush.linearGradient(listOf(RoyalGold.copy(alpha = 0.7f), LightGold.copy(alpha = 0.3f)))
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.linearGradient(
+                        listOf(Color(0xFF4A0D18).copy(alpha = 0.9f), Color(0xFF2B060E).copy(alpha = 0.95f))
+                    )
+                )
+                .padding(12.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Title Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = "AI",
+                            tint = RoyalGold,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Kunwar AI Matchmaker",
+                            color = LightGold,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Serif
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(LightGold)
+                            .clickable(onClick = onOpenAIChat)
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.ChatBubble,
+                                contentDescription = "Chat",
+                                tint = Color(0xFF4A0D18),
+                                modifier = Modifier.size(10.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Chat AI",
+                                color = Color(0xFF4A0D18),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                // Search Input Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White.copy(alpha = 0.12f))
+                            .border(1.dp, RoyalGold.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = RoyalGold.copy(alpha = 0.8f),
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            BasicTextField(
+                                value = aiQueryInput,
+                                onValueChange = onQueryChange,
+                                singleLine = true,
+                                textStyle = androidx.compose.ui.text.TextStyle(
+                                    color = Color.White,
+                                    fontSize = 12.sp
+                                ),
+                                modifier = Modifier.weight(1f),
+                                decorationBox = { innerTextField ->
+                                    if (aiQueryInput.isEmpty()) {
+                                        Text(
+                                            text = "Ask AI (e.g. Rathore bride 23-27 in Jaipur)...",
+                                            color = Color.White.copy(alpha = 0.6f),
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            )
+                            if (aiQueryInput.isNotEmpty()) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Clear",
+                                    tint = Color.White.copy(alpha = 0.7f),
+                                    modifier = Modifier
+                                        .size(14.dp)
+                                        .clickable { onQueryChange("") }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(Brush.linearGradient(listOf(AppPrimary, AppSecondary)))
+                            .clickable {
+                                if (aiQueryInput.isNotBlank()) {
+                                    onSearch(aiQueryInput, aiQueryInput)
+                                }
+                            }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = "Find",
+                            tint = Color.White,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+                }
+
+                // Quick Prompt Chips Row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // "👑 Show My Type of Match" (Prominent Golden Pill)
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(Brush.horizontalGradient(listOf(RoyalGold, Color(0xFFB8860B))))
+                            .clickable { onSearch("show my type of match", "My Type of Match") }
+                            .padding(horizontal = 11.dp, vertical = 5.dp)
+                    ) {
+                        Text(
+                            text = "👑 Show My Type of Match",
+                            color = Color.White,
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    QuickChip(label = "🏰 Rathore 22-26") { onSearch("Rathore clan 22 to 26", "Rathore 22-26") }
+                    QuickChip(label = "👨‍⚕️ Doctors & Engg") { onSearch("doctor or engineer", "Doctors & Engineers") }
+                    QuickChip(label = "📍 Jaipur / Jodhpur") { onSearch("Jaipur or Jodhpur", "Jaipur / Jodhpur") }
+                    QuickChip(label = "🛡️ Gotra Safe") { onSearch("gotra compatible safe", "Gotra Safe") }
+                }
+
+                // Active AI Filter Banner
+                if (isFilterActive) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(RoyalGold.copy(alpha = 0.2f))
+                            .border(1.dp, RoyalGold.copy(alpha = 0.7f), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Verified,
+                                contentDescription = "Active",
+                                tint = RoyalGold,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "AI Match: '$activeTitle' • $matchCount found",
+                                color = Color.White,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(Color.White)
+                                .clickable(onClick = onReset)
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Text(
+                                text = "✕ Reset",
+                                color = DislikeRed,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun QuickChip(label: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(Color.White.copy(alpha = 0.12f))
+            .border(1.dp, Color.White.copy(alpha = 0.25f), CircleShape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 5.dp)
+    ) {
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.9f),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+// MARK: - Kunwar AI Chat Assistant Dialog
+data class AndroidKunwarChatMessage(
+    val isUser: Boolean,
+    val text: String,
+    val recommendations: List<ScoredProfile> = emptyList()
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun KunwarAIChatDialog(
+    session: SagaiSessionManager,
+    onDismiss: () -> Unit,
+    onApplyQueryToDeck: (String, String) -> Unit,
+    onOpenProfile: (Profile) -> Unit
+) {
+    val context = LocalContext.current
+    var inputMessage by remember { mutableStateOf("") }
+    val messages = remember {
+        mutableStateListOf(
+            AndroidKunwarChatMessage(
+                isUser = false,
+                text = "Khammaghani! I am Kunwar from Shree Rajput Sagai Sambandh.\n\nI can search our royal database according to your lineage gotra rules and preference criteria. How can I assist your rishta search today?"
+            )
+        )
+    }
+    var isAnalyzing by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    fun handleSend(queryText: String) {
+        val q = queryText.trim()
+        if (q.isEmpty()) return
+        inputMessage = ""
+        messages.add(AndroidKunwarChatMessage(isUser = true, text = q))
+        isAnalyzing = true
+
+        coroutineScope.launch {
+            delay(600)
+            isAnalyzing = false
+            val lower = q.lowercase()
+
+            if (lower.contains("gotra") || lower.contains("rule") || lower.contains("sagotra")) {
+                messages.add(
+                    AndroidKunwarChatMessage(
+                        isUser = false,
+                        text = "📜 Rajput Gotra Marriage Rules:\n\nIn traditional Rajput alliances, marriage within the same Gotra is strictly forbidden (Sagotra union) to respect genetics and ancestral lineage.\n\nA noble alliance verifies four gotras:\n1. Self Gotra (Father's side)\n2. Mother's Gotra\n3. Dadi's Gotra\n4. Nani's Gotra\n\nOur system automatically checks your gotra against candidates to ensure 100% compliance!"
+                    )
+                )
+            } else if (lower.contains("agent") || lower.contains("call") || lower.contains("whatsapp") || lower.contains("support")) {
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/919928592159"))
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                messages.add(
+                    AndroidKunwarChatMessage(
+                        isUser = false,
+                        text = "📞 Connecting you to our Royal Relations Desk on WhatsApp (+91 99285 92159)... Our matchmaking counselor will assist you directly."
+                    )
+                )
+            } else {
+                val results = AIMatchmaker.searchDatabase(q, session.currentUser.value, session.profiles.value)
+                val topMatches = results.take(4)
+                messages.add(
+                    AndroidKunwarChatMessage(
+                        isUser = false,
+                        text = "👑 Khammaghani! I searched the royal database for '$q'. Found ${results.size} compatible profiles matching your gotra and lineage requirements. Here are the top recommendations:",
+                        recommendations = topMatches
+                    )
+                )
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.85f),
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB))
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White)
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF4A0D18))
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.WorkspacePremium,
+                                contentDescription = "Crown",
+                                tint = RoyalGold,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "Kunwar AI Matchmaker",
+                                color = InkBrown,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Serif
+                            )
+                            Text(
+                                text = "Royal Matchmaker Desk • Online",
+                                color = Color(0xFF059669),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.Gray,
+                        modifier = Modifier
+                            .size(22.dp)
+                            .clickable(onClick = onDismiss)
+                    )
+                }
+
+                // Chat Messages List
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(messages) { msg ->
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = if (msg.isUser) Alignment.End else Alignment.Start
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(
+                                        if (msg.isUser) Brush.horizontalGradient(listOf(AppPrimary, AppSecondary))
+                                        else Brush.linearGradient(listOf(Color.White, Color.White))
+                                    )
+                                    .border(1.dp, if (msg.isUser) Color.Transparent else Color(0xFFE5E7EB), RoundedCornerShape(16.dp))
+                                    .padding(horizontal = 14.dp, vertical = 10.dp)
+                            ) {
+                                Text(
+                                    text = msg.text,
+                                    color = if (msg.isUser) Color.White else InkBrown,
+                                    fontSize = 13.sp
+                                )
+                            }
+
+                            // Inline recommendation cards
+                            if (msg.recommendations.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    msg.recommendations.forEach { item ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(14.dp))
+                                                .background(Color.White)
+                                                .border(1.dp, RoyalGold.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
+                                                .clickable {
+                                                    onDismiss()
+                                                    onOpenProfile(item.profile)
+                                                }
+                                                .padding(10.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            AvatarImageView(
+                                                source = item.profile.img,
+                                                name = item.profile.name,
+                                                clan = item.profile.clan,
+                                                contentDescription = item.profile.name,
+                                                contentScale = ContentScale.Crop,
+                                                fallbackFontSize = 18.sp,
+                                                modifier = Modifier
+                                                    .size(50.dp)
+                                                    .clip(CircleShape)
+                                                    .border(1.2.dp, RoyalGold, CircleShape)
+                                            )
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Text(
+                                                        text = "${item.profile.name}, ${item.profile.age}",
+                                                        color = InkBrown,
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .clip(CircleShape)
+                                                            .background(RoyalGold)
+                                                            .padding(horizontal = 7.dp, vertical = 2.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = "${item.matchScore}%",
+                                                            color = Color.White,
+                                                            fontSize = 10.sp,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    }
+                                                }
+                                                Text(
+                                                    text = "${item.profile.clan} • ${item.profile.gotra}",
+                                                    color = Color.Gray,
+                                                    fontSize = 11.sp
+                                                )
+                                                if (item.reasons.isNotEmpty()) {
+                                                    Text(
+                                                        text = item.reasons.first(),
+                                                        color = AppPrimary,
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Button to apply to discover feed
+                                    Button(
+                                        onClick = {
+                                            onApplyQueryToDeck(msg.text, "AI Recommendations")
+                                            onDismiss()
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                                        contentPadding = PaddingValues(),
+                                        shape = RoundedCornerShape(20.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .background(
+                                                    Brush.horizontalGradient(listOf(RoyalGold, Color(0xFFB8860B))),
+                                                    shape = RoundedCornerShape(20.dp)
+                                                )
+                                                .padding(vertical = 10.dp)
+                                        ) {
+                                            Text(
+                                                text = "Apply Matches to Discover Deck",
+                                                color = Color.White,
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (isAnalyzing) {
+                        item {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    color = RoyalGold,
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Kunwar AI analyzing lineage & gotra...",
+                                    color = RoyalGold,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Quick Prompt Chips
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White)
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    QuickChatButton("👑 Show My Type of Match") { handleSend("show my type of match") }
+                    QuickChatButton("🏰 Rathore Brides (23-27)") { handleSend("Rathore clan brides aged 23 to 27") }
+                    QuickChatButton("👨‍⚕️ Doctors & Engineers") { handleSend("Doctors and Engineers") }
+                    QuickChatButton("📜 Gotra Rules") { handleSend("what are gotra rules") }
+                    QuickChatButton("📞 Connect to Agent") { handleSend("talk to human agent") }
+                }
+
+                // Message Input Row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White)
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(22.dp))
+                            .background(Color(0xFFF3F4F6))
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                    ) {
+                        BasicTextField(
+                            value = inputMessage,
+                            onValueChange = { inputMessage = it },
+                            singleLine = true,
+                            textStyle = androidx.compose.ui.text.TextStyle(
+                                color = InkBrown,
+                                fontSize = 13.5.sp
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            decorationBox = { innerTextField ->
+                                if (inputMessage.isEmpty()) {
+                                    Text(
+                                        text = "Ask Kunwar AI (e.g. Rathore bride in Jaipur)...",
+                                        color = Color.Gray,
+                                        fontSize = 13.5.sp
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(if (inputMessage.isNotBlank()) AppPrimary else Color(0xFFE5E7EB))
+                            .clickable(enabled = inputMessage.isNotBlank()) { handleSend(inputMessage) }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Send,
+                            contentDescription = "Send",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun QuickChatButton(text: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(AppPrimary.copy(alpha = 0.08f))
+            .border(1.dp, AppPrimary.copy(alpha = 0.2f), CircleShape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 11.dp, vertical = 5.dp)
+    ) {
+        Text(
+            text = text,
+            color = AppPrimary,
+            fontSize = 11.5.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+

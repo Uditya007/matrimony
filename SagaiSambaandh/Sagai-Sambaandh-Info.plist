@@ -17,9 +17,5 @@
 	</array>
 	<key>GIDClientID</key>
 	<string>946288819563-bkg75q9ba57t1e61cjj0070o9hrlbjip.apps.googleusercontent.com</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Sagai Sambaandh requires access to your photo gallery to select and update your profile picture.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Sagai Sambaandh requires access to your camera to take a profile picture.</string>
 </dict>
 </plist>

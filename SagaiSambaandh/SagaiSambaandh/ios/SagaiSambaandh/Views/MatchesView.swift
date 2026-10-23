@@ -12,11 +12,37 @@ struct MatchesView: View {
     @State private var showingConnectionSuccess: Bool = false
     @State private var successProfileName: String = ""
     
+    // AI Matchmaker States
+    @State private var aiQueryInput: String = ""
+    @State private var isAIFilterActive: Bool = false
+    @State private var activeAITitle: String = ""
+    @State private var showingAIChatSheet: Bool = false
+    
     private var isProfileLocked: Bool {
         session.currentUser == nil
     }
     
+    private var aiScoredMatches: [ScoredProfile] {
+        return AIMatchmaker.shared.searchDatabase(
+            queryText: isAIFilterActive ? (activeAITitle.isEmpty ? aiQueryInput : activeAITitle) : nil,
+            currentUser: session.currentUser,
+            allProfiles: session.profiles
+        )
+    }
+    
+    private var allScoredProfilesDict: [String: ScoredProfile] {
+        let scored = AIMatchmaker.shared.searchDatabase(
+            queryText: isAIFilterActive ? (activeAITitle.isEmpty ? aiQueryInput : activeAITitle) : nil,
+            currentUser: session.currentUser,
+            allProfiles: session.profiles
+        )
+        return Dictionary(scored.map { ($0.profile.id, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+    
     private var filteredMatches: [Profile] {
+        if isAIFilterActive {
+            return aiScoredMatches.map { $0.profile }
+        }
         let searched = session.profiles.filter {
             let genderMatch = $0.gender.lowercased() == session.searchGender.lowercased()
             let clanMatch = session.searchClan == "All Clans" || $0.clan.lowercased() == session.searchClan.lowercased()
@@ -29,6 +55,22 @@ struct MatchesView: View {
             }
         }
         return searched
+    }
+    
+    private func executeAISearch(query: String, title: String) {
+        aiQueryInput = query
+        activeAITitle = title
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+            isAIFilterActive = true
+        }
+    }
+    
+    private func clearAISearch() {
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+            isAIFilterActive = false
+            aiQueryInput = ""
+            activeAITitle = ""
+        }
     }
     
     private var allGenderMatchesCount: Int {
@@ -91,15 +133,22 @@ struct MatchesView: View {
                 // Top Header with Location & Controls
                 topHeaderBar
                 
+                // AI Lineage Matchmaker Header Card
+                aiMatchmakerHeaderCard
+                    .padding(.horizontal, 20)
+                    .padding(.top, 4)
+                    .padding(.bottom, 6)
+                
                 // Filter Capsule Pills
                 filterCapsulesBar
                     .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 4)
                 
                 if viewMode == 0 {
                     // 3D Neumorphic Swipe Card Deck
                     SwipeDeckView(
                         profiles: filteredMatches,
+                        scoredProfilesDict: allScoredProfilesDict,
                         isLocked: isProfileLocked,
                         onUnlock: showRegistration,
                         onOpenDetail: { profile in
@@ -109,7 +158,7 @@ struct MatchesView: View {
                             handleConnectTap(profile: profile)
                         }
                     )
-                    .id("\(session.searchGender)_\(activeFilterTab)")
+                    .id("\(session.searchGender)_\(activeFilterTab)_\(isAIFilterActive ? activeAITitle : "none")")
                     .frame(maxHeight: .infinity)
                 } else {
                     // Modern 2-Column Matches Grid
@@ -176,7 +225,206 @@ struct MatchesView: View {
             ProfileDetailView(profile: profile)
                 .environmentObject(session)
         }
+        .sheet(isPresented: $showingAIChatSheet) {
+            KunwarAIChatSheet(
+                onApplyQueryToDeck: { query, title in
+                    executeAISearch(query: query, title: title)
+                },
+                onOpenProfile: { profile in
+                    openDetail(for: profile)
+                }
+            )
+            .environmentObject(session)
+        }
         .navigationBarHidden(true)
+    }
+    
+    // MARK: - AI Matchmaker Header Card
+    private var aiMatchmakerHeaderCard: some View {
+        VStack(spacing: 8) {
+            // Title row with Chat button
+            HStack(spacing: 8) {
+                HStack(spacing: 6) {
+                    Image(systemName: "wand.and.stars")
+                        .foregroundColor(Color.royalGold)
+                        .font(.system(size: 14, weight: .bold))
+                    Text("Kunwar AI Matchmaker")
+                        .font(BrandFonts.displayBold(size: 14))
+                        .foregroundColor(Color.lightGold)
+                }
+                
+                Spacer()
+                
+                Button(action: { showingAIChatSheet = true }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                            .font(.system(size: 10))
+                        Text("Chat AI")
+                            .font(BrandFonts.bodyBold(size: 11))
+                    }
+                    .foregroundColor(Color(hex: "#4A0D18"))
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .background(Color.lightGold)
+                    .clipShape(Capsule())
+                }
+            }
+            
+            // Search Input Row
+            HStack(spacing: 8) {
+                HStack(spacing: 6) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(Color.royalGold.opacity(0.8))
+                        .font(.system(size: 13))
+                    
+                    TextField("Ask AI (e.g. Rathore bride 23-27 in Jaipur)...", text: $aiQueryInput, onCommit: {
+                        let query = aiQueryInput.trimmingCharacters(in: .whitespaces)
+                        if !query.isEmpty {
+                            executeAISearch(query: query, title: query)
+                        }
+                    })
+                    .font(BrandFonts.body(size: 12))
+                    .foregroundColor(.white)
+                    
+                    if !aiQueryInput.isEmpty {
+                        Button(action: { aiQueryInput = "" }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.white.opacity(0.6))
+                                .font(.system(size: 12))
+                        }
+                    }
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(Color.white.opacity(0.12))
+                .cornerRadius(12)
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.royalGold.opacity(0.4), lineWidth: 1))
+                
+                Button(action: {
+                    let query = aiQueryInput.trimmingCharacters(in: .whitespaces)
+                    if !query.isEmpty {
+                        executeAISearch(query: query, title: query)
+                    }
+                }) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 34, height: 34)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.appPrimary, Color.appSecondary],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .clipShape(Circle())
+                        .shadow(color: Color.appPrimary.opacity(0.4), radius: 4, y: 2)
+                }
+            }
+            
+            // Quick Action Prompt Chips
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    // "👑 Show My Type of Match" (Prominent action)
+                    Button(action: {
+                        executeAISearch(query: "show my type of match", title: "My Type of Match")
+                    }) {
+                        HStack(spacing: 4) {
+                            Text("👑 Show My Type of Match")
+                                .font(BrandFonts.bodyBold(size: 11.5))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 5)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.royalGold, Color(hex: "#B8860B")],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .clipShape(Capsule())
+                        .shadow(color: Color.black.opacity(0.2), radius: 4, y: 1)
+                    }
+                    
+                    quickPromptChip(label: "🏰 Rathore 22-26", query: "Rathore clan 22 to 26")
+                    quickPromptChip(label: "👨‍⚕️ Doctors & Engg", query: "doctor or engineer")
+                    quickPromptChip(label: "📍 Jaipur / Jodhpur", query: "Jaipur or Jodhpur")
+                    quickPromptChip(label: "🛡️ Gotra Safe", query: "gotra compatible safe")
+                }
+            }
+            
+            // Active AI Filter Banner
+            if isAIFilterActive {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundColor(Color.royalGold)
+                        .font(.system(size: 13))
+                    
+                    Text("AI Match: '\(activeAITitle)' • \(filteredMatches.count) found")
+                        .font(BrandFonts.bodyBold(size: 11.5))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                    
+                    Spacer()
+                    
+                    Button(action: clearAISearch) {
+                        HStack(spacing: 3) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 9, weight: .bold))
+                            Text("Reset")
+                                .font(BrandFonts.bodyBold(size: 11))
+                        }
+                        .foregroundColor(Color.dislikeRed)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.white)
+                        .clipShape(Capsule())
+                    }
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.royalGold.opacity(0.2))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.royalGold.opacity(0.7), lineWidth: 1))
+            }
+        }
+        .padding(12)
+        .background(
+            LinearGradient(
+                colors: [Color(hex: "#4A0D18").opacity(0.85), Color(hex: "#2B060E").opacity(0.9)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .cornerRadius(18)
+        .overlay(
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.royalGold.opacity(0.7), Color.lightGold.opacity(0.3)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.2
+                )
+        )
+        .shadow(color: Color.black.opacity(0.25), radius: 8, y: 4)
+    }
+    
+    private func quickPromptChip(label: String, query: String) -> some View {
+        Button(action: {
+            executeAISearch(query: query, title: label)
+        }) {
+            Text(label)
+                .font(BrandFonts.body(size: 11, weight: .medium))
+                .foregroundColor(.white.opacity(0.9))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color.white.opacity(0.12))
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(Color.white.opacity(0.25), lineWidth: 1))
+        }
     }
     
     // MARK: - Header Bar
@@ -341,6 +589,7 @@ struct MatchesView: View {
                         ModernGridCardItem(
                             profile: profile,
                             isLocked: isProfileLocked,
+                            scoreInfo: allScoredProfilesDict[profile.id],
                             onTap: { openDetail(for: profile) },
                             onConnect: { handleConnectTap(profile: profile) }
                         )
@@ -360,6 +609,7 @@ struct MatchesView: View {
 struct SwipeDeckView: View {
     @EnvironmentObject var session: SagaiSessionManager
     let profiles: [Profile]
+    var scoredProfilesDict: [String: ScoredProfile] = [:]
     let isLocked: Bool
     let onUnlock: () -> Void
     let onOpenDetail: (Profile) -> Void
@@ -453,6 +703,37 @@ struct SwipeDeckView: View {
             AppGradients.overlay
                 .frame(width: width, height: height)
                 .allowsHitTesting(false)
+            
+            // AI Compatibility Badge (Top Right)
+            if let match = scoredProfilesDict[profile.id] {
+                VStack {
+                    HStack {
+                        Spacer()
+                        HStack(spacing: 4) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 10, weight: .bold))
+                            Text("\(match.matchScore)% Match")
+                                .font(BrandFonts.displayBold(size: 12))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.royalGold, Color(hex: "#B8860B")],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .clipShape(Capsule())
+                        .overlay(Capsule().stroke(Color.white.opacity(0.6), lineWidth: 1))
+                        .shadow(color: Color.black.opacity(0.35), radius: 6, y: 3)
+                        .padding(16)
+                    }
+                    Spacer()
+                }
+                .allowsHitTesting(false)
+            }
             
             // 3. Dynamic Real-time Drag Stamps
             // (a) SEND RISHTA (Swiping Right)
@@ -583,6 +864,24 @@ struct SwipeDeckView: View {
                             .clipShape(Circle())
                             .overlay(Circle().stroke(Color.white.opacity(0.45), lineWidth: 1.5))
                     }
+                }
+                
+                // AI Match Reason Tag
+                if let match = scoredProfilesDict[profile.id], let firstReason = match.reasons.first {
+                    HStack(spacing: 5) {
+                        Image(systemName: "wand.and.stars")
+                            .font(.system(size: 10))
+                            .foregroundColor(Color.royalGold)
+                        Text(firstReason)
+                            .font(BrandFonts.body(size: 11, weight: .semibold))
+                            .foregroundColor(Color.lightGold)
+                            .lineLimit(1)
+                    }
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 3.5)
+                    .background(Color.black.opacity(0.55))
+                    .clipShape(Capsule())
+                    .overlay(Capsule().stroke(Color.royalGold.opacity(0.7), lineWidth: 0.8))
                 }
                 
                 // Clan & Gotra Pill Tags
@@ -886,6 +1185,7 @@ struct SwipeDeckView: View {
 struct ModernGridCardItem: View {
     let profile: Profile
     let isLocked: Bool
+    var scoreInfo: ScoredProfile? = nil
     let onTap: () -> Void
     let onConnect: () -> Void
     
@@ -927,6 +1227,35 @@ struct ModernGridCardItem: View {
                     )
                     .frame(height: 70)
                     
+                    // Top Right AI Compatibility Score Badge
+                    if let score = scoreInfo?.matchScore {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                HStack(spacing: 3) {
+                                    Image(systemName: "sparkles")
+                                        .font(.system(size: 8, weight: .bold))
+                                    Text("\(score)%")
+                                        .font(BrandFonts.bodyBold(size: 10))
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 3.5)
+                                .background(
+                                    LinearGradient(
+                                        colors: [Color.royalGold, Color(hex: "#B8860B")],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .clipShape(Capsule())
+                                .shadow(color: Color.black.opacity(0.3), radius: 4, y: 2)
+                                .padding(8)
+                            }
+                            Spacer()
+                        }
+                    }
+                    
                     // Information on Card
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 4) {
@@ -946,6 +1275,19 @@ struct ModernGridCardItem: View {
                             .font(BrandFonts.body(size: 11, weight: .medium))
                             .foregroundColor(.white.opacity(0.85))
                             .lineLimit(1)
+                        
+                        if let reason = scoreInfo?.reasons.first {
+                            HStack(spacing: 3) {
+                                Image(systemName: "wand.and.stars")
+                                    .font(.system(size: 8))
+                                    .foregroundColor(Color.royalGold)
+                                Text(reason)
+                                    .font(BrandFonts.body(size: 9.5, weight: .semibold))
+                                    .foregroundColor(Color.lightGold)
+                                    .lineLimit(1)
+                            }
+                            .padding(.top, 1)
+                        }
                     }
                     .padding(10)
                 }
@@ -979,5 +1321,293 @@ struct ModernGridCardItem: View {
             .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 3)
         }
         .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - Kunwar AI Chat Assistant Sheet
+struct KunwarChatMessage: Identifiable {
+    let id = UUID().uuidString
+    let isUser: Bool
+    let text: String
+    let recommendations: [ScoredProfile]
+}
+
+struct KunwarAIChatSheet: View {
+    @EnvironmentObject var session: SagaiSessionManager
+    @Environment(\.presentationMode) var presentationMode
+    let onApplyQueryToDeck: (String, String) -> Void
+    let onOpenProfile: (Profile) -> Void
+    
+    @State private var inputMessage: String = ""
+    @State private var messages: [KunwarChatMessage] = [
+        KunwarChatMessage(
+            isUser: false,
+            text: "Khammaghani! I am Kunwar from Shree Rajput Sagai Sambandh.\n\nI can search our royal database according to your lineage gotra rules and preference criteria. How can I assist your rishta search today?",
+            recommendations: []
+        )
+    ]
+    @State private var isAnalyzing: Bool = false
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                Color(hex: "#F9FAFB").edgesIgnoringSafeArea(.all)
+                
+                VStack(spacing: 0) {
+                    // Chat messages list
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            VStack(spacing: 16) {
+                                ForEach(messages) { msg in
+                                    chatBubbleView(for: msg)
+                                }
+                                
+                                if isAnalyzing {
+                                    HStack(spacing: 8) {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: Color.royalGold))
+                                        Text("Kunwar AI analyzing gotra & lineage...")
+                                            .font(BrandFonts.body(size: 12))
+                                            .foregroundColor(Color.royalGold)
+                                    }
+                                    .padding(.vertical, 8)
+                                    .id("analyzing_indicator")
+                                }
+                                
+                                Spacer().frame(height: 10).id("bottom_anchor")
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.top, 16)
+                        }
+                        .onChange(of: messages.count) { _ in
+                            withAnimation {
+                                proxy.scrollTo("bottom_anchor", anchor: .bottom)
+                            }
+                        }
+                    }
+                    
+                    // Quick Prompts Row
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            quickChatChip("👑 Show My Type of Match")
+                            quickChatChip("🏰 Rathore Brides (23-27)")
+                            quickChatChip("👨‍⚕️ Doctors & Engineers")
+                            quickChatChip("📜 Gotra Rules")
+                            quickChatChip("📞 Connect to Agent")
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                    }
+                    .background(Color.white)
+                    
+                    // Input Bar
+                    HStack(spacing: 10) {
+                        TextField("Ask Kunwar AI (e.g. Rathore bride in Jaipur)...", text: $inputMessage, onCommit: submitUserQuery)
+                            .font(BrandFonts.body(size: 13.5))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .background(Color(hex: "#F3F4F6"))
+                            .cornerRadius(22)
+                            .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.appBorder, lineWidth: 1))
+                        
+                        Button(action: submitUserQuery) {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: 32))
+                                .foregroundColor(inputMessage.trimmingCharacters(in: .whitespaces).isEmpty ? Color.gray.opacity(0.4) : Color.appPrimary)
+                        }
+                        .disabled(inputMessage.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(Color.white)
+                    .shadow(color: Color.black.opacity(0.04), radius: 6, y: -2)
+                }
+            }
+            .navigationBarTitle("Kunwar AI Matchmaker", displayMode: .inline)
+            .navigationBarItems(
+                trailing: Button("Close") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+                .foregroundColor(Color.appPrimary)
+                .font(BrandFonts.bodyBold(size: 14))
+            )
+        }
+    }
+    
+    private func quickChatChip(_ text: String) -> some View {
+        Button(action: {
+            inputMessage = text
+            submitUserQuery()
+        }) {
+            Text(text)
+                .font(BrandFonts.body(size: 11.5, weight: .semibold))
+                .foregroundColor(Color.appPrimary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.appPrimary.opacity(0.08))
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(Color.appPrimary.opacity(0.2), lineWidth: 1))
+        }
+    }
+    
+    private func submitUserQuery() {
+        let text = inputMessage.trimmingCharacters(in: .whitespaces)
+        guard !text.isEmpty else { return }
+        inputMessage = ""
+        
+        messages.append(KunwarChatMessage(isUser: true, text: text, recommendations: []))
+        isAnalyzing = true
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            isAnalyzing = false
+            let lower = text.lowercased()
+            
+            if lower.contains("gotra") || lower.contains("rule") || lower.contains("sagotra") {
+                messages.append(KunwarChatMessage(
+                    isUser: false,
+                    text: "📜 Rajput Gotra Marriage Rules:\n\nIn traditional Rajput alliances, marriage within the same Gotra is strictly forbidden (Sagotra union) to respect genetics and ancestral lineage.\n\nA noble alliance verifies four gotras:\n1. Self Gotra (Father's side)\n2. Mother's Gotra\n3. Dadi's Gotra\n4. Nani's Gotra\n\nOur system automatically checks your gotra against candidates to ensure 100% compliance!",
+                    recommendations: []
+                ))
+            } else if lower.contains("agent") || lower.contains("call") || lower.contains("whatsapp") || lower.contains("support") {
+                if let url = URL(string: "https://wa.me/919928592159") {
+                    UIApplication.shared.open(url)
+                }
+                messages.append(KunwarChatMessage(
+                    isUser: false,
+                    text: "📞 Connecting you to our Royal Relations Desk on WhatsApp (+91 99285 92159)... Our matchmaking counselor will assist you directly.",
+                    recommendations: []
+                ))
+            } else {
+                let results = AIMatchmaker.shared.searchDatabase(queryText: text, currentUser: session.currentUser, allProfiles: session.profiles)
+                let topMatches = Array(results.prefix(4))
+                let replyText = "👑 Khammaghani! I searched the royal database for '\(text)'. Found \(results.count) compatible profiles matching your gotra and lineage requirements. Here are the top recommendations:"
+                
+                messages.append(KunwarChatMessage(
+                    isUser: false,
+                    text: replyText,
+                    recommendations: topMatches
+                ))
+            }
+        }
+    }
+    
+    private func chatBubbleView(for msg: KunwarChatMessage) -> some View {
+        VStack(alignment: msg.isUser ? .trailing : .leading, spacing: 8) {
+            HStack {
+                if msg.isUser { Spacer() }
+                
+                if !msg.isUser {
+                    Image(systemName: "crown.fill")
+                        .foregroundColor(Color.royalGold)
+                        .font(.system(size: 12))
+                        .padding(6)
+                        .background(Color(hex: "#4A0D18"))
+                        .clipShape(Circle())
+                }
+                
+                Text(msg.text)
+                    .font(BrandFonts.body(size: 13.5))
+                    .foregroundColor(msg.isUser ? .white : Color.appTextPrimary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(
+                        msg.isUser
+                            ? LinearGradient(colors: [Color.appPrimary, Color.appSecondary], startPoint: .leading, endPoint: .trailing)
+                            : LinearGradient(colors: [Color.white, Color.white], startPoint: .leading, endPoint: .trailing)
+                    )
+                    .cornerRadius(18)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(msg.isUser ? Color.clear : Color.appBorder, lineWidth: 1)
+                    )
+                    .shadow(color: Color.black.opacity(0.04), radius: 4, y: 2)
+                
+                if !msg.isUser { Spacer() }
+            }
+            
+            // Inline Candidate Recommendation Cards
+            if !msg.recommendations.isEmpty {
+                VStack(spacing: 10) {
+                    ForEach(msg.recommendations) { item in
+                        HStack(spacing: 12) {
+                            AvatarImageView(
+                                imageSource: item.profile.img,
+                                name: item.profile.name,
+                                clan: item.profile.clan,
+                                contentMode: .fill,
+                                fallbackFontSize: 18
+                            )
+                            .frame(width: 52, height: 52)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.royalGold, lineWidth: 1.2))
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack {
+                                    Text("\(item.profile.name), \(item.profile.age)")
+                                        .font(BrandFonts.displayBold(size: 14))
+                                        .foregroundColor(Color.appTextPrimary)
+                                    Spacer()
+                                    HStack(spacing: 3) {
+                                        Image(systemName: "sparkles")
+                                            .font(.system(size: 9, weight: .bold))
+                                        Text("\(item.matchScore)%")
+                                            .font(BrandFonts.bodyBold(size: 11))
+                                    }
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 7)
+                                    .padding(.vertical, 3)
+                                    .background(Color.royalGold)
+                                    .clipShape(Capsule())
+                                }
+                                
+                                Text("\(item.profile.clan) • \(item.profile.gotra)")
+                                    .font(BrandFonts.body(size: 11, weight: .medium))
+                                    .foregroundColor(Color.appTextSecondary)
+                                
+                                if let reason = item.reasons.first {
+                                    Text(reason)
+                                        .font(BrandFonts.body(size: 10, weight: .semibold))
+                                        .foregroundColor(Color.appPrimary)
+                                        .lineLimit(1)
+                                }
+                            }
+                        }
+                        .padding(10)
+                        .background(Color.white)
+                        .cornerRadius(14)
+                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.royalGold.opacity(0.3), lineWidth: 1))
+                        .onTapGesture {
+                            presentationMode.wrappedValue.dismiss()
+                            onOpenProfile(item.profile)
+                        }
+                    }
+                    
+                    // Button to apply query to discover deck
+                    Button(action: {
+                        onApplyQueryToDeck(msg.text, "AI Recommendations")
+                        presentationMode.wrappedValue.dismiss()
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "rectangle.stack.badge.play.fill")
+                            Text("Apply Matches to Discover Deck")
+                                .font(BrandFonts.bodyBold(size: 13))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.royalGold, Color(hex: "#B8860B")],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(20)
+                    }
+                    .padding(.top, 4)
+                }
+                .padding(.leading, 32)
+            }
+        }
     }
 }

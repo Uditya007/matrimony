@@ -46,7 +46,8 @@ data class User(
     val height: String = "",
     val maritalStatus: String = "Never Married",
     val profilePic: String? = null,
-    val about: String? = null
+    val about: String? = null,
+    val location: String = ""
 )
 
 data class ConnectionRecord(
