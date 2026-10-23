@@ -12,7 +12,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="css/styles.css?v=2.6">
+  <link rel="stylesheet" href="css/styles.css?v=2.7">
 </head>
 <body class="dashboard-layout">
 
@@ -135,6 +135,53 @@
             <p>Hire a personal royal matchmaker manager to curate noble matches, coordinate families, and verify gotras.</p>
           </div>
           <a href="membership.html" class="btn btn-royal">Upgrade Now</a>
+        </div>
+      </div>
+      <!-- Kunwar AI Lineage Match Finder Widget -->
+      <div class="ai-match-finder-card" id="aiMatchFinderCard">
+        <div class="ai-finder-header">
+          <div class="ai-finder-title">
+            <span class="ai-sparkle-icon">✨</span>
+            <div>
+              <h3>Kunwar AI Match Finder</h3>
+              <p>Search our Rajput database using natural language or find your ideal match by profile preferences</p>
+            </div>
+          </div>
+          <button type="button" class="btn btn-royal ai-btn-auto-match" onclick="executeQuickAIPrompt('Show my type of match according to my profile preferences')">
+            👑 Show My Type of Match
+          </button>
+        </div>
+
+        <form class="ai-finder-form" id="aiFinderForm" onsubmit="handleDashboardAISearch(event)">
+          <div class="ai-input-group">
+            <span class="ai-search-icon">🪄</span>
+            <input type="text" id="aiSearchInput" placeholder="e.g. 'Rathore bride aged 23 to 26 in Jaipur who is an engineer', or 'Show doctor grooms'..." autocomplete="off">
+            <button type="submit" class="btn btn-royal ai-submit-btn">
+              Search Database ✨
+            </button>
+          </div>
+        </form>
+
+        <div class="ai-quick-pills">
+          <span class="ai-pills-label">Quick AI Searches:</span>
+          <button type="button" class="ai-prompt-pill" onclick="executeQuickAIPrompt('Show my type of match')">✨ My Preference</button>
+          <button type="button" class="ai-prompt-pill" onclick="executeQuickAIPrompt('Rathore clan brides aged 23 to 27')">🏰 Rathore Brides (23-27)</button>
+          <button type="button" class="ai-prompt-pill" onclick="executeQuickAIPrompt('Doctors and Engineers in Rajasthan')">👨‍⚕️ Doctors & Engineers</button>
+          <button type="button" class="ai-prompt-pill" onclick="executeQuickAIPrompt('Matches located in Jaipur or Jodhpur')">📍 Jaipur / Jodhpur</button>
+          <button type="button" class="ai-prompt-pill" onclick="executeQuickAIPrompt('Sisodia clan matches')">👑 Sisodia Matches</button>
+        </div>
+
+        <!-- AI Active Results Notice (Hidden initially) -->
+        <div id="aiActiveFilterNotice" class="ai-active-notice" style="display: none;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.1rem;">✨</span>
+            <span id="aiActiveFilterText" style="color: #FFFFFF; font-weight: 600; font-size: 0.85rem;">
+              Kunwar AI matched 3 noble profiles
+            </span>
+          </div>
+          <button type="button" class="btn-clear-ai" onclick="clearDashboardAIFilter()">
+            ✕ Reset to All Matches
+          </button>
         </div>
       </div>
 
@@ -656,7 +703,8 @@
   <!-- Supabase JS Client SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
-  <script src="js/app.js?v=2.6"></script>
-  <script src="js/chatbot.js"></script>
+  <script src="js/ai-matchmaker.js?v=2.7"></script>
+  <script src="js/app.js?v=2.7"></script>
+  <script src="js/chatbot.js?v=2.7"></script>
 </body>
 </html>

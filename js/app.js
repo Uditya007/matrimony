@@ -2265,6 +2265,17 @@ async function initDashboardPage() {
     }, 500);
   }
 
+  // If redirected from Chatbot with pending AI Match query, execute it live
+  const aiPendingQuery = sessionStorage.getItem('aiPendingQuery');
+  if (aiPendingQuery) {
+    sessionStorage.removeItem('aiPendingQuery');
+    setTimeout(() => {
+      if (typeof window.executeAIMatchSearchOnDashboard === 'function') {
+        window.executeAIMatchSearchOnDashboard(aiPendingQuery);
+      }
+    }, 400);
+  }
+
   // Setup sidebar filter event listeners (Real-time live filtering!)
   document.getElementById('filterGender').addEventListener('change', (e) => {
     activeFilters.gender = e.target.value;
@@ -2326,6 +2337,12 @@ async function initDashboardPage() {
       shortlistFilterToggle.textContent = 'View Shortlisted';
     }
 
+    window.currentAIMatches = null;
+    const aiBanner = document.getElementById('aiActiveFilterNotice');
+    if (aiBanner) aiBanner.style.display = 'none';
+    const aiInput = document.getElementById('aiSearchInput');
+    if (aiInput) aiInput.value = '';
+
     renderMatchesGrid();
     showToast('Filters Reset', 'gold');
   });
@@ -2366,6 +2383,25 @@ function renderMatchesGrid() {
 
   // Scan and register any incoming interests from other users to unlock chats
   checkIncomingInterests();
+
+  // 1. If Kunwar AI Match filter is active, display the AI curated results in ranked order
+  if (window.currentAIMatches && Array.isArray(window.currentAIMatches) && window.currentAIMatches.length > 0) {
+    const aiResults = window.currentAIMatches;
+    const aiProfiles = aiResults.map(item => {
+      const p = { ...item.profile };
+      p.aiScore = item.matchScore;
+      p.aiMatchReasons = item.reasons;
+      return p;
+    });
+
+    const countSpan = document.getElementById('resultsCountSpan');
+    if (countSpan) {
+      countSpan.textContent = aiProfiles.length;
+    }
+
+    container.innerHTML = aiProfiles.map(profile => createProfileCardHtml(profile, true)).join('');
+    return;
+  }
 
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   const profiles = getAllProfiles();
@@ -2418,6 +2454,75 @@ function renderMatchesGrid() {
 
   container.innerHTML = filtered.map(profile => createProfileCardHtml(profile, true)).join('');
 }
+
+// ==========================================
+// KUNWAR AI LINEAGE MATCHMAKER DASHBOARD HANDLERS
+// ==========================================
+window.handleDashboardAISearch = function(e) {
+  if (e) e.preventDefault();
+  const input = document.getElementById('aiSearchInput');
+  const query = input ? input.value.trim() : '';
+  if (!query) {
+    showToast('Please describe your desired partner preferences or clan.', 'normal');
+    return;
+  }
+  window.executeAIMatchSearchOnDashboard(query);
+};
+
+window.executeQuickAIPrompt = function(promptText) {
+  const input = document.getElementById('aiSearchInput');
+  if (input) input.value = promptText;
+  window.executeAIMatchSearchOnDashboard(promptText);
+};
+
+window.runAutoAIMatch = function() {
+  window.executeAIMatchSearchOnDashboard('Show my type of match according to my profile preferences');
+};
+
+window.executeAIMatchSearchOnDashboard = function(queryText) {
+  if (!window.KunwarAIMatchmaker) {
+    showToast('Kunwar AI engine is loading. Please try again.', 'normal');
+    return;
+  }
+
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  const searchOutcome = window.KunwarAIMatchmaker.searchDatabase(queryText, currentUser);
+  const validMatches = searchOutcome.results.filter(r => !r.hasSagotraConflict);
+
+  window.currentAIMatches = validMatches.length > 0 ? validMatches : searchOutcome.results.slice(0, 4);
+
+  if (validMatches.length === 0) {
+    showToast('No exact matches found. Displaying closest compatible profiles.', 'normal');
+  } else {
+    showToast(`Kunwar AI curated ${window.currentAIMatches.length} matching noble profiles!`, 'gold');
+  }
+
+  // Update AI Active Banner
+  const banner = document.getElementById('aiActiveFilterNotice');
+  const bannerText = document.getElementById('aiActiveFilterText');
+  if (banner && bannerText) {
+    banner.style.display = 'flex';
+    bannerText.innerHTML = `Kunwar AI: Found <strong>${window.currentAIMatches.length} matching profiles</strong> for: <em>"${queryText}"</em>`;
+  }
+
+  renderMatchesGrid();
+
+  // Scroll to matches grid smoothly
+  const grid = document.getElementById('searchResultsCountBar') || document.getElementById('matchesGrid');
+  if (grid) {
+    grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
+
+window.clearDashboardAIFilter = function() {
+  window.currentAIMatches = null;
+  const banner = document.getElementById('aiActiveFilterNotice');
+  if (banner) banner.style.display = 'none';
+  const input = document.getElementById('aiSearchInput');
+  if (input) input.value = '';
+  renderMatchesGrid();
+  showToast('Reset to all matches', 'normal');
+};
 
 function getAvatarGradient(clan) {
   switch (clan) {
@@ -2860,6 +2965,11 @@ function createProfileCardHtml(profile, isDashboard = true) {
         <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px;">
           ${recentlyActiveBadge}
           ${verifiedBadge}
+          ${profile.aiMatchReasons && profile.aiMatchReasons.length > 0 ? `
+            <div style="margin-top: 4px; padding: 4px 8px; background: rgba(201, 162, 39, 0.15); border: 1px solid rgba(201, 162, 39, 0.45); border-radius: 4px; font-size: 0.72rem; color: #FCD34D; font-weight: 600; text-align: left; line-height: 1.3;">
+              ✨ ${profile.aiMatchReasons[0]}
+            </div>
+          ` : ''}
         </div>
         
         <div class="profile-meta-list">

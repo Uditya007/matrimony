@@ -47,10 +47,11 @@
             </div>
           </div>
           <div class="quick-replies">
-            <button class="quick-reply-btn" data-query="find perfect match">🔍 Find Perfect Match</button>
+            <button class="quick-reply-btn" data-query="show my type of match">👑 Show My Type of Match</button>
+            <button class="quick-reply-btn" data-query="Rathore clan brides aged 23 to 27">🏰 Rathore Brides (23-27)</button>
+            <button class="quick-reply-btn" data-query="Doctors and Engineers in Rajasthan">👨‍⚕️ Doctors & Engineers</button>
             <button class="quick-reply-btn" data-query="what are gotra rules">📜 Gotra Rules</button>
             <button class="quick-reply-btn" data-query="talk to human agent">📞 Connect to Agent</button>
-            <button class="quick-reply-btn" data-query="view pricing plans">💎 View Royal Plans</button>
           </div>
         </div>
 
@@ -221,158 +222,36 @@
               Let me know if you want to find matches within a specific clan!`;
     }
 
-    // AI Matchmaking Perfect Match Query
-    if (cleanQuery.includes('match') || cleanQuery.includes('perfect') || cleanQuery.includes('find') || cleanQuery.includes('recommend') || cleanQuery.includes('compatibility')) {
-      return performAIMatchmaking();
+    // AI Matchmaking & Lineage Search Query
+    const matchTriggers = [
+      'match', 'find', 'perfect', 'recommend', 'suggest', 'compatibility',
+      'type of match', 'his type', 'my type', 'her type', 'preference',
+      'mere type', 'dikhao', 'search', 'bride', 'groom', 'ladi', 'banna',
+      'ladki', 'ladka', 'girl', 'boy', 'rathore', 'sisodia', 'chauhan',
+      'bhati', 'shekhawat', 'kachwaha', 'tanwar', 'panwar', 'doctor', 'engineer'
+    ];
+    const isMatchQuery = matchTriggers.some(t => cleanQuery.includes(t));
+
+    if (isMatchQuery) {
+      if (window.KunwarAIMatchmaker) {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        const searchOutcome = window.KunwarAIMatchmaker.searchDatabase(query, currentUser);
+        return window.KunwarAIMatchmaker.generateChatbotResponse(query, searchOutcome, currentUser);
+      }
+      return `⚠️ Kunwar AI engine is initializing. Please try again in a moment.`;
     }
 
     // Default Fallback Response
-    return `Khammaghani! I understand you are asking about: "<em>${query}</em>". 
+    return `Khammaghani! I am here to assist your Rajput partner search.
             <br><br>
-            Try typing:
+            You can ask me anything, such as:
             <ul>
-              <li><strong>"Find perfect match"</strong> to check matching profiles.</li>
-              <li><strong>"Gotra rules"</strong> to see compatibility guidelines.</li>
-              <li><strong>"View plans"</strong> to check pricing packages.</li>
-              <li><strong>"Connect to agent"</strong> to talk to our WhatsApp customer support.</li>
+              <li><strong>"Show my type of match"</strong> to search database according to your saved preferences.</li>
+              <li><strong>"Find Rathore brides aged 23 to 27 in Jaipur"</strong>.</li>
+              <li><strong>"Show doctor or engineer grooms"</strong>.</li>
+              <li><strong>"What are gotra rules"</strong> to see Sagotra guidelines.</li>
+              <li><strong>"Connect to agent"</strong> to chat on WhatsApp.</li>
             </ul>`;
-  }
-
-  // 5. Dynamic AI Matchmaking Scoring Core
-  function performAIMatchmaking() {
-    const currentUserRaw = localStorage.getItem('currentUser');
-    if (!currentUserRaw) {
-      return `🔐 <strong>Access Restricted:</strong><br>
-              Khammaghani! Please log in or register your noble profile to run our matchmaking search and reveal compatible Rajput brides/grooms.
-              <br><br>
-              <a href="login.html" class="btn btn-primary" style="display: block; text-align: center; margin-top: 10px; text-decoration: none; padding: 8px;">Log In Now</a>
-              <a href="register.html" class="btn btn-minimal" style="display: block; text-align: center; margin-top: 5px; text-decoration: none; padding: 8px;">Register Lineage</a>`;
-    }
-
-    const currentUser = JSON.parse(currentUserRaw);
-    
-    // Safety fallback properties if profile lacks full setup
-    const userGender = currentUser.gender || 'Groom';
-    const userCaste = currentUser.clan || currentUser.caste || 'Rathore';
-    const userGotra = (currentUser.gotra || 'Not Specified').split(' ')[0].trim();
-    const userMotherGotra = (currentUser.motherGotra || 'Not Specified').split(' ')[0].trim();
-    const userPrefMinAge = parseInt(currentUser.prefMinAge) || 20;
-    const userPrefMaxAge = parseInt(currentUser.prefMaxAge) || 30;
-    const userPrefCaste = currentUser.prefCaste || 'Any';
-    const userPrefLocation = currentUser.prefLocation || 'Any';
-
-    // Retrieve database profiles
-    if (typeof getAllProfiles !== 'function') {
-      return `⚠️ Lineage database is currently updating. Please try again in a moment.`;
-    }
-
-    const allProfiles = getAllProfiles();
-    
-    // Filter profiles:
-    // 1. Opposite gender (Groom looks for Bride, Bride looks for Groom)
-    const oppositeGender = userGender.toLowerCase() === 'groom' ? 'bride' : 'groom';
-    let candidates = allProfiles.filter(p => (p.gender || '').toLowerCase() === oppositeGender);
-
-    if (candidates.length === 0) {
-      return `I could not find matching profiles in our lineage catalog. Try adjusting your preferences.`;
-    }
-
-    // 2. Gotra Conflict Filter (Strict Rajput Rule: No Sagotra unions!)
-    // Candidate cannot share the user's father's gotra OR mother's gotra
-    candidates = candidates.filter(candidate => {
-      const candidateGotra = (candidate.gotra || '').split(' ')[0].trim().toLowerCase();
-      const fatherGotraLower = userGotra.toLowerCase();
-      const motherGotraLower = userMotherGotra.toLowerCase();
-      
-      // Reject match if their primary gotra matches the user's paternal or maternal gotras
-      if (candidateGotra === fatherGotraLower || candidateGotra === motherGotraLower) {
-        return false;
-      }
-      return true;
-    });
-
-    if (candidates.length === 0) {
-      return `📜 <strong>Sagotra Union Alert:</strong> All profiles in our catalog share your paternal or maternal Gotra. No matches were recommended to respect traditional Rajput endogamy guidelines.`;
-    }
-
-    // 3. AI Scoring Weights Loop
-    const scoredCandidates = candidates.map(candidate => {
-      let score = 50; // baseline score
-
-      // Age alignment (+15 points)
-      const candidateAge = parseInt(candidate.age) || 25;
-      if (candidateAge >= userPrefMinAge && candidateAge <= userPrefMaxAge) {
-        score += 15;
-      }
-
-      // Location alignment (+15 points)
-      const candidateLocation = (candidate.location || '').toLowerCase();
-      if (userPrefLocation.toLowerCase() !== 'any' && candidateLocation.includes(userPrefLocation.toLowerCase())) {
-        score += 15;
-      }
-
-      // Clan alliance alignment (+15 points)
-      const candidateClan = (candidate.clan || '').toLowerCase();
-      if (userPrefCaste.toLowerCase() !== 'any' && candidateClan.includes(userPrefCaste.toLowerCase())) {
-        score += 15;
-      } else {
-        // Natural Rajput historical clan matches (e.g. Sisodia marrying Rathore/Bhati)
-        if (userCaste.toLowerCase() === 'sisodia' && ['rathore', 'bhati'].includes(candidateClan)) {
-          score += 10;
-        } else if (userCaste.toLowerCase() === 'rathore' && ['sisodia', 'chauhan'].includes(candidateClan)) {
-          score += 10;
-        }
-      }
-
-      // Verification verification (+5 points)
-      if (candidate.isVerified) {
-        score += 5;
-      }
-
-      return {
-        profile: candidate,
-        matchScore: Math.min(score, 99) // Cap at 99%
-      };
-    });
-
-    // Sort by highest score first
-    scoredCandidates.sort((a, b) => b.matchScore - a.matchScore);
-    const topMatch = scoredCandidates[0];
-
-    if (!topMatch) {
-      return `Our Matchmaker did not find a perfect match in our archive at this time.`;
-    }
-
-    const match = topMatch.profile;
-    const matchScore = topMatch.matchScore;
-    
-    // Split initials for avatar display
-    const initials = match.initials || 'NM';
-
-    return `
-      <div class="message-bubble ai-match-bubble" style="padding: 12px; border: 1.5px solid var(--gold-antique); background: var(--bg-card); border-radius: 12px; box-shadow: 0 4px 15px rgba(170, 124, 17, 0.15);">
-        <div style="font-size: 0.85rem; font-weight: bold; color: var(--gold-antique); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-          ✨ Recommended Match: ${matchScore}% Compatible
-        </div>
-        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-          <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, var(--maroon-royal), var(--maroon-light)); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.1rem; border: 1px solid var(--gold-antique);">
-            ${initials}
-          </div>
-          <div>
-            <h4 style="margin: 0; color: var(--maroon-royal); font-family: var(--font-header);">${match.name}</h4>
-            <span style="font-size: 0.8rem; color: var(--text-muted);">${match.age} Yrs • ${match.clan} Clan</span>
-          </div>
-        </div>
-        <div style="font-size: 0.85rem; color: var(--text-dark); margin-bottom: 10px; line-height: 1.4; border-top: 1px solid rgba(170, 124, 17, 0.15); padding-top: 8px;">
-          <strong>Lineage:</strong> ${match.gotra}<br>
-          <strong>Native:</strong> ${match.native}<br>
-          <strong>Education:</strong> ${match.education}
-        </div>
-        <button onclick="openChatMatchDetails('${match.id}')" class="btn btn-royal" style="width: 100%; padding: 8px; font-size: 0.85rem; cursor: pointer;">
-          View Full Lineage
-        </button>
-      </div>
-    `;
   }
 
   // 6. Global scope mapping function for detail triggers
