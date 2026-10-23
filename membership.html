@@ -35,6 +35,8 @@
   <link rel="stylesheet" href="css/styles.css">
   <!-- Razorpay Standard Web Checkout SDK -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <!-- YouPI PG Universal Checkout SDK -->
+  <script src="js/youpi-checkout.js"></script>
   <style>
     /* Royal YouPI Payment Modal Styles */
     .youpi-modal-overlay {
@@ -802,6 +804,34 @@
         });
 
         const data = await res.json();
+        const checkoutTargetUrl = data.checkoutUrl ? data.checkoutUrl.replace('localhost:7000', '127.0.0.1:7000') : '';
+
+        // Launch Official YouPI 2-Column Portal Modal (Matches screenshot exactly)
+        if (checkoutTargetUrl && typeof YoupiCheckout !== 'undefined') {
+          modal.classList.remove('active');
+          const youpiInstance = new YoupiCheckout({
+            checkoutUrl: checkoutTargetUrl,
+            portalUrl: 'http://127.0.0.1:7000',
+            apiUrl: 'http://127.0.0.1:6100',
+            amount: (amountInPaise / 100).toFixed(2),
+            name: 'Shree Rajput Sagai Sambandh',
+            description: `Rajputana ${planName} Plan (${periodLabel})`,
+            customer: {
+              name: user.name || 'uditya',
+              email: user.email || '',
+              phone: user.phone || '7665941949'
+            },
+            onSuccess: function(result) {
+              completeUpgrade('YouPI Royal Gateway', result.utr || result.order_id);
+            },
+            onCancelled: function() {
+              console.log('YouPI Checkout cancelled');
+            }
+          });
+          youpiInstance.open();
+          return;
+        }
+
         if (data.success && data.upiUri) {
           activePaymentState = {
             ...data,
