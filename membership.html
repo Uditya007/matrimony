@@ -620,9 +620,14 @@
               <input type="text" id="youpiUtrInput" placeholder="e.g. 428901234567" maxlength="18" class="youpi-input">
               <button type="button" id="btnVerifyUtr" onclick="submitYoupiUtr()" class="youpi-verify-btn">Verify & Activate</button>
             </div>
-            <span id="youpiStatusNotice" style="font-size: 10.5px; color: #059669; display: block; margin-top: 5px;">
-              🛡️ Direct Kotak Bank Settlement • Auto-reconciliation active
-            </span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+              <span id="youpiStatusNotice" style="font-size: 10.5px; color: #059669;">
+                🛡️ Direct Kotak Settlement • Powered by YouPI-PG
+              </span>
+              <a id="youpiCheckoutPortalLink" href="#" target="_blank" style="font-size: 10.5px; color: #6B1220; text-decoration: underline; font-weight: 600; display: none;">
+                Open YouPI Portal ↗
+              </a>
+            </div>
           </div>
         </div>
 
@@ -811,6 +816,16 @@
           document.getElementById('btnPayPhonePe').href = data.upiUri;
           document.getElementById('btnPayPaytm').href = data.upiUri;
           document.getElementById('btnPayAnyUpi').href = data.upiUri;
+
+          const portalLink = document.getElementById('youpiCheckoutPortalLink');
+          if (portalLink) {
+            if (data.checkoutUrl) {
+              portalLink.href = data.checkoutUrl.replace('localhost:7000', '127.0.0.1:7000');
+              portalLink.style.display = 'inline';
+            } else {
+              portalLink.style.display = 'none';
+            }
+          }
 
           // Render dynamic QR code
           const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(data.upiUri);
