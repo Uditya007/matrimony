@@ -29,6 +29,7 @@ async function createYoupiOrder({ orderId, amountPaise, planName, customer }) {
         orderId: cleanOrderId,
         amount: amountRupees,
         currency: 'INR',
+        autoActivate: true,
         customer: customer || {},
         metadata: {
           planName: planName || 'Royal Plan',
