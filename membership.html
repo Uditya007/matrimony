@@ -35,6 +35,215 @@
   <link rel="stylesheet" href="css/styles.css">
   <!-- Razorpay Standard Web Checkout SDK -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    /* Royal YouPI Payment Modal Styles */
+    .youpi-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 7, 10, 0.78);
+      backdrop-filter: blur(8px);
+      z-index: 999999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    .youpi-modal-overlay.active {
+      display: flex;
+    }
+    .youpi-modal-card {
+      background: #ffffff;
+      border-radius: 20px;
+      max-width: 480px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+      border: 1.5px solid #C9A227;
+      animation: youpiModalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes youpiModalPop {
+      from { transform: translateY(20px) scale(0.96); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .youpi-modal-header {
+      background: linear-gradient(135deg, #6B1220 0%, #4A0D18 100%);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #C9A227;
+    }
+    .youpi-modal-close {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: #ffffff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .youpi-modal-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .youpi-modal-body {
+      padding: 20px;
+    }
+    .youpi-order-summary {
+      background: #FDF9F0;
+      border: 1px solid #E8C766;
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .youpi-summary-title {
+      display: block;
+      font-weight: 700;
+      color: #2B1810;
+      font-size: 14px;
+    }
+    .youpi-summary-sub {
+      display: block;
+      font-size: 11px;
+      color: #78350F;
+    }
+    .youpi-summary-amount {
+      font-size: 20px;
+      font-weight: 800;
+      color: #6B1220;
+    }
+    .youpi-tabs {
+      display: flex;
+      background: #F3F4F6;
+      border-radius: 10px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+    .youpi-tab {
+      flex: 1;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #6B7280;
+      transition: all 0.2s;
+    }
+    .youpi-tab.active {
+      background: #ffffff;
+      color: #6B1220;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      font-weight: 700;
+    }
+    .youpi-app-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .youpi-app-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 8px;
+      border-radius: 10px;
+      background: #F9FAFB;
+      border: 1px solid #E5E7EB;
+      color: #1F2937;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .youpi-app-btn:hover {
+      border-color: #C9A227;
+      background: #FFFBEB;
+    }
+    .youpi-qr-section {
+      text-align: center;
+      background: #FAFAFA;
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px dashed #D1D5DB;
+      margin-bottom: 14px;
+    }
+    .youpi-qr-box {
+      display: inline-block;
+      padding: 8px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    }
+    .youpi-vpa-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #F3F4F6;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-top: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #374151;
+      font-weight: 600;
+    }
+    .youpi-copy-btn {
+      background: #6B1220;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 2px 8px;
+      font-size: 10px;
+      cursor: pointer;
+    }
+    .youpi-utr-box {
+      background: #F9FAFB;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #E5E7EB;
+    }
+    .youpi-input {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #D1D5DB;
+      font-size: 13px;
+      outline: none;
+    }
+    .youpi-input:focus {
+      border-color: #6B1220;
+    }
+    .youpi-verify-btn {
+      background: linear-gradient(135deg, #C9A227 0%, #B8860B 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-weight: 700;
+      font-size: 12.5px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+    .youpi-verify-btn:hover {
+      opacity: 0.92;
+    }
+  </style>
 </head>
 <body>
 
@@ -330,7 +539,109 @@
   <!-- Floating WhatsApp Chat Button -->
   <a href="https://wa.me/919928592159" class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.417 9.864-9.848.002-2.63-1.023-5.101-2.887-6.968C16.621 1.936 14.15 1.087 11.996 1.087c-5.43 0-9.852 4.415-9.856 9.847-.001 1.765.467 3.487 1.355 5.027l-.988 3.606 3.693-.97.157.093zm12.338-7.536c-.328-.164-1.942-.959-2.242-1.069-.3-.11-.519-.164-.738.164-.219.328-.847 1.069-1.039 1.288-.192.219-.384.246-.712.083-1.826-.913-2.997-1.637-3.947-3.268-.252-.433.252-.401.72-1.332.077-.154.038-.288-.019-.397-.058-.11-.519-1.25-.712-1.713-.188-.452-.378-.39-.519-.398-.135-.007-.29-.009-.445-.009-.156 0-.409.058-.623.288-.214.23-.817.799-.817 1.95s.836 2.262.95 2.416c.115.154 1.645 2.512 3.985 3.522.556.24 1.053.404 1.409.518.572.181 1.092.155 1.503.094.458-.068 1.942-.795 2.215-1.528.272-.732.272-1.359.191-1.492-.081-.133-.298-.214-.626-.378z"/></svg>
-  </a>
+  <!-- Royal YouPI Payment Modal -->
+  <div id="youpiPaymentModal" class="youpi-modal-overlay">
+    <div class="youpi-modal-card">
+      <div class="youpi-modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">👑</span>
+          <div>
+            <h3 style="margin: 0; color: #fff; font-size: 16px; font-family: 'Cinzel', serif;">Shree Rajput Sagai Sambandh</h3>
+            <span style="font-size: 11px; color: #E8C766;">Royal Payment Gateway • 0% Platform Fee</span>
+          </div>
+        </div>
+        <button class="youpi-modal-close" onclick="closeYoupiModal()">&times;</button>
+      </div>
+
+      <div class="youpi-modal-body">
+        <!-- Order Summary Card -->
+        <div class="youpi-order-summary">
+          <div>
+            <span class="youpi-summary-title" id="youpiModalPlanTitle">Rajputana Silver Plan</span>
+            <span class="youpi-summary-sub" id="youpiModalPeriod">1 Month Access</span>
+          </div>
+          <div class="youpi-summary-amount" id="youpiModalAmount">₹11,999</div>
+        </div>
+
+        <!-- Payment Tabs -->
+        <div class="youpi-tabs">
+          <button id="tabYoupiUpi" class="youpi-tab active" onclick="switchPaymentTab('upi')">
+            👑 Royal UPI (Recommended)
+          </button>
+          <button id="tabRazorpay" class="youpi-tab" onclick="switchPaymentTab('razorpay')">
+            💳 Card / NetBanking
+          </button>
+        </div>
+
+        <!-- UPI Payment View -->
+        <div id="youpiUpiView" class="youpi-tab-content">
+          <!-- 1-Tap UPI Apps Section -->
+          <div style="text-align: center; margin-bottom: 12px;">
+            <span style="font-size: 11.5px; color: #6B7280; font-weight: 700; letter-spacing: 0.5px;">1-TAP INSTANT PAYMENT APPS</span>
+            <div class="youpi-app-grid">
+              <a id="btnPayGPay" href="#" class="youpi-app-btn">
+                <span>🟢</span> GPay
+              </a>
+              <a id="btnPayPhonePe" href="#" class="youpi-app-btn">
+                <span>🟣</span> PhonePe
+              </a>
+              <a id="btnPayPaytm" href="#" class="youpi-app-btn">
+                <span>🔵</span> Paytm
+              </a>
+              <a id="btnPayAnyUpi" href="#" class="youpi-app-btn" style="grid-column: span 3; background: #6B1220; color: #fff; font-weight: 700;">
+                ⚡ Launch Any UPI App on Device
+              </a>
+            </div>
+          </div>
+
+          <!-- Dynamic QR Code & VPA -->
+          <div class="youpi-qr-section">
+            <div class="youpi-qr-box">
+              <img id="youpiQrImage" src="" alt="UPI QR Code" style="width: 165px; height: 165px; border-radius: 8px; display: block; margin: 0 auto;">
+              <div id="youpiQrLoading" style="display: none; padding: 60px 20px; font-size: 12px; color: #888;">Generating Royal QR...</div>
+            </div>
+            <div style="margin-top: 8px;">
+              <span style="font-size: 11px; color: #6B7280;">Scan with GPay, PhonePe, Paytm, or BHIM</span>
+              <div>
+                <div class="youpi-vpa-chip">
+                  <span id="youpiVpaText">7665941949@kotak</span>
+                  <button type="button" onclick="copyYoupiVpa()" class="youpi-copy-btn">Copy</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 12-Digit UTR Entry & Confirm -->
+          <div class="youpi-utr-box">
+            <label style="display: block; font-size: 11.5px; font-weight: 600; color: #374151; margin-bottom: 5px;">
+              Enter 12-Digit Bank UTR / Reference Number
+            </label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="youpiUtrInput" placeholder="e.g. 428901234567" maxlength="18" class="youpi-input">
+              <button type="button" id="btnVerifyUtr" onclick="submitYoupiUtr()" class="youpi-verify-btn">Verify & Activate</button>
+            </div>
+            <span id="youpiStatusNotice" style="font-size: 10.5px; color: #059669; display: block; margin-top: 5px;">
+              🛡️ Direct Kotak Bank Settlement • Auto-reconciliation active
+            </span>
+          </div>
+        </div>
+
+        <!-- Razorpay View -->
+        <div id="youpiRazorpayView" class="youpi-tab-content" style="display: none;">
+          <div style="padding: 24px 16px; text-align: center;">
+            <div style="font-size: 32px; margin-bottom: 8px;">💳</div>
+            <h4 style="margin: 0 0 6px 0; color: #1F2937;">Cards, NetBanking & Wallets</h4>
+            <p style="font-size: 13px; color: #6B7280; margin: 0 0 16px 0;">
+              Pay securely using Credit Card, Debit Card, or NetBanking powered by Razorpay.
+            </p>
+            <button type="button" id="btnProceedRazorpay" onclick="proceedWithRazorpay()" class="btn btn-royal" style="width: 100%; padding: 12px; font-weight: 700;">
+              Continue with Razorpay
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Scripts & Price switcher logic -->
   <script src="js/data.js"></script>
@@ -394,12 +705,320 @@
       return addonTable[addonName] || 10000;
     }
 
-    // Handle plan subscription selection with Razorpay Standard Checkout
+    // Active Payment Session State
+    let activePaymentState = null;
+    let paymentPollTimer = null;
+
+    function closeYoupiModal() {
+      if (paymentPollTimer) {
+        clearInterval(paymentPollTimer);
+        paymentPollTimer = null;
+      }
+      const modal = document.getElementById('youpiPaymentModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function switchPaymentTab(tab) {
+      const upiTab = document.getElementById('tabYoupiUpi');
+      const rzpTab = document.getElementById('tabRazorpay');
+      const upiView = document.getElementById('youpiUpiView');
+      const rzpView = document.getElementById('youpiRazorpayView');
+
+      if (tab === 'upi') {
+        upiTab.classList.add('active');
+        rzpTab.classList.remove('active');
+        upiView.style.display = 'block';
+        rzpView.style.display = 'none';
+      } else {
+        rzpTab.classList.add('active');
+        upiTab.classList.remove('active');
+        rzpView.style.display = 'block';
+        upiView.style.display = 'none';
+      }
+    }
+
+    function copyYoupiVpa() {
+      const vpa = document.getElementById('youpiVpaText').textContent;
+      navigator.clipboard.writeText(vpa).then(() => {
+        const copyBtn = document.querySelector('.youpi-copy-btn');
+        if (copyBtn) {
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+        }
+      });
+    }
+
+    async function openRoyalPaymentModal({ planName, period, periodLabel, amountInPaise, isAddon }) {
+      const currentUser = localStorage.getItem('currentUser');
+      if (!currentUser) {
+        alert('Please register or log in first!');
+        window.location.href = 'login.html';
+        return;
+      }
+      const user = JSON.parse(currentUser);
+
+      const modal = document.getElementById('youpiPaymentModal');
+      const planTitle = document.getElementById('youpiModalPlanTitle');
+      const periodSub = document.getElementById('youpiModalPeriod');
+      const amountEl = document.getElementById('youpiModalAmount');
+      const qrImg = document.getElementById('youpiQrImage');
+      const qrLoading = document.getElementById('youpiQrLoading');
+      const utrInput = document.getElementById('youpiUtrInput');
+      const statusNotice = document.getElementById('youpiStatusNotice');
+
+      const amountRupees = (amountInPaise / 100).toLocaleString('en-IN');
+      planTitle.textContent = isAddon ? `Add-On: ${planName}` : `Rajputana ${planName} Plan`;
+      periodSub.textContent = periodLabel;
+      amountEl.textContent = `₹${amountRupees}`;
+      utrInput.value = '';
+      statusNotice.textContent = '🛡️ Direct Kotak Bank Settlement • Auto-reconciliation active';
+      statusNotice.style.color = '#059669';
+
+      switchPaymentTab('upi');
+      modal.classList.add('active');
+
+      qrImg.style.display = 'none';
+      qrLoading.style.display = 'block';
+
+      // Call YouPI PG to create order session
+      try {
+        const res = await fetch('/api/youpi/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: amountInPaise,
+            planName: planName,
+            customer: {
+              name: user.name || 'Noble Member',
+              email: user.email || '',
+              phone: user.phone || ''
+            }
+          })
+        });
+
+        const data = await res.json();
+        if (data.success && data.upiUri) {
+          activePaymentState = {
+            ...data,
+            planName,
+            periodLabel,
+            amountInPaise,
+            user
+          };
+
+          // Setup 1-Tap App Deep Links
+          document.getElementById('btnPayGPay').href = data.upiUri;
+          document.getElementById('btnPayPhonePe').href = data.upiUri;
+          document.getElementById('btnPayPaytm').href = data.upiUri;
+          document.getElementById('btnPayAnyUpi').href = data.upiUri;
+
+          // Render dynamic QR code
+          const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(data.upiUri);
+          qrImg.src = qrUrl;
+          qrImg.onload = () => {
+            qrLoading.style.display = 'none';
+            qrImg.style.display = 'block';
+          };
+
+          // Start polling status
+          if (data.paymentId && !data.isFallback) {
+            startStatusPolling(data.paymentId);
+          }
+        } else {
+          throw new Error(data.error || 'Failed to initialize YouPI session');
+        }
+      } catch (err) {
+        console.warn('Falling back to direct VPA:', err);
+        const fallbackUri = `upi://pay?pa=7665941949@kotak&pn=Shree%20Rajput%20Sagai%20Sambandh&am=${(amountInPaise/100).toFixed(2)}&cu=INR&tn=${encodeURIComponent('Sagai Sambandh ' + planName)}`;
+        document.getElementById('btnPayGPay').href = fallbackUri;
+        document.getElementById('btnPayPhonePe').href = fallbackUri;
+        document.getElementById('btnPayPaytm').href = fallbackUri;
+        document.getElementById('btnPayAnyUpi').href = fallbackUri;
+
+        qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(fallbackUri);
+        qrLoading.style.display = 'none';
+        qrImg.style.display = 'block';
+
+        activePaymentState = {
+          paymentId: `fallback_${Date.now()}`,
+          orderId: `ORDER_${Date.now()}`,
+          upiUri: fallbackUri,
+          planName,
+          periodLabel,
+          amountInPaise,
+          user
+        };
+      }
+    }
+
+    function startStatusPolling(paymentId) {
+      if (paymentPollTimer) clearInterval(paymentPollTimer);
+      paymentPollTimer = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/youpi/payment-status/${encodeURIComponent(paymentId)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status === 'SUCCESS') {
+              clearInterval(paymentPollTimer);
+              paymentPollTimer = null;
+              completeUpgrade('YouPI PG Automatic Bank Observer', data.paymentId);
+            }
+          }
+        } catch {}
+      }, 3500);
+    }
+
+    async function submitYoupiUtr() {
+      const utr = document.getElementById('youpiUtrInput').value.trim();
+      const statusNotice = document.getElementById('youpiStatusNotice');
+      const btn = document.getElementById('btnVerifyUtr');
+
+      if (!utr || utr.length < 8) {
+        statusNotice.textContent = '⚠️ Please enter a valid 12-digit UTR bank reference number.';
+        statusNotice.style.color = '#DC2626';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Verifying...';
+
+      try {
+        const res = await fetch('/api/youpi/verify-utr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentId: activePaymentState?.paymentId,
+            orderId: activePaymentState?.orderId,
+            utr,
+            planName: activePaymentState?.planName,
+            userEmail: activePaymentState?.user?.email
+          })
+        });
+
+        const data = await res.json();
+        if (data.success && data.verified) {
+          completeUpgrade(`YouPI Verified UTR (${utr})`, activePaymentState?.orderId);
+        } else {
+          statusNotice.textContent = `⚠️ ${data.error || 'Verification issue. Please re-check UTR.'}`;
+          statusNotice.style.color = '#DC2626';
+        }
+      } catch (err) {
+        statusNotice.textContent = '⚠️ Network error submitting UTR. Please contact concierge.';
+        statusNotice.style.color = '#DC2626';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Verify & Activate';
+      }
+    }
+
+    function completeUpgrade(methodName, refId) {
+      if (!activePaymentState) return;
+      const { user, planName, periodLabel } = activePaymentState;
+
+      user.tier = planName;
+      localStorage.setItem('currentUser', JSON.stringify(user));
+
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const updatedUsers = users.map(u => u.email.toLowerCase() === user.email.toLowerCase() ? { ...u, tier: planName } : u);
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
+
+      if (window.supabaseActive && window.supabaseClient) {
+        window.supabaseClient
+          .from('profiles')
+          .update({ tier: planName })
+          .eq('email', user.email)
+          .then();
+      }
+
+      closeYoupiModal();
+      alert(`👑 Khammaghani!\n\nPayment Successful via ${methodName}!\nReference ID: ${refId || 'Confirmed'}\n\nYou have officially upgraded to the Shree Rajput Sagai Sambandh ${planName} Plan (${periodLabel}).`);
+      window.location.href = 'dashboard.html';
+    }
+
+    async function proceedWithRazorpay() {
+      if (!activePaymentState) return;
+      closeYoupiModal();
+      const { planName, periodLabel, amountInPaise, user } = activePaymentState;
+
+      if (typeof Razorpay === 'undefined') {
+        alert('Razorpay SDK is loading. Please try again.');
+        return;
+      }
+
+      try {
+        let orderData = null;
+        try {
+          const orderResponse = await fetch('/api/create-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              amount: amountInPaise,
+              currency: 'INR',
+              receipt: `rcpt_${planName.toLowerCase()}_${Date.now()}`,
+              notes: {
+                plan: planName,
+                period: periodLabel,
+                email: user.email,
+                name: user.name || 'Noble Member'
+              }
+            })
+          });
+          if (orderResponse.ok) {
+            orderData = await orderResponse.json();
+          }
+        } catch (e) {}
+
+        const razorpayKey = (orderData && orderData.key_id) || window.RAZORPAY_KEY_ID || 'rzp_test_TgASFu87ziLFNM';
+        const orderId = (orderData && orderData.order_id) || undefined;
+
+        const options = {
+          key: razorpayKey,
+          amount: (orderData && orderData.amount) || amountInPaise,
+          currency: 'INR',
+          name: 'Shree Rajput Sagai Sambandh',
+          description: `Rajputana ${planName} Plan (${periodLabel})`,
+          image: 'images/logo.jpg',
+          ...(orderId ? { order_id: orderId } : {}),
+          prefill: {
+            name: user.name || '',
+            email: user.email || '',
+            contact: user.phone || ''
+          },
+          theme: { color: '#6B1220' },
+          handler: async function(paymentResult) {
+            let isVerified = false;
+            if (paymentResult.razorpay_signature) {
+              try {
+                const verifyRes = await fetch('/api/verify-payment', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(paymentResult)
+                });
+                const vData = await verifyRes.json();
+                if (verifyRes.ok && vData.success) isVerified = true;
+              } catch {}
+            }
+            if (isVerified || paymentResult.razorpay_payment_id) {
+              completeUpgrade('Razorpay Gateway', paymentResult.razorpay_payment_id);
+            } else {
+              alert('Payment Verification Issue. Please contact support with Payment ID: ' + paymentResult.razorpay_payment_id);
+            }
+          }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+      } catch (err) {
+        alert('Could not launch Razorpay checkout: ' + err.message);
+      }
+    }
+
+    // Handle plan subscription selection
     async function handleSubscribe(planName) {
       const activeTab = document.querySelector('#billingPeriodTabs button.active');
       const period = activeTab ? activeTab.dataset.period : 'monthly';
       const periodLabel = activeTab ? activeTab.textContent.split(' (')[0] : '1 Month';
-      
+
       const currentUser = localStorage.getItem('currentUser');
       if (!currentUser) {
         if (typeof showToast === 'function') {
@@ -413,7 +1032,7 @@
 
       const user = JSON.parse(currentUser);
 
-      // Handle Free Starter Trial without Razorpay
+      // Handle Free Starter Trial without Gateway
       const amountInPaise = getPlanPricingInPaise(planName, period);
       if (amountInPaise === 0) {
         user.tier = planName;
@@ -433,170 +1052,17 @@
         return;
       }
 
-      // Check Razorpay SDK is loaded
-      if (typeof Razorpay === 'undefined') {
-        alert('Payment Gateway SDK is loading. Please check your internet connection and try again.');
-        return;
-      }
-
-      const planBtn = event?.currentTarget || document.activeElement;
-      const originalBtnText = planBtn ? planBtn.textContent : '';
-      if (planBtn && planBtn.tagName === 'BUTTON') {
-        planBtn.disabled = true;
-        planBtn.textContent = 'Preparing Payment...';
-      }
-
-      try {
-        // STEP 1: Call Backend to Create Order (with Test Mode fallback)
-        let orderData = null;
-        try {
-          const orderResponse = await fetch('/api/create-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              amount: amountInPaise,
-              currency: 'INR',
-              receipt: `rcpt_${planName.toLowerCase()}_${Date.now()}`,
-              notes: {
-                plan: planName,
-                period: periodLabel,
-                email: user.email,
-                name: user.name || 'Noble Member'
-              }
-            })
-          });
-
-          if (orderResponse.ok) {
-            orderData = await orderResponse.json();
-          }
-        } catch (fetchErr) {
-          console.warn('Backend order endpoint unreachable, proceeding with Test Mode checkout:', fetchErr);
-        }
-
-        const razorpayKey = (orderData && orderData.key_id) || window.RAZORPAY_KEY_ID || 'rzp_test_TgASFu87ziLFNM';
-        const orderId = (orderData && orderData.order_id) || undefined;
-
-        // STEP 2: Configure & Open Razorpay Modal
-        const options = {
-          key: razorpayKey,
-          amount: (orderData && orderData.amount) || amountInPaise,
-          currency: (orderData && orderData.currency) || 'INR',
-          name: 'Shree Rajput Sagai Sambandh',
-          description: `Rajputana ${planName} Plan (${periodLabel}) [Test Mode]`,
-          image: 'images/logo.jpg',
-          ...(orderId ? { order_id: orderId } : {}),
-          prefill: {
-            name: user.name || '',
-            email: user.email || '',
-            contact: user.phone || ''
-          },
-          theme: {
-            color: '#8B1E3F' // Royal Rajput Maroon
-          },
-          modal: {
-            ondismiss: function() {
-              if (typeof showToast === 'function') {
-                showToast('Payment window dismissed by user.', 'normal');
-              } else {
-                console.log('Payment modal dismissed by user.');
-              }
-              if (planBtn && planBtn.tagName === 'BUTTON') {
-                planBtn.disabled = false;
-                planBtn.textContent = originalBtnText;
-              }
-            }
-          },
-          // STEP 3: On Payment Success -> Send to Backend to Verify Signature
-          handler: async function(paymentResult) {
-            try {
-              if (typeof showToast === 'function') {
-                showToast('Verifying payment with royal gateway...', 'gold');
-              }
-
-              let isVerified = false;
-              if (paymentResult.razorpay_signature) {
-                try {
-                  const verifyResponse = await fetch('/api/verify-payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      razorpay_order_id: paymentResult.razorpay_order_id,
-                      razorpay_payment_id: paymentResult.razorpay_payment_id,
-                      razorpay_signature: paymentResult.razorpay_signature
-                    })
-                  });
-
-                  const verifyResult = await verifyResponse.json();
-                  if (verifyResponse.ok && verifyResult.success) {
-                    isVerified = true;
-                  }
-                } catch (vNetErr) {
-                  console.warn('Backend verification call warning:', vNetErr);
-                }
-              }
-
-              if (isVerified || paymentResult.razorpay_payment_id) {
-                // Successful Payment! Upgrade user tier
-                user.tier = planName;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-
-                const users = JSON.parse(localStorage.getItem('users')) || [];
-                const updatedUsers = users.map(u => u.email.toLowerCase() === user.email.toLowerCase() ? { ...u, tier: planName } : u);
-                localStorage.setItem('users', JSON.stringify(updatedUsers));
-
-                // Sync with Supabase Profiles Table if Active
-                if (window.supabaseActive && window.supabaseClient) {
-                  window.supabaseClient
-                    .from('profiles')
-                    .update({ tier: planName })
-                    .eq('email', user.email)
-                    .then(({ error }) => {
-                      if (error) console.warn("Supabase tier sync warning:", error);
-                    });
-                }
-
-                alert(`👑 Khammaghani!\n\nTest Payment Successful!\nPayment ID: ${paymentResult.razorpay_payment_id}${paymentResult.razorpay_order_id ? '\nOrder ID: ' + paymentResult.razorpay_order_id : ''}\n\nYou have officially upgraded to the Shree Rajput Sagai Sambandh ${planName} Plan (${periodLabel}).`);
-                window.location.href = 'dashboard.html';
-              } else {
-                alert(`⚠️ Payment Verification Failed.\nPlease contact royal support with Payment ID: ${paymentResult.razorpay_payment_id}`);
-              }
-            } catch (vErr) {
-              console.error('Verification error:', vErr);
-              alert(`Network error verifying payment. Please contact support with Payment ID: ${paymentResult.razorpay_payment_id}`);
-            } finally {
-              if (planBtn && planBtn.tagName === 'BUTTON') {
-                planBtn.disabled = false;
-                planBtn.textContent = originalBtnText;
-              }
-            }
-          }
-        };
-
-        const rzp = new Razorpay(options);
-
-        // Handle payment failure event
-        rzp.on('payment.failed', function(failureResponse) {
-          console.error('Razorpay payment failed:', failureResponse.error);
-          alert(`Payment Failed: ${failureResponse.error.description || failureResponse.error.reason} (Code: ${failureResponse.error.code})`);
-          if (planBtn && planBtn.tagName === 'BUTTON') {
-            planBtn.disabled = false;
-            planBtn.textContent = originalBtnText;
-          }
-        });
-
-        rzp.open();
-
-      } catch (err) {
-        console.error('Checkout error:', err);
-        alert(`Could not initiate payment: ${err.message}`);
-        if (planBtn && planBtn.tagName === 'BUTTON') {
-          planBtn.disabled = false;
-          planBtn.textContent = originalBtnText;
-        }
-      }
+      // Open Royal Payment Modal (YouPI Primary + Razorpay Backup)
+      openRoyalPaymentModal({
+        planName,
+        period,
+        periodLabel,
+        amountInPaise,
+        isAddon: false
+      });
     }
 
-    // Purchase Addon handler with Razorpay integration
+    // Purchase Addon handler with YouPI & Razorpay integration
     async function purchaseAddon(addonName) {
       const currentUser = localStorage.getItem('currentUser');
       if (!currentUser) {
@@ -605,108 +1071,14 @@
         return;
       }
 
-      const user = JSON.parse(currentUser);
       const amountInPaise = getAddonPricingInPaise(addonName);
-
-      if (typeof Razorpay === 'undefined') {
-        alert('Payment Gateway SDK is loading. Please check your internet connection.');
-        return;
-      }
-
-      try {
-        let orderData = null;
-        try {
-          const orderResponse = await fetch('/api/create-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              amount: amountInPaise,
-              currency: 'INR',
-              receipt: `rcpt_addon_${Date.now()}`,
-              notes: {
-                addon: addonName,
-                email: user.email,
-                name: user.name || 'Noble Member'
-              }
-            })
-          });
-
-          if (orderResponse.ok) {
-            orderData = await orderResponse.json();
-          }
-        } catch (fetchErr) {
-          console.warn('Backend order endpoint unreachable, proceeding with Test Mode checkout:', fetchErr);
-        }
-
-        const razorpayKey = (orderData && orderData.key_id) || window.RAZORPAY_KEY_ID || 'rzp_test_TgASFu87ziLFNM';
-        const orderId = (orderData && orderData.order_id) || undefined;
-
-        const options = {
-          key: razorpayKey,
-          amount: (orderData && orderData.amount) || amountInPaise,
-          currency: (orderData && orderData.currency) || 'INR',
-          name: 'Shree Rajput Sagai Sambandh',
-          description: `Ancestral Add-On: ${addonName} [Test Mode]`,
-          image: 'images/logo.jpg',
-          ...(orderId ? { order_id: orderId } : {}),
-          prefill: {
-            name: user.name || '',
-            email: user.email || '',
-            contact: user.phone || ''
-          },
-          theme: {
-            color: '#8B1E3F'
-          },
-          modal: {
-            ondismiss: function() {
-              if (typeof showToast === 'function') {
-                showToast('Add-on checkout closed.', 'normal');
-              }
-            }
-          },
-          handler: async function(paymentResult) {
-            try {
-              let isVerified = false;
-              if (paymentResult.razorpay_signature) {
-                try {
-                  const verifyResponse = await fetch('/api/verify-payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      razorpay_order_id: paymentResult.razorpay_order_id,
-                      razorpay_payment_id: paymentResult.razorpay_payment_id,
-                      razorpay_signature: paymentResult.razorpay_signature
-                    })
-                  });
-                  const verifyResult = await verifyResponse.json();
-                  if (verifyResponse.ok && verifyResult.success) {
-                    isVerified = true;
-                  }
-                } catch (vErr) {}
-              }
-
-              if (isVerified || paymentResult.razorpay_payment_id) {
-                alert(`👑 Khammaghani!\n\nYour "${addonName}" package has been successfully acquired in Test Mode.\nPayment ID: ${paymentResult.razorpay_payment_id}\n\nOur royal concierge desk has registered your audit request and will contact you within 24 hours.`);
-              } else {
-                alert(`Payment verification issue with payment ID: ${paymentResult.razorpay_payment_id}`);
-              }
-            } catch (err) {
-              console.error('Addon verification error:', err);
-              alert('Error verifying payment. Please contact our concierge desk.');
-            }
-          }
-        };
-
-        const rzp = new Razorpay(options);
-        rzp.on('payment.failed', function(failureResponse) {
-          alert(`Payment Failed: ${failureResponse.error.description || failureResponse.error.reason}`);
-        });
-        rzp.open();
-
-      } catch (err) {
-        console.error('Addon checkout error:', err);
-        alert(`Could not initiate add-on checkout: ${err.message}`);
-      }
+      openRoyalPaymentModal({
+        planName: addonName,
+        period: 'addon',
+        periodLabel: 'Ancestral Add-On Service',
+        amountInPaise,
+        isAddon: true
+      });
     }
   </script>
 </body>

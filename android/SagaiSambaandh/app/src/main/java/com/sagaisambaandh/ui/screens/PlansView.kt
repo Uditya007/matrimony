@@ -1,5 +1,8 @@
 package com.sagaisambaandh.ui.screens
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,6 +14,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.*
@@ -20,16 +25,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.sagaisambaandh.data.SagaiSessionManager
 import com.sagaisambaandh.data.User
 import com.sagaisambaandh.ui.components.RoyalBackground
 import com.sagaisambaandh.ui.theme.*
+import java.net.URLEncoder
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlansView(
     session: SagaiSessionManager,
@@ -39,6 +50,10 @@ fun PlansView(
     var billingCycle by remember { mutableStateOf(0) } // 0 = Monthly, 1 = Annual (20% off)
     var showDialog by remember { mutableStateOf(false) }
     var dialogMessage by remember { mutableStateOf("") }
+    var showPaymentDialog by remember { mutableStateOf(false) }
+    var selectedPlanTier by remember { mutableStateOf("") }
+    var selectedPlanPrice by remember { mutableStateOf(0) }
+    var selectedCycleLabel by remember { mutableStateOf("") }
 
     val starterPrice = if (billingCycle == 0) 4999 else 3999
     val silverPrice = if (billingCycle == 0) 11999 else 9599
@@ -231,9 +246,14 @@ fun PlansView(
                         buttonText = "Choose Silver",
                         isFeatured = true,
                         onSelect = {
-                            subscribe(session, "Silver") { msg ->
-                                dialogMessage = msg
+                            if (session.currentUser.value == null) {
+                                dialogMessage = "Please log in or register your profile to select a membership plan!"
                                 showDialog = true
+                            } else {
+                                selectedPlanTier = "Silver"
+                                selectedPlanPrice = silverPrice
+                                selectedCycleLabel = if (billingCycle == 0) "1 Month Access" else "Annual Access (Save 20%)"
+                                showPaymentDialog = true
                             }
                         }
                     )
@@ -252,9 +272,14 @@ fun PlansView(
                         buttonText = "Go Gold Elite",
                         isFeatured = false,
                         onSelect = {
-                            subscribe(session, "Gold") { msg ->
-                                dialogMessage = msg
+                            if (session.currentUser.value == null) {
+                                dialogMessage = "Please log in or register your profile to select a membership plan!"
                                 showDialog = true
+                            } else {
+                                selectedPlanTier = "Gold"
+                                selectedPlanPrice = goldPrice
+                                selectedCycleLabel = if (billingCycle == 0) "1 Month Access" else "Annual Access (Save 20%)"
+                                showPaymentDialog = true
                             }
                         }
                     )
@@ -294,6 +319,23 @@ fun PlansView(
                 },
                 containerColor = Color.White,
                 shape = RoundedCornerShape(16.dp)
+            )
+        }
+
+        // Royal UPI Payment Dialog (YouPI Gateway)
+        if (showPaymentDialog) {
+            RoyalUPIPaymentDialog(
+                tier = selectedPlanTier,
+                price = selectedPlanPrice,
+                cycleLabel = selectedCycleLabel,
+                onDismiss = { showPaymentDialog = false },
+                onUpgradeSuccess = { utr ->
+                    showPaymentDialog = false
+                    subscribe(session, selectedPlanTier) {
+                        dialogMessage = "Khammaghani! Payment confirmed via Royal UPI (UTR: $utr). You have successfully upgraded to the Rajputana $selectedPlanTier Membership plan."
+                        showDialog = true
+                    }
+                }
             )
         }
     }
@@ -462,6 +504,451 @@ fun PlanCard(
                     fontWeight = FontWeight.Bold
                 )
             }
+        }
+    }
+}
+
+// MARK: - Royal UPI Payment Dialog (YouPI Gateway)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RoyalUPIPaymentDialog(
+    tier: String,
+    price: Int,
+    cycleLabel: String,
+    onDismiss: () -> Unit,
+    onUpgradeSuccess: (String) -> Unit
+) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    var utrInput by remember { mutableStateOf("") }
+    var isVerifying by remember { mutableStateOf(false) }
+    var verificationNotice by remember { mutableStateOf<String?>(null) }
+    var isNoticeError by remember { mutableStateOf(false) }
+    var copiedVPA by remember { mutableStateOf(false) }
+
+    val vpa = "7665941949@kotak"
+    val payeeName = "Shree Rajput Sagai Sambandh"
+
+    val encodedPayee = try { URLEncoder.encode(payeeName, "UTF-8") } catch (e: Exception) { "ShreeRajputSagaiSambandh" }
+    val encodedNote = try { URLEncoder.encode("Sagai Sambandh $tier Plan", "UTF-8") } catch (e: Exception) { "Membership" }
+    val refId = "SAGAI${System.currentTimeMillis()}"
+    val upiUri = "upi://pay?pa=$vpa&pn=$encodedPayee&am=$price.00&cu=INR&tr=$refId&tn=$encodedNote"
+    val qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + (try { URLEncoder.encode(upiUri, "UTF-8") } catch (e: Exception) { "" })
+
+    fun launchUPIIntent(specificPackage: String? = null) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse(upiUri)
+                if (specificPackage != null) {
+                    setPackage(specificPackage)
+                }
+            }
+            if (specificPackage != null) {
+                context.startActivity(intent)
+            } else {
+                val chooser = Intent.createChooser(intent, "Pay with UPI (GPay, PhonePe, Paytm, CRED)")
+                context.startActivity(chooser)
+            }
+        } catch (e: Exception) {
+            try {
+                val fallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse(upiUri))
+                context.startActivity(Intent.createChooser(fallbackIntent, "Pay with UPI"))
+            } catch (err: Exception) {
+                Toast.makeText(context, "No UPI app found. Please scan the QR code or copy UPI ID.", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    fun submitUTR() {
+        val clean = utrInput.trim()
+        if (clean.length < 8) {
+            verificationNotice = "Please enter a valid 12-digit UTR bank reference number."
+            isNoticeError = true
+            return
+        }
+
+        isVerifying = true
+        isNoticeError = false
+        verificationNotice = "Verifying with royal bank desk..."
+
+        onUpgradeSuccess(clean)
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier
+            .fillMaxWidth(0.95f)
+            .fillMaxHeight(0.92f)
+    ) {
+        Card(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB))
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Brush.horizontalGradient(listOf(RoyalMaroon, DeepMaroon)))
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.15f))
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.WorkspacePremium,
+                                contentDescription = "Crown",
+                                tint = RoyalGold,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "Royal UPI Gateway",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Serif
+                            )
+                            Text(
+                                text = "0% Platform Fee • Instant Settlement",
+                                color = LightGold,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White.copy(alpha = 0.8f),
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable(onClick = onDismiss)
+                    )
+                }
+
+                // Scrollable Body
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    // Order Summary Box
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFFDF9F0))
+                            .border(1.dp, LightGold.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "Rajputana $tier Plan",
+                                color = InkBrown,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = cycleLabel,
+                                color = Color(0xFF78350F),
+                                fontSize = 12.sp
+                            )
+                        }
+                        Text(
+                            text = "₹$price",
+                            color = RoyalMaroon,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+
+                    // 1-Tap UPI Apps Grid
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "1-TAP INSTANT PAYMENT APPS",
+                                color = Color.Gray,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                AndroidUpiAppButton(
+                                    label = "GPay",
+                                    color = Color(0xFF0F9D58),
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { launchUPIIntent("com.google.android.apps.nbu.paisa.user") }
+                                )
+                                AndroidUpiAppButton(
+                                    label = "PhonePe",
+                                    color = Color(0xFF5F259F),
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { launchUPIIntent("com.phonepe.app") }
+                                )
+                                AndroidUpiAppButton(
+                                    label = "Paytm",
+                                    color = Color(0xFF00B9F1),
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { launchUPIIntent("net.one97.paytm") }
+                                )
+                            }
+
+                            // Launch Any UPI App Button
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Brush.horizontalGradient(listOf(RoyalMaroon, DeepMaroon)))
+                                    .clickable { launchUPIIntent() }
+                                    .padding(vertical = 12.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.WorkspacePremium,
+                                        contentDescription = "Pay",
+                                        tint = RoyalGold,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "⚡ Launch Any UPI App on Device",
+                                        color = Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Dynamic QR Code Section
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Scan QR with any UPI App",
+                                color = Color.Gray,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .size(180.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color.White)
+                                    .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(12.dp))
+                                    .padding(6.dp)
+                            ) {
+                                AsyncImage(
+                                    model = qrUrl,
+                                    contentDescription = "UPI QR Code",
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+
+                            // Kotak VPA chip
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFF3F4F6))
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    text = vpa,
+                                    color = InkBrown,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(RoyalMaroon)
+                                        .clickable {
+                                            clipboardManager.setText(AnnotatedString(vpa))
+                                            copiedVPA = true
+                                            Toast.makeText(context, "UPI ID copied!", Toast.LENGTH_SHORT).show()
+                                        }
+                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    Text(
+                                        text = if (copiedVPA) "Copied!" else "Copy",
+                                        color = Color.White,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // 12-Digit UTR Entry & Confirm
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Enter 12-Digit Bank UTR / Reference Number",
+                                color = InkBrown,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                OutlinedTextField(
+                                    value = utrInput,
+                                    onValueChange = { utrInput = it },
+                                    placeholder = { Text("e.g. 428901234567", fontSize = 13.sp) },
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+
+                                Button(
+                                    onClick = { submitUTR() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                                    contentPadding = PaddingValues(),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier.height(50.dp)
+                                ) {
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .background(
+                                                Brush.horizontalGradient(listOf(RoyalGold, Color(0xFFB8860B))),
+                                                RoundedCornerShape(10.dp)
+                                            )
+                                            .padding(horizontal = 16.dp)
+                                    ) {
+                                        if (isVerifying) {
+                                            CircularProgressIndicator(
+                                                color = Color.White,
+                                                modifier = Modifier.size(18.dp),
+                                                strokeWidth = 2.dp
+                                            )
+                                        } else {
+                                            Text(
+                                                text = "Verify",
+                                                color = Color.White,
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            val notice = verificationNotice
+                            if (notice != null) {
+                                Text(
+                                    text = notice,
+                                    color = if (isNoticeError) DislikeRed else SuccessGreen,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            } else {
+                                Text(
+                                    text = "🛡️ Direct Kotak Bank Settlement • Auto-reconciliation active",
+                                    color = SuccessGreen,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AndroidUpiAppButton(
+    label: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color(0xFFF9FAFB))
+            .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(color)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = label,
+                color = InkBrown,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

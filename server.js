@@ -172,6 +172,88 @@ app.post('/api/verify-payment', (req, res) => {
   }
 });
 
+// YouPI Payment Gateway Endpoints
+const youpiGateway = require('./api/youpi-gateway');
+
+/**
+ * YouPI PG - Config Endpoint
+ * GET /api/youpi/config
+ */
+app.get('/api/youpi/config', (req, res) => {
+  res.json({
+    upiId: youpiGateway.MERCHANT_VPA,
+    payeeName: youpiGateway.MERCHANT_NAME,
+    apiBase: youpiGateway.YOUPI_API_BASE,
+    checkoutBase: youpiGateway.YOUPI_CHECKOUT_BASE
+  });
+});
+
+/**
+ * YouPI PG - Create Order Session
+ * POST /api/youpi/create-order
+ * Body: { amount (in paise), planName, customer: { name, email, phone } }
+ */
+app.post('/api/youpi/create-order', async (req, res) => {
+  try {
+    const { amount, planName, customer, orderId } = req.body;
+    if (!amount || isNaN(amount) || Number(amount) < 100) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid amount. Minimum amount must be at least 100 paise.'
+      });
+    }
+
+    const result = await youpiGateway.createYoupiOrder({
+      orderId,
+      amountPaise: amount,
+      planName,
+      customer
+    });
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('Error creating YouPI order:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * YouPI PG - Check Payment Status
+ * GET /api/youpi/payment-status/:id
+ */
+app.get('/api/youpi/payment-status/:id', async (req, res) => {
+  try {
+    const status = await youpiGateway.getYoupiPaymentStatus(req.params.id);
+    return res.json(status);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * YouPI PG - Verify UTR Reference
+ * POST /api/youpi/verify-utr
+ * Body: { paymentId, orderId, utr, planName, userEmail }
+ */
+app.post('/api/youpi/verify-utr', async (req, res) => {
+  try {
+    const { paymentId, orderId, utr, planName, userEmail } = req.body;
+    if (!utr) {
+      return res.status(400).json({ success: false, error: 'UTR number is required' });
+    }
+    const result = await youpiGateway.verifyYoupiUtr({
+      paymentId,
+      orderId,
+      utr,
+      planName,
+      userEmail
+    });
+    return res.json(result);
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Admin Vault Endpoints
 app.post('/api/admin-auth', require('./api/admin-auth'));
 app.post('/api/admin-members', require('./api/admin-members'));
