@@ -32,7 +32,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=2.9">
 </head>
 <body class="auth-body">
 
@@ -53,138 +53,198 @@
     </div>
   </header>
 
-  <div class="auth-card" id="loginCard">
-    <div class="auth-header">
-      <h1 class="auth-heading" id="loginMainHeading">Member Login</h1>
-      <p>Log in to access your royal matchmaking profile</p>
+  <div class="auth-card auth-card-clean" id="loginCard">
+    <div class="auth-header" style="text-align: center; margin-bottom: 24px;">
+      <h1 class="auth-heading" id="loginMainHeading" style="font-family: var(--font-royal); font-size: 1.85rem; color: #FCD34D; margin-bottom: 6px;">Member Login</h1>
+      <p id="loginSubHeading" style="color: rgba(255, 255, 255, 0.85); font-size: 0.95rem; margin: 0;">Enter your details to continue</p>
     </div>
 
-    <!-- Mode Switcher: Password Login vs OTP Verification -->
-    <div class="auth-mode-tabs" role="tablist">
-      <button type="button" class="auth-mode-tab-btn active" id="tabBtnPassword" onclick="switchLoginAuthMode('password')">
-        🔑 Password Login
-      </button>
-      <button type="button" class="auth-mode-tab-btn" id="tabBtnOtp" onclick="switchLoginAuthMode('otp')">
-        📱 Instant OTP Login
-      </button>
-    </div>
-
-    <!-- PANEL 1: OTP Verification Login (Mobile or Email) -->
-    <div id="panelOtpLogin" style="display: none;">
-      <!-- Channel Selector: Mobile Number vs Email Address -->
-      <div class="auth-channel-selector">
-        <button type="button" class="auth-channel-btn active" id="channelBtnPhone" onclick="setOtpChannel('phone')">
-          <span>💬</span> WhatsApp / Mobile
-        </button>
-        <button type="button" class="auth-channel-btn" id="channelBtnEmail" onclick="setOtpChannel('email')">
-          <span>✉️</span> Email Address
-        </button>
-      </div>
-
-      <!-- STEP 1: Enter Mobile / Email -->
-      <div id="loginOtpStep1">
-        <!-- Phone Input Group -->
+    <!-- Container for Step 1 input views -->
+    <div id="loginOtpStep1">
+      <!-- VIEW 1: Mobile / WhatsApp OTP (Default - Matches Reference Mockup Exactly) -->
+      <div id="authViewPhone">
         <div id="otpInputGroupPhone">
-          <div class="form-group">
-            <label for="loginOtpPhone" style="color: #FCD34D; font-weight: 600; font-size: 0.82rem; letter-spacing: 0.5px;">WhatsApp Mobile Number <span style="color: #ff6b6b;">*</span></label>
-            <div style="display: flex; gap: 8px;">
-              <span class="auth-prefix-badge">+91</span>
-              <input type="tel" id="loginOtpPhone" maxlength="10" placeholder="10-digit mobile number" style="flex: 1;" inputmode="numeric">
+          <div class="auth-phone-row">
+            <div class="auth-country-select-wrap" title="Select Country Code">
+              <select id="loginCountryCode" class="auth-country-code-select" aria-label="Country Code">
+                <option value="+91" selected>+91 (India)</option>
+                <option value="+1">+1 (USA/Canada)</option>
+                <option value="+44">+44 (UK)</option>
+                <option value="+971">+971 (UAE)</option>
+                <option value="+61">+61 (Australia)</option>
+                <option value="+65">+65 (Singapore)</option>
+                <option value="+966">+966 (Saudi Arabia)</option>
+              </select>
+              <span class="auth-country-code-display" id="countryCodeDisplay">+91</span>
+              <svg class="auth-caret-icon" width="10" height="10" viewBox="0 0 24 24">
+                <path d="M7 10l5 5 5-5z"/>
+              </svg>
             </div>
-            <div style="font-size: 0.76rem; color: #E2E8F0; margin-top: 6px; opacity: 0.9;">
-              💬 Instant 6-digit OTP will be delivered directly to your WhatsApp number.
-            </div>
+            <input type="tel" id="loginOtpPhone" class="auth-phone-input" maxlength="10" placeholder="Mobile no." inputmode="numeric" autocomplete="tel">
           </div>
-          <button type="button" class="btn btn-primary" id="btnSendPhoneOtp" onclick="handleSendLoginOtp('phone')" style="width: 100%; margin-top: 8px; padding: 12px; font-weight: 700; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-color: #25D366; color: #FFF;">
-            💬 Send WhatsApp Verification Code
+
+          <button type="button" class="btn-auth-pill btn-auth-primary" id="btnSendPhoneOtp" onclick="handleSendLoginOtp('phone')">
+            Get OTP
           </button>
         </div>
 
-        <!-- Email Input Group -->
-        <div id="otpInputGroupEmail" style="display: none;">
-          <div class="form-group">
-            <label for="loginOtpEmail" style="color: #FCD34D; font-weight: 600; font-size: 0.82rem; letter-spacing: 0.5px;">Registered Email Address <span style="color: #ff6b6b;">*</span></label>
-            <input type="email" id="loginOtpEmail" placeholder="e.g. kunwar@shreerajputsagaisambandh.com">
-            <div style="font-size: 0.76rem; color: #E2E8F0; margin-top: 6px; opacity: 0.9;">
-              🔒 A 6-digit royal verification code will be sent to your email address.
-            </div>
-          </div>
-          <button type="button" class="btn btn-primary" id="btnSendEmailOtp" onclick="handleSendLoginOtp('email')" style="width: 100%; margin-top: 8px; padding: 12px; font-weight: 700;">
-            ✉️ Send Email Verification Code
+        <div class="auth-text-link-wrap">
+          <button type="button" class="auth-text-link" onclick="switchLoginView('password')">
+            Login with Password
+          </button>
+        </div>
+
+        <div class="auth-divider-line">
+          <hr>
+          <span>Or</span>
+          <hr>
+        </div>
+
+        <div class="auth-alt-stack">
+          <button type="button" class="btn-auth-pill btn-auth-google" id="btnGoogleAuth">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+            </svg>
+            <span>Continue with Google</span>
+          </button>
+
+          <button type="button" class="btn-auth-pill btn-auth-outline" id="btnContinueEmail" onclick="switchLoginView('email')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <span>Continue with Email</span>
           </button>
         </div>
       </div>
 
-      <!-- STEP 2: Enter & Verify OTP -->
-      <div id="loginOtpStep2" style="display: none;">
-        <div style="background: rgba(37, 211, 102, 0.14); border: 1.5px solid rgba(37, 211, 102, 0.4); border-radius: var(--border-radius); padding: 14px; margin-bottom: 16px; font-size: 0.86rem; text-align: left; color: #E2E8F0;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 1.2rem;">💬</span>
-            <div>Verification code sent to WhatsApp: <strong id="loginOtpTargetDisplay" style="color: #25D366;">+91 9928592159</strong></div>
+      <!-- VIEW 2: Password Login (Triggered by "Login with Password") -->
+      <div id="authViewPassword" style="display: none;">
+        <form id="loginForm">
+          <div style="margin-bottom: 14px;">
+            <input type="text" id="loginEmail" class="auth-pill-input" placeholder="Mobile no. or Email" required autocomplete="username">
           </div>
-          <div style="font-size: 0.78rem; color: #CBD5E0; margin-top: 6px; line-height: 1.45;">
-            Please open WhatsApp on your mobile phone and enter the 6-digit verification code below:
+
+          <div style="margin-bottom: 18px;">
+            <input type="password" id="loginPassword" class="auth-pill-input" placeholder="Password" required autocomplete="current-password">
+            <div style="text-align: right; margin-top: 6px;">
+              <a href="javascript:void(0)" onclick="handleForgotPasswordClick()" style="font-size: 0.8rem; color: #FCD34D; text-decoration: underline;">Forgot Password?</a>
+            </div>
           </div>
+
+          <button type="submit" class="btn-auth-pill btn-auth-primary" id="loginSubmitBtn">
+            Log In
+          </button>
+        </form>
+
+        <div class="auth-text-link-wrap">
+          <button type="button" class="auth-text-link" onclick="switchLoginView('phone')">
+            Login with OTP
+          </button>
         </div>
 
-        <div class="form-group">
-          <label for="loginOtpCodeInput" style="font-weight: 600; margin-bottom: 6px; display: block; color: #FCD34D; font-size: 0.84rem;">Enter 6-Digit OTP</label>
-          <input type="text" id="loginOtpCodeInput" class="auth-otp-input" maxlength="6" inputmode="numeric" placeholder="• • • • • •">
-          <span id="loginOtpCodeError" style="color: #ff6b6b; font-size: 0.8rem; display: none; margin-top: 5px; font-weight: 600;">Invalid OTP code. Please enter the valid 6-digit code.</span>
+        <div class="auth-divider-line">
+          <hr>
+          <span>Or</span>
+          <hr>
         </div>
 
-        <button type="button" class="btn btn-primary" id="btnVerifyLoginOtp" onclick="handleVerifyLoginOtp()" style="width: 100%; margin-top: 8px; padding: 12px; font-weight: 700;">
-          🛡️ Verify OTP & Access Dashboard
-        </button>
+        <div class="auth-alt-stack">
+          <button type="button" class="btn-auth-pill btn-auth-google" id="btnGoogleAuthPass">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+            </svg>
+            <span>Continue with Google</span>
+          </button>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 0.82rem;">
-          <span id="loginOtpCountdown" style="color: #CBD5E0;">Resend in 45s</span>
-          <button type="button" id="btnResendLoginOtp" onclick="handleResendLoginOtp()" style="background: none; border: none; color: #FCD34D; font-weight: 700; cursor: pointer; text-decoration: underline; display: none;">Resend OTP</button>
-          <a href="javascript:void(0)" onclick="resetLoginOtpStep()" style="color: #FCD34D; font-weight: 600; text-decoration: underline;">← Change Mobile / Email</a>
+          <button type="button" class="btn-auth-pill btn-auth-outline" onclick="switchLoginView('email')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <span>Continue with Email</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- VIEW 3: Email OTP Screen (Triggered by "Continue with Email") -->
+      <div id="authViewEmail" style="display: none;">
+        <div id="otpInputGroupEmail">
+          <div style="margin-bottom: 20px;">
+            <input type="email" id="loginOtpEmail" class="auth-pill-input" placeholder="Email address" autocomplete="email">
+          </div>
+
+          <button type="button" class="btn-auth-pill btn-auth-primary" id="btnSendEmailOtp" onclick="handleSendLoginOtp('email')">
+            Get OTP
+          </button>
+        </div>
+
+        <div class="auth-text-link-wrap">
+          <button type="button" class="auth-text-link" onclick="switchLoginView('phone')">
+            Login with Mobile Number
+          </button>
+        </div>
+
+        <div class="auth-divider-line">
+          <hr>
+          <span>Or</span>
+          <hr>
+        </div>
+
+        <div class="auth-alt-stack">
+          <button type="button" class="btn-auth-pill btn-auth-google" id="btnGoogleAuthEmail">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+            </svg>
+            <span>Continue with Google</span>
+          </button>
+
+          <button type="button" class="btn-auth-pill btn-auth-outline" onclick="switchLoginView('password')">
+            <span>Login with Password</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- PANEL 2: Password Login (Email or Phone + Password) -->
-    <div id="panelPasswordLogin">
-      <form id="loginForm">
-        <div class="form-group">
-          <label for="loginEmail" style="color: #FCD34D; font-weight: 600; font-size: 0.82rem;">Email Address or Mobile Number</label>
-          <input type="text" id="loginEmail" placeholder="e.g. 9928592159 or royal@shreerajputsagaisambandh.com" required>
+    <!-- STEP 2: Enter & Verify OTP (Triggered after Get OTP) -->
+    <div id="loginOtpStep2" style="display: none;">
+      <div class="auth-otp-status-badge">
+        <span class="auth-badge-icon">💬</span>
+        <div>
+          <div style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.75);">Verification code sent to WhatsApp:</div>
+          <div id="loginOtpTargetDisplay" style="color: #25D366; font-weight: 700; font-size: 0.98rem; letter-spacing: 0.5px;">+91 9928592159</div>
         </div>
+      </div>
 
-        <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label for="loginPassword" style="margin: 0; color: #FCD34D; font-weight: 600; font-size: 0.82rem;">Regal Password</label>
-            <a href="javascript:void(0)" onclick="handleForgotPasswordClick()" style="font-size: 0.78rem; color: #FCD34D; text-decoration: underline; font-weight: 600;">Forgot Password?</a>
-          </div>
-          <input type="password" id="loginPassword" placeholder="••••••••" required>
-        </div>
+      <div style="margin-bottom: 16px;">
+        <input type="text" id="loginOtpCodeInput" class="auth-otp-input" maxlength="6" inputmode="numeric" placeholder="• • • • • •" autocomplete="one-time-code">
+        <div id="loginOtpCodeError" style="color: #ff6b6b; font-size: 0.82rem; display: none; margin-top: 6px; text-align: center; font-weight: 600;">Invalid OTP code. Please enter the valid 6-digit code.</div>
+      </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;" id="loginSubmitBtn">Access Dashboard</button>
-      </form>
+      <button type="button" class="btn-auth-pill btn-auth-primary" id="btnVerifyLoginOtp" onclick="handleVerifyLoginOtp()">
+        Verify & Continue
+      </button>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; font-size: 0.86rem;">
+        <span id="loginOtpCountdown" style="color: rgba(255, 255, 255, 0.7);">Resend in 45s</span>
+        <button type="button" id="btnResendLoginOtp" onclick="handleResendLoginOtp()" style="background: none; border: none; color: #FCD34D; font-weight: 700; cursor: pointer; text-decoration: underline; display: none; padding: 0;">Resend OTP</button>
+        <button type="button" onclick="resetLoginOtpStep()" class="auth-text-link" style="color: #FCD34D; font-weight: 600; text-decoration: underline; background: none; border: none; cursor: pointer; padding: 0;">← Change Number</button>
+      </div>
     </div>
 
-    <!-- Divider -->
-    <div style="display: flex; align-items: center; margin: 20px 0; text-align: center;">
-      <hr style="flex: 1; border: none; border-top: 1px solid rgba(170, 124, 17, 0.15);">
-      <span style="padding: 0 10px; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Or Connect Via</span>
-      <hr style="flex: 1; border: none; border-top: 1px solid rgba(170, 124, 17, 0.15);">
-    </div>
-
-    <!-- Google Login Button -->
-    <button type="button" class="btn btn-google-auth" id="btnGoogleAuth" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; font-weight: 600;">
-      <svg width="18" height="18" viewBox="0 0 24 24">
-        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
-        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
-      </svg>
-      Continue with Google
-    </button>
-
-    <div class="auth-footer">
-      <p>New to Shree Rajput Sagai Sambandh? <a href="register.html" id="registerRedirectLink">Create Noble Profile</a></p>
+    <div class="auth-footer" style="text-align: center; margin-top: 24px;">
+      <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.9rem; margin: 0;">
+        New to Shree Rajput Sagai Sambandh? <a href="register.html" id="registerRedirectLink" style="color: #FCD34D; font-weight: 700; text-decoration: underline;">Create Noble Profile</a>
+      </p>
     </div>
   </div>
 
@@ -197,6 +257,6 @@
   <!-- Supabase JS Client SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=2.9"></script>
 </body>
 </html>

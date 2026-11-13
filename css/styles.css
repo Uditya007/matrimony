@@ -5471,6 +5471,274 @@ body:has(.dashboard-subnav) {
 }
 
 /* ==========================================================================
+   Modern Minimalist Auth Screen Layout (Reference Mockup)
+   Maintains deep royal burgundy & gold theme with clean modern pill layout
+   ========================================================================== */
+
+.auth-card.auth-card-clean {
+  max-width: 440px;
+  width: 100%;
+  padding: 42px 36px 36px;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.5);
+  border: 1.5px solid rgba(212, 175, 55, 0.35);
+  background: var(--bg-card);
+  border-radius: 20px;
+  box-sizing: border-box;
+}
+
+.auth-phone-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.auth-country-select-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 52px;
+  min-width: 92px;
+  padding: 0 14px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1.5px solid rgba(212, 175, 55, 0.45);
+  border-radius: 10px;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.auth-country-select-wrap:focus-within,
+.auth-country-select-wrap:hover {
+  border-color: #FCD34D;
+  box-shadow: 0 0 12px rgba(252, 211, 77, 0.25);
+}
+
+.auth-country-code-select {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+  background: transparent;
+  color: #000;
+}
+
+.auth-country-code-select option {
+  background: #2a040b;
+  color: #ffffff;
+}
+
+.auth-country-code-display {
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+}
+
+.auth-caret-icon {
+  fill: #FCD34D;
+  margin-left: 2px;
+  transition: transform 0.2s;
+}
+
+.auth-phone-input {
+  flex: 1;
+  height: 52px !important;
+  padding: 0 18px !important;
+  background: rgba(0, 0, 0, 0.45) !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.45) !important;
+  border-radius: 10px !important;
+  color: #FFFFFF !important;
+  font-size: 1.02rem !important;
+  outline: none !important;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.auth-pill-input {
+  width: 100%;
+  height: 52px !important;
+  padding: 0 18px !important;
+  background: rgba(0, 0, 0, 0.45) !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.45) !important;
+  border-radius: 10px !important;
+  color: #FFFFFF !important;
+  font-size: 1rem !important;
+  outline: none !important;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.auth-phone-input::placeholder,
+.auth-pill-input::placeholder {
+  color: rgba(255, 255, 255, 0.55) !important;
+  font-size: 0.98rem;
+}
+
+.auth-phone-input:focus,
+.auth-pill-input:focus {
+  border-color: #FCD34D !important;
+  box-shadow: 0 0 15px rgba(252, 211, 77, 0.35) !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Pill Action Buttons (Image 2 Mockup Style) */
+.btn-auth-pill {
+  width: 100%;
+  height: 50px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 1.02rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
+  outline: none;
+  text-decoration: none;
+}
+
+.btn-auth-primary {
+  background: linear-gradient(135deg, #E8C766 0%, #C9A227 50%, #AA7C11 100%);
+  border: none;
+  color: #1A050B;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+}
+
+.btn-auth-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(212, 175, 55, 0.45);
+  filter: brightness(1.06);
+}
+
+.btn-auth-primary:active {
+  transform: translateY(0);
+}
+
+.auth-text-link-wrap {
+  text-align: center;
+  margin: 16px 0 18px;
+}
+
+.auth-text-link {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.96rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s;
+  font-family: inherit;
+}
+
+.auth-text-link:hover {
+  color: #FCD34D;
+}
+
+.auth-divider-line {
+  display: flex;
+  align-items: center;
+  margin: 18px 0;
+  text-align: center;
+}
+
+.auth-divider-line hr {
+  flex: 1;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  margin: 0;
+}
+
+.auth-divider-line span {
+  padding: 0 14px;
+  font-size: 0.86rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.auth-alt-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-auth-google {
+  background: #FFFFFF;
+  border: 1.5px solid #FFFFFF;
+  color: #1F2937;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-auth-google:hover {
+  background: #F8FAFC;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+}
+
+.btn-auth-outline {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(212, 175, 55, 0.4);
+  color: #FFFFFF;
+}
+
+.btn-auth-outline:hover {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: #FCD34D;
+  color: #FCD34D;
+  transform: translateY(-1px);
+}
+
+.auth-otp-status-badge {
+  background: rgba(37, 211, 102, 0.12);
+  border: 1.5px solid rgba(37, 211, 102, 0.4);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.auth-badge-icon {
+  font-size: 1.35rem;
+}
+
+@media (max-width: 480px) {
+  .auth-card.auth-card-clean {
+    padding: 30px 20px 26px !important;
+    border-radius: 16px !important;
+  }
+  .auth-phone-row {
+    gap: 8px;
+  }
+  .auth-country-select-wrap {
+    min-width: 82px;
+    padding: 0 10px;
+    height: 48px;
+  }
+  .auth-phone-input,
+  .auth-pill-input {
+    height: 48px !important;
+  }
+  .btn-auth-pill {
+    height: 48px;
+  }
+}
+
+/* ==========================================================================
    Kunwar AI Lineage Matchmaker & Smart Search Styles
    ========================================================================== */
 

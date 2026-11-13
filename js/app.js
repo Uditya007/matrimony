@@ -1198,49 +1198,58 @@ async function findUserProfileByIdentifier(identifier) {
   return null;
 }
 
-// ─── Mode Switcher (OTP vs Password) ─────────────────────────────────
-window.switchLoginAuthMode = function(mode) {
-  const tabOtp = document.getElementById('tabBtnOtp');
-  const tabPass = document.getElementById('tabBtnPassword');
-  const panelOtp = document.getElementById('panelOtpLogin');
-  const panelPass = document.getElementById('panelPasswordLogin');
+// ─── Modern Auth View Switcher (Phone OTP / Password / Email OTP) ──────
+window.switchLoginView = function(view) {
+  const viewPhone = document.getElementById('authViewPhone');
+  const viewPassword = document.getElementById('authViewPassword');
+  const viewEmail = document.getElementById('authViewEmail');
+  const viewOtpStep2 = document.getElementById('loginOtpStep2');
+  const step1 = document.getElementById('loginOtpStep1');
+  const subHeading = document.getElementById('loginSubHeading');
 
-  if (mode === 'otp') {
-    if (tabOtp) tabOtp.classList.add('active');
-    if (tabPass) tabPass.classList.remove('active');
-    if (panelOtp) panelOtp.style.display = 'block';
-    if (panelPass) panelPass.style.display = 'none';
-  } else {
-    if (tabPass) tabPass.classList.add('active');
-    if (tabOtp) tabOtp.classList.remove('active');
-    if (panelPass) panelPass.style.display = 'block';
-    if (panelOtp) panelOtp.style.display = 'none';
+  if (step1) step1.style.display = 'block';
+  if (viewOtpStep2) viewOtpStep2.style.display = 'none';
+
+  if (viewPhone) viewPhone.style.display = 'none';
+  if (viewPassword) viewPassword.style.display = 'none';
+  if (viewEmail) viewEmail.style.display = 'none';
+
+  // Remove any previous "not registered" prompt
+  const existingPrompt = document.getElementById('loginNotRegisteredPrompt');
+  if (existingPrompt) existingPrompt.remove();
+
+  if (view === 'password') {
+    if (viewPassword) viewPassword.style.display = 'block';
+    if (subHeading) subHeading.textContent = 'Enter your password to continue';
     const emailField = document.getElementById('loginEmail');
-    if (emailField) emailField.focus();
+    if (emailField) setTimeout(() => emailField.focus(), 100);
+  } else if (view === 'email') {
+    if (viewEmail) viewEmail.style.display = 'block';
+    if (subHeading) subHeading.textContent = 'Enter your email to continue';
+    const emailField = document.getElementById('loginOtpEmail');
+    if (emailField) setTimeout(() => emailField.focus(), 100);
+  } else {
+    // Default view: phone OTP
+    if (viewPhone) viewPhone.style.display = 'block';
+    if (subHeading) subHeading.textContent = 'Enter your details to continue';
+    const phoneField = document.getElementById('loginOtpPhone');
+    if (phoneField) setTimeout(() => phoneField.focus(), 100);
   }
 };
 
-// ─── Channel Switcher (Mobile vs Email) ───────────────────────────────
-window.setOtpChannel = function(channel) {
-  const btnPhone = document.getElementById('channelBtnPhone');
-  const btnEmail = document.getElementById('channelBtnEmail');
-  const groupPhone = document.getElementById('otpInputGroupPhone');
-  const groupEmail = document.getElementById('otpInputGroupEmail');
-
-  if (channel === 'phone') {
-    if (btnPhone) btnPhone.classList.add('active');
-    if (btnEmail) btnEmail.classList.remove('active');
-    if (groupPhone) groupPhone.style.display = 'block';
-    if (groupEmail) groupEmail.style.display = 'none';
-    const phoneIn = document.getElementById('loginOtpPhone');
-    if (phoneIn) phoneIn.focus();
+window.switchLoginAuthMode = function(mode) {
+  if (mode === 'password') {
+    window.switchLoginView('password');
   } else {
-    if (btnEmail) btnEmail.classList.add('active');
-    if (btnPhone) btnPhone.classList.remove('active');
-    if (groupEmail) groupEmail.style.display = 'block';
-    if (groupPhone) groupPhone.style.display = 'none';
-    const emailIn = document.getElementById('loginOtpEmail');
-    if (emailIn) emailIn.focus();
+    window.switchLoginView('phone');
+  }
+};
+
+window.setOtpChannel = function(channel) {
+  if (channel === 'email') {
+    window.switchLoginView('email');
+  } else {
+    window.switchLoginView('phone');
   }
 };
 
@@ -1262,14 +1271,15 @@ window.handleSendLoginOtp = async function(channel) {
       return;
     }
 
+    const cc = document.getElementById('loginCountryCode')?.value || '+91';
     target = digits;
-    displayTarget = `+91 ${digits}`;
+    displayTarget = `${cc} ${digits}`;
 
     const btnSend = document.getElementById('btnSendPhoneOtp');
     const origBtnText = btnSend ? btnSend.innerHTML : '';
     if (btnSend) {
       btnSend.disabled = true;
-      btnSend.innerHTML = '⏳ Checking Registration...';
+      btnSend.innerHTML = '⏳ Checking...';
     }
 
     // Verify whether this mobile number is registered
@@ -1280,23 +1290,24 @@ window.handleSendLoginOtp = async function(channel) {
         btnSend.disabled = false;
         btnSend.innerHTML = origBtnText;
       }
-      showToast(`⚠️ Mobile number +91 ${digits} is not registered. Please sign up first!`, 'normal');
+      showToast(`⚠️ Mobile number ${displayTarget} is not registered. Please sign up first!`, 'normal');
       
       const existingPrompt = document.getElementById('loginNotRegisteredPrompt');
       if (existingPrompt) existingPrompt.remove();
 
       const promptHtml = `
-        <div id="loginNotRegisteredPrompt" style="margin-top: 14px; padding: 14px; background: rgba(231, 76, 60, 0.15); border: 1.5px solid rgba(231, 76, 60, 0.45); border-radius: 8px; font-size: 0.84rem; color: #fc8181; text-align: center;">
+        <div id="loginNotRegisteredPrompt" style="margin-top: 14px; padding: 14px; background: rgba(231, 76, 60, 0.15); border: 1.5px solid rgba(231, 76, 60, 0.45); border-radius: 12px; font-size: 0.84rem; color: #fc8181; text-align: center;">
           <div style="font-weight: 700; margin-bottom: 4px;">⚠️ Number Not Registered</div>
           <div style="font-size: 0.78rem; color: #CBD5E0; line-height: 1.4;">
-            +91 ${digits} is not linked to any active Rajput profile.
+            ${displayTarget} is not linked to any active Rajput profile.
           </div>
-          <a href="register.html?phone=${digits}" style="display: inline-block; margin-top: 10px; padding: 8px 18px; background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%); color: #1A050B; font-weight: 700; border-radius: 6px; text-decoration: none; font-size: 0.85rem;">
-            👑 Register Now with +91 ${digits}
+          <a href="register.html?phone=${digits}" style="display: inline-block; margin-top: 10px; padding: 10px 22px; background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%); color: #1A050B; font-weight: 700; border-radius: 50px; text-decoration: none; font-size: 0.88rem;">
+            👑 Register Now with ${displayTarget}
           </a>
         </div>
       `;
-      document.getElementById('otpInputGroupPhone')?.insertAdjacentHTML('beforeend', promptHtml);
+      const targetContainer = document.getElementById('otpInputGroupPhone') || document.getElementById('authViewPhone');
+      targetContainer?.insertAdjacentHTML('beforeend', promptHtml);
       return;
     }
 
@@ -1352,6 +1363,8 @@ window.handleSendLoginOtp = async function(channel) {
   const step2 = document.getElementById('loginOtpStep2');
   if (step1) step1.style.display = 'none';
   if (step2) step2.style.display = 'block';
+  const subHeading = document.getElementById('loginSubHeading');
+  if (subHeading) subHeading.textContent = 'Enter verification code to continue';
 
   // Provide notification and trigger dispatch
   if (selectedChannel === 'phone') {
@@ -1427,6 +1440,13 @@ window.resetLoginOtpStep = function() {
   const step2 = document.getElementById('loginOtpStep2');
   if (step1) step1.style.display = 'block';
   if (step2) step2.style.display = 'none';
+
+  const subHeading = document.getElementById('loginSubHeading');
+  if (subHeading) subHeading.textContent = 'Enter your details to continue';
+
+  const channel = sessionStorage.getItem('royal_login_channel') || 'phone';
+  window.switchLoginView(channel === 'email' ? 'email' : 'phone');
+
   if (loginOtpCountdownInterval) {
     clearInterval(loginOtpCountdownInterval);
     loginOtpCountdownInterval = null;
@@ -1510,13 +1530,26 @@ window.handleVerifyLoginOtp = async function() {
 };
 
 window.handleForgotPasswordClick = function() {
-  showToast('🔑 Forgot Password? You can instantly log in without password using Mobile or Email OTP above!', 'gold');
-  window.switchLoginAuthMode('otp');
+  showToast('🔑 Forgot Password? You can instantly log in without password using Mobile OTP!', 'gold');
+  window.switchLoginView('phone');
 };
 
 function initLoginPage() {
   const loginForm = document.getElementById('loginForm');
   const btnGoogle = document.getElementById('btnGoogleAuth');
+  const btnGooglePass = document.getElementById('btnGoogleAuthPass');
+  const btnGoogleEmail = document.getElementById('btnGoogleAuthEmail');
+
+  // Country Code selector sync
+  const countryCodeSelect = document.getElementById('loginCountryCode');
+  const countryCodeDisplay = document.getElementById('countryCodeDisplay');
+  if (countryCodeSelect && countryCodeDisplay) {
+    countryCodeSelect.addEventListener('change', () => {
+      const val = countryCodeSelect.value;
+      const codeOnly = val.split(' ')[0];
+      countryCodeDisplay.textContent = codeOnly;
+    });
+  }
 
   // Input Enter key listeners for seamless UX
   const phoneInput = document.getElementById('loginOtpPhone');
@@ -1549,42 +1582,44 @@ function initLoginPage() {
     });
   }
 
-  if (btnGoogle) {
-    btnGoogle.addEventListener('click', async () => {
-      if (!window.supabaseActive) {
-        showToast('Google login is active in mock fallback mode. Please configure credentials in supabase-config.js!', 'normal');
-        // Fallback mock login for local testing
-        const demoUser = {
-          name: 'Kunwar Shivraj Singh',
-          gender: 'Groom',
-          email: 'royal@shreerajputsagaisambandh.com',
-          caste: 'Rajput',
-          clan: 'Rathore',
-          age: 28,
-          tier: 'Starter'
-        };
-        localStorage.setItem('currentUser', JSON.stringify(demoUser));
-        showToast('Mock Google Login Success!', 'gold');
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 1200);
-        return;
-      }
+  const handleGoogleLoginClick = async () => {
+    if (!window.supabaseActive) {
+      showToast('Google login is active in mock fallback mode. Please configure credentials in supabase-config.js!', 'normal');
+      // Fallback mock login for local testing
+      const demoUser = {
+        name: 'Kunwar Shivraj Singh',
+        gender: 'Groom',
+        email: 'royal@shreerajputsagaisambandh.com',
+        caste: 'Rajput',
+        clan: 'Rathore',
+        age: 28,
+        tier: 'Starter'
+      };
+      localStorage.setItem('currentUser', JSON.stringify(demoUser));
+      showToast('Mock Google Login Success!', 'gold');
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 1200);
+      return;
+    }
 
-      // Supabase Google Sign-In (Redirect flow)
-      const { error } = await window.supabaseClient.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin + '/dashboard.html'
-        }
-      });
-
-      if (error) {
-        console.error("Google Auth error:", error);
-        showToast('Google connection failed: ' + error.message, 'normal');
+    // Supabase Google Sign-In (Redirect flow)
+    const { error } = await window.supabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/dashboard.html'
       }
     });
-  }
+
+    if (error) {
+      console.error("Google Auth error:", error);
+      showToast('Google connection failed: ' + error.message, 'normal');
+    }
+  };
+
+  if (btnGoogle) btnGoogle.addEventListener('click', handleGoogleLoginClick);
+  if (btnGooglePass) btnGooglePass.addEventListener('click', handleGoogleLoginClick);
+  if (btnGoogleEmail) btnGoogleEmail.addEventListener('click', handleGoogleLoginClick);
 
   if (!loginForm) return;
 
