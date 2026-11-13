@@ -400,12 +400,16 @@ window.handleSendVerificationOtp = function(isResend = false, overridePhone = nu
     body: JSON.stringify({ phone: rawNumber, otp: generatedOtp, name: userName })
   }).then(r => r.json()).then(data => {
     if (data.success) {
+      if (data.token) sessionStorage.setItem('royal_pending_otp_token', data.token);
+      if (data.expiresAt) sessionStorage.setItem('royal_pending_otp_expires', data.expiresAt);
       showToast('💬 Verification code sent to your WhatsApp!', 'gold');
     } else {
+      showToast(`⚠️ ${data?.error || 'Could not send WhatsApp OTP. Please ensure number is on WhatsApp.'}`, 'normal');
       console.warn('WhatsApp OTP send notice:', data);
     }
   }).catch(e => {
     console.warn('WhatsApp dispatch fetch error:', e);
+    showToast('⚠️ Network error contacting WhatsApp service', 'normal');
   });
 
   // Start countdown timer (45 seconds)
@@ -450,13 +454,15 @@ window.handleConfirmVerificationOtp = async function() {
     return;
   }
 
-  // Verify against backend API
+  // Verify against backend API (resilient across Vercel serverless containers)
   let isVerified = false;
+  const token = sessionStorage.getItem('royal_pending_otp_token');
+  const expiresAt = sessionStorage.getItem('royal_pending_otp_expires');
   try {
     const res = await fetch('/api/verify-whatsapp-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: rawNumber, otp: enteredOtp })
+      body: JSON.stringify({ phone: rawNumber, otp: enteredOtp, token, expiresAt })
     });
     const data = await res.json();
     if (data.success && data.verified) {
@@ -1357,6 +1363,8 @@ window.handleSendLoginOtp = async function(channel) {
       body: JSON.stringify({ phone: target, otp: generatedOtp, name: memberName })
     }).then(r => r.json()).then(data => {
       if (data && data.success) {
+        if (data.token) sessionStorage.setItem('royal_login_otp_token', data.token);
+        if (data.expiresAt) sessionStorage.setItem('royal_login_otp_expires', data.expiresAt);
         showToast('💬 Verification code sent to your registered WhatsApp!', 'gold');
       } else {
         showToast(`⚠️ ${data?.error || 'Could not send WhatsApp OTP.'}`, 'normal');
@@ -1438,11 +1446,13 @@ window.handleVerifyLoginOtp = async function() {
 
   // Also verify with backend API if needed
   if (!isOtpValid && channel === 'phone') {
+    const token = sessionStorage.getItem('royal_login_otp_token');
+    const expiresAt = sessionStorage.getItem('royal_login_otp_expires');
     try {
       const res = await fetch('/api/verify-whatsapp-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: target, otp: enteredOtp })
+        body: JSON.stringify({ phone: target, otp: enteredOtp, token, expiresAt })
       });
       const data = await res.json();
       if (data && data.success && data.verified) {

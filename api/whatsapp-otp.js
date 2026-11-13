@@ -6,26 +6,30 @@
  * Instance: sagai
  * Gateway Phone: +91 8971928018
  * 
- * STRICT POLICY: OTP delivered ONLY through WhatsApp. No SMS fallback.
+ * STRICT POLICY: OTP delivered ONLY through WhatsApp. No SMS.
+ * Resilient for both persistent Node servers and stateless Vercel Serverless Functions.
  */
 
 const crypto = require('crypto');
 
 const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL || 'http://130.210.15.192:8080';
 const WHATSAPP_API_KEY = process.env.WHATSAPP_API_KEY || 'sagai_instance_token_2026';
+const OTP_SECRET = process.env.ADMIN_SESSION_SECRET || 'royal_rajput_vault_secret_2026';
 
-// Active OTP store: Map<cleanPhone10Digits, { otp: string, expiresAt: number, attempts: number }>
+// In-memory OTP store for local / single-container runs
 const otpStore = new Map();
 
 // Periodic cleanup of expired OTPs every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [phone, record] of otpStore.entries()) {
-    if (record.expiresAt < now) {
-      otpStore.delete(phone);
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [phone, record] of otpStore.entries()) {
+      if (record.expiresAt < now) {
+        otpStore.delete(phone);
+      }
     }
-  }
-}, 5 * 60 * 1000);
+  }, 5 * 60 * 1000).unref?.();
+}
 
 /**
  * Standardize phone number into:
@@ -49,8 +53,33 @@ function generateOtp() {
 }
 
 /**
+ * Generate stateless HMAC token so verification works across independent Vercel lambdas
+ */
+function generateStatelessToken(clean10, otp, expiresAt) {
+  return crypto.createHmac('sha256', OTP_SECRET)
+    .update(`${clean10}:${otp}:${expiresAt}`)
+    .digest('hex');
+}
+
+/**
+ * Verify stateless HMAC token
+ */
+function verifyStatelessToken(clean10, code, token, expiresAt) {
+  try {
+    if (!token || !expiresAt) return false;
+    if (Date.now() > Number(expiresAt)) return false;
+    const expected = generateStatelessToken(clean10, code, expiresAt);
+    const bufA = Buffer.from(token, 'hex');
+    const bufB = Buffer.from(expected, 'hex');
+    if (bufA.length !== bufB.length) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
  * Dispatches an OTP EXCLUSIVELY via WhatsApp (Evolution-Go)
- * Strictly NO SMS fallback.
  */
 async function sendWhatsAppOtp(phone, customOtp = null, userName = '') {
   const parsed = parsePhone(phone);
@@ -60,11 +89,13 @@ async function sendWhatsAppOtp(phone, customOtp = null, userName = '') {
 
   const otp = customOtp || generateOtp();
   const expiresAt = Date.now() + 5 * 60 * 1000; // 5-minute validity
+  const token = generateStatelessToken(parsed.clean10, otp, expiresAt);
 
   // Save to active OTP store
   otpStore.set(parsed.clean10, {
     otp,
     expiresAt,
+    token,
     attempts: 0
   });
 
@@ -82,7 +113,7 @@ async function sendWhatsAppOtp(phone, customOtp = null, userName = '') {
         number: parsed.waNumber,
         text: messageText
       }),
-      signal: AbortSignal.timeout(8000)
+      signal: AbortSignal.timeout(9000)
     });
 
     const waResponseData = await waResponse.json().catch(() => ({}));
@@ -92,6 +123,8 @@ async function sendWhatsAppOtp(phone, customOtp = null, userName = '') {
         channel: 'WhatsApp',
         phone: parsed.clean10,
         waNumber: parsed.waNumber,
+        token,
+        expiresAt,
         message: 'OTP delivered instantly to your WhatsApp!',
         expiresInSeconds: 300
       };
@@ -103,7 +136,7 @@ async function sendWhatsAppOtp(phone, customOtp = null, userName = '') {
         channel: 'WhatsApp',
         phone: parsed.clean10,
         waNumber: parsed.waNumber,
-        error: `WhatsApp delivery error: ${errMsg}. Please check that this number is active on WhatsApp.`
+        error: `WhatsApp delivery error: ${errMsg}. Please verify that this number is active on WhatsApp.`
       };
     }
   } catch (waErr) {
@@ -115,7 +148,7 @@ async function sendWhatsAppOtp(phone, customOtp = null, userName = '') {
 /**
  * Verify user submitted OTP
  */
-function verifyWhatsAppOtp(phone, enteredCode) {
+function verifyWhatsAppOtp(phone, enteredCode, token = null, expiresAt = null) {
   const parsed = parsePhone(phone);
   if (!parsed) {
     return { verified: false, error: 'Invalid phone number format' };
@@ -126,41 +159,56 @@ function verifyWhatsAppOtp(phone, enteredCode) {
     return { verified: false, error: 'Please enter the 6-digit OTP received on WhatsApp' };
   }
 
-  // Master Test OTP for convenience / automated tests
+  // Master Test OTP for convenience / automated testing
   if (code === '123456') {
     otpStore.delete(parsed.clean10);
     return { verified: true, isMaster: true };
   }
 
+  // 1. Check stateless token (works across all Vercel serverless containers)
+  if (token && expiresAt) {
+    if (verifyStatelessToken(parsed.clean10, code, token, expiresAt)) {
+      otpStore.delete(parsed.clean10);
+      return { verified: true };
+    }
+  }
+
+  // 2. Check in-memory record (if same container)
   const record = otpStore.get(parsed.clean10);
-  if (!record) {
-    return { verified: false, error: 'No active OTP request found for this number or OTP expired. Please request a new WhatsApp OTP.' };
+  if (record) {
+    if (Date.now() > record.expiresAt) {
+      otpStore.delete(parsed.clean10);
+      return { verified: false, error: 'OTP has expired (validity is 5 minutes). Please click Resend on WhatsApp.' };
+    }
+
+    record.attempts = (record.attempts || 0) + 1;
+    if (record.attempts > 5) {
+      otpStore.delete(parsed.clean10);
+      return { verified: false, error: 'Too many failed attempts. Please request a new WhatsApp OTP.' };
+    }
+
+    if (record.otp === code) {
+      otpStore.delete(parsed.clean10);
+      return { verified: true };
+    }
   }
 
-  if (Date.now() > record.expiresAt) {
-    otpStore.delete(parsed.clean10);
-    return { verified: false, error: 'OTP has expired (validity is 5 minutes). Please click Resend on WhatsApp.' };
-  }
-
-  record.attempts += 1;
-  if (record.attempts > 5) {
-    otpStore.delete(parsed.clean10);
-    return { verified: false, error: 'Too many failed attempts. Please request a new WhatsApp OTP.' };
-  }
-
-  if (record.otp !== code) {
-    return { verified: false, error: 'Invalid OTP code. Please enter the 6-digit code received on WhatsApp.' };
-  }
-
-  // Successfully matched!
-  otpStore.delete(parsed.clean10);
-  return { verified: true };
+  return { verified: false, error: 'Invalid OTP code. Please enter the valid 6-digit code received on WhatsApp.' };
 }
 
 /**
- * Express Request Handler for POST /api/send-whatsapp-otp
+ * Universal Serverless / Express Handler for POST /api/send-whatsapp-otp
  */
 async function sendOtpHandler(req, res) {
+  res.setHeader?.('Access-Control-Allow-Credentials', 'true');
+  res.setHeader?.('Access-Control-Allow-Origin', '*');
+  res.setHeader?.('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+  res.setHeader?.('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status?.(200).end() || res.end?.();
+  }
+
   try {
     let body = req.body;
     if (typeof body === 'string') {
@@ -184,21 +232,30 @@ async function sendOtpHandler(req, res) {
 }
 
 /**
- * Express Request Handler for POST /api/verify-whatsapp-otp
+ * Universal Serverless / Express Handler for POST /api/verify-whatsapp-otp
  */
 async function verifyOtpHandler(req, res) {
+  res.setHeader?.('Access-Control-Allow-Credentials', 'true');
+  res.setHeader?.('Access-Control-Allow-Origin', '*');
+  res.setHeader?.('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+  res.setHeader?.('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status?.(200).end() || res.end?.();
+  }
+
   try {
     let body = req.body;
     if (typeof body === 'string') {
       try { body = JSON.parse(body); } catch (e) {}
     }
 
-    const { phone, otp } = body || {};
+    const { phone, otp, token, expiresAt } = body || {};
     if (!phone || !otp) {
       return res.status(400).json({ success: false, error: 'Both phone and OTP code are required' });
     }
 
-    const result = verifyWhatsAppOtp(phone, otp);
+    const result = verifyWhatsAppOtp(phone, otp, token, expiresAt);
     if (result.verified) {
       return res.status(200).json({ success: true, verified: true, message: 'OTP verified successfully' });
     } else {
