@@ -322,7 +322,7 @@ function initOtpDigitCells() {
 
     cell.addEventListener('focus', () => {
       cell.style.borderBottomColor = '#00B5B8';
-      cell.style.background = 'rgba(255, 255, 255, 0.05)';
+      cell.style.background = 'transparent';
     });
 
     cell.addEventListener('blur', () => {
