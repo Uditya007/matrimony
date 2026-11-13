@@ -270,6 +270,98 @@ function checkMandatoryPhoneVerification() {
   return;
 }
 
+function initOtpDigitCells() {
+  const cells = document.querySelectorAll('.otp-digit-cell');
+  const hiddenInput = document.getElementById('mandatoryOtpInput');
+  if (!cells || cells.length === 0) return;
+
+  cells.forEach((cell, idx) => {
+    cell.addEventListener('input', () => {
+      const val = cell.value.replace(/[^0-9]/g, '');
+      cell.value = val ? val[val.length - 1] : '';
+
+      if (cell.value) {
+        cell.style.borderBottomColor = '#FCD34D';
+      } else {
+        cell.style.borderBottomColor = 'rgba(255, 255, 255, 0.35)';
+      }
+
+      const fullVal = Array.from(cells).map(c => c.value).join('');
+      if (hiddenInput) hiddenInput.value = fullVal;
+
+      if (cell.value && idx < cells.length - 1) {
+        cells[idx + 1].focus();
+      }
+
+      if (fullVal.length === cells.length) {
+        window.handleConfirmVerificationOtp();
+      }
+    });
+
+    cell.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace') {
+        if (!cell.value && idx > 0) {
+          cells[idx - 1].focus();
+          cells[idx - 1].value = '';
+          cells[idx - 1].style.borderBottomColor = 'rgba(255, 255, 255, 0.35)';
+        } else {
+          cell.value = '';
+          cell.style.borderBottomColor = 'rgba(255, 255, 255, 0.35)';
+        }
+        const fullVal = Array.from(cells).map(c => c.value).join('');
+        if (hiddenInput) hiddenInput.value = fullVal;
+      } else if (e.key === 'ArrowLeft' && idx > 0) {
+        cells[idx - 1].focus();
+      } else if (e.key === 'ArrowRight' && idx < cells.length - 1) {
+        cells[idx + 1].focus();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        window.handleConfirmVerificationOtp();
+      }
+    });
+
+    cell.addEventListener('focus', () => {
+      cell.style.borderBottomColor = '#00B5B8';
+      cell.style.background = 'rgba(255, 255, 255, 0.05)';
+    });
+
+    cell.addEventListener('blur', () => {
+      cell.style.background = 'transparent';
+      if (cell.value) {
+        cell.style.borderBottomColor = '#FCD34D';
+      } else {
+        cell.style.borderBottomColor = 'rgba(255, 255, 255, 0.35)';
+      }
+    });
+
+    cell.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const paste = (e.clipboardData || window.clipboardData).getData('text');
+      const digits = paste.replace(/[^0-9]/g, '').slice(0, cells.length);
+      if (!digits) return;
+      digits.split('').forEach((d, i) => {
+        if (cells[i]) {
+          cells[i].value = d;
+          cells[i].style.borderBottomColor = '#FCD34D';
+        }
+      });
+      const fullVal = Array.from(cells).map(c => c.value).join('');
+      if (hiddenInput) hiddenInput.value = fullVal;
+
+      const nextIdx = Math.min(digits.length, cells.length - 1);
+      cells[nextIdx].focus();
+
+      if (digits.length === cells.length) {
+        window.handleConfirmVerificationOtp();
+      }
+    });
+  });
+
+  setTimeout(() => {
+    if (cells[0]) cells[0].focus();
+  }, 200);
+}
+
 function openPhoneVerificationModal(options = {}) {
   const existing = document.getElementById('mandatoryPhoneVerificationModal');
   if (existing) existing.remove();
@@ -280,69 +372,76 @@ function openPhoneVerificationModal(options = {}) {
   const shouldAutoSend = Boolean(options.autoSend && initialPhone.length === 10);
 
   const modalHtml = `
-    <div id="mandatoryPhoneVerificationModal" style="position: fixed; inset: 0; background: rgba(10, 2, 5, 0.94); z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px);">
-      <div style="background: #1C070D; border: 1.5px solid #D4AF37; box-shadow: 0 10px 40px rgba(0,0,0,0.85), 0 0 35px rgba(212, 175, 55, 0.25); border-radius: 14px; max-width: 460px; width: 100%; padding: 32px 28px; text-align: center; color: #E2E8F0; position: relative;">
+    <div id="mandatoryPhoneVerificationModal" style="position: fixed; inset: 0; background: rgba(10, 2, 5, 0.94); z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px);">
+      <div style="background: #1C070D; border: 1.5px solid rgba(212, 175, 55, 0.45); box-shadow: 0 12px 45px rgba(0,0,0,0.9), 0 0 35px rgba(212, 175, 55, 0.2); border-radius: 18px; max-width: 410px; width: 100%; padding: 36px 28px 28px; text-align: center; color: #E2E8F0; position: relative; box-sizing: border-box;">
         
-        <button type="button" onclick="closePhoneVerificationModal()" style="position: absolute; top: 14px; right: 16px; background: none; border: none; color: #CBD5E0; font-size: 1.5rem; cursor: pointer; line-height: 1;">&times;</button>
+        <button type="button" onclick="closePhoneVerificationModal()" style="position: absolute; top: 16px; right: 18px; background: none; border: none; color: rgba(255, 255, 255, 0.6); font-size: 1.4rem; cursor: pointer; line-height: 1; padding: 4px; transition: color 0.2s;" onmouseover="this.style.color='#FFF'" onmouseout="this.style.color='rgba(255,255,255,0.6)'" aria-label="Close">&times;</button>
 
-        <div style="font-size: 2.6rem; margin-bottom: 6px;">👑</div>
-        
-        <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(37, 211, 102, 0.15); border: 1px solid rgba(37, 211, 102, 0.4); padding: 4px 14px; border-radius: 20px; color: #25D366; font-size: 0.78rem; font-weight: 700; margin-bottom: 12px;">
-          <span>💬</span> WhatsApp Instant OTP
+        <!-- Top Circular Shield Badge -->
+        <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.35); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L3 7V12C3 17.52 6.84 22.74 12 24C17.16 22.74 21 17.52 21 12V7L12 2Z" fill="#D4AF37" fill-opacity="0.25" stroke="#FCD34D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 12L11 14L15 10" stroke="#FCD34D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
 
-        <h2 style="font-family: var(--font-royal, 'Cinzel', serif); color: #D4AF37; margin: 0 0 8px; font-size: 1.35rem; letter-spacing: 0.5px;">
-          Verify Mobile Number
+        <!-- Heading -->
+        <h2 style="font-family: var(--font-royal, 'Cinzel', serif); color: #FFFFFF; margin: 0 0 8px; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.5px;">
+          Enter OTP
         </h2>
-        <p style="font-size: 0.85rem; color: #CBD5E0; line-height: 1.5; margin: 0 0 20px;">
-          Khammaghani${userName ? `, <strong>${userName}</strong>` : ''}! To protect Rajputana lineage authenticity, please verify your mobile number. A 6-digit verification code will be sent to your WhatsApp.
+
+        <!-- Subtitle with Phone Number -->
+        <p style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.8); line-height: 1.45; margin: 0 0 22px;">
+          We've sent a code to <strong style="color: #FCD34D; font-weight: 700;" id="displayOtpSentPhone">+91 ${initialPhone}</strong>
         </p>
 
-        <!-- STEP 1: Phone Input -->
+        <!-- STEP 1: Phone Input (Fallback if phone was not provided) -->
         <div id="otpStepPhone" style="${shouldAutoSend ? 'display: none;' : 'display: block;'}">
-          <div style="text-align: left; margin-bottom: 16px;">
-            <label style="display: block; font-size: 0.82rem; color: #D4AF37; font-weight: 600; margin-bottom: 6px;">WhatsApp Mobile Number</label>
+          <div style="text-align: left; margin-bottom: 18px;">
             <div style="display: flex; gap: 8px;">
-              <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(170,124,17,0.3); padding: 10px 14px; border-radius: 6px; font-weight: 700; color: #D4AF37; font-size: 0.95rem; display: flex; align-items: center;">+91</span>
-              <input type="tel" id="mandatoryPhoneInput" maxlength="10" placeholder="10-digit mobile" value="${initialPhone}" style="flex: 1; padding: 10px 14px; border-radius: 6px; border: 1.5px solid rgba(170,124,17,0.35); background: rgba(0,0,0,0.45); color: #FFF; font-size: 1rem; letter-spacing: 1px; outline: none;">
+              <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(170,124,17,0.3); padding: 12px 14px; border-radius: 8px; font-weight: 700; color: #D4AF37; font-size: 0.95rem; display: flex; align-items: center;">+91</span>
+              <input type="tel" id="mandatoryPhoneInput" maxlength="10" placeholder="Mobile no." value="${initialPhone}" style="flex: 1; padding: 12px 14px; border-radius: 8px; border: 1.5px solid rgba(170,124,17,0.35); background: rgba(0,0,0,0.45); color: #FFF; font-size: 1rem; letter-spacing: 1px; outline: none; box-sizing: border-box;">
             </div>
-            <span id="phoneValidationError" style="color: #fc8181; font-size: 0.75rem; display: none; margin-top: 5px;">Please enter a valid 10-digit mobile number</span>
+            <span id="phoneValidationError" style="color: #fc8181; font-size: 0.78rem; display: none; margin-top: 6px;">Please enter a valid 10-digit mobile number</span>
           </div>
 
-          <button type="button" id="btnSendPhoneOtp" onclick="handleSendVerificationOtp()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: #FFFFFF; font-weight: 700; border: none; border-radius: 6px; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease;">
-            <span>💬</span> Send Verification Code on WhatsApp
+          <button type="button" id="btnSendPhoneOtp" onclick="handleSendVerificationOtp()" style="width: 100%; padding: 13px; font-size: 0.95rem; font-weight: 700; border-radius: 50px; cursor: pointer; border: none; background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%); color: #1A050B; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
+            Get OTP
           </button>
         </div>
 
-        <!-- STEP 2: OTP Input -->
+        <!-- STEP 2: OTP Input View -->
         <div id="otpStepVerify" style="${shouldAutoSend ? 'display: block;' : 'display: none;'}">
-          <div style="background: rgba(37, 211, 102, 0.12); border: 1px solid rgba(37, 211, 102, 0.35); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 0.84rem; text-align: left;">
-            <div style="color: #25D366; font-weight: 600;">💬 Code sent to WhatsApp:</div>
-            <div style="font-size: 1.05rem; font-weight: 700; color: #FCD34D; margin: 3px 0;" id="displayOtpSentPhone">+91 ${initialPhone}</div>
-            <div style="font-size: 0.76rem; color: #A0AEC0;">
-              Check your WhatsApp messages for the 6-digit verification code.
-            </div>
+          
+          <!-- 6 Segmented Digit Input Underlines / Cells Matching Mockup -->
+          <div class="otp-digits-container" style="display: flex; justify-content: center; gap: 10px; margin: 18px 0 20px;">
+            <input type="text" class="otp-digit-cell" id="otpDigit0" maxlength="1" inputmode="numeric" autocomplete="one-time-code" style="width: 44px; height: 50px; border: none; border-bottom: 2.5px solid #00B5B8; background: transparent; color: #FCD34D; font-size: 1.6rem; font-weight: 700; text-align: center; outline: none; border-radius: 4px 4px 0 0; transition: all 0.2s;">
+            <input type="text" class="otp-digit-cell" id="otpDigit1" maxlength="1" inputmode="numeric" style="width: 44px; height: 50px; border: none; border-bottom: 2.5px solid rgba(255, 255, 255, 0.35); background: transparent; color: #FCD34D; font-size: 1.6rem; font-weight: 700; text-align: center; outline: none; border-radius: 4px 4px 0 0; transition: all 0.2s;">
+            <input type="text" class="otp-digit-cell" id="otpDigit2" maxlength="1" inputmode="numeric" style="width: 44px; height: 50px; border: none; border-bottom: 2.5px solid rgba(255, 255, 255, 0.35); background: transparent; color: #FCD34D; font-size: 1.6rem; font-weight: 700; text-align: center; outline: none; border-radius: 4px 4px 0 0; transition: all 0.2s;">
+            <input type="text" class="otp-digit-cell" id="otpDigit3" maxlength="1" inputmode="numeric" style="width: 44px; height: 50px; border: none; border-bottom: 2.5px solid rgba(255, 255, 255, 0.35); background: transparent; color: #FCD34D; font-size: 1.6rem; font-weight: 700; text-align: center; outline: none; border-radius: 4px 4px 0 0; transition: all 0.2s;">
+            <input type="text" class="otp-digit-cell" id="otpDigit4" maxlength="1" inputmode="numeric" style="width: 44px; height: 50px; border: none; border-bottom: 2.5px solid rgba(255, 255, 255, 0.35); background: transparent; color: #FCD34D; font-size: 1.6rem; font-weight: 700; text-align: center; outline: none; border-radius: 4px 4px 0 0; transition: all 0.2s;">
+            <input type="text" class="otp-digit-cell" id="otpDigit5" maxlength="1" inputmode="numeric" style="width: 44px; height: 50px; border: none; border-bottom: 2.5px solid rgba(255, 255, 255, 0.35); background: transparent; color: #FCD34D; font-size: 1.6rem; font-weight: 700; text-align: center; outline: none; border-radius: 4px 4px 0 0; transition: all 0.2s;">
           </div>
 
-          <div style="text-align: left; margin-bottom: 16px;">
-            <label style="display: block; font-size: 0.82rem; color: #D4AF37; font-weight: 600; margin-bottom: 6px;">Enter 6-Digit OTP</label>
-            <input type="text" id="mandatoryOtpInput" maxlength="6" inputmode="numeric" placeholder="• • • • • •" style="width: 100%; padding: 12px; text-align: center; letter-spacing: 8px; font-size: 1.4rem; font-weight: 700; border-radius: 6px; border: 1.5px solid rgba(212, 175, 55, 0.5); background: rgba(0,0,0,0.5); color: #FFF; outline: none; box-sizing: border-box;">
-            <span id="otpValidationError" style="color: #fc8181; font-size: 0.75rem; display: none; margin-top: 5px;">Invalid OTP code. Please check your WhatsApp.</span>
+          <!-- Hidden input for standard form read -->
+          <input type="hidden" id="mandatoryOtpInput" value="">
+
+          <div id="otpValidationError" style="color: #fc8181; font-size: 0.8rem; display: none; margin-bottom: 12px; text-align: center; font-weight: 600;">Invalid OTP code. Please enter the valid 6-digit code.</div>
+
+          <!-- Resend row matching reference mockup -->
+          <div style="font-size: 0.88rem; color: rgba(255, 255, 255, 0.7); margin-bottom: 22px;">
+            Didn't get the code yet? 
+            <span id="otpCountdownTimer" style="color: rgba(255, 255, 255, 0.55); font-weight: 600;">Resend in 45s</span>
+            <button type="button" id="btnResendOtp" onclick="handleSendVerificationOtp(true)" style="background: none; border: none; color: #FCD34D; cursor: pointer; text-decoration: underline; font-weight: 700; display: none; padding: 0 0 0 4px; font-size: 0.88rem;">Resend</button>
           </div>
 
-          <button type="button" id="btnConfirmOtp" onclick="handleConfirmVerificationOtp()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%); color: #1A050B; font-weight: 700; border: none; border-radius: 6px; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-            🛡️ Verify & Activate Royal Profile
+          <button type="button" id="btnConfirmOtp" onclick="handleConfirmVerificationOtp()" style="width: 100%; padding: 13px; font-size: 0.95rem; font-weight: 700; border-radius: 50px; cursor: pointer; border: none; background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%); color: #1A050B; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35); transition: all 0.2s ease;">
+            Verify & Continue
           </button>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 0.8rem;">
-            <span id="otpCountdownTimer" style="color: #A0AEC0;">Resend OTP in 45s</span>
-            <button type="button" id="btnResendOtp" onclick="handleSendVerificationOtp(true)" style="background: none; border: none; color: #25D366; cursor: pointer; text-decoration: underline; font-weight: 600; display: none;">Resend on WhatsApp</button>
-            <button type="button" onclick="document.getElementById('otpStepVerify').style.display='none'; document.getElementById('otpStepPhone').style.display='block';" style="background: none; border: none; color: #D4AF37; cursor: pointer; text-decoration: underline; font-size: 0.78rem;">← Change Number</button>
+          <div style="margin-top: 16px;">
+            <button type="button" onclick="document.getElementById('otpStepVerify').style.display='none'; document.getElementById('otpStepPhone').style.display='block';" style="background: none; border: none; color: #FCD34D; cursor: pointer; text-decoration: underline; font-size: 0.82rem; font-weight: 600;">← Change Number</button>
           </div>
-        </div>
-
-        <div style="margin-top: 20px; font-size: 0.74rem; color: #718096; border-top: 1px solid rgba(170,124,17,0.15); padding-top: 12px;">
-          🔒 Lineage Privacy: Your number is never shared with third parties or shown publicly without mutual match approval.
         </div>
       </div>
     </div>
@@ -350,25 +449,7 @@ function openPhoneVerificationModal(options = {}) {
 
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-  const modalOtpInput = document.getElementById('mandatoryOtpInput');
-  if (modalOtpInput) {
-    modalOtpInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        window.handleConfirmVerificationOtp();
-      }
-    });
-    modalOtpInput.addEventListener('input', () => {
-      const val = modalOtpInput.value.replace(/[^0-9]/g, '');
-      modalOtpInput.value = val;
-      if (val.length === 6) {
-        window.handleConfirmVerificationOtp();
-      }
-    });
-    if (shouldAutoSend) {
-      setTimeout(() => modalOtpInput.focus(), 250);
-    }
-  }
+  initOtpDigitCells();
 
   if (shouldAutoSend) {
     handleSendVerificationOtp(false, initialPhone);
@@ -439,7 +520,7 @@ window.handleSendVerificationOtp = function(isResend = false, overridePhone = nu
   if (resendBtn) resendBtn.style.display = 'none';
   if (timerEl) {
     timerEl.style.display = 'inline';
-    timerEl.textContent = `Resend OTP in ${timeLeft}s`;
+    timerEl.textContent = `Resend in ${timeLeft}s`;
   }
 
   if (otpCountdownInterval) clearInterval(otpCountdownInterval);
@@ -450,23 +531,38 @@ window.handleSendVerificationOtp = function(isResend = false, overridePhone = nu
       if (timerEl) timerEl.style.display = 'none';
       if (resendBtn) resendBtn.style.display = 'inline';
     } else {
-      if (timerEl) timerEl.textContent = `Resend OTP in ${timeLeft}s`;
+      if (timerEl) timerEl.textContent = `Resend in ${timeLeft}s`;
     }
   }, 1000);
 
-  const otpInput = document.getElementById('mandatoryOtpInput');
-  if (otpInput) setTimeout(() => otpInput.focus(), 150);
+  const cells = document.querySelectorAll('.otp-digit-cell');
+  if (cells && cells.length > 0) {
+    cells.forEach(c => {
+      c.value = '';
+      c.style.borderBottomColor = 'rgba(255, 255, 255, 0.35)';
+    });
+    setTimeout(() => { if (cells[0]) cells[0].focus(); }, 150);
+  }
 };
 
 window.handleConfirmVerificationOtp = async function() {
   const otpInput = document.getElementById('mandatoryOtpInput');
   const errorEl = document.getElementById('otpValidationError');
-  const enteredOtp = (otpInput?.value || '').trim();
+  let enteredOtp = (otpInput?.value || '').trim();
+
+  const digitCells = document.querySelectorAll('.otp-digit-cell');
+  if (digitCells && digitCells.length === 6) {
+    const assembled = Array.from(digitCells).map(c => c.value).join('');
+    if (assembled) {
+      enteredOtp = assembled;
+    }
+  }
+
   const actualOtp = sessionStorage.getItem('royal_pending_otp');
   const verifiedPhone = sessionStorage.getItem('royal_pending_phone');
   const rawNumber = (verifiedPhone || '').replace(/[^0-9]/g, '').slice(-10);
 
-  if (!enteredOtp) {
+  if (!enteredOtp || enteredOtp.length !== 6) {
     if (errorEl) {
       errorEl.textContent = 'Please enter the 6-digit code received on WhatsApp.';
       errorEl.style.display = 'block';

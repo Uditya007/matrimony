@@ -32,7 +32,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="css/styles.css?v=3.2">
+  <link rel="stylesheet" href="css/styles.css?v=3.3">
 </head>
 <body class="auth-body">
 
@@ -217,27 +217,27 @@
 
     <!-- STEP 2: Enter & Verify OTP (Triggered after Get OTP) -->
     <div id="loginOtpStep2" style="display: none;">
-      <div class="auth-otp-status-badge">
-        <span class="auth-badge-icon">💬</span>
-        <div>
-          <div style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.75);">Verification code sent to WhatsApp:</div>
-          <div id="loginOtpTargetDisplay" style="color: #25D366; font-weight: 700; font-size: 0.98rem; letter-spacing: 0.5px;">+91 ••••••••••</div>
-        </div>
-      </div>
+      <p style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.8); line-height: 1.45; margin: 0 0 22px; text-align: center;">
+        We've sent a code to <strong style="color: #FCD34D; font-weight: 700;" id="loginOtpTargetDisplay">+91 ••••••••••</strong>
+      </p>
 
-      <div style="margin-bottom: 16px;">
+      <div style="margin-bottom: 18px;">
         <input type="text" id="loginOtpCodeInput" class="auth-otp-input" maxlength="6" inputmode="numeric" placeholder="• • • • • •" autocomplete="one-time-code">
         <div id="loginOtpCodeError" style="color: #ff6b6b; font-size: 0.82rem; display: none; margin-top: 6px; text-align: center; font-weight: 600;">Invalid OTP code. Please enter the valid 6-digit code.</div>
+      </div>
+
+      <div style="font-size: 0.88rem; color: rgba(255, 255, 255, 0.7); margin-bottom: 22px; text-align: center;">
+        Didn't get the code yet? 
+        <span id="loginOtpCountdown" style="color: rgba(255, 255, 255, 0.55); font-weight: 600;">Resend in 45s</span>
+        <button type="button" id="btnResendLoginOtp" onclick="handleResendLoginOtp()" style="background: none; border: none; color: #FCD34D; font-weight: 700; cursor: pointer; text-decoration: underline; display: none; padding: 0 0 0 4px; font-size: 0.88rem;">Resend</button>
       </div>
 
       <button type="button" class="btn-auth-pill btn-auth-primary" id="btnVerifyLoginOtp" onclick="handleVerifyLoginOtp()">
         Verify & Continue
       </button>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; font-size: 0.86rem;">
-        <span id="loginOtpCountdown" style="color: rgba(255, 255, 255, 0.7);">Resend in 45s</span>
-        <button type="button" id="btnResendLoginOtp" onclick="handleResendLoginOtp()" style="background: none; border: none; color: #FCD34D; font-weight: 700; cursor: pointer; text-decoration: underline; display: none; padding: 0;">Resend OTP</button>
-        <button type="button" onclick="resetLoginOtpStep()" class="auth-text-link" style="color: #FCD34D; font-weight: 600; text-decoration: underline; background: none; border: none; cursor: pointer; padding: 0;">← Change Number</button>
+      <div style="text-align: center; margin-top: 16px;">
+        <button type="button" onclick="resetLoginOtpStep()" class="auth-text-link" style="color: #FCD34D; font-weight: 600; text-decoration: underline; background: none; border: none; cursor: pointer; padding: 0; font-size: 0.84rem;">← Change Number</button>
       </div>
     </div>
 
@@ -257,6 +257,6 @@
   <!-- Supabase JS Client SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
-  <script src="js/app.js?v=3.2"></script>
+  <script src="js/app.js?v=3.3"></script>
 </body>
 </html>
