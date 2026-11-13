@@ -2181,7 +2181,7 @@ function initRegisterPage() {
           previewContainer.style.boxShadow = '0 0 20px rgba(255, 77, 77, 0.7)';
           previewContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-        showToast('📸 Profile portrait photo is strictly mandatory! Please upload your photo.', 'gold');
+        showToast('📸 A profile photo is required to continue. Please upload your photo.', 'gold');
         return false;
       }
 
@@ -2750,7 +2750,7 @@ window.executeAIMatchSearchOnDashboard = function(queryText) {
   if (validMatches.length === 0) {
     showToast('No exact matches found. Displaying closest compatible profiles.', 'normal');
   } else {
-    showToast(`Kunwar AI curated ${window.currentAIMatches.length} matching noble profiles!`, 'gold');
+    showToast(`Kunwar AI identified ${window.currentAIMatches.length} matching noble profiles!`, 'gold');
   }
 
   // Update AI Active Banner
@@ -4351,7 +4351,7 @@ window.openProfileDetailModal = function(id) {
             <div style="font-size: 1.6rem; margin-bottom: 6px;">🔒</div>
             <h4 style="color: var(--gold-bright); font-family: var(--font-royal); margin-bottom: 6px; font-size: 1.05rem;">Heritage Privacy Protected</h4>
             <p style="color: var(--text-muted); font-size: 0.84rem; max-width: 480px; margin: 0 auto 14px; line-height: 1.45;">
-              Direct contact details (mobile phone and email) are strictly confidential. Log in to your royal account to express interest and connect.
+              Direct contact details (mobile and email) remain confidential. Log in to express interest and connect.
             </p>
             <a href="login.html" class="btn btn-royal" style="display: inline-block; padding: 8px 22px; font-size: 0.84rem; font-weight: 600;">
               Login to Connect
@@ -4392,7 +4392,7 @@ window.openProfileDetailModal = function(id) {
             <div style="text-align: center; padding: 18px 20px; background: rgba(201, 162, 39, 0.08); border: 1.5px solid rgba(201, 162, 39, 0.3); border-radius: 8px;">
               <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
                 <span style="font-size: 1.3rem;">⏳</span>
-                <h4 style="color: var(--gold-bright); font-family: var(--font-royal); margin: 0; font-size: 1.05rem;">Match Interest Sent — Awaiting Response</h4>
+                <h4 style="color: var(--gold-bright); font-family: var(--font-royal); margin: 0; font-size: 1.05rem;">Match Interest Sent: Awaiting Response</h4>
               </div>
               <p style="color: var(--text-muted); font-size: 0.84rem; max-width: 500px; margin: 0 auto 10px; line-height: 1.45;">
                 You have expressed match interest in connecting with <strong>${profile.name}</strong>. In compliance with privacy standards, their phone number and email will be securely revealed as soon as they accept your request.

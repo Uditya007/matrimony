@@ -175,7 +175,7 @@
     // Gotra Rules Query
     if (cleanQuery.includes('gotra') || cleanQuery.includes('rule') || cleanQuery.includes('sagotra')) {
       return `📜 <strong>Rajput Gotra Marriage Rules:</strong><br>
-              In traditional Rajput alliances, marriage within the same Gotra is strictly forbidden (Sagotra union) to respect genetics and ancestral lineage.
+              In traditional Rajput alliances, marriage within the same Gotra is forbidden (Sagotra union) in accordance with ancestral customs.
               <br><br>
               Typically, a noble union checks <strong>four Gotras</strong> to ensure zero conflicts:
               <ol>
@@ -201,7 +201,7 @@
     // Pricing / Membership Packages
     if (cleanQuery.includes('price') || cleanQuery.includes('plan') || cleanQuery.includes('cost') || cleanQuery.includes('membership') || cleanQuery.includes('starter') || cleanQuery.includes('silver') || cleanQuery.includes('gold') || cleanQuery.includes('package')) {
       return `💎 <strong>Royal Matrimonial Plans:</strong><br>
-              Choose from our curated membership levels designed for the Rajput community:
+              Membership options designed for Rajput families:
               <ul>
                 <li><strong>Starter Plan (₹4,999/mo):</strong> Basic listing search and up to 10 lineage unlocks.</li>
                 <li><strong>Rajputana Silver (₹11,999/mo):</strong> Gotra compatibility analysis, verified badge tag, and palace ecosystem unlocks.</li>
