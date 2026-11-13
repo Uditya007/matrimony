@@ -5,13 +5,14 @@
  * Host: 130.210.15.192:8080
  * Instance: sagai
  * Gateway Phone: +91 8971928018
+ * 
+ * STRICT POLICY: OTP delivered ONLY through WhatsApp. No SMS fallback.
  */
 
 const crypto = require('crypto');
 
 const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL || 'http://130.210.15.192:8080';
 const WHATSAPP_API_KEY = process.env.WHATSAPP_API_KEY || 'sagai_instance_token_2026';
-const FAST2SMS_API_KEY = process.env.FAST2SMS_API_KEY || 'Xmqx2kcUKeTvE7AMYaZFVOj8fnyGpDb6RidBu3Hr1oz54NSCQlFQsP9SWCDB8X0afuc56AGUqg3EnyNr';
 
 // Active OTP store: Map<cleanPhone10Digits, { otp: string, expiresAt: number, attempts: number }>
 const otpStore = new Map();
@@ -48,7 +49,8 @@ function generateOtp() {
 }
 
 /**
- * Dispatches an OTP via WhatsApp (Evolution-Go)
+ * Dispatches an OTP EXCLUSIVELY via WhatsApp (Evolution-Go)
+ * Strictly NO SMS fallback.
  */
 async function sendWhatsAppOtp(phone, customOtp = null, userName = '') {
   const parsed = parsePhone(phone);
@@ -69,9 +71,6 @@ async function sendWhatsAppOtp(phone, customOtp = null, userName = '') {
   const greeting = userName ? `Khammaghani Sa, *${userName}*!` : `Khammaghani Sa!`;
   const messageText = `👑 *Shree Rajput Sagai Sambandh* 👑\n\n${greeting}\n\nYour royal profile verification code is:\n\n👉 *${otp}* 👈\n\n⏱️ _Valid for 5 minutes. Please do not disclose this OTP to anyone._\n\n🙏 Dhanyawad\n*Team Shree Rajput Sagai Sambandh*`;
 
-  let waSuccess = false;
-  let waResponseData = null;
-
   try {
     const waResponse = await fetch(`${WHATSAPP_API_URL}/send/text`, {
       method: 'POST',
@@ -86,65 +85,31 @@ async function sendWhatsAppOtp(phone, customOtp = null, userName = '') {
       signal: AbortSignal.timeout(8000)
     });
 
-    waResponseData = await waResponse.json().catch(() => ({}));
+    const waResponseData = await waResponse.json().catch(() => ({}));
     if (waResponse.ok && waResponseData && waResponseData.message === 'success') {
-      waSuccess = true;
+      return {
+        success: true,
+        channel: 'WhatsApp',
+        phone: parsed.clean10,
+        waNumber: parsed.waNumber,
+        message: 'OTP delivered instantly to your WhatsApp!',
+        expiresInSeconds: 300
+      };
+    } else {
+      const errMsg = waResponseData?.error || waResponseData?.message || 'WhatsApp message could not be sent';
+      console.warn('WhatsApp API delivery notice:', waResponseData);
+      return {
+        success: false,
+        channel: 'WhatsApp',
+        phone: parsed.clean10,
+        waNumber: parsed.waNumber,
+        error: `WhatsApp delivery error: ${errMsg}. Please check that this number is active on WhatsApp.`
+      };
     }
   } catch (waErr) {
-    console.warn('⚠️ WhatsApp dispatch attempt failed or timed out:', waErr.message);
+    console.error('⚠️ WhatsApp gateway connection error:', waErr.message);
+    throw new Error(`WhatsApp Gateway unavailable: ${waErr.message}. All OTPs are strictly dispatched via WhatsApp only.`);
   }
-
-  // If WhatsApp succeeded, return immediately
-  if (waSuccess) {
-    return {
-      success: true,
-      channel: 'WhatsApp',
-      phone: parsed.clean10,
-      waNumber: parsed.waNumber,
-      message: 'OTP delivered instantly to your WhatsApp!',
-      expiresInSeconds: 300
-    };
-  }
-
-  // Graceful fallback: Fast2SMS if WhatsApp failed
-  let smsSuccess = false;
-  let smsData = null;
-
-  if (FAST2SMS_API_KEY) {
-    try {
-      const smsResp = await fetch('https://www.fast2sms.com/dev/bulkV2', {
-        method: 'POST',
-        headers: {
-          'authorization': FAST2SMS_API_KEY,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          route: 'otp',
-          variables_values: otp,
-          numbers: parsed.clean10
-        }),
-        signal: AbortSignal.timeout(6000)
-      });
-      smsData = await smsResp.json();
-      if (smsData && smsData.return) {
-        smsSuccess = true;
-      }
-    } catch (smsErr) {
-      console.warn('⚠️ Fast2SMS fallback failed:', smsErr.message);
-    }
-  }
-
-  return {
-    success: true,
-    channel: smsSuccess ? 'SMS' : 'WhatsApp-Pending',
-    phone: parsed.clean10,
-    waNumber: parsed.waNumber,
-    message: smsSuccess 
-      ? 'Verification OTP dispatched via SMS fallback.' 
-      : 'Verification OTP prepared. Please enter the OTP displayed or check WhatsApp.',
-    otp: !waSuccess && !smsSuccess ? otp : undefined, // Provide for seamless development testing if network offline
-    expiresInSeconds: 300
-  };
 }
 
 /**
@@ -158,7 +123,7 @@ function verifyWhatsAppOtp(phone, enteredCode) {
 
   const code = String(enteredCode || '').trim();
   if (!code) {
-    return { verified: false, error: 'Please enter the 6-digit OTP' };
+    return { verified: false, error: 'Please enter the 6-digit OTP received on WhatsApp' };
   }
 
   // Master Test OTP for convenience / automated tests
@@ -169,22 +134,22 @@ function verifyWhatsAppOtp(phone, enteredCode) {
 
   const record = otpStore.get(parsed.clean10);
   if (!record) {
-    return { verified: false, error: 'No active OTP request found for this number or OTP expired. Please request a new code.' };
+    return { verified: false, error: 'No active OTP request found for this number or OTP expired. Please request a new WhatsApp OTP.' };
   }
 
   if (Date.now() > record.expiresAt) {
     otpStore.delete(parsed.clean10);
-    return { verified: false, error: 'OTP has expired (validity is 5 minutes). Please click Resend OTP.' };
+    return { verified: false, error: 'OTP has expired (validity is 5 minutes). Please click Resend on WhatsApp.' };
   }
 
   record.attempts += 1;
   if (record.attempts > 5) {
     otpStore.delete(parsed.clean10);
-    return { verified: false, error: 'Too many failed attempts. Please request a new OTP.' };
+    return { verified: false, error: 'Too many failed attempts. Please request a new WhatsApp OTP.' };
   }
 
   if (record.otp !== code) {
-    return { verified: false, error: `Invalid OTP code. Please verify the 6-digit code received on WhatsApp.` };
+    return { verified: false, error: 'Invalid OTP code. Please enter the 6-digit code received on WhatsApp.' };
   }
 
   // Successfully matched!
@@ -208,6 +173,9 @@ async function sendOtpHandler(req, res) {
     }
 
     const result = await sendWhatsAppOtp(phone, otp, name);
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
     return res.status(200).json(result);
   } catch (err) {
     console.error('Send WhatsApp OTP Error:', err);

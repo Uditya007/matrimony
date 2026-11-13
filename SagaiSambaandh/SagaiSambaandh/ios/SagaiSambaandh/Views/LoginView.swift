@@ -363,7 +363,7 @@ struct LoginView: View {
         let code = String(Int.random(in: 100000...999999))
         self.generatedOtp = code
         self.isOtpSent = true
-        self.successBanner = "OTP sent to +91 \(cleanDigits)! Code: \(code)"
+        self.successBanner = "WhatsApp OTP sent to +91 \(cleanDigits)! Code: \(code)"
         self.otpInput = code // Conveniently prefill for quick access
         
         // Send via WhatsApp Gateway (Oracle Cloud Evolution-Go)

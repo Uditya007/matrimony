@@ -1292,7 +1292,7 @@ window.handleSendLoginOtp = async function(channel) {
   if (selectedChannel === 'phone') {
     showToast(`💬 Sending OTP to your WhatsApp: ${displayTarget}...`, 'gold');
 
-    // Call WhatsApp Gateway (Evolution-Go with SMS fallback)
+    // Call WhatsApp Gateway exclusively (no SMS)
     fetch('/api/send-whatsapp-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -186,7 +186,7 @@ fun LoginView(
         val code = (100000..999999).random().toString()
         generatedOtp = code
         isOtpSent = true
-        successBanner = "OTP sent to +91 $cleanDigits! Code: $code"
+        successBanner = "WhatsApp OTP sent to +91 $cleanDigits! Code: $code"
         otpInput = code // Prefill for instant, convenient testing
         sendWhatsAppOtpAndroid(cleanDigits, code)
     }
