@@ -817,7 +817,7 @@ function updateNavigationState() {
         </div>
       </div>
 
-      <span style="font-size: 0.9rem; font-weight: 500; font-family: var(--font-royal); color: var(--primary-color); display: flex; align-items: center; gap: 8px; margin-right: 15px;">
+      <span class="nav-user-greeting" style="font-size: 0.9rem; font-weight: 500; font-family: var(--font-royal); color: var(--primary-color); display: flex; align-items: center; gap: 8px; margin-right: 15px;">
         Khammaghani, <strong style="color: var(--gold-antique);">${currentUser.name.split(' ')[0]}</strong>
         <span style="font-size: 0.7rem; font-family: var(--font-body); padding: 2px 10px; background-color: var(--gold-light); border: 1px solid var(--gold-antique); border-radius: 12px; color: var(--primary-color); font-weight: bold;">
           ${tier} Plan
@@ -828,8 +828,8 @@ function updateNavigationState() {
     `;
   } else {
     html = `
-      <a href="login.html" class="btn btn-minimal" style="margin-right: 12px; font-weight: 600;">Log In</a>
-      <a href="register.html" class="btn btn-royal" id="navSignUpBtn">Sign Up</a>
+      <a href="login.html" class="btn btn-minimal">Log In</a>
+      <a href="register.html" class="btn btn-royal" id="navSignUpBtn">Register</a>
     `;
   }
 

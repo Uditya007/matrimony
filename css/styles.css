@@ -1696,7 +1696,7 @@ body:has(.dashboard-subnav) {
   }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 380px) {
   .hero-image-frame {
     width: 110px;
     height: 145px;
@@ -1704,6 +1704,39 @@ body:has(.dashboard-subnav) {
   }
   .hero-image-inner {
     border-radius: 60px 60px 4px 4px;
+  }
+  .nav-container {
+    padding: 6px 8px !important;
+    gap: 4px !important;
+  }
+  .logo {
+    gap: 6px !important;
+    min-width: 0 !important;
+  }
+  .logo-img {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .logo-text {
+    font-size: 0.82rem !important;
+    letter-spacing: 0.3px !important;
+  }
+  .logo-subtext {
+    font-size: 0.44rem !important;
+    letter-spacing: 1px !important;
+  }
+  .nav-auth-buttons {
+    gap: 4px !important;
+    margin-right: 0 !important;
+  }
+  .nav-auth-buttons a.btn,
+  .nav-auth-buttons .btn {
+    padding: 5px 8px !important;
+    font-size: 0.68rem !important;
+    letter-spacing: 0.2px !important;
+  }
+  .mobile-menu-toggle {
+    margin-left: 2px !important;
   }
 }
 
@@ -1819,22 +1852,31 @@ body:has(.dashboard-subnav) {
     grid-template-columns: 1fr !important;
   }
   .nav-container {
-    padding: 6px 12px !important; /* Shrunk padding for compact menu bar */
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    box-sizing: border-box !important;
+  }
+  .logo {
+    gap: 8px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
   }
   .logo-img {
-    width: 32px !important; /* Shrunk logo image size on mobile */
+    width: 32px !important;
     height: 32px !important;
+    flex-shrink: 0 !important;
   }
   .logo-text {
-    font-size: 0.98rem !important; /* Sleek, readable header logo title */
+    font-size: 0.84rem !important;
     font-weight: 700 !important;
-    letter-spacing: 0.8px !important;
+    letter-spacing: 0.3px !important;
     color: var(--primary-color) !important;
+    white-space: nowrap !important;
   }
   .logo-subtext {
     display: block !important;
-    font-size: 0.5rem !important;
-    letter-spacing: 1.5px !important;
+    font-size: 0.48rem !important;
+    letter-spacing: 1.2px !important;
     text-transform: uppercase !important;
     color: var(--gold-antique) !important;
     margin-top: 0px !important;
@@ -1843,11 +1885,56 @@ body:has(.dashboard-subnav) {
   .mobile-menu-toggle {
     width: 20px !important;
     height: 13px !important;
+    margin-left: 6px !important;
+    flex-shrink: 0 !important;
   }
   .mobile-menu-toggle span {
     height: 1.5px !important;
   }
+  /* Mobile Navigation Auth Buttons: Log In & Register properly aligned */
   .nav-auth-buttons {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 5px !important;
+    margin-left: auto !important;
+    margin-right: 0px !important;
+    flex-shrink: 0 !important;
+  }
+  .nav-auth-buttons a.btn,
+  .nav-auth-buttons .btn {
+    padding: 5px 9px !important;
+    font-size: 0.72rem !important;
+    font-family: var(--font-royal, 'Cinzel', serif) !important;
+    letter-spacing: 0.3px !important;
+    border-radius: 50px !important;
+    margin-right: 0 !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
+  .nav-auth-buttons a.btn-minimal,
+  .nav-auth-buttons .btn-minimal {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: var(--primary-color, #5C0612) !important;
+    border: 1px solid rgba(170, 124, 17, 0.45) !important;
+    font-weight: 600 !important;
+  }
+  .nav-auth-buttons a.btn-royal,
+  .nav-auth-buttons .btn-royal,
+  .nav-auth-buttons a.btn-primary,
+  .nav-auth-buttons .btn-primary {
+    background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%) !important;
+    color: #1A050B !important;
+    font-weight: 700 !important;
+    border: none !important;
+    box-shadow: 0 2px 6px rgba(212, 175, 55, 0.25) !important;
+  }
+  .nav-user-greeting {
     display: none !important;
   }
   
