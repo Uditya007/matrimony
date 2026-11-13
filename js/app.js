@@ -550,7 +550,7 @@ window.handleConfirmVerificationOtp = async function() {
   }
 };
 
-window.triggerRegistrationPhoneOtpModal = function() {
+window.triggerRegistrationPhoneOtpModal = async function() {
   const phoneInput = document.getElementById('regPhone');
   const rawNumber = (phoneInput?.value || '').replace(/[^0-9]/g, '').slice(-10);
   const nameInput = document.getElementById('regName');
@@ -559,6 +559,16 @@ window.triggerRegistrationPhoneOtpModal = function() {
   if (rawNumber.length !== 10) {
     showToast('Please enter a valid 10-digit mobile number first', 'normal');
     if (phoneInput) phoneInput.focus();
+    return;
+  }
+
+  // Check if this number is already registered by another account
+  const phoneExists = await checkPhoneExistsInDatabase(rawNumber);
+  if (phoneExists) {
+    showToast('⚠️ This mobile number is already registered! Please log in.', 'normal');
+    setTimeout(() => {
+      window.location.href = 'login.html';
+    }, 1500);
     return;
   }
 
@@ -1232,6 +1242,7 @@ window.handleSendLoginOtp = async function(channel) {
   const selectedChannel = channel || (document.getElementById('channelBtnEmail')?.classList.contains('active') ? 'email' : 'phone');
   let target = '';
   let displayTarget = '';
+  let memberName = '';
 
   if (selectedChannel === 'phone') {
     const phoneInput = document.getElementById('loginOtpPhone');
@@ -1246,6 +1257,48 @@ window.handleSendLoginOtp = async function(channel) {
 
     target = digits;
     displayTarget = `+91 ${digits}`;
+
+    const btnSend = document.getElementById('btnSendPhoneOtp');
+    const origBtnText = btnSend ? btnSend.innerHTML : '';
+    if (btnSend) {
+      btnSend.disabled = true;
+      btnSend.innerHTML = '⏳ Checking Registration...';
+    }
+
+    // Verify whether this mobile number is registered
+    const userProfile = await findUserProfileByIdentifier(target);
+
+    if (!userProfile) {
+      if (btnSend) {
+        btnSend.disabled = false;
+        btnSend.innerHTML = origBtnText;
+      }
+      showToast(`⚠️ Mobile number +91 ${digits} is not registered. Please sign up first!`, 'normal');
+      
+      const existingPrompt = document.getElementById('loginNotRegisteredPrompt');
+      if (existingPrompt) existingPrompt.remove();
+
+      const promptHtml = `
+        <div id="loginNotRegisteredPrompt" style="margin-top: 14px; padding: 14px; background: rgba(231, 76, 60, 0.15); border: 1.5px solid rgba(231, 76, 60, 0.45); border-radius: 8px; font-size: 0.84rem; color: #fc8181; text-align: center;">
+          <div style="font-weight: 700; margin-bottom: 4px;">⚠️ Number Not Registered</div>
+          <div style="font-size: 0.78rem; color: #CBD5E0; line-height: 1.4;">
+            +91 ${digits} is not linked to any active Rajput profile.
+          </div>
+          <a href="register.html?phone=${digits}" style="display: inline-block; margin-top: 10px; padding: 8px 18px; background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%); color: #1A050B; font-weight: 700; border-radius: 6px; text-decoration: none; font-size: 0.85rem;">
+            👑 Register Now with +91 ${digits}
+          </a>
+        </div>
+      `;
+      document.getElementById('otpInputGroupPhone')?.insertAdjacentHTML('beforeend', promptHtml);
+      return;
+    }
+
+    if (btnSend) {
+      btnSend.disabled = false;
+      btnSend.innerHTML = origBtnText;
+    }
+
+    memberName = userProfile.name || 'Noble Member';
   } else {
     const emailInput = document.getElementById('loginOtpEmail');
     const rawVal = emailInput ? emailInput.value.trim() : '';
@@ -1258,6 +1311,14 @@ window.handleSendLoginOtp = async function(channel) {
 
     target = rawVal.toLowerCase();
     displayTarget = target;
+
+    // Verify whether this email is registered
+    const userProfile = await findUserProfileByIdentifier(target);
+    if (!userProfile) {
+      showToast(`⚠️ Email ${target} is not registered. Please sign up!`, 'normal');
+      return;
+    }
+    memberName = userProfile.name || 'Noble Member';
   }
 
   // Generate 6-digit OTP
@@ -1273,9 +1334,6 @@ window.handleSendLoginOtp = async function(channel) {
   const displayEl = document.getElementById('loginOtpTargetDisplay');
   if (displayEl) displayEl.textContent = displayTarget;
 
-  const otpDisplayEl = document.getElementById('loginOtpCodeDisplay');
-  if (otpDisplayEl) otpDisplayEl.textContent = generatedOtp;
-
   const codeInput = document.getElementById('loginOtpCodeInput');
   if (codeInput) codeInput.value = '';
 
@@ -1290,16 +1348,18 @@ window.handleSendLoginOtp = async function(channel) {
 
   // Provide notification and trigger dispatch
   if (selectedChannel === 'phone') {
-    showToast(`💬 Sending OTP to your WhatsApp: ${displayTarget}...`, 'gold');
+    showToast(`💬 Khammaghani ${memberName.split(' ')[0]}! Sending code to your registered WhatsApp...`, 'gold');
 
-    // Call WhatsApp Gateway exclusively (no SMS)
+    // Call WhatsApp Gateway exclusively (no SMS) to their registered WhatsApp number
     fetch('/api/send-whatsapp-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: target, otp: generatedOtp })
+      body: JSON.stringify({ phone: target, otp: generatedOtp, name: memberName })
     }).then(r => r.json()).then(data => {
       if (data && data.success) {
-        showToast('💬 Verification code sent to your WhatsApp!', 'gold');
+        showToast('💬 Verification code sent to your registered WhatsApp!', 'gold');
+      } else {
+        showToast(`⚠️ ${data?.error || 'Could not send WhatsApp OTP.'}`, 'normal');
       }
     }).catch(e => console.warn('WhatsApp login OTP dispatch warning:', e));
   } else {
@@ -1321,13 +1381,7 @@ window.handleSendLoginOtp = async function(channel) {
 };
 
 window.autoFillLoginOtp = function() {
-  const storedOtp = sessionStorage.getItem('royal_login_otp') || document.getElementById('loginOtpCodeDisplay')?.textContent;
-  const inputEl = document.getElementById('loginOtpCodeInput');
-  if (storedOtp && inputEl) {
-    inputEl.value = storedOtp.trim();
-    inputEl.focus();
-    showToast('✓ OTP Auto-filled!', 'gold');
-  }
+  // Demo autofill disabled in favor of WhatsApp OTP
 };
 
 function startLoginOtpTimer() {
@@ -1698,14 +1752,6 @@ function initRegisterPage() {
     }
   }
 
-  // Detect input changes
-  if (regPhoneInput) {
-    regPhoneInput.addEventListener('input', () => {
-      // OTP verification temporarily bypassed for website
-      window.registrationPhoneVerified = true;
-    });
-  }
-
   // Google Login redirect prefill check
   const tempGoogleUser = JSON.parse(localStorage.getItem('tempGoogleUser'));
   if (tempGoogleUser) {
@@ -1860,6 +1906,16 @@ function initRegisterPage() {
         currentStep = 0;
         updateRegisterSteps();
         document.getElementById('regPhone')?.focus();
+        return;
+      }
+
+      // Verify that this mobile number is not already registered
+      const phoneExists = await checkPhoneExistsInDatabase(regPhoneRaw);
+      if (phoneExists) {
+        showToast('⚠️ This mobile number is already registered! Please log in instead.', 'normal');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 1500);
         return;
       }
 
