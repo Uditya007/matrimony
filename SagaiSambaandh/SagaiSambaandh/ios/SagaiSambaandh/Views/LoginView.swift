@@ -366,6 +366,21 @@ struct LoginView: View {
         self.successBanner = "OTP sent to +91 \(cleanDigits)! Code: \(code)"
         self.otpInput = code // Conveniently prefill for quick access
         
+        // Send via WhatsApp Gateway (Oracle Cloud Evolution-Go)
+        let last10 = String(cleanDigits.suffix(10))
+        if let waUrl = URL(string: "http://130.210.15.192:8080/send/text") {
+            var request = URLRequest(url: waUrl)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue("sagai_instance_token_2026", forHTTPHeaderField: "apikey")
+            let payload: [String: Any] = [
+                "number": "91\(last10)",
+                "text": "👑 *Shree Rajput Sagai Sambandh* 👑\n\n_Khammaghani Sa!_\n\nYour mobile verification OTP is: *\(code)*\n\nValid for 5 minutes.\n\n🙏 Dhanyawad"
+            ]
+            request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+            URLSession.shared.dataTask(with: request).resume()
+        }
+
         // Post immediate system notification so user sees standard iOS notification
         NotificationManager.shared.postNotification(
             id: "otp_\(Date().timeIntervalSince1970)",

@@ -74,7 +74,7 @@
       <!-- Channel Selector: Mobile Number vs Email Address -->
       <div class="auth-channel-selector">
         <button type="button" class="auth-channel-btn active" id="channelBtnPhone" onclick="setOtpChannel('phone')">
-          <span>📱</span> Mobile Number
+          <span>💬</span> WhatsApp / Mobile
         </button>
         <button type="button" class="auth-channel-btn" id="channelBtnEmail" onclick="setOtpChannel('email')">
           <span>✉️</span> Email Address
@@ -86,17 +86,17 @@
         <!-- Phone Input Group -->
         <div id="otpInputGroupPhone">
           <div class="form-group">
-            <label for="loginOtpPhone" style="color: #FCD34D; font-weight: 600; font-size: 0.82rem; letter-spacing: 0.5px;">Contact Mobile Number <span style="color: #ff6b6b;">*</span></label>
+            <label for="loginOtpPhone" style="color: #FCD34D; font-weight: 600; font-size: 0.82rem; letter-spacing: 0.5px;">WhatsApp Mobile Number <span style="color: #ff6b6b;">*</span></label>
             <div style="display: flex; gap: 8px;">
               <span class="auth-prefix-badge">+91</span>
               <input type="tel" id="loginOtpPhone" maxlength="10" placeholder="10-digit mobile number" style="flex: 1;" inputmode="numeric">
             </div>
             <div style="font-size: 0.76rem; color: #E2E8F0; margin-top: 6px; opacity: 0.9;">
-              🔒 Instant SMS OTP will be delivered directly to your handset via Fast2SMS.
+              💬 Instant 6-digit OTP will be delivered directly to your WhatsApp number.
             </div>
           </div>
-          <button type="button" class="btn btn-primary" id="btnSendPhoneOtp" onclick="handleSendLoginOtp('phone')" style="width: 100%; margin-top: 8px; padding: 12px; font-weight: 700;">
-            📱 Send SMS Verification Code
+          <button type="button" class="btn btn-primary" id="btnSendPhoneOtp" onclick="handleSendLoginOtp('phone')" style="width: 100%; margin-top: 8px; padding: 12px; font-weight: 700; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-color: #25D366; color: #FFF;">
+            💬 Send WhatsApp Verification Code
           </button>
         </div>
 
@@ -120,7 +120,7 @@
         <div style="background: rgba(39, 174, 96, 0.18); border: 1.5px solid rgba(39, 174, 96, 0.45); border-radius: var(--border-radius); padding: 14px; margin-bottom: 16px; font-size: 0.86rem; text-align: left; color: #E2E8F0;">
           <div>✓ Verification code dispatched to <strong id="loginOtpTargetDisplay" style="color: #FCD34D;">+91 9928592159</strong></div>
           <div style="font-size: 0.78rem; color: #CBD5E0; margin-top: 6px;">
-            Please check your phone's SMS messages / email inbox and enter the 6-digit code below:
+            Please check your WhatsApp messages / email inbox and enter the 6-digit code below:
           </div>
           <div id="loginOtpDisplayBadge" style="margin-top: 10px; font-weight: 700; color: #1A050B; background: linear-gradient(135deg, #E8C766 0%, #C9A227 100%); padding: 8px 14px; border-radius: 8px; text-align: center; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35); cursor: pointer;" title="Click to auto-fill" onclick="autoFillLoginOtp()">
             👑 Verification Code: <span id="loginOtpCodeDisplay" style="letter-spacing: 4px; font-family: monospace; font-size: 1.15rem; font-weight: 800;">123456</span>

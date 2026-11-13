@@ -118,10 +118,21 @@
         </div>
 
         <div class="form-group">
-          <label for="regPhone">Contact Mobile Number <span style="color: #ff6b6b; font-weight: 700;">*</span></label>
-          <input type="tel" id="regPhone" placeholder="e.g. 98765 43210" maxlength="15" required>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label for="regPhone" style="margin-bottom: 0;">Contact Mobile Number <span style="color: #ff6b6b; font-weight: 700;">*</span></label>
+            <span id="regPhoneVerifiedBadge" style="display: none; background: rgba(37, 211, 102, 0.15); border: 1px solid #25D366; color: #25D366; font-size: 0.72rem; padding: 2px 8px; border-radius: 12px; font-weight: 600;">
+              ✓ WhatsApp Verified
+            </span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(170,124,17,0.3); padding: 10px 12px; border-radius: 6px; font-weight: 700; color: #D4AF37; font-size: 0.95rem; display: flex; align-items: center;">+91</span>
+            <input type="tel" id="regPhone" placeholder="10-digit mobile" maxlength="10" required style="flex: 1;">
+            <button type="button" id="btnVerifyRegPhone" onclick="triggerRegistrationPhoneOtpModal()" style="background: rgba(37, 211, 102, 0.12); border: 1px solid rgba(37, 211, 102, 0.4); color: #25D366; font-size: 0.8rem; font-weight: 700; padding: 0 14px; border-radius: 6px; cursor: pointer; white-space: nowrap; transition: all 0.2s ease;">
+              💬 Verify
+            </button>
+          </div>
           <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
-            🔒 Lineage Privacy: Your phone number is strictly kept confidential and shared only upon mutual match consent.
+            🔒 Lineage Privacy: 6-digit verification code will be sent to your WhatsApp number.
           </div>
         </div>
 

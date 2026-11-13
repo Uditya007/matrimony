@@ -301,6 +301,11 @@ app.post('/api/admin-auth', require('./api/admin-auth'));
 app.post('/api/admin-members', require('./api/admin-members'));
 app.post('/api/send-sms', require('./api/send-sms'));
 
+// WhatsApp OTP Endpoints (Evolution-Go Gateway on Oracle Cloud)
+const whatsappOtp = require('./api/whatsapp-otp');
+app.post('/api/send-whatsapp-otp', whatsappOtp.sendOtpHandler);
+app.post('/api/verify-whatsapp-otp', whatsappOtp.verifyOtpHandler);
+
 // Fallback route for SPA / root
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
