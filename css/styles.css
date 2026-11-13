@@ -6005,3 +6005,28 @@ body:has(.dashboard-subnav) {
     text-align: center;
   }
 }
+
+/* Clean Minimal OTP Digit Inputs matching reference mockup */
+.otp-digit-cell {
+  width: 44px !important;
+  height: 50px !important;
+  border: none !important;
+  border-bottom: 2.5px solid rgba(255, 255, 255, 0.35) !important;
+  background: transparent !important;
+  color: #FCD34D !important;
+  font-size: 1.6rem !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+  caret-color: #00B5B8 !important;
+  transition: border-color 0.2s ease !important;
+}
+
+.otp-digit-cell:focus {
+  border-bottom: 2.5px solid #00B5B8 !important;
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
