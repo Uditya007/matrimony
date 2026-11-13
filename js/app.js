@@ -350,6 +350,26 @@ function openPhoneVerificationModal(options = {}) {
 
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 
+  const modalOtpInput = document.getElementById('mandatoryOtpInput');
+  if (modalOtpInput) {
+    modalOtpInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        window.handleConfirmVerificationOtp();
+      }
+    });
+    modalOtpInput.addEventListener('input', () => {
+      const val = modalOtpInput.value.replace(/[^0-9]/g, '');
+      modalOtpInput.value = val;
+      if (val.length === 6) {
+        window.handleConfirmVerificationOtp();
+      }
+    });
+    if (shouldAutoSend) {
+      setTimeout(() => modalOtpInput.focus(), 250);
+    }
+  }
+
   if (shouldAutoSend) {
     handleSendVerificationOtp(false, initialPhone);
   }
@@ -1152,13 +1172,13 @@ async function findUserProfileByIdentifier(identifier) {
   if (
     clean.toLowerCase() === 'royal@shreerajputsagaisambandh.com' ||
     clean.toLowerCase() === 'royal@lifepartnerconnects.com' ||
-    (isPhone && (digits === '9928592159' || digits === '9876543210'))
+    (isPhone && (digits === '9928592159' || digits === '9876543210' || digits === '8971928018'))
   ) {
     return {
       name: 'Kunwar Shivraj Singh',
       gender: 'Groom',
       email: 'royal@shreerajputsagaisambandh.com',
-      phone: '+91 9928592159',
+      phone: `+91 ${digits || '8971928018'}`,
       caste: 'Rajput',
       clan: 'Rathore',
       age: 28,
@@ -1259,6 +1279,7 @@ window.handleSendLoginOtp = async function(channel) {
   let target = '';
   let displayTarget = '';
   let memberName = '';
+  let isExistingMember = false;
 
   if (selectedChannel === 'phone') {
     const phoneInput = document.getElementById('loginOtpPhone');
@@ -1279,44 +1300,24 @@ window.handleSendLoginOtp = async function(channel) {
     const origBtnText = btnSend ? btnSend.innerHTML : '';
     if (btnSend) {
       btnSend.disabled = true;
-      btnSend.innerHTML = '⏳ Checking...';
+      btnSend.innerHTML = '⏳ Sending OTP...';
     }
 
-    // Verify whether this mobile number is registered
+    // Check whether this mobile number is already registered in our database
     const userProfile = await findUserProfileByIdentifier(target);
 
-    if (!userProfile) {
-      if (btnSend) {
-        btnSend.disabled = false;
-        btnSend.innerHTML = origBtnText;
-      }
-      showToast(`⚠️ Mobile number ${displayTarget} is not registered. Please sign up first!`, 'normal');
-      
-      const existingPrompt = document.getElementById('loginNotRegisteredPrompt');
-      if (existingPrompt) existingPrompt.remove();
-
-      const promptHtml = `
-        <div id="loginNotRegisteredPrompt" style="margin-top: 14px; padding: 14px; background: rgba(231, 76, 60, 0.15); border: 1.5px solid rgba(231, 76, 60, 0.45); border-radius: 12px; font-size: 0.84rem; color: #fc8181; text-align: center;">
-          <div style="font-weight: 700; margin-bottom: 4px;">⚠️ Number Not Registered</div>
-          <div style="font-size: 0.78rem; color: #CBD5E0; line-height: 1.4;">
-            ${displayTarget} is not linked to any active Rajput profile.
-          </div>
-          <a href="register.html?phone=${digits}" style="display: inline-block; margin-top: 10px; padding: 10px 22px; background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%); color: #1A050B; font-weight: 700; border-radius: 50px; text-decoration: none; font-size: 0.88rem;">
-            👑 Register Now with ${displayTarget}
-          </a>
-        </div>
-      `;
-      const targetContainer = document.getElementById('otpInputGroupPhone') || document.getElementById('authViewPhone');
-      targetContainer?.insertAdjacentHTML('beforeend', promptHtml);
-      return;
+    if (userProfile) {
+      isExistingMember = true;
+      memberName = userProfile.name || 'Noble Member';
+    } else {
+      isExistingMember = false;
+      memberName = 'Noble Member';
     }
 
     if (btnSend) {
       btnSend.disabled = false;
       btnSend.innerHTML = origBtnText;
     }
-
-    memberName = userProfile.name || 'Noble Member';
   } else {
     const emailInput = document.getElementById('loginOtpEmail');
     const rawVal = emailInput ? emailInput.value.trim() : '';
@@ -1336,6 +1337,7 @@ window.handleSendLoginOtp = async function(channel) {
       showToast(`⚠️ Email ${target} is not registered. Please sign up!`, 'normal');
       return;
     }
+    isExistingMember = true;
     memberName = userProfile.name || 'Noble Member';
   }
 
@@ -1347,6 +1349,7 @@ window.handleSendLoginOtp = async function(channel) {
   sessionStorage.setItem('royal_login_channel', selectedChannel);
   sessionStorage.setItem('royal_login_target', target);
   sessionStorage.setItem('royal_login_display_target', displayTarget);
+  sessionStorage.setItem('royal_login_is_new_user', isExistingMember ? 'false' : 'true');
 
   // Update Step 2 UI
   const displayEl = document.getElementById('loginOtpTargetDisplay');
@@ -1368,9 +1371,10 @@ window.handleSendLoginOtp = async function(channel) {
 
   // Provide notification and trigger dispatch
   if (selectedChannel === 'phone') {
-    showToast(`💬 Khammaghani ${memberName.split(' ')[0]}! Sending code to your registered WhatsApp...`, 'gold');
+    const salutation = isExistingMember ? `Khammaghani ${memberName.split(' ')[0]}!` : `Khammaghani!`;
+    showToast(`💬 ${salutation} Sending code to your WhatsApp...`, 'gold');
 
-    // Call WhatsApp Gateway exclusively (no SMS) to their registered WhatsApp number
+    // Call WhatsApp Gateway exclusively (no SMS) to their WhatsApp number
     fetch('/api/send-whatsapp-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1379,7 +1383,7 @@ window.handleSendLoginOtp = async function(channel) {
       if (data && data.success) {
         if (data.token) sessionStorage.setItem('royal_login_otp_token', data.token);
         if (data.expiresAt) sessionStorage.setItem('royal_login_otp_expires', data.expiresAt);
-        showToast('💬 Verification code sent to your registered WhatsApp!', 'gold');
+        showToast('💬 Verification code sent to your WhatsApp!', 'gold');
       } else {
         showToast(`⚠️ ${data?.error || 'Could not send WhatsApp OTP.'}`, 'normal');
       }
@@ -1580,6 +1584,13 @@ function initLoginPage() {
         window.handleVerifyLoginOtp();
       }
     });
+    otpCodeInput.addEventListener('input', () => {
+      const val = otpCodeInput.value.replace(/[^0-9]/g, '');
+      otpCodeInput.value = val;
+      if (val.length === 6) {
+        window.handleVerifyLoginOtp();
+      }
+    });
   }
 
   const handleGoogleLoginClick = async () => {
@@ -1641,7 +1652,7 @@ function initLoginPage() {
     if (
       (identifier.toLowerCase() === 'royal@shreerajputsagaisambandh.com' ||
        identifier.toLowerCase() === 'royal@lifepartnerconnects.com' ||
-       (isPhone && (digits === '9928592159' || digits === '9876543210'))) &&
+       (isPhone && (digits === '9928592159' || digits === '9876543210' || digits === '8971928018'))) &&
       password === 'royal123'
     ) {
       const demoUser = {
@@ -1785,6 +1796,23 @@ function initRegisterPage() {
         regVerifyBtn.style.borderColor = 'rgba(46, 204, 113, 0.4)';
       }
     }
+  }
+
+  // If user modifies verified phone number, invalidate verification status
+  if (regPhoneInput) {
+    regPhoneInput.addEventListener('input', () => {
+      const currentDigits = regPhoneInput.value.replace(/[^0-9]/g, '').slice(-10);
+      const verifiedDigits = regPhoneInput.dataset.verifiedNumber || '';
+      if (verifiedDigits && currentDigits !== verifiedDigits) {
+        window.registrationPhoneVerified = false;
+        if (regBadge) regBadge.style.display = 'none';
+        if (regVerifyBtn) {
+          regVerifyBtn.textContent = '💬 Verify';
+          regVerifyBtn.style.color = '#25D366';
+          regVerifyBtn.style.borderColor = 'rgba(37, 211, 102, 0.4)';
+        }
+      }
+    });
   }
 
   // Check if arriving with verified email from query params or sessionStorage
@@ -2300,8 +2328,22 @@ function initRegisterPage() {
         }
       }
 
-      // Mobile number format verified; OTP verification modal bypassed
-      window.registrationPhoneVerified = true;
+      // If not yet verified via WhatsApp OTP, prompt for verification
+      if (!window.registrationPhoneVerified) {
+        openPhoneVerificationModal({
+          phone: rawDigits,
+          name: name,
+          autoSend: true,
+          onVerified: () => {
+            window.registrationPhoneVerified = true;
+            currentStep++;
+            updateRegisterSteps();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        });
+        return false;
+      }
+
       return true;
     } else if (stepIdx === 1) {
       const clanSelect = document.getElementById('regCaste').value;
