@@ -2992,19 +2992,19 @@ window.clearDashboardAIFilter = function() {
 function getAvatarGradient(clan) {
   switch (clan) {
     case 'Rathore':
-      return 'linear-gradient(135deg, #4A0D18 0%, #6B1220 50%, #D45B12 100%)';
+      return 'linear-gradient(135deg, #181820 0%, #252532 50%, #B8860B 100%)';
     case 'Sisodia':
-      return 'linear-gradient(135deg, #4A0D18 0%, #6B1220 50%, #C41E3A 100%)';
+      return 'linear-gradient(135deg, #181820 0%, #252532 50%, #C9A227 100%)';
     case 'Chauhan':
-      return 'linear-gradient(135deg, #4A0D18 0%, #6B1220 50%, #C9A227 100%)';
+      return 'linear-gradient(135deg, #181820 0%, #252532 50%, #D4AF37 100%)';
     case 'Kachwaha':
-      return 'linear-gradient(135deg, #4A0D18 0%, #6B1220 50%, #1D2B53 100%)';
+      return 'linear-gradient(135deg, #181820 0%, #252532 50%, #3B5998 100%)';
     case 'Bhati':
-      return 'linear-gradient(135deg, #4A0D18 0%, #6B1220 50%, #E8C766 100%)';
+      return 'linear-gradient(135deg, #181820 0%, #252532 50%, #AA7C11 100%)';
     case 'Shekhawat':
-      return 'linear-gradient(135deg, #4A0D18 0%, #6B1220 50%, #0D6646 100%)';
+      return 'linear-gradient(135deg, #181820 0%, #252532 50%, #2E7D32 100%)';
     default:
-      return 'linear-gradient(135deg, #4A0D18 0%, #6B1220 100%)';
+      return 'linear-gradient(135deg, #181820 0%, #252532 100%)';
   }
 }
 

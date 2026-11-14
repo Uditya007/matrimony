@@ -6264,8 +6264,8 @@ body:has(.dashboard-subnav) {
 @media (min-width: 769px) {
   .profile-card.shaadi-match-card {
     position: relative;
-    background: #23050B;
-    border: 1px solid rgba(212, 175, 55, 0.25);
+    background: #16161C;
+    border: 1px solid rgba(212, 175, 55, 0.22);
     border-radius: 18px;
     overflow: hidden;
     box-shadow: var(--shadow-royal);
@@ -6280,7 +6280,7 @@ body:has(.dashboard-subnav) {
     height: 330px;
     overflow: hidden;
     cursor: pointer;
-    background: #140205;
+    background: #0D0D11;
   }
   .profile-card.shaadi-match-card .shaadi-card-img {
     width: 100%;
@@ -6341,7 +6341,7 @@ body:has(.dashboard-subnav) {
     left: 0;
     right: 0;
     padding: 40px 14px 12px 14px;
-    background: linear-gradient(to top, rgba(14, 2, 5, 0.98) 0%, rgba(14, 2, 5, 0.7) 50%, transparent 100%);
+    background: linear-gradient(to top, rgba(10, 10, 14, 0.98) 0%, rgba(10, 10, 14, 0.65) 50%, transparent 100%);
     z-index: 4;
   }
   .profile-card.shaadi-match-card .shaadi-profile-name {
@@ -6401,13 +6401,13 @@ body:has(.dashboard-subnav) {
     display: inline-block;
   }
   .profile-card.shaadi-match-card .shaadi-action-row {
-    background: #160205;
+    background: #121216;
     padding: 12px 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    border-top: 1px solid rgba(212, 175, 55, 0.18);
+    border-top: 1px solid rgba(212, 175, 55, 0.16);
   }
   .profile-card.shaadi-match-card .shaadi-action-text {
     flex: 1 1 auto;
@@ -6465,8 +6465,8 @@ body:has(.dashboard-subnav) {
     overflow-x: hidden !important;
     padding-top: 108px !important;
     padding-bottom: 78px !important;
-    background-color: #1A0307 !important;
-    background-image: radial-gradient(circle at 50% 0%, #30060F 0%, #170206 100%) !important;
+    background-color: #0A0A0D !important;
+    background-image: none !important;
     min-height: 100vh;
   }
 
@@ -6499,7 +6499,7 @@ body:has(.dashboard-subnav) {
     max-width: 100vw !important;
     height: 56px !important;
     padding: 0 16px !important;
-    background: #1E0308 !important;
+    background: #111116 !important;
     border-bottom: 1px solid rgba(212, 175, 55, 0.22) !important;
     z-index: 1000 !important;
     box-sizing: border-box !important;
@@ -6809,8 +6809,8 @@ body:has(.dashboard-subnav) {
     width: 100% !important;
     max-width: 100vw !important;
     height: 48px !important;
-    background: #1C0307 !important;
-    border-bottom: 1px solid rgba(212, 175, 55, 0.22) !important;
+    background: #0D0D11 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
     z-index: 999 !important;
     box-sizing: border-box !important;
   }
@@ -6926,11 +6926,11 @@ body:has(.dashboard-subnav) {
     width: 100% !important;
     max-width: 420px !important;
     margin: 0 auto 20px auto !important;
-    background: #23050B !important;
-    border: 1px solid rgba(212, 175, 55, 0.28) !important;
+    background: #141419 !important;
+    border: 1px solid rgba(212, 175, 55, 0.22) !important;
     border-radius: 22px !important;
     overflow: hidden !important;
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6) !important;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65) !important;
     display: flex !important;
     flex-direction: column !important;
     box-sizing: border-box !important;
@@ -6944,7 +6944,7 @@ body:has(.dashboard-subnav) {
     min-height: 330px !important;
     overflow: hidden !important;
     cursor: pointer !important;
-    background: #140205 !important;
+    background: #0E0E12 !important;
   }
 
   .shaadi-card-img {
@@ -7003,7 +7003,7 @@ body:has(.dashboard-subnav) {
     gap: 6px !important;
     padding: 5px 12px !important;
     border-radius: 20px !important;
-    background: rgba(14, 2, 5, 0.68) !important;
+    background: rgba(14, 14, 18, 0.72) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
     border: 1px solid rgba(255, 255, 255, 0.18) !important;
@@ -7030,7 +7030,7 @@ body:has(.dashboard-subnav) {
     left: 0 !important;
     right: 0 !important;
     padding: 55px 16px 14px 16px !important;
-    background: linear-gradient(to top, rgba(14, 2, 5, 0.98) 0%, rgba(14, 2, 5, 0.72) 50%, rgba(14, 2, 5, 0) 100%) !important;
+    background: linear-gradient(to top, rgba(10, 10, 14, 0.98) 0%, rgba(10, 10, 14, 0.72) 50%, rgba(10, 10, 14, 0) 100%) !important;
     z-index: 5 !important;
     pointer-events: none !important;
   }
@@ -7110,13 +7110,13 @@ body:has(.dashboard-subnav) {
 
   /* Bottom Action Row */
   .shaadi-action-row {
-    background: #160205 !important;
+    background: #121216 !important;
     padding: 12px 18px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
     gap: 14px !important;
-    border-top: 1px solid rgba(212, 175, 55, 0.18) !important;
+    border-top: 1px solid rgba(212, 175, 55, 0.16) !important;
     width: 100% !important;
     box-sizing: border-box !important;
   }
@@ -7198,10 +7198,10 @@ body:has(.dashboard-subnav) {
     width: 100% !important;
     max-width: 100vw !important;
     height: 58px !important;
-    background: rgba(20, 2, 6, 0.97) !important;
+    background: rgba(14, 14, 18, 0.98) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
-    border-top: 1px solid rgba(212, 175, 55, 0.26) !important;
+    border-top: 1px solid rgba(212, 175, 55, 0.22) !important;
     align-items: center !important;
     justify-content: space-around !important;
     z-index: 1000 !important;
