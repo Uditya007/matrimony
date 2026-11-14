@@ -3747,8 +3747,8 @@ window.renderMatchesListCustom = function(profilesList) {
 window.toggleMobileUserMenu = function() {
   const drawer = document.getElementById('mobileUserDrawer');
   if (!drawer) return;
-  const isHidden = drawer.style.display === 'none' || !drawer.style.display;
-  if (isHidden) {
+  const isOpening = !drawer.classList.contains('active');
+  if (isOpening) {
     const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
     const name = currentUser.name || 'Noble Member';
     const initial = name.trim().charAt(0).toUpperCase() || 'U';
@@ -3770,9 +3770,9 @@ window.toggleMobileUserMenu = function() {
     if (avatarEl) avatarEl.textContent = initial;
     if (headerAvatarEl) headerAvatarEl.textContent = initial;
 
-    drawer.style.display = 'flex';
+    drawer.classList.add('active');
   } else {
-    drawer.style.display = 'none';
+    drawer.classList.remove('active');
   }
 };
 

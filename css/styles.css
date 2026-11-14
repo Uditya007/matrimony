@@ -6548,9 +6548,13 @@ body:has(.dashboard-subnav) {
     position: fixed !important;
     inset: 0 !important;
     z-index: 30000 !important;
-    display: flex !important;
+    display: none;
     flex-direction: column !important;
     justify-content: flex-end !important;
+  }
+
+  .mobile-user-drawer.active {
+    display: flex !important;
   }
 
   .mobile-drawer-backdrop {
