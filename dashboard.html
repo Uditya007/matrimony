@@ -12,13 +12,16 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="css/styles.css?v=3.7">
+  <link rel="stylesheet" href="css/styles.css?v=3.9">
 </head>
 <body class="dashboard-layout">
 
   <!-- Modern Mobile Matches App Header (Active on Mobile <= 768px, Shaadi Layout) -->
   <div class="mobile-matches-header" id="mobileMatchesHeader">
     <div class="mobile-matches-left">
+      <button type="button" class="mobile-header-user-btn" onclick="toggleMobileUserMenu()" aria-label="My Account" title="My Account">
+        <span class="m-user-avatar-circle" id="mHeaderAvatar">U</span>
+      </button>
       <h1 class="mobile-matches-title">Matches</h1>
     </div>
     <div class="mobile-matches-right">
@@ -28,6 +31,87 @@
         </svg>
         <span class="mobile-bell-badge" id="mobileBellBadge">1</span>
       </button>
+      <button type="button" class="mobile-header-logout-btn" onclick="handleLogout()" aria-label="Logout" title="Log Out">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        <span>Logout</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile User Account Drawer / Bottom Sheet -->
+  <div class="mobile-user-drawer" id="mobileUserDrawer" style="display: none;">
+    <div class="mobile-drawer-backdrop" onclick="toggleMobileUserMenu()"></div>
+    <div class="mobile-user-drawer-panel">
+      <div class="m-drawer-handle"></div>
+      
+      <!-- User Profile Header in Drawer -->
+      <div class="m-user-drawer-header">
+        <div class="m-user-drawer-avatar" id="mDrawerAvatar">U</div>
+        <div class="m-user-drawer-info">
+          <div class="m-user-drawer-name" id="mDrawerName">Noble User</div>
+          <div class="m-user-drawer-meta">
+            <span id="mDrawerClan">Rajput Clan</span> &bull; <span id="mDrawerId" class="m-user-id-badge">SRS-MEMBER</span>
+          </div>
+          <div class="m-user-drawer-plan" id="mDrawerPlan">👑 Royal Plan</div>
+        </div>
+        <button type="button" class="m-user-drawer-close" onclick="toggleMobileUserMenu()">&times;</button>
+      </div>
+
+      <!-- Quick Action Menu List -->
+      <div class="m-user-drawer-menu">
+        <a href="profile.html" class="m-user-drawer-item">
+          <span class="m-item-icon">👤</span>
+          <div class="m-item-text">
+            <strong>My Profile</strong>
+            <small>View &amp; edit your noble bio, lineage &amp; photos</small>
+          </div>
+          <span class="m-item-arrow">&rarr;</span>
+        </a>
+
+        <a href="membership.html" class="m-user-drawer-item">
+          <span class="m-item-icon">👑</span>
+          <div class="m-item-text">
+            <strong>Regal Membership</strong>
+            <small>Upgrade for unlimited contact unlocks</small>
+          </div>
+          <span class="m-item-badge">85% OFF</span>
+        </a>
+
+        <a href="javascript:void(0)" onclick="toggleMobileUserMenu(); switchMobileSubtab('shortlist');" class="m-user-drawer-item">
+          <span class="m-item-icon">⭐</span>
+          <div class="m-item-text">
+            <strong>Shortlisted Matches</strong>
+            <small>Profiles saved for family review</small>
+          </div>
+          <span class="m-item-arrow">&rarr;</span>
+        </a>
+
+        <a href="faq.html" class="m-user-drawer-item">
+          <span class="m-item-icon">🛡️</span>
+          <div class="m-item-text">
+            <strong>Support &amp; Guidelines</strong>
+            <small>Matchmaker desk &amp; Gotra verification help</small>
+          </div>
+          <span class="m-item-arrow">&rarr;</span>
+        </a>
+      </div>
+
+      <!-- Logout Action Row in Drawer -->
+      <div class="m-user-drawer-logout-wrap">
+        <button type="button" class="m-user-drawer-logout-btn" onclick="handleLogout()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Log Out of Royal Account</span>
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -859,7 +943,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/ai-matchmaker.js?v=3.7"></script>
-  <script src="js/app.js?v=3.8"></script>
+  <script src="js/app.js?v=3.9"></script>
   <script src="js/chatbot.js?v=3.7"></script>
 </body>
 </html>

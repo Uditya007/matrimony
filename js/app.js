@@ -2657,6 +2657,12 @@ async function initDashboardPage() {
     </span>
   `;
 
+  // Populate Mobile Matches Header Avatar
+  const mAvatar = document.getElementById('mHeaderAvatar');
+  if (mAvatar && currentUser && currentUser.name) {
+    mAvatar.textContent = currentUser.name.trim().charAt(0).toUpperCase();
+  }
+
   // Render stats in dashboard top greeting bar
   updateDashboardStats();
 
@@ -3736,6 +3742,38 @@ window.renderMatchesListCustom = function(profilesList) {
     return;
   }
   container.innerHTML = profilesList.map(p => createProfileCardHtml(p, true)).join('');
+};
+
+window.toggleMobileUserMenu = function() {
+  const drawer = document.getElementById('mobileUserDrawer');
+  if (!drawer) return;
+  const isHidden = drawer.style.display === 'none' || !drawer.style.display;
+  if (isHidden) {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+    const name = currentUser.name || 'Noble Member';
+    const initial = name.trim().charAt(0).toUpperCase() || 'U';
+    const clan = currentUser.caste || currentUser.clan || 'Rajput';
+    const memberId = currentUser.id || 'SRS-MEMBER';
+    const tier = (currentUser.tier || 'Royal').toUpperCase();
+
+    const nameEl = document.getElementById('mDrawerName');
+    const clanEl = document.getElementById('mDrawerClan');
+    const idEl = document.getElementById('mDrawerId');
+    const planEl = document.getElementById('mDrawerPlan');
+    const avatarEl = document.getElementById('mDrawerAvatar');
+    const headerAvatarEl = document.getElementById('mHeaderAvatar');
+
+    if (nameEl) nameEl.textContent = name;
+    if (clanEl) clanEl.textContent = `${clan} Clan`;
+    if (idEl) idEl.textContent = memberId.slice(-8);
+    if (planEl) planEl.textContent = `👑 ${tier} Plan`;
+    if (avatarEl) avatarEl.textContent = initial;
+    if (headerAvatarEl) headerAvatarEl.textContent = initial;
+
+    drawer.style.display = 'flex';
+  } else {
+    drawer.style.display = 'none';
+  }
 };
 
 window.toggleMobileSearchDrawer = function() {
