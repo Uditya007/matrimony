@@ -2992,19 +2992,19 @@ window.clearDashboardAIFilter = function() {
 function getAvatarGradient(clan) {
   switch (clan) {
     case 'Rathore':
-      return 'linear-gradient(135deg, #181820 0%, #252532 50%, #B8860B 100%)';
+      return 'linear-gradient(135deg, #8B1E2D 0%, #5B0E1B 100%)';
     case 'Sisodia':
-      return 'linear-gradient(135deg, #181820 0%, #252532 50%, #C9A227 100%)';
+      return 'linear-gradient(135deg, #991B1B 0%, #7F1D1D 100%)';
     case 'Chauhan':
-      return 'linear-gradient(135deg, #181820 0%, #252532 50%, #D4AF37 100%)';
+      return 'linear-gradient(135deg, #B45309 0%, #78350F 100%)';
     case 'Kachwaha':
-      return 'linear-gradient(135deg, #181820 0%, #252532 50%, #3B5998 100%)';
+      return 'linear-gradient(135deg, #1E40AF 0%, #172554 100%)';
     case 'Bhati':
-      return 'linear-gradient(135deg, #181820 0%, #252532 50%, #AA7C11 100%)';
+      return 'linear-gradient(135deg, #D97706 0%, #92400E 100%)';
     case 'Shekhawat':
-      return 'linear-gradient(135deg, #181820 0%, #252532 50%, #2E7D32 100%)';
+      return 'linear-gradient(135deg, #047857 0%, #064E3B 100%)';
     default:
-      return 'linear-gradient(135deg, #181820 0%, #252532 100%)';
+      return 'linear-gradient(135deg, #8B1E2D 0%, #4C0519 100%)';
   }
 }
 
