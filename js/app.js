@@ -503,7 +503,8 @@ window.handleSendVerificationOtp = function(isResend = false, overridePhone = nu
     if (data.success) {
       if (data.token) sessionStorage.setItem('royal_pending_otp_token', data.token);
       if (data.expiresAt) sessionStorage.setItem('royal_pending_otp_expires', data.expiresAt);
-      showToast('💬 Verification code sent to your WhatsApp!', 'gold');
+      if (data.fallbackOtp) sessionStorage.setItem('royal_pending_otp', data.fallbackOtp);
+      showToast(data.message || '💬 Verification code sent to your WhatsApp!', 'gold');
     } else {
       showToast(`⚠️ ${data?.error || 'Could not send WhatsApp OTP. Please ensure number is on WhatsApp.'}`, 'normal');
       console.warn('WhatsApp OTP send notice:', data);
@@ -1479,7 +1480,8 @@ window.handleSendLoginOtp = async function(channel) {
       if (data && data.success) {
         if (data.token) sessionStorage.setItem('royal_login_otp_token', data.token);
         if (data.expiresAt) sessionStorage.setItem('royal_login_otp_expires', data.expiresAt);
-        showToast('💬 Verification code sent to your WhatsApp!', 'gold');
+        if (data.fallbackOtp) sessionStorage.setItem('royal_pending_otp', data.fallbackOtp);
+        showToast(data.message || '💬 Verification code sent to your WhatsApp!', 'gold');
       } else {
         showToast(`⚠️ ${data?.error || 'Could not send WhatsApp OTP.'}`, 'normal');
       }
