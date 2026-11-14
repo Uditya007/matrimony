@@ -6463,10 +6463,13 @@ body:has(.dashboard-subnav) {
   body.dashboard-layout {
     max-width: 100vw !important;
     overflow-x: hidden !important;
-    padding-top: 108px !important;
+    padding-top: 104px !important;
     padding-bottom: 78px !important;
-    background-color: #0A0A0D !important;
-    background-image: none !important;
+    background-color: var(--bg-warm, #4A0813) !important;
+    background-image: linear-gradient(rgba(10, 10, 14, 0.38), rgba(10, 10, 14, 0.38)), url('../images/royal-wallpaper.jpg') !important;
+    background-repeat: repeat !important;
+    background-size: 380px !important;
+    background-attachment: fixed !important;
     min-height: 100vh;
   }
 
