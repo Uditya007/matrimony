@@ -3296,6 +3296,122 @@ function createProfileCardHtml(profile, isDashboard = true) {
   const onlineStatus = getProfileOnlineStatus(profile);
   const badgeDotColor = onlineStatus.isOnline ? '#2ecc71' : (onlineStatus.statusClass === 'status-recent' ? '#f39c12' : '#a0aec0');
   const badgeDotClass = onlineStatus.isOnline ? 'pulse-green' : (onlineStatus.statusClass === 'status-recent' ? 'pulse-amber' : '');
+
+  // ==========================================
+  // SHAADI-STYLE CARD LAYOUT FOR DASHBOARD (ROYAL BURGUNDY THEME)
+  // ==========================================
+  if (isDashboard) {
+    const profileImg = profile.img || profile.profilePic || '';
+    const oppositeGenderText = profile.gender === 'Groom' ? 'Him' : 'Her';
+    const formattedClan = profile.clan || profile.caste || 'Rajput';
+    const formattedLocation = profile.location ? profile.location.split(',')[0] : (profile.native || 'Rajasthan');
+    const formattedState = profile.location && profile.location.split(',')[1] ? profile.location.split(',')[1].trim() : 'Rajasthan';
+
+    return `
+      <div class="profile-card shaadi-match-card" data-id="${profile.id}">
+        <!-- Main Photo Area -->
+        <div class="shaadi-card-media" onclick="openProfileDetailModal('${profile.id}')">
+          ${profileImg ? `
+            <img src="${profileImg}" class="shaadi-card-img" alt="${profile.name}" loading="lazy" />
+          ` : `
+            <div class="shaadi-card-placeholder" style="background: ${getAvatarGradient(profile.clan)};">
+              <span class="shaadi-placeholder-avatar">${profile.initials || '👑'}</span>
+            </div>
+          `}
+
+          <!-- Floating Top-Right Overlays -->
+          <div class="shaadi-top-badges">
+            <!-- 3-dots Menu Button -->
+            <button type="button" class="shaadi-badge-btn" onclick="event.stopPropagation(); openCardOptionsSheet('${profile.id}', '${profile.name}')" title="More options" aria-label="More options">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <circle cx="5" cy="12" r="2.2"/>
+                <circle cx="12" cy="12" r="2.2"/>
+                <circle cx="19" cy="12" r="2.2"/>
+              </svg>
+            </button>
+
+            <!-- Astro Badge -->
+            <button type="button" class="shaadi-badge-pill shaadi-badge-astro" onclick="event.stopPropagation(); openAstroCompatibilityModal('${profile.id}')" title="Kundali & Astro Compatibility">
+              <span class="shaadi-astro-icon">🪐</span>
+              <span class="shaadi-astro-label">Astro</span>
+            </button>
+
+            <!-- Photo Count Badge -->
+            <div class="shaadi-badge-pill shaadi-badge-photos">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                <path d="M12 12c1.65 0 3-1.35 3-3s-1.35-3-3-3-3 1.35-3 3 1.35 3 3 3zm0-4.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zm7-4.5h-3.17L14.4 1.57A2.003 2.003 0 0 0 12.92 1H9.08c-.59 0-1.15.26-1.48.57L6.17 3H3c-1.1 0-2 .9-2 2v13c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 15H3V5h3.83l1.83-2h4.68l1.83 2H19v12z"/>
+              </svg>
+              <span>1</span>
+            </div>
+          </div>
+
+          <!-- Bottom Overlay on top of Photo -->
+          <div class="shaadi-card-overlay">
+            <div class="shaadi-name-row">
+              <h3 class="shaadi-profile-name">${profile.name}</h3>
+              ${profile.isVerified !== false ? `
+                <span class="shaadi-verified-badge" title="Lineage, Gotra & Family Verified">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  </svg>
+                </span>
+              ` : ''}
+            </div>
+
+            <div class="shaadi-subline-1">
+              ${profile.age} yrs, ${profile.height || "5'5\""} • ${profile.occupation ? profile.occupation.split(',')[0].substring(0, 26) : 'Professional'}
+            </div>
+
+            <div class="shaadi-subline-2">
+              Hindu, Rajput • ${formattedLocation}, ${formattedState}
+            </div>
+
+            <div class="shaadi-badges-row">
+              <div class="shaadi-meta-pill shaadi-pill-active">
+                <span class="shaadi-pulse-dot" style="background-color: ${badgeDotColor};"></span>
+                <span>${onlineStatus.formattedText || '10h ago'}</span>
+              </div>
+              <div class="shaadi-meta-pill shaadi-pill-match">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                  <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                </svg>
+                <span>You & ${oppositeGenderText}</span>
+              </div>
+              ${profile.aiScore ? `
+                <div class="shaadi-meta-pill shaadi-pill-score">
+                  <span>✨ ${profile.aiScore}% Match</span>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Action Row (Exact Shaadi Layout) -->
+        <div class="shaadi-action-row">
+          <div class="shaadi-action-text" onclick="handleMobileConnectClick('${profile.id}')">
+            <span class="shaadi-like-prompt">Like this profile?</span>
+            <span class="shaadi-connect-cta">${isAccepted ? 'Connected (Chat)' : (hasSentInterest ? 'Request Sent ⌛' : 'Connect Now')}</span>
+          </div>
+
+          <button type="button" class="shaadi-fab-btn ${isAccepted ? 'is-connected' : (hasSentInterest ? 'is-pending' : '')}" onclick="handleMobileConnectClick('${profile.id}')" aria-label="Connect with ${profile.name}">
+            ${isAccepted ? `
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+              </svg>
+            ` : (hasSentInterest ? `
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/>
+              </svg>
+            ` : `
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            `)}
+          </button>
+        </div>
+      </div>
+    `;
+  }
   
   const recentlyActiveBadge = `
     <div class="badge-active" style="margin-top: 10px; display: inline-flex; align-items: center; gap: 5px;">
@@ -3463,7 +3579,203 @@ function updateDashboardStats() {
     const acceptedCount = profiles.filter(p => areProfilesConnected(currentUser, p)).length;
     actChats.textContent = acceptedCount;
   }
+
+  // Update mobile subtab pill counters (Shaadi Mobile Layout)
+  const mNew = document.getElementById('mCountNew');
+  if (mNew) mNew.textContent = profiles.length;
+  const mDaily = document.getElementById('mCountDaily');
+  if (mDaily) mDaily.textContent = Math.min(9, profiles.length);
+  const mAll = document.getElementById('mCountAll');
+  if (mAll) mAll.textContent = profiles.length;
+  const mShort = document.getElementById('mCountShortlist');
+  if (mShort) mShort.textContent = shortlists.length;
 }
+
+// ==========================================
+// MOBILE SHAADI-LAYOUT DASHBOARD HANDLERS
+// ==========================================
+window.activeMobileSubtab = 'daily';
+
+window.handleMobileConnectClick = function(profileId) {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+    showToast('Please log in first', 'normal');
+    return;
+  }
+  const mySentInterests = getProfileInterests(currentUser);
+  const profiles = getAllProfiles();
+  const target = profiles.find(p => p.id === profileId);
+  if (!target) return;
+
+  if (areProfilesConnected(currentUser, target)) {
+    openOneOnOneChat(profileId);
+    return;
+  }
+  if (mySentInterests[profileId] === 'sent') {
+    handleCancelInterest(profileId);
+    return;
+  }
+  handleSendInterest(profileId);
+};
+
+let currentSheetProfileId = null;
+let currentSheetProfileName = '';
+
+window.openCardOptionsSheet = function(profileId, profileName) {
+  currentSheetProfileId = profileId;
+  currentSheetProfileName = profileName;
+  const sheet = document.getElementById('cardOptionsSheet');
+  const title = document.getElementById('cardOptionsName');
+  if (title) title.textContent = profileName || 'Profile Options';
+  if (sheet) sheet.style.display = 'flex';
+};
+
+window.closeCardOptionsSheet = function() {
+  const sheet = document.getElementById('cardOptionsSheet');
+  if (sheet) sheet.style.display = 'none';
+};
+
+window.openModalFromSheet = function() {
+  closeCardOptionsSheet();
+  if (currentSheetProfileId) {
+    openProfileDetailModal(currentSheetProfileId);
+  }
+};
+
+window.shortlistFromSheet = function() {
+  closeCardOptionsSheet();
+  if (currentSheetProfileId) {
+    handleShortlist(currentSheetProfileId);
+  }
+};
+
+window.shareProfileFromSheet = function() {
+  closeCardOptionsSheet();
+  if (navigator.share) {
+    navigator.share({
+      title: `Noble Rajput Profile: ${currentSheetProfileName}`,
+      text: `View verified noble profile of ${currentSheetProfileName} on Shree Rajput Sagai Sambandh.`,
+      url: window.location.href
+    }).catch(() => {});
+  } else {
+    navigator.clipboard?.writeText(window.location.href);
+    showToast('Profile link copied to clipboard!', 'gold');
+  }
+};
+
+window.openAstroCompatibilityModal = function(profileId) {
+  const profiles = getAllProfiles();
+  const profile = profiles.find(p => p.id === profileId);
+  if (!profile) return;
+
+  const modal = document.getElementById('astroCompatibilityModal');
+  const nameEl = document.getElementById('astroProfileName');
+  const rashiEl = document.getElementById('astroRashiVal');
+  const nakshatraEl = document.getElementById('astroNakshatraVal');
+  const manglikEl = document.getElementById('astroManglikVal');
+  const gunasEl = document.getElementById('astroGunasVal');
+
+  if (nameEl) nameEl.textContent = `${profile.name} & You`;
+  if (rashiEl) rashiEl.textContent = profile.rashi || 'Leo (Simha)';
+  if (nakshatraEl) nakshatraEl.textContent = profile.nakshatra || 'Purva Phalguni';
+  if (manglikEl) manglikEl.textContent = (profile.manglik || 'Non-Manglik') + ' ✓';
+  if (gunasEl) gunasEl.textContent = (profile.aiScore ? Math.round(profile.aiScore * 0.36) : 29) + ' / 36 Auspicious';
+
+  if (modal) modal.style.display = 'flex';
+};
+
+window.closeAstroCompatibilityModal = function() {
+  const modal = document.getElementById('astroCompatibilityModal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.switchMobileSubtab = function(tabKey) {
+  window.activeMobileSubtab = tabKey;
+  const tabs = document.querySelectorAll('.mobile-subtab');
+  tabs.forEach(t => t.classList.remove('active'));
+
+  const idMap = {
+    'new': 'mTabNew',
+    'daily': 'mTabDaily',
+    'all': 'mTabAll',
+    'shortlist': 'mTabShortlist'
+  };
+  const activeBtn = document.getElementById(idMap[tabKey]);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  const all = getAllProfiles().filter(p => !currentUser || p.id !== currentUser.id);
+  const shortlists = JSON.parse(localStorage.getItem('shortlisted')) || [];
+
+  if (tabKey === 'new') {
+    const sortedNew = [...all].reverse();
+    renderMatchesListCustom(sortedNew);
+  } else if (tabKey === 'daily') {
+    const daily = all.slice(0, 9);
+    renderMatchesListCustom(daily);
+  } else if (tabKey === 'all') {
+    renderMatchesListCustom(all);
+  } else if (tabKey === 'shortlist') {
+    const shortlisted = all.filter(p => shortlists.includes(p.id));
+    renderMatchesListCustom(shortlisted);
+  }
+};
+
+window.renderMatchesListCustom = function(profilesList) {
+  const container = document.getElementById('matchesGrid');
+  if (!container) return;
+  if (!profilesList || profilesList.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 50px 20px; background: #22050B; border: 1px dashed rgba(212, 175, 55, 0.4); border-radius: 16px; margin: 15px auto; width: 100%; box-sizing: border-box;">
+        <p style="font-family: var(--font-royal); font-size: 1.15rem; color: #FFFFFF; margin-bottom: 6px;">No Profiles in this Category</p>
+        <p style="color: #BDB0B4; font-size: 0.82rem;">Explore 'Daily' or 'My Matches' to view compatible noble profiles.</p>
+      </div>
+    `;
+    return;
+  }
+  container.innerHTML = profilesList.map(p => createProfileCardHtml(p, true)).join('');
+};
+
+window.toggleMobileSearchDrawer = function() {
+  const drawer = document.getElementById('mobileSearchDrawer');
+  if (!drawer) return;
+  if (drawer.style.display === 'none' || !drawer.style.display) {
+    drawer.style.display = 'block';
+    document.getElementById('mFilterSearchInput')?.focus();
+  } else {
+    drawer.style.display = 'none';
+  }
+};
+
+window.handleMobileSearchInput = function(query) {
+  const q = (query || '').toLowerCase().trim();
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  const all = getAllProfiles().filter(p => !currentUser || p.id !== currentUser.id);
+  if (!q) {
+    renderMatchesListCustom(all.slice(0, 9));
+    return;
+  }
+  const filtered = all.filter(p => {
+    const matchText = `${p.name} ${p.clan} ${p.gotra} ${p.location} ${p.occupation}`.toLowerCase();
+    return matchText.includes(q);
+  });
+  renderMatchesListCustom(filtered);
+};
+
+window.setMobileClanFilter = function(clan, btnEl) {
+  const pills = document.querySelectorAll('.m-filter-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  const all = getAllProfiles().filter(p => !currentUser || p.id !== currentUser.id);
+  if (clan === 'All') {
+    renderMatchesListCustom(all);
+  } else {
+    const filtered = all.filter(p => (p.clan || '').toLowerCase() === clan.toLowerCase());
+    renderMatchesListCustom(filtered);
+  }
+};
 
 // Shortlisting handler
 window.handleShortlist = function(id) {
@@ -5378,6 +5690,17 @@ window.renderNotifications = function() {
       badge.style.display = 'flex';
     } else {
       badge.style.display = 'none';
+    }
+  }
+
+  const mBellBadge = document.getElementById('mobileBellBadge');
+  if (mBellBadge) {
+    if (totalActiveCount > 0) {
+      mBellBadge.textContent = totalActiveCount > 99 ? '99+' : totalActiveCount;
+      mBellBadge.style.display = 'flex';
+    } else {
+      mBellBadge.textContent = '1';
+      mBellBadge.style.display = 'flex';
     }
   }
 

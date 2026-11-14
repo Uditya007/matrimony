@@ -12,9 +12,68 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="css/styles.css?v=2.8">
+  <link rel="stylesheet" href="css/styles.css?v=3.7">
 </head>
 <body class="dashboard-layout">
+
+  <!-- Modern Mobile Matches App Header (Active on Mobile <= 768px, Shaadi Layout) -->
+  <div class="mobile-matches-header" id="mobileMatchesHeader">
+    <div class="mobile-matches-left">
+      <h1 class="mobile-matches-title">Matches</h1>
+    </div>
+    <div class="mobile-matches-right">
+      <button type="button" class="mobile-header-bell-btn" id="mobileHeaderBell" onclick="openNotificationDropdownDirectly()" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="mobile-bell-svg">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9zM13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="mobile-bell-badge" id="mobileBellBadge">1</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Sub-tabs Bar (Search, New, Daily, My Matches, Shortlisted) -->
+  <div class="mobile-subtabs-bar" id="mobileSubtabsBar">
+    <div class="mobile-subtabs-scroll">
+      <button type="button" class="mobile-subtab" id="mTabSearch" onclick="toggleMobileSearchDrawer()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span>Search</span>
+      </button>
+      <button type="button" class="mobile-subtab" id="mTabNew" onclick="switchMobileSubtab('new')">
+        <span>New (<span id="mCountNew">16</span>)</span>
+      </button>
+      <button type="button" class="mobile-subtab active" id="mTabDaily" onclick="switchMobileSubtab('daily')">
+        <span>Daily (<span id="mCountDaily">9</span>)</span>
+      </button>
+      <button type="button" class="mobile-subtab" id="mTabAll" onclick="switchMobileSubtab('all')">
+        <span>My Matches (<span id="mCountAll">24</span>)</span>
+      </button>
+      <button type="button" class="mobile-subtab" id="mTabShortlist" onclick="switchMobileSubtab('shortlist')">
+        <span>Shortlisted (<span id="mCountShortlist">0</span>)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Collapsible Mobile Search & Filter Drawer (Opened when tapping Search tab) -->
+  <div class="mobile-search-drawer" id="mobileSearchDrawer" style="display: none;">
+    <div class="mobile-drawer-inner">
+      <div class="mobile-drawer-header">
+        <span>🔍 Search Rajput Profiles</span>
+        <button type="button" onclick="toggleMobileSearchDrawer()" class="mobile-drawer-close">&times;</button>
+      </div>
+      <div class="mobile-drawer-body">
+        <input type="text" id="mFilterSearchInput" placeholder="Search by name, gotra, city..." oninput="handleMobileSearchInput(this.value)">
+        <div class="mobile-filter-pills">
+          <button type="button" class="m-filter-pill active" onclick="setMobileClanFilter('All', this)">All Clans</button>
+          <button type="button" class="m-filter-pill" onclick="setMobileClanFilter('Rathore', this)">Rathore</button>
+          <button type="button" class="m-filter-pill" onclick="setMobileClanFilter('Chauhan', this)">Chauhan</button>
+          <button type="button" class="m-filter-pill" onclick="setMobileClanFilter('Sisodia', this)">Sisodia</button>
+          <button type="button" class="m-filter-pill" onclick="setMobileClanFilter('Shekhawat', this)">Shekhawat</button>
+          <button type="button" class="m-filter-pill" onclick="setMobileClanFilter('Bhati', this)">Bhati</button>
+          <button type="button" class="m-filter-pill" onclick="setMobileClanFilter('Kachwaha', this)">Kachwaha</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Jharokha SVG Clip Path for CSS Masking -->
   <svg width="0" height="0" style="position: absolute;">
@@ -693,6 +752,102 @@
     </div>
   </footer>
 
+  <!-- Fixed Mobile Bottom Navigation Bar (Shaadi 5-tab layout) -->
+  <nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <a href="index.html" class="mobile-bottom-tab" id="mNavHome">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="dashboard.html" class="mobile-bottom-tab active" id="mNavMatches">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+      </svg>
+      <span>Matches</span>
+    </a>
+    <a href="javascript:void(0)" onclick="openInterestsModal()" class="mobile-bottom-tab" id="mNavInbox">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+        <polyline points="22,6 12,13 2,6"></polyline>
+      </svg>
+      <span>Inbox</span>
+    </a>
+    <a href="javascript:void(0)" onclick="openOneOnOneChat('P1')" class="mobile-bottom-tab" id="mNavChat">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span>Chat</span>
+    </a>
+    <a href="membership.html" class="mobile-bottom-tab" id="mNavPremium">
+      <div class="m-premium-badge-wrapper">
+        <span class="m-premium-pill">85% OFF</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
+        </svg>
+      </div>
+      <span>Premium</span>
+    </a>
+  </nav>
+
+  <!-- Astrological Compatibility Modal (Shaadi Astro badge popup) -->
+  <div class="profile-modal" id="astroCompatibilityModal" style="display: none;">
+    <div class="modal-content astro-modal-card" id="astroModalCard">
+      <button class="modal-close-btn" onclick="closeAstroCompatibilityModal()">&times;</button>
+      <div class="astro-icon-emblem">🪐</div>
+      <h3 class="astro-title">Kundali & Heritage Alignment</h3>
+      <p class="astro-subtitle" id="astroProfileName">Astrological Compatibility with You</p>
+
+      <div class="astro-grid">
+        <div class="astro-stat">
+          <span class="astro-stat-label">Rashi / Moon Sign</span>
+          <strong class="astro-stat-value" id="astroRashiVal">Leo (Simha)</strong>
+        </div>
+        <div class="astro-stat">
+          <span class="astro-stat-label">Nakshatra</span>
+          <strong class="astro-stat-value" id="astroNakshatraVal">Purva Phalguni</strong>
+        </div>
+        <div class="astro-stat">
+          <span class="astro-stat-label">Manglik Status</span>
+          <strong class="astro-stat-value text-green" id="astroManglikVal">Non-Manglik ✓</strong>
+        </div>
+        <div class="astro-stat">
+          <span class="astro-stat-label">Guna Milan Score</span>
+          <strong class="astro-stat-value text-gold" id="astroGunasVal">29 / 36 Auspicious</strong>
+        </div>
+      </div>
+
+      <div class="astro-auspicious-note">
+        Ancestral Rajput gotra screening and planetary dispositions reflect high marital harmony, gotra non-conflict, and family prosperity.
+      </div>
+
+      <button type="button" class="btn btn-royal" style="width: 100%; margin-top: 15px;" onclick="closeAstroCompatibilityModal()">
+        Done 👑
+      </button>
+    </div>
+  </div>
+
+  <!-- Profile More Options Action Sheet -->
+  <div class="profile-modal" id="cardOptionsSheet" style="display: none;" onclick="closeCardOptionsSheet()">
+    <div class="card-options-panel" onclick="event.stopPropagation()">
+      <div class="card-options-handle"></div>
+      <h4 class="card-options-title" id="cardOptionsName">Profile Options</h4>
+      <button type="button" class="card-option-btn" onclick="openModalFromSheet()">
+        <span>👁️</span> View Full Detailed Profile
+      </button>
+      <button type="button" class="card-option-btn" onclick="shortlistFromSheet()">
+        <span>❤️</span> Shortlist Profile
+      </button>
+      <button type="button" class="card-option-btn" onclick="shareProfileFromSheet()">
+        <span>🔗</span> Share Profile Link
+      </button>
+      <button type="button" class="card-option-btn text-muted" onclick="closeCardOptionsSheet()">
+        <span>✕</span> Cancel
+      </button>
+    </div>
+  </div>
+
   <!-- Floating WhatsApp Chat Button -->
   <a href="https://wa.me/919928592159" class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.417 9.864-9.848.002-2.63-1.023-5.101-2.887-6.968C16.621 1.936 14.15 1.087 11.996 1.087c-5.43 0-9.852 4.415-9.856 9.847-.001 1.765.467 3.487 1.355 5.027l-.988 3.606 3.693-.97.157.093zm12.338-7.536c-.328-.164-1.942-.959-2.242-1.069-.3-.11-.519-.164-.738.164-.219.328-.847 1.069-1.039 1.288-.192.219-.384.246-.712.083-1.826-.913-2.997-1.637-3.947-3.268-.252-.433.252-.401.72-1.332.077-.154.038-.288-.019-.397-.058-.11-.519-1.25-.712-1.713-.188-.452-.378-.39-.519-.398-.135-.007-.29-.009-.445-.009-.156 0-.409.058-.623.288-.214.23-.817.799-.817 1.95s.836 2.262.95 2.416c.115.154 1.645 2.512 3.985 3.522.556.24 1.053.404 1.409.518.572.181 1.092.155 1.503.094.458-.068 1.942-.795 2.215-1.528.272-.732.272-1.359.191-1.492-.081-.133-.298-.214-.626-.378z"/></svg>
@@ -703,8 +858,8 @@
   <!-- Supabase JS Client SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
-  <script src="js/ai-matchmaker.js?v=2.7"></script>
-  <script src="js/app.js?v=2.8"></script>
-  <script src="js/chatbot.js?v=2.7"></script>
+  <script src="js/ai-matchmaker.js?v=3.7"></script>
+  <script src="js/app.js?v=3.7"></script>
+  <script src="js/chatbot.js?v=3.7"></script>
 </body>
 </html>
