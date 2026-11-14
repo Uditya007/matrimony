@@ -22,10 +22,10 @@
       <button type="button" class="mobile-header-user-btn" onclick="toggleMobileUserMenu()" aria-label="My Account" title="My Account">
         <span class="m-user-avatar-circle" id="mHeaderAvatar">U</span>
       </button>
-      <h1 class="mobile-matches-title">Matches</h1>
+      <h1 class="mobile-matches-title" id="mobileHeaderTitle">Matches</h1>
     </div>
     <div class="mobile-matches-right">
-      <button type="button" class="mobile-header-bell-btn" id="mobileHeaderBell" onclick="openNotificationDropdownDirectly()" aria-label="Notifications">
+      <button type="button" class="mobile-header-bell-btn" id="mobileHeaderBell" onclick="switchAppView('inbox', 'notifs')" aria-label="Notifications">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="mobile-bell-svg">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9zM13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
@@ -189,9 +189,16 @@
   <!-- Sub-header Dashboard Navigation Tabs -->
   <div class="dashboard-subnav">
     <div class="subnav-container">
-      <a href="dashboard.html" class="subnav-tab active" id="subnavDashboard">Dashboard</a>
+      <a href="javascript:void(0)" class="subnav-tab active" id="subnavMatches" onclick="switchAppView('matches')">Matches & Feed</a>
+      <a href="javascript:void(0)" class="subnav-tab" id="subnavHome" onclick="switchAppView('home')">Royal Hub</a>
+      <a href="javascript:void(0)" class="subnav-tab" id="subnavInbox" onclick="switchAppView('inbox')">
+        Inbox & Requests <span class="subnav-counter-pill" id="desktopInboxBadge" style="display:none;">0</span>
+      </a>
+      <a href="javascript:void(0)" class="subnav-tab" id="subnavChat" onclick="switchAppView('chat')">
+        Messenger <span class="subnav-counter-dot" id="desktopChatBadge" style="display:none;"></span>
+      </a>
       <a href="profile.html" class="subnav-tab" id="subnavMyProfile">My Profile</a>
-      <a href="#" class="subnav-tab" id="subnavShortlists" onclick="document.getElementById('shortlistToggleBtn').click()">Shortlisted Matches</a>
+      <a href="javascript:void(0)" class="subnav-tab" id="subnavShortlists" onclick="switchAppView('matches'); switchMobileSubtab('shortlist');">Shortlisted Matches</a>
       <a href="membership.html" class="subnav-tab" id="subnavMembership">Regal Plans</a>
       <a href="faq.html" class="subnav-tab" id="subnavGuide">FAQ & Guidelines</a>
       <a href="#" class="subnav-tab" id="subnavLogout" onclick="handleLogout()">Logout</a>
@@ -233,8 +240,8 @@
       </div>
     </aside>
 
-    <!-- Center Column: Main matches & Activity statistics section -->
-    <main class="dashboard-main" id="dashboardMainMatches">
+    <!-- Center Column: Main matches & Activity statistics section (View 1) -->
+    <main class="dashboard-main app-view-section" id="viewMatchesSection">
       
       <!-- Royal Greeting Card -->
       <div class="dashboard-hero-greeting" id="dashboardGreetingBanner">
@@ -399,6 +406,21 @@
         <!-- Rendered Dynamically via app.js -->
       </div>
     </main>
+
+    <!-- View 2: Royal Hub / Home Section -->
+    <section class="app-view-section home-hub-container" id="viewHomeSection" style="display: none;">
+      <!-- Populated dynamically via renderHomeHubView() -->
+    </section>
+
+    <!-- View 3: Inbox & Connections Section -->
+    <section class="app-view-section inbox-hub-container" id="viewInboxSection" style="display: none;">
+      <!-- Populated dynamically via renderInboxHubView() -->
+    </section>
+
+    <!-- View 4: Royal Messenger / Chat Section -->
+    <section class="app-view-section chat-hub-container" id="viewChatSection" style="display: none;">
+      <!-- Populated dynamically via renderChatHubView() -->
+    </section>
 
     <!-- Right Column: Online sidebar + Real-time Lineage Filters -->
     <aside class="dashboard-online-right-panel" style="display: flex; flex-direction: column; gap: 20px;">
@@ -836,41 +858,52 @@
     </div>
   </footer>
 
+  <!-- Floating Undo Toast Notification -->
+  <div id="undoToastContainer" class="undo-toast-container" style="display: none;">
+    <span id="undoToastText">Action completed</span>
+    <button type="button" class="undo-toast-btn" id="undoToastBtn" onclick="executeUndoAction()">Undo</button>
+  </div>
+
   <!-- Fixed Mobile Bottom Navigation Bar (Shaadi 5-tab layout) -->
   <nav class="mobile-bottom-nav" id="mobileBottomNav">
-    <a href="index.html" class="mobile-bottom-tab" id="mNavHome">
+    <a href="javascript:void(0)" onclick="switchAppView('home')" class="mobile-bottom-tab" id="mNavHome" aria-label="Royal Hub">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
         <polyline points="9 22 9 12 15 12 15 22"></polyline>
       </svg>
       <span>Home</span>
     </a>
-    <a href="dashboard.html" class="mobile-bottom-tab active" id="mNavMatches">
+    <a href="javascript:void(0)" onclick="switchAppView('matches')" class="mobile-bottom-tab active" id="mNavMatches" aria-label="Matches Feed">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
         <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
       </svg>
       <span>Matches</span>
     </a>
-    <a href="javascript:void(0)" onclick="openInterestsModal()" class="mobile-bottom-tab" id="mNavInbox">
+    <a href="javascript:void(0)" onclick="switchAppView('inbox')" class="mobile-bottom-tab" id="mNavInbox" style="position: relative;" aria-label="Inbox and Requests">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
         <polyline points="22,6 12,13 2,6"></polyline>
       </svg>
+      <span class="m-bottom-nav-badge" id="mNavInboxBadge" style="display: none;">0</span>
       <span>Inbox</span>
     </a>
-    <a href="javascript:void(0)" onclick="openOneOnOneChat('P1')" class="mobile-bottom-tab" id="mNavChat">
+    <a href="javascript:void(0)" onclick="switchAppView('chat')" class="mobile-bottom-tab" id="mNavChat" style="position: relative;" aria-label="Royal Messenger">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
       </svg>
+      <span class="m-bottom-nav-dot" id="mNavChatBadge" style="display: none;"></span>
       <span>Chat</span>
     </a>
-    <a href="membership.html" class="mobile-bottom-tab" id="mNavPremium">
+    <a href="membership.html" class="mobile-bottom-tab" id="mNavPremium" aria-label="Premium Membership">
       <div class="m-premium-badge-wrapper">
         <span class="m-premium-pill">85% OFF</span>
         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
           <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
         </svg>
       </div>
+      <span>Premium</span>
+    </a>
+  </nav>
       <span>Premium</span>
     </a>
   </nav>

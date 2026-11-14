@@ -273,13 +273,60 @@
 
     /* mobile card stays semi-transparent */
     @media (max-width: 768px) {
+      body {
+        padding-top: 60px !important;
+        padding-bottom: 74px !important;
+      }
+      body > header,
+      .dashboard-subnav {
+        display: none !important;
+      }
+      .mobile-matches-header {
+        display: flex !important;
+      }
+      .mobile-bottom-nav {
+        display: flex !important;
+      }
+      .profile-edit-container {
+        margin: 10px auto !important;
+        padding: 0 12px !important;
+        gap: 20px !important;
+      }
       .profile-card-left {
+        position: static !important;
+        padding: 20px 14px !important;
         background: rgba(255,255,255,0.95) !important;
+      }
+      .profile-form-right {
+        padding: 20px 14px !important;
+      }
+      .form-grid-2col {
+        grid-template-columns: 1fr !important;
       }
     }
   </style>
 </head>
 <body>
+
+  <!-- Mobile Header for Profile -->
+  <div class="mobile-matches-header" id="mobileProfileHeader">
+    <div class="mobile-matches-left">
+      <a href="dashboard.html" class="mobile-header-user-btn" style="text-decoration: none;" aria-label="Back to Matches" title="Back to Matches">
+        <span style="font-size: 1.3rem; color: #FCD34D; font-weight: bold; line-height: 1; padding: 0 4px;">&larr;</span>
+      </a>
+      <h1 class="mobile-matches-title" style="font-size: 1.15rem !important;">My Profile &amp; Settings</h1>
+    </div>
+    <div class="mobile-matches-right">
+      <button type="button" class="mobile-header-logout-btn" onclick="handleLogout()" aria-label="Logout" title="Log Out">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        <span>Logout</span>
+      </button>
+    </div>
+  </div>
 
   <!-- Main Navigation Header -->
   <header>
@@ -537,6 +584,114 @@
           <textarea id="profExpectations" rows="4" placeholder="Describe what you are looking for in terms of Gotra restrictions, native areas, and family values..."></textarea>
         </div>
         
+        <!-- Section 6: Partner Lineage Preferences -->
+        <h3 class="profile-form-section-title">
+          <span>🎯</span> Partner Lineage &amp; Lifestyle Preferences
+        </h3>
+        
+        <div class="form-grid-2col">
+          <div class="form-group">
+            <label for="profPrefClan">Preferred Rajput Clans</label>
+            <select id="profPrefClan">
+              <option value="Any">All Rajput Clans (Traditional Exclusions apply)</option>
+              <option value="Rathore">Rathore</option>
+              <option value="Sisodia">Sisodia</option>
+              <option value="Chauhan">Chauhan</option>
+              <option value="Kachwaha">Kachwaha</option>
+              <option value="Shekhawat">Shekhawat</option>
+              <option value="Bhati">Bhati</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="profPrefAge">Preferred Age Range</label>
+            <select id="profPrefAge">
+              <option value="21-25">21 - 25 years</option>
+              <option value="23-28" selected>23 - 28 years</option>
+              <option value="26-32">26 - 32 years</option>
+              <option value="Any">Any Suitable Age</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="profPrefHeight">Minimum Preferred Height</label>
+            <select id="profPrefHeight">
+              <option value="Any">Any Height</option>
+              <option value="5ft 2in">5 ft 2 in &amp; above</option>
+              <option value="5ft 5in">5 ft 5 in &amp; above</option>
+              <option value="5ft 8in">5 ft 8 in &amp; above</option>
+              <option value="6ft 0in">6 ft 0 in &amp; above</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="profPrefLocation">Preferred Location / State</label>
+            <input type="text" id="profPrefLocation" placeholder="e.g. Rajasthan, Delhi NCR, Gujarat, Mumbai">
+          </div>
+        </div>
+
+        <!-- Section 7: Account, Privacy & Security Controls -->
+        <h3 class="profile-form-section-title">
+          <span>🔒</span> Lineage Privacy &amp; Account Controls
+        </h3>
+
+        <div class="form-grid-2col">
+          <div class="form-group">
+            <label for="profVisibility">Profile Visibility in Search</label>
+            <select id="profVisibility">
+              <option value="public" selected>Public to all Verified Rajput Suitors</option>
+              <option value="incognito">Incognito (Only Visible to Profiles I Express Interest In)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="profContactPrivacy">Phone Number Privacy</label>
+            <select id="profContactPrivacy">
+              <option value="mutual" selected>Unlocked ONLY upon Mutual Interest Approval</option>
+              <option value="verified">Directly Visible to Royal Verified Members</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="profPhotoPrivacy">Portrait Photo Privacy</label>
+            <select id="profPhotoPrivacy">
+              <option value="visible" selected>Visible to all Verified Members</option>
+              <option value="request_only">Protected (Visible on Photo Request Only)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="profWhatsAppAlerts">Instant WhatsApp Match &amp; Chat Alerts</label>
+            <select id="profWhatsAppAlerts">
+              <option value="enabled" selected>Enabled (Receive OTP &amp; Match Notifications on WhatsApp)</option>
+              <option value="disabled">Disabled (Email Only)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Blocked Profiles Manager -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; padding: 14px 16px; margin-bottom: 25px;">
+          <h4 style="font-size: 0.9rem; color: #FFFFFF; margin: 0 0 6px 0; font-family: var(--font-royal);">🛡️ Blocked &amp; Reported Profiles</h4>
+          <p style="font-size: 0.74rem; color: rgba(255,255,255,0.7); margin: 0 0 10px 0;">Members you block cannot view your biodata, see your photos, or send match interests.</p>
+          <div id="blockedProfilesList" style="font-size: 0.75rem; color: var(--gold-bright);">
+            No profiles currently blocked. You can block or report any profile directly from the match card options menu (...).
+          </div>
+        </div>
+
+        <!-- Section 8: Rajput Lineage Safety & Scam Prevention Guidelines -->
+        <h3 class="profile-form-section-title">
+          <span>🛡️</span> Traditional Rajputana Safety &amp; Verification Guidelines
+        </h3>
+
+        <div style="background: linear-gradient(145deg, rgba(32, 4, 10, 0.9) 0%, rgba(20, 2, 6, 0.9) 100%); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 14px; padding: 16px; margin-bottom: 30px;">
+          <ul style="margin: 0; padding-left: 20px; font-size: 0.78rem; color: rgba(255,255,255,0.85); line-height: 1.6;">
+            <li><strong>Four-Gotra Exclusions:</strong> Ensure neither candidate shares paternal gotra, maternal gotra, dadi's gotra, or nani's gotra.</li>
+            <li><strong>Lineage Record Verification:</strong> Always request our Rajput screening desk or family bhats to verify ancestral jagir and thikana records.</li>
+            <li><strong>Elder Coordination:</strong> Never commit to marriage alliances without direct telephone and in-person consultations between family elders.</li>
+            <li><strong>Anti-Fraud Warning:</strong> Never send financial remittances, gift customs, or travel fees before official engagement (Roka/Sagai).</li>
+          </ul>
+        </div>
+
         <!-- Action Buttons -->
         <div style="display: flex; gap: 20px; justify-content: flex-end; border-top: 1.5px solid rgba(170, 124, 17, 0.2); padding-top: 25px;">
           <a href="dashboard.html" class="btn btn-minimal" style="padding: 12px 25px;">Cancel</a>
@@ -1257,5 +1412,43 @@
       }
     }
   </script>
+  <!-- Fixed Mobile Bottom Navigation Bar -->
+  <nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <a href="dashboard.html?view=home" class="mobile-bottom-tab" id="mNavHome" aria-label="Royal Hub">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="dashboard.html?view=matches" class="mobile-bottom-tab" id="mNavMatches" aria-label="Matches Feed">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+      </svg>
+      <span>Matches</span>
+    </a>
+    <a href="dashboard.html?view=inbox" class="mobile-bottom-tab" id="mNavInbox" aria-label="Inbox and Requests">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+        <polyline points="22,6 12,13 2,6"></polyline>
+      </svg>
+      <span>Inbox</span>
+    </a>
+    <a href="dashboard.html?view=chat" class="mobile-bottom-tab" id="mNavChat" aria-label="Royal Messenger">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span>Chat</span>
+    </a>
+    <a href="membership.html" class="mobile-bottom-tab" id="mNavPremium" aria-label="Premium Membership">
+      <div class="m-premium-badge-wrapper">
+        <span class="m-premium-pill">85% OFF</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
+        </svg>
+      </div>
+      <span>Premium</span>
+    </a>
+  </nav>
 </body>
 </html>
