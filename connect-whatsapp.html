@@ -178,13 +178,22 @@
       <span>🔄</span> Live auto-refreshing in <strong id="refreshTimer" style="color: var(--gold-light);">10</strong>s
     </div>
 
-    <!-- 8-Digit Pairing Code Fallback -->
-    <div class="pairing-box">
-      <div style="text-align: left;">
-        <div style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Phone Pairing Code</div>
-        <div style="font-size: 0.75rem; color: #E2E8F0;">For <strong>+91 8971928018</strong></div>
+    <!-- 8-Digit Pairing Code Generator -->
+    <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; padding: 14px; margin-bottom: 18px; text-align: left;">
+      <div style="font-size: 0.72rem; font-weight: 700; color: var(--gold-light); margin-bottom: 8px;">
+        🔗 Alternative: Link via Phone Number &amp; Code
       </div>
-      <div id="pairingCodeVal" style="font-family: monospace; font-weight: 800; font-size: 1.05rem; color: var(--gold-light); letter-spacing: 1px;">LRT7-NEJM</div>
+      <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+        <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(212,175,55,0.3); padding: 8px 10px; border-radius: 6px; font-weight: 700; color: var(--gold-light); font-size: 0.85rem; display: flex; align-items: center;">+91</span>
+        <input type="tel" id="customPairPhone" value="7665941949" maxlength="10" placeholder="10-digit phone" style="flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(212,175,55,0.3); border-radius: 6px; padding: 8px 12px; color: #FFF; font-size: 0.88rem; outline: none;">
+        <button type="button" onclick="requestPairingCode()" id="btnGetPairCode" style="background: var(--gold-primary); color: #120407; font-weight: 700; font-size: 0.78rem; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; white-space: nowrap;">
+          Get Code
+        </button>
+      </div>
+      <div id="pairingCodeResult" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 10px 14px; border-radius: 8px; border: 1px dashed rgba(212,175,55,0.4);">
+        <span style="font-size: 0.72rem; color: var(--text-muted);">Pairing Code:</span>
+        <span id="pairingCodeVal" style="font-family: monospace; font-weight: 800; font-size: 1.15rem; color: var(--gold-light); letter-spacing: 1.5px;">CYVE-35GK</span>
+      </div>
     </div>
 
     <!-- Step instructions -->
@@ -261,6 +270,49 @@
 
     // Initial check
     checkStatus();
+
+    async function requestPairingCode() {
+      const phone = (document.getElementById('customPairPhone')?.value || '').replace(/[^0-9]/g, '').slice(-10);
+      if (phone.length !== 10) {
+        alert('Please enter a valid 10-digit phone number');
+        return;
+      }
+      const btn = document.getElementById('btnGetPairCode');
+      const codeVal = document.getElementById('pairingCodeVal');
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+
+      try {
+        const pairUrl = isHttps 
+          ? `/api/whatsapp-gateway?action=pair&phone=91${phone}` 
+          : 'http://130.210.15.192:8080/instance/pair';
+        
+        let resp;
+        if (isHttps) {
+          resp = await fetch(pairUrl);
+        } else {
+          resp = await fetch(pairUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': INSTANCE_TOKEN },
+            body: JSON.stringify({ phone: `91${phone}` })
+          });
+        }
+
+        const data = await resp.json();
+        if (data?.data?.PairingCode) {
+          codeVal.textContent = data.data.PairingCode;
+        } else {
+          codeVal.textContent = 'RETRY';
+          alert('Could not generate pairing code: ' + (data?.error || 'Please try scanning QR code'));
+        }
+      } catch (err) {
+        codeVal.textContent = 'ERROR';
+        alert('Error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Get Code';
+      }
+    }
 
     async function sendTestOtp() {
       const btn = document.getElementById('btnTestOtp');
