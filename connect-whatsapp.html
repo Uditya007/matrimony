@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Gateway Reconnect - Shree Rajput Sagai Sambandh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #120407;
+      --card-bg: #1C070D;
+      --card-border: rgba(212, 175, 55, 0.4);
+      --gold-primary: #D4AF37;
+      --gold-light: #FCD34D;
+      --text-main: #FFFFFF;
+      --text-muted: #CBD5E0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(circle at 50% 20%, #2A0913 0%, var(--bg-dark) 100%);
+      color: var(--text-main);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+    .panel-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: 20px;
+      max-width: 440px;
+      width: 100%;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(212,175,55,0.15);
+    }
+    .cinzel { font-family: 'Cinzel', serif; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .badge-amber {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #FCD34D;
+    }
+    .badge-green {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34D399;
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    .qr-container {
+      position: relative;
+      background: #FFFFFF;
+      padding: 14px;
+      border-radius: 14px;
+      display: inline-block;
+      margin: 0 auto 16px;
+      border: 2px solid var(--gold-primary);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    }
+    .qr-container img {
+      width: 210px;
+      height: 210px;
+      object-fit: contain;
+      display: block;
+      border-radius: 4px;
+    }
+    .overlay-connected {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      color: #065F46;
+    }
+    .overlay-connected.active { display: flex; }
+    .btn-action {
+      background: linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #AA7C11 100%);
+      color: #1A050A;
+      font-weight: 700;
+      font-size: 0.88rem;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 20px;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(212,175,55,0.3);
+    }
+    .btn-action:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(212,175,55,0.45);
+    }
+    .btn-action:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .steps-box {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: left;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .pairing-box {
+      background: rgba(212, 175, 55, 0.08);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="panel-card">
+    <div style="font-size: 2rem; margin-bottom: 4px;">👑</div>
+    <h1 class="cinzel" style="font-size: 1.25rem; font-weight: 700; color: var(--gold-light); letter-spacing: 0.5px; margin-bottom: 4px;">WhatsApp Gateway Link</h1>
+    <p style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 16px;">
+      Instance: <strong>sagai</strong> &bull; Host: <strong>130.210.15.192:8080</strong>
+    </p>
+
+    <!-- Status Badge -->
+    <div id="statusBadge" class="badge badge-amber">
+      <span class="pulse-dot"></span>
+      <span id="statusLabel">Checking WhatsApp status...</span>
+    </div>
+
+    <!-- QR Code -->
+    <div class="qr-container">
+      <img id="qrImg" src="whatsapp_qr.png" alt="Scan WhatsApp QR">
+      <div id="connectedOverlay" class="overlay-connected">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <div style="font-weight: 800; font-size: 1rem;">Linked &amp; Active!</div>
+        <div style="font-size: 0.72rem; color: #047857; margin-top: 3px;">WhatsApp Gateway is ready to send OTPs</div>
+      </div>
+    </div>
+
+    <!-- Live timer indicator -->
+    <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+      <span>🔄</span> Live auto-refreshing in <strong id="refreshTimer" style="color: var(--gold-light);">10</strong>s
+    </div>
+
+    <!-- 8-Digit Pairing Code Fallback -->
+    <div class="pairing-box">
+      <div style="text-align: left;">
+        <div style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Phone Pairing Code</div>
+        <div style="font-size: 0.75rem; color: #E2E8F0;">For <strong>+91 8971928018</strong></div>
+      </div>
+      <div id="pairingCodeVal" style="font-family: monospace; font-weight: 800; font-size: 1.05rem; color: var(--gold-light); letter-spacing: 1px;">LRT7-NEJM</div>
+    </div>
+
+    <!-- Step instructions -->
+    <div class="steps-box">
+      <div style="color: var(--gold-light); font-weight: 700; margin-bottom: 6px;">📱 Easy 3-Step Link:</div>
+      <div>1. Open <strong>WhatsApp</strong> on your phone.</div>
+      <div>2. Go to <strong>Linked Devices &rarr; Link a Device</strong>.</div>
+      <div>3. Point camera at the QR code above (or choose <em>Link with phone number</em>).</div>
+    </div>
+
+    <!-- Test OTP Dispatch -->
+    <div>
+      <button type="button" id="btnTestOtp" class="btn-action" onclick="sendTestOtp()">
+        💬 Send Test OTP to +91 7665941949
+      </button>
+      <div id="testStatus" style="font-size: 0.76rem; margin-top: 10px; display: none;"></div>
+    </div>
+  </div>
+
+  <script>
+    const isHttps = window.location.protocol === 'https:';
+    const STATUS_URL = isHttps ? '/api/whatsapp-gateway?action=status' : 'http://130.210.15.192:8080/instance/all';
+    const TEST_URL = isHttps ? '/api/whatsapp-gateway?action=test-send' : 'http://130.210.15.192:8080/send/text';
+    const API_SECRET = 'sagai_evolution_secret_2026';
+    const INSTANCE_TOKEN = 'sagai_instance_token_2026';
+
+    let countdown = 10;
+
+    async function checkStatus() {
+      try {
+        const headers = isHttps ? {} : { 'apikey': API_SECRET };
+        const res = await fetch(STATUS_URL, { headers });
+        const json = await res.json();
+        const instance = json.data?.[0];
+
+        if (!instance) return;
+
+        const isConnected = instance.connected === true;
+        const statusBadge = document.getElementById('statusBadge');
+        const statusLabel = document.getElementById('statusLabel');
+        const connectedOverlay = document.getElementById('connectedOverlay');
+        const qrImg = document.getElementById('qrImg');
+
+        if (isConnected) {
+          statusBadge.className = 'badge badge-green';
+          const jidNum = instance.jid ? instance.jid.split('@')[0].split(':')[0] : 'Active';
+          statusLabel.textContent = `🟢 Online & Connected (+${jidNum})`;
+          connectedOverlay.classList.add('active');
+        } else {
+          statusBadge.className = 'badge badge-amber';
+          statusLabel.textContent = '🟡 Waiting for WhatsApp Link (Scan QR)';
+          connectedOverlay.classList.remove('active');
+
+          if (instance.qrcode) {
+            const b64Data = instance.qrcode.split('|')[0];
+            qrImg.src = b64Data;
+          }
+        }
+      } catch (err) {
+        console.warn('Status poll:', err.message);
+      }
+    }
+
+    // Timer loop
+    setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        countdown = 10;
+        checkStatus();
+      }
+      const timer = document.getElementById('refreshTimer');
+      if (timer) timer.textContent = countdown;
+    }, 1000);
+
+    // Initial check
+    checkStatus();
+
+    async function sendTestOtp() {
+      const btn = document.getElementById('btnTestOtp');
+      const statusEl = document.getElementById('testStatus');
+      btn.disabled = true;
+      btn.textContent = '⏳ Dispatching WhatsApp OTP...';
+      statusEl.style.display = 'block';
+      statusEl.style.color = '#FCD34D';
+      statusEl.textContent = 'Contacting WhatsApp Gateway...';
+
+      try {
+        let resp;
+        if (isHttps) {
+          resp = await fetch(TEST_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ number: '917665941949' })
+          });
+        } else {
+          resp = await fetch(TEST_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': INSTANCE_TOKEN
+            },
+            body: JSON.stringify({
+              number: '917665941949',
+              text: '👑 *Shree Rajput Sagai Sambandh* 👑\n\nKhammaghani Sa!\n\nYour royal profile verification test OTP is:\n\n👉 *654321* 👈\n\n⏱️ Gateway test verified successfully!'
+            })
+          });
+        }
+
+        const data = await resp.json().catch(() => ({}));
+        if (resp.ok && (data.message === 'success' || data.success)) {
+          statusEl.style.color = '#34D399';
+          statusEl.innerHTML = '<strong>✓ OTP Delivered!</strong> Check WhatsApp on +91 7665941949.';
+        } else {
+          statusEl.style.color = '#F87171';
+          statusEl.textContent = '⚠️ Failed: ' + (data.error || data.message || 'Scan the QR code to link your device first.');
+        }
+      } catch (e) {
+        statusEl.style.color = '#F87171';
+        statusEl.textContent = '⚠️ Network error: ' + e.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '💬 Send Test OTP to +91 7665941949';
+      }
+    }
+  </script>
+</body>
+</html>
