@@ -3429,7 +3429,10 @@ function createProfileCardHtml(profile, isDashboard = true) {
         <!-- Bottom Action Row (Exact Shaadi Layout) -->
         <div class="shaadi-action-row">
           <button type="button" class="shaadi-pass-btn" onclick="event.stopPropagation(); handlePassProfile('${profile.id}', '${profile.name}')" title="Pass this match" aria-label="Pass match">
-            ✕ Pass
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
           </button>
 
           <div class="shaadi-action-text" onclick="handleMobileConnectClick('${profile.id}')">

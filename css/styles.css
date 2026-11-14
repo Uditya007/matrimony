@@ -6271,6 +6271,9 @@ body:has(.dashboard-subnav) {
     box-shadow: var(--shadow-royal);
     display: flex;
     flex-direction: column;
+    max-width: 380px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
   }
   .profile-card.shaadi-match-card .shaadi-card-media {
     position: relative;
@@ -6399,26 +6402,40 @@ body:has(.dashboard-subnav) {
   }
   .profile-card.shaadi-match-card .shaadi-action-row {
     background: #160205;
-    padding: 10px 14px;
+    padding: 12px 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
     border-top: 1px solid rgba(212, 175, 55, 0.18);
+  }
+  .profile-card.shaadi-match-card .shaadi-action-text {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 2px;
+    cursor: pointer;
   }
   .profile-card.shaadi-match-card .shaadi-like-prompt {
     font-style: italic;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     color: rgba(255, 255, 255, 0.7);
+    white-space: nowrap;
   }
   .profile-card.shaadi-match-card .shaadi-connect-cta {
-    font-size: 0.88rem;
+    font-size: 0.92rem;
     font-weight: 700;
     color: #2BC48A;
     cursor: pointer;
+    white-space: nowrap;
   }
   .profile-card.shaadi-match-card .shaadi-fab-btn {
     width: 44px;
     height: 44px;
+    min-width: 44px;
     border-radius: 50%;
     background: linear-gradient(135deg, #11998E 0%, #38EF7D 100%);
     color: #FFFFFF;
@@ -6428,6 +6445,13 @@ body:has(.dashboard-subnav) {
     justify-content: center;
     box-shadow: 0 4px 12px rgba(56, 239, 125, 0.35);
     cursor: pointer;
+    flex-shrink: 0;
+  }
+  .profile-card.shaadi-match-card .shaadi-pass-btn {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    border-radius: 50% !important;
   }
 }
 
@@ -6851,8 +6875,12 @@ body:has(.dashboard-subnav) {
 
   /* Hide Desktop sidebars and clutter on mobile */
   .dashboard-wrapper {
-    padding: 10px 14px 20px 14px !important;
-    display: block !important;
+    padding: 10px 14px 84px 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .dashboard-user-left-panel,
@@ -6869,16 +6897,24 @@ body:has(.dashboard-subnav) {
   /* Matches Grid single column feed */
   .dashboard-main {
     padding: 0 !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
     width: 100% !important;
+    max-width: 440px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
   }
 
   .matches-grid {
     display: flex !important;
     flex-direction: column !important;
+    align-items: center !important;
     gap: 20px !important;
     padding: 0 !important;
     width: 100% !important;
+    max-width: 440px !important;
+    margin: 0 auto !important;
     box-sizing: border-box !important;
   }
 
@@ -6888,7 +6924,8 @@ body:has(.dashboard-subnav) {
   .profile-card.shaadi-match-card {
     position: relative !important;
     width: 100% !important;
-    margin: 0 0 18px 0 !important;
+    max-width: 420px !important;
+    margin: 0 auto 20px auto !important;
     background: #23050B !important;
     border: 1px solid rgba(212, 175, 55, 0.28) !important;
     border-radius: 22px !important;
@@ -6896,12 +6933,15 @@ body:has(.dashboard-subnav) {
     box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6) !important;
     display: flex !important;
     flex-direction: column !important;
+    box-sizing: border-box !important;
   }
 
   .shaadi-card-media {
     position: relative !important;
     width: 100% !important;
-    height: 430px !important;
+    height: 400px !important;
+    max-height: 54vh !important;
+    min-height: 330px !important;
     overflow: hidden !important;
     cursor: pointer !important;
     background: #140205 !important;
@@ -7075,32 +7115,46 @@ body:has(.dashboard-subnav) {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
+    gap: 14px !important;
     border-top: 1px solid rgba(212, 175, 55, 0.18) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .shaadi-action-text {
+    flex: 1 1 auto !important;
     display: flex !important;
-    align-items: baseline !important;
-    gap: 8px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    gap: 2px !important;
     cursor: pointer !important;
+    min-width: 0 !important;
+    padding: 0 6px !important;
   }
 
   .shaadi-like-prompt {
     font-style: italic !important;
-    font-size: 0.88rem !important;
-    color: rgba(255, 255, 255, 0.74) !important;
+    font-size: 0.8rem !important;
+    color: rgba(255, 255, 255, 0.68) !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
   }
 
   .shaadi-connect-cta {
-    font-size: 0.96rem !important;
+    font-size: 0.95rem !important;
     font-weight: 700 !important;
     color: #2BC48A !important;
     letter-spacing: 0.2px !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
   }
 
   .shaadi-fab-btn {
-    width: 52px !important;
-    height: 52px !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
     border-radius: 50% !important;
     background: linear-gradient(135deg, #11998E 0%, #38EF7D 100%) !important;
     color: #FFFFFF !important;
@@ -7108,10 +7162,16 @@ body:has(.dashboard-subnav) {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    padding: 0 !important;
     box-shadow: 0 4px 14px rgba(56, 239, 125, 0.4) !important;
     cursor: pointer !important;
     transition: transform 0.2s ease, box-shadow 0.2s ease !important;
     flex-shrink: 0 !important;
+  }
+
+  .shaadi-fab-btn:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 6px 18px rgba(56, 239, 125, 0.55) !important;
   }
 
   .shaadi-fab-btn:active {
@@ -8335,24 +8395,35 @@ body:has(.dashboard-subnav) {
 }
 
 .shaadi-pass-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 10px 18px;
-  border-radius: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.22) !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.shaadi-pass-btn:hover {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  color: #FF6B6B !important;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3) !important;
+  transform: scale(1.05) !important;
 }
 
 .shaadi-pass-btn:active {
-  transform: scale(0.95);
-  background: rgba(255, 77, 77, 0.15);
-  border-color: rgba(255, 77, 77, 0.4);
+  transform: scale(0.92) !important;
+  background: rgba(255, 77, 77, 0.22) !important;
+  border-color: rgba(255, 77, 77, 0.6) !important;
 }
 
 /* Floating Undo Toast */
