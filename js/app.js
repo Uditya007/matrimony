@@ -3783,21 +3783,8 @@ window.renderMatchesListCustom = function(profilesList) {
     return;
   }
 
-  // Render cards deck with floating indicator and hint
+  // Render cards deck (clean full-bleed swipe deck)
   container.innerHTML = `
-    <!-- Floating Deck Indicator Bar -->
-    <div class="deck-indicator-bar" id="deckIndicatorBar">
-      <span class="deck-counter-badge" id="deckCounterBadge">1 / ${list.length} &bull; Swipe up &#9650;</span>
-      <div class="deck-nav-arrows">
-        <button type="button" class="deck-arrow-btn" id="deckPrevBtn" onclick="swipeToPrevProfile()" title="Previous profile (Swipe down)" aria-label="Previous profile">
-          &#9650;
-        </button>
-        <button type="button" class="deck-arrow-btn" id="deckNextBtn" onclick="swipeToNextProfile()" title="Next profile (Swipe up)" aria-label="Next profile">
-          &#9660;
-        </button>
-      </div>
-    </div>
-
     <!-- Cards Deck Wrapper -->
     <div class="deck-cards-wrapper" id="deckCardsWrapper">
       ${list.map((p, idx) => `
