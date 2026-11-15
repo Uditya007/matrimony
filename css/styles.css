@@ -9293,6 +9293,10 @@ body:has(.dashboard-subnav) {
   border: 1.5px solid #C9A227;
   animation: youpiModalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
+  max-height: 94vh;
+  max-height: 94dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes youpiModalPop {
@@ -9307,6 +9311,7 @@ body:has(.dashboard-subnav) {
   align-items: center;
   justify-content: space-between;
   border-bottom: 2px solid #C9A227;
+  flex-shrink: 0;
 }
 
 .youpi-modal-close {
@@ -9330,6 +9335,8 @@ body:has(.dashboard-subnav) {
 
 .youpi-modal-body {
   padding: 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .youpi-order-summary {
@@ -9495,4 +9502,170 @@ body:has(.dashboard-subnav) {
 
 .youpi-verify-btn:hover {
   opacity: 0.92;
+}
+
+/* ==========================================================================
+   MOBILE PAYMENT MODAL COMPACT RESIZING (CLEAN VIEWPORT FIT)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .youpi-modal-overlay {
+    padding: 10px 8px !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .youpi-modal-card {
+    max-width: 350px !important;
+    width: 100% !important;
+    max-height: 90vh !important;
+    max-height: 90dvh !important;
+    border-radius: 16px !important;
+    border-width: 1.5px !important;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .youpi-modal-header {
+    padding: 8px 12px !important;
+  }
+
+  .youpi-modal-header div span[style*="font-size: 24px"] {
+    font-size: 16px !important;
+  }
+
+  .youpi-modal-header h3 {
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+  }
+
+  .youpi-modal-header span[style*="font-size: 11px"] {
+    font-size: 9.5px !important;
+    display: block !important;
+    margin-top: 1px !important;
+  }
+
+  .youpi-modal-close {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 16px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .youpi-modal-body {
+    padding: 10px 12px 12px 12px !important;
+  }
+
+  .youpi-order-summary {
+    padding: 7px 10px !important;
+    margin-bottom: 8px !important;
+    border-radius: 10px !important;
+  }
+
+  .youpi-summary-title {
+    font-size: 12px !important;
+  }
+
+  .youpi-summary-sub {
+    font-size: 9.5px !important;
+  }
+
+  .youpi-summary-amount {
+    font-size: 16px !important;
+  }
+
+  .youpi-tabs {
+    margin-bottom: 8px !important;
+    padding: 2px !important;
+    border-radius: 8px !important;
+  }
+
+  .youpi-tab {
+    padding: 5px 6px !important;
+    font-size: 10.5px !important;
+    border-radius: 6px !important;
+  }
+
+  #youpiUpiView > div:first-child {
+    margin-bottom: 6px !important;
+  }
+
+  #youpiUpiView span[style*="font-size: 11.5px"] {
+    font-size: 9.5px !important;
+    letter-spacing: 0.3px !important;
+  }
+
+  .youpi-app-grid {
+    gap: 5px !important;
+    margin-top: 4px !important;
+  }
+
+  .youpi-app-btn {
+    padding: 5px 4px !important;
+    font-size: 10.5px !important;
+    border-radius: 8px !important;
+    gap: 4px !important;
+  }
+
+  #btnPayAnyUpi {
+    padding: 6px 8px !important;
+    font-size: 10.5px !important;
+  }
+
+  .youpi-qr-section {
+    padding: 6px 8px !important;
+    margin-bottom: 6px !important;
+    border-radius: 10px !important;
+  }
+
+  .youpi-qr-box {
+    padding: 4px !important;
+    border-radius: 8px !important;
+  }
+
+  #youpiQrImage,
+  .youpi-qr-box img {
+    width: 95px !important;
+    height: 95px !important;
+  }
+
+  .youpi-qr-section span[style*="font-size: 11px"] {
+    font-size: 9px !important;
+  }
+
+  .youpi-vpa-chip {
+    padding: 2px 7px !important;
+    font-size: 10px !important;
+    margin-top: 3px !important;
+    gap: 5px !important;
+  }
+
+  .youpi-copy-btn {
+    padding: 1px 6px !important;
+    font-size: 9px !important;
+  }
+
+  .youpi-utr-box {
+    padding: 7px 9px !important;
+    border-radius: 10px !important;
+  }
+
+  .youpi-utr-box label {
+    font-size: 10px !important;
+    margin-bottom: 3px !important;
+  }
+
+  .youpi-input {
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+  }
+
+  .youpi-verify-btn {
+    padding: 6px 10px !important;
+    font-size: 10.5px !important;
+    border-radius: 6px !important;
+  }
+
+  #youpiStatusNotice {
+    font-size: 8.5px !important;
+  }
 }
