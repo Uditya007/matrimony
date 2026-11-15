@@ -2833,10 +2833,12 @@ async function initDashboardPage() {
   const urlParams = new URLSearchParams(window.location.search);
   const hashView = window.location.hash.replace('#', '');
   const viewParam = urlParams.get('view') || urlParams.get('tab') || hashView;
-  if (['home', 'inbox', 'chat', 'matches'].includes(viewParam)) {
+  if (['home', 'inbox', 'chat', 'matches', 'premium'].includes(viewParam)) {
     if (typeof switchAppView === 'function') switchAppView(viewParam);
   } else if (urlParams.get('shortlist') === 'true') {
     if (typeof switchAppView === 'function') switchAppView('matches', 'shortlist');
+  } else {
+    if (typeof switchAppView === 'function') switchAppView('matches');
   }
 }
 
@@ -3785,13 +3787,13 @@ window.renderMatchesListCustom = function(profilesList) {
   container.innerHTML = `
     <!-- Floating Deck Indicator Bar -->
     <div class="deck-indicator-bar" id="deckIndicatorBar">
-      <span class="deck-counter-badge" id="deckCounterBadge">1 / ${list.length}</span>
+      <span class="deck-counter-badge" id="deckCounterBadge">1 / ${list.length} &bull; Swipe up &#9650;</span>
       <div class="deck-nav-arrows">
         <button type="button" class="deck-arrow-btn" id="deckPrevBtn" onclick="swipeToPrevProfile()" title="Previous profile (Swipe down)" aria-label="Previous profile">
-          ▲
+          &#9650;
         </button>
         <button type="button" class="deck-arrow-btn" id="deckNextBtn" onclick="swipeToNextProfile()" title="Next profile (Swipe up)" aria-label="Next profile">
-          ▼
+          &#9660;
         </button>
       </div>
     </div>
@@ -3803,12 +3805,6 @@ window.renderMatchesListCustom = function(profilesList) {
           ${createProfileCardHtml(p, true)}
         </div>
       `).join('')}
-    </div>
-
-    <!-- Swipe Hint Pill -->
-    <div class="swipe-hint-pill" id="swipeHintPill">
-      <span>Swipe up for next match</span>
-      <span class="swipe-hint-chevron">▲</span>
     </div>
   `;
 
@@ -3889,7 +3885,11 @@ window.updateDeckControls = function() {
   const total = window.currentDeckProfiles ? window.currentDeckProfiles.length : 0;
   const badge = document.getElementById('deckCounterBadge');
   if (badge) {
-    badge.textContent = `${window.currentDeckIndex + 1} / ${total}`;
+    if (window.currentDeckIndex >= total - 1) {
+      badge.innerHTML = `${window.currentDeckIndex + 1} / ${total} &bull; All viewed &#10024;`;
+    } else {
+      badge.innerHTML = `${window.currentDeckIndex + 1} / ${total} &bull; Swipe up &#9650;`;
+    }
   }
 
   const prevBtn = document.getElementById('deckPrevBtn');
@@ -3905,15 +3905,6 @@ window.updateDeckControls = function() {
     nextBtn.style.opacity = canNext ? '1' : '0.35';
     nextBtn.style.pointerEvents = canNext ? 'auto' : 'none';
   }
-
-  const hint = document.getElementById('swipeHintPill');
-  if (hint) {
-    if (window.currentDeckIndex >= total - 1) {
-      hint.innerHTML = '<span>All matches viewed ✨</span>';
-    } else {
-      hint.innerHTML = '<span>Swipe up for next match</span> <span class="swipe-hint-chevron">▲</span>';
-    }
-  }
 };
 
 window.initDeckSwipeGestures = function() {
@@ -3928,7 +3919,7 @@ window.initDeckSwipeGestures = function() {
 
   wrapper.addEventListener('touchstart', (e) => {
     if (e.touches.length !== 1) return;
-    if (e.target.closest('button, a, input, select, textarea')) return;
+    if (e.target.closest('button, a, input, select, textarea, .shaadi-badge-btn, .shaadi-badge-pill, .shaadi-pass-btn, .shaadi-connect-btn')) return;
 
     startY = e.touches[0].clientY;
     startX = e.touches[0].clientX;
@@ -3940,7 +3931,7 @@ window.initDeckSwipeGestures = function() {
     if (activeSlot) {
       activeSlot.style.transition = 'none';
     }
-  }, { passive: true });
+  }, { passive: false });
 
   wrapper.addEventListener('touchmove', (e) => {
     if (!isDragging || e.touches.length !== 1) return;
@@ -3949,17 +3940,17 @@ window.initDeckSwipeGestures = function() {
     const deltaY = currentY - startY;
     const deltaX = currentX - startX;
 
-    if (Math.abs(deltaY) > Math.abs(deltaX)) {
-      if (e.cancelable) e.preventDefault();
-      currentDeltaY = deltaY;
-      const activeSlot = document.getElementById(`deckSlot_${window.currentDeckIndex}`);
-      if (activeSlot) {
-        let dragY = deltaY;
-        if (window.currentDeckIndex === 0 && deltaY > 0) {
-          dragY = deltaY * 0.25;
-        }
-        activeSlot.style.transform = `translateY(${dragY}px)`;
+    // Fully lock down vertical scroll so the browser cannot scroll the webpage
+    if (e.cancelable) e.preventDefault();
+
+    currentDeltaY = deltaY;
+    const activeSlot = document.getElementById(`deckSlot_${window.currentDeckIndex}`);
+    if (activeSlot) {
+      let dragY = deltaY;
+      if (window.currentDeckIndex === 0 && deltaY > 0) {
+        dragY = deltaY * 0.25;
       }
+      activeSlot.style.transform = `translateY(${dragY}px)`;
     }
   }, { passive: false });
 
@@ -3969,16 +3960,16 @@ window.initDeckSwipeGestures = function() {
 
     const activeSlot = document.getElementById(`deckSlot_${window.currentDeckIndex}`);
     if (activeSlot) {
-      activeSlot.style.transition = 'transform 0.36s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.36s ease';
+      activeSlot.style.transition = 'transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.32s ease';
     }
 
     const duration = Date.now() - startTime;
     const velocity = Math.abs(currentDeltaY) / (duration || 1);
 
-    if (currentDeltaY < -40 || (currentDeltaY < -20 && velocity > 0.35)) {
+    if (currentDeltaY < -30 || (currentDeltaY < -15 && velocity > 0.22)) {
       // SWIPE UP -> NEXT PROFILE
       swipeToNextProfile();
-    } else if (currentDeltaY > 40 || (currentDeltaY > 20 && velocity > 0.35)) {
+    } else if (currentDeltaY > 30 || (currentDeltaY > 15 && velocity > 0.22)) {
       // SWIPE DOWN -> PREVIOUS PROFILE
       if (window.currentDeckIndex > 0) {
         swipeToPrevProfile();
@@ -3995,7 +3986,7 @@ window.initDeckSwipeGestures = function() {
     isDragging = false;
     const activeSlot = document.getElementById(`deckSlot_${window.currentDeckIndex}`);
     if (activeSlot) {
-      activeSlot.style.transition = 'transform 0.36s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.36s ease';
+      activeSlot.style.transition = 'transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.32s ease';
       activeSlot.style.transform = 'translateY(0)';
     }
     currentDeltaY = 0;
@@ -4005,8 +3996,8 @@ window.initDeckSwipeGestures = function() {
   let wheelTimer = null;
   wrapper.addEventListener('wheel', (e) => {
     if (wheelTimer) return;
-    if (Math.abs(e.deltaY) > 28) {
-      wheelTimer = setTimeout(() => { wheelTimer = null; }, 380);
+    if (Math.abs(e.deltaY) > 24) {
+      wheelTimer = setTimeout(() => { wheelTimer = null; }, 360);
       if (e.deltaY > 0) {
         swipeToNextProfile();
       } else {
@@ -6648,6 +6639,7 @@ window.switchAppView = function(viewName, param) {
     subtabsBar.style.display = isMatches ? "block" : "none";
   }
   document.body.classList.toggle("subtabs-hidden", !isMatches);
+  document.body.classList.toggle("view-matches-active", isMatches);
 
   // Update bottom nav active classes
   const bottomTabs = document.querySelectorAll(".mobile-bottom-tab");
