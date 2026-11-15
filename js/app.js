@@ -790,11 +790,20 @@ function getCompatibleProfiles(currentUser) {
   const all = getAllProfiles();
   if (!currentUser) return all;
   const targetGender = getOppositeGender(currentUser.gender);
-  return all.filter(p => {
+  const filtered = all.filter(p => {
     if (p.id === currentUser.id) return false;
     if (currentUser.email && p.email && p.email.toLowerCase() === currentUser.email.toLowerCase()) return false;
     return normalizeGender(p.gender) === targetGender;
   });
+
+  // Sort by Tier: Gold first, then Silver, then Starter
+  const tierWeight = { gold: 3, silver: 2, starter: 1 };
+  filtered.sort((a, b) => {
+    const wA = tierWeight[(a.tier || 'starter').toLowerCase()] || 1;
+    const wB = tierWeight[(b.tier || 'starter').toLowerCase()] || 1;
+    return wB - wA;
+  });
+  return filtered;
 }
 
 function updateNavigationState() {
@@ -3096,13 +3105,19 @@ function renderMatchesGrid() {
     return true;
   });
 
-  if (currentUser && currentUser.caste && activeFilters.caste === 'All') {
-    filtered.sort((a, b) => {
+  filtered.sort((a, b) => {
+    // 1. Tier weighting: Gold gets top priority, Silver 3x boost, Starter normal
+    const tierWeight = { gold: 3, silver: 2, starter: 1 };
+    const wA = tierWeight[(a.tier || 'starter').toLowerCase()] || 1;
+    const wB = tierWeight[(b.tier || 'starter').toLowerCase()] || 1;
+    if (wA !== wB) return wB - wA;
+
+    if (currentUser && currentUser.caste && activeFilters.caste === 'All') {
       if (a.caste === currentUser.caste && b.caste !== currentUser.caste) return -1;
       if (a.caste !== currentUser.caste && b.caste === currentUser.caste) return 1;
-      return 0;
-    });
-  }
+    }
+    return 0;
+  });
 
   const countSpan = document.getElementById('resultsCountSpan');
   if (countSpan) {
@@ -3549,6 +3564,16 @@ function createProfileCardHtml(profile, isDashboard = true) {
 
           <!-- Floating Top-Right Overlays -->
           <div class="shaadi-top-badges">
+            ${(profile.tier === 'Gold') ? `
+              <div class="shaadi-badge-pill" style="background: linear-gradient(135deg, #B8860B, #FCD34D); color: #120407; font-weight: 800; font-size: 0.72rem; padding: 4px 10px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); border: 1px solid #FFF;">
+                👑 Gold VIP
+              </div>
+            ` : ((profile.tier === 'Silver') ? `
+              <div class="shaadi-badge-pill" style="background: linear-gradient(135deg, #4A5568, #A0AEC0); color: #FFFFFF; font-weight: 700; font-size: 0.72rem; padding: 4px 10px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); border: 1px solid #FFF;">
+                ⚔️ Silver
+              </div>
+            ` : '')}
+
             <!-- 3-dots Menu Button -->
             <button type="button" class="shaadi-badge-btn" onclick="event.stopPropagation(); openCardOptionsSheet('${profile.id}', '${profile.name}')" title="More options" aria-label="More options">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -3600,6 +3625,15 @@ function createProfileCardHtml(profile, isDashboard = true) {
             </div>
 
             <div class="shaadi-badges-row">
+              ${profile.tier === 'Gold' ? `
+                <div class="shaadi-meta-pill" style="background: rgba(212, 175, 55, 0.25); border: 1px solid #FCD34D; color: #FCD34D; font-weight: 700;">
+                  <span>👑 Royal Gold</span>
+                </div>
+              ` : (profile.tier === 'Silver' ? `
+                <div class="shaadi-meta-pill" style="background: rgba(160, 174, 192, 0.25); border: 1px solid #E2E8F0; color: #FFFFFF; font-weight: 700;">
+                  <span>⚔️ Silver Member</span>
+                </div>
+              ` : '')}
               <div class="shaadi-meta-pill shaadi-pill-active">
                 <span class="shaadi-pulse-dot" style="background-color: ${badgeDotColor};"></span>
                 <span>${onlineStatus.formattedText || '10h ago'}</span>
@@ -4378,6 +4412,20 @@ window.handleSendInterest = async function(id) {
     return;
   }
 
+  // Tier Enforcement: Free/Starter members get 5 Express Interests per day; Silver/Gold are Unlimited
+  const userTier = (currentUser.tier || 'Starter').toLowerCase();
+  if (userTier === 'starter' || userTier === 'free') {
+    const today = new Date().toISOString().slice(0, 10);
+    const dailyKey = `royal_interests_${currentUser.id || 'me'}_${today}`;
+    const sentToday = parseInt(localStorage.getItem(dailyKey) || '0', 10);
+    if (sentToday >= 5) {
+      showToast('⚠️ Daily limit reached (5 free interests/day). Upgrade to Rajputana Silver for Unlimited Interests!', 'normal');
+      setTimeout(() => { window.location.href = 'membership.html'; }, 1600);
+      return;
+    }
+    localStorage.setItem(dailyKey, (sentToday + 1).toString());
+  }
+
   // 1. Mark as 'sent' in currentUser's local interests mapping (PENDING, NOT accepted yet!)
   mySentInterests[id] = 'sent';
   currentUser.about = setProfileInterestsInAbout(currentUser.about, mySentInterests);
@@ -4868,6 +4916,17 @@ window.openOneOnOneChat = function(profileId) {
     return;
   }
 
+  // Tier Enforcement: Silver/Gold get Instant Direct Chat; Starter can chat once match interest is mutually accepted
+  const userTier = (currentUser.tier || 'Starter').toLowerCase();
+  const isPaid = userTier === 'silver' || userTier === 'gold' || userTier === 'royal';
+  const isConnected = typeof areProfilesConnected === 'function' && areProfilesConnected(currentUser, profile);
+
+  if (!isPaid && !isConnected) {
+    showToast(`🔒 Starter plan allows chat once interest is accepted. Upgrade to Rajputana Silver for Instant Direct Chat!`, 'normal');
+    setTimeout(() => { window.location.href = 'membership.html'; }, 1600);
+    return;
+  }
+
   // Notify admin on Telegram about chat open
   notifyAdminChatOpened(currentUser, profile);
 
@@ -5323,11 +5382,31 @@ window.openProfileDetailModal = function(id) {
   const isAdmin = (currentUser && (currentUser.role === 'admin' || currentUser.isAdmin)) || sessionStorage.getItem('royal_admin_auth') === 'true' || localStorage.getItem('royal_admin_auth') === 'true';
   const isOwnProfile = currentUser && currentUser.id === id;
   const isConnected = currentUser && typeof areProfilesConnected === 'function' && areProfilesConnected(currentUser, profile);
+  const userTier = (currentUser?.tier || 'Starter').toLowerCase();
+  const isPaidMember = userTier === 'silver' || userTier === 'gold' || userTier === 'royal';
 
-  if (isAdmin || isOwnProfile || isConnected) {
-    if (unlockBox) {
-      unlockBox.style.display = 'none';
-      unlockBox.innerHTML = '';
+  if (isAdmin || isOwnProfile || isConnected || isPaidMember) {
+    if (isPaidMember && !isConnected && !isOwnProfile && !isAdmin) {
+      if (unlockBox) {
+        unlockBox.style.display = 'block';
+        unlockBox.innerHTML = `
+          <div style="background: rgba(212, 175, 55, 0.12); border: 1.5px solid rgba(212, 175, 55, 0.45); border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.3rem;">👑</span>
+              <div style="text-align: left;">
+                <strong style="font-size: 0.88rem; color: #FCD34D;">Rajputana ${(currentUser.tier || 'Silver')} Privilege: Direct Contact Unlocked!</strong>
+                <div style="font-size: 0.74rem; color: rgba(255,255,255,0.7);">You can call or message this noble family directly on WhatsApp.</div>
+              </div>
+            </div>
+            ${profile.phone ? `<a href="https://wa.me/${profile.phone.replace(/[^0-9]/g, '')}" target="_blank" rel="noopener noreferrer" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">💬 Open WhatsApp</a>` : ''}
+          </div>
+        `;
+      }
+    } else {
+      if (unlockBox) {
+        unlockBox.style.display = 'none';
+        unlockBox.innerHTML = '';
+      }
     }
     if (unlockedDetails) unlockedDetails.classList.add('active');
     
@@ -5463,17 +5542,22 @@ window.openProfileDetailModal = function(id) {
           `;
         } else {
           unlockBox.innerHTML = `
-            <div style="text-align: center; padding: 18px 20px; background: rgba(0, 0, 0, 0.25); border: 1.5px solid rgba(170, 124, 17, 0.3); border-radius: 8px;">
+            <div style="text-align: center; padding: 18px 20px; background: rgba(0, 0, 0, 0.3); border: 1.5px solid rgba(170, 124, 17, 0.35); border-radius: 10px;">
               <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
                 <span style="font-size: 1.3rem;">🔒</span>
                 <h4 style="color: var(--gold-bright); font-family: var(--font-royal); margin: 0; font-size: 1.05rem;">Lineage Privacy Protected</h4>
               </div>
-              <p style="color: var(--text-muted); font-size: 0.84rem; max-width: 500px; margin: 0 auto 12px; line-height: 1.45;">
-                Contact information (mobile phone, email, and direct chat) is confidential and protected until mutual match interest is accepted.
+              <p style="color: var(--text-muted); font-size: 0.84rem; max-width: 500px; margin: 0 auto 14px; line-height: 1.45;">
+                Direct phone number and WhatsApp are protected. Connect for free by sending a Royal Interest, or upgrade to <strong>Rajputana Silver / Gold</strong> to unlock direct contact lines immediately!
               </p>
-              <button type="button" class="btn btn-royal" onclick="handleSendInterest('${profile.id}')" style="padding: 9px 24px; font-size: 0.85rem; font-weight: 700;">
-                👑 Send Royal Interest to Connect
-              </button>
+              <div style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn-royal" onclick="handleSendInterest('${profile.id}')" style="padding: 9px 20px; font-size: 0.85rem; font-weight: 700;">
+                  👑 Send Free Interest (5/day)
+                </button>
+                <a href="membership.html" class="btn btn-primary" style="padding: 9px 20px; font-size: 0.85rem; font-weight: 700; background: linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #AA7C11 100%); color: #120407; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(212,175,55,0.25);">
+                  ⚡ Upgrade to Unlock Contacts
+                </a>
+              </div>
             </div>
           `;
         }
@@ -7742,8 +7826,8 @@ window.ensureDefaultAppData = function(currentUser) {
 
 const REGAL_PLAN_PRICING = {
   Starter: { monthly: 0, quarterly: 0, halfyearly: 0 },
-  Silver: { monthly: 1199900, quarterly: 2879900, halfyearly: 5039900 },
-  Gold: { monthly: 2499900, quarterly: 5999900, halfyearly: 10499900 }
+  Silver: { monthly: 249900, quarterly: 499900, halfyearly: 799900 },
+  Gold: { monthly: 599900, quarterly: 1199900, halfyearly: 1899900 }
 };
 
 const REGAL_ADDON_PRICING = {
@@ -7769,16 +7853,16 @@ window.renderPremiumHubView = function(selectedPeriod = "monthly") {
 
   const pricing = {
     monthly: {
-      silver: { display: "₹11,999", periodText: "/ 1 month", subtext: "Profiles get 4x more responses" },
-      gold: { display: "₹24,999", periodText: "/ 1 month", subtext: "Maximum trust & personal assistance" }
+      silver: { display: "₹2,499", periodText: "/ 1 month", subtext: "Profiles get 4x more responses" },
+      gold: { display: "₹5,999", periodText: "/ 1 month", subtext: "Maximum trust & personal assistance" }
     },
     quarterly: {
-      silver: { display: "₹28,799", periodText: "/ 3 months (₹9,599/mo)", subtext: "Save 20% • Most Popular Choice" },
-      gold: { display: "₹59,999", periodText: "/ 3 months (₹19,999/mo)", subtext: "Save 20% • Royal VIP Concierge" }
+      silver: { display: "₹4,999", periodText: "/ 3 months (₹1,666/mo)", subtext: "Save 33% • Most Popular Choice" },
+      gold: { display: "₹11,999", periodText: "/ 3 months (₹3,999/mo)", subtext: "Save 33% • Royal VIP Concierge" }
     },
     halfyearly: {
-      silver: { display: "₹50,399", periodText: "/ 6 months (₹8,399/mo)", subtext: "Save 30% • Best Long-Term Value" },
-      gold: { display: "₹1,04,999", periodText: "/ 6 months (₹17,499/mo)", subtext: "Save 30% • Dedicated Matchmaker" }
+      silver: { display: "₹7,999", periodText: "/ 6 months (₹1,333/mo)", subtext: "Save 46% • Best Long-Term Value" },
+      gold: { display: "₹18,999", periodText: "/ 6 months (₹3,166/mo)", subtext: "Save 47% • Dedicated Matchmaker" }
     }
   };
 
@@ -7824,11 +7908,12 @@ window.renderPremiumHubView = function(selectedPeriod = "monthly") {
         <div class="m-plan-note">${currentPrices.silver.subtext}</div>
 
         <ul class="m-plan-features">
-          <li><span class="m-feat-check">✓</span> <span><strong>Unlimited</strong> profile biodata views</span></li>
-          <li><span class="m-feat-check">✓</span> <span><strong>Unlimited</strong> interests & direct chats</span></li>
-          <li><span class="m-feat-check">✓</span> <span><strong>Direct Contact Number</strong> & verified biodata access</span></li>
-          <li><span class="m-feat-check">✓</span> <span><strong>Advanced filters:</strong> Clan, Gotra, Thikana, Education</span></li>
-          <li><span class="m-feat-check">✓</span> <span>"Recently Active" high-visibility royal badge</span></li>
+          <li><span class="m-feat-check">✓</span> <span><strong>Direct Contact Access:</strong> 35 Verified Phone &amp; WhatsApp numbers</span></li>
+          <li><span class="m-feat-check">✓</span> <span><strong>Unlimited</strong> Direct Chat &amp; Messaging</span></li>
+          <li><span class="m-feat-check">✓</span> <span><strong>Full 36 Guna Milan</strong> Kundali &amp; Horoscope Harmony Report</span></li>
+          <li><span class="m-feat-check">✓</span> <span><strong>Deep Rajput Filters:</strong> Maternal Gotra, Thikana, Income</span></li>
+          <li><span class="m-feat-check">✓</span> <span><strong>⚔️ Silver Crown Badge</strong> &amp; 3x Profile Boost</span></li>
+          <li><span class="m-feat-check">✓</span> <span>"Who Viewed My Profile" viewer list</span></li>
         </ul>
 
         <button type="button" class="m-plan-cta btn-royal" onclick="handleSubscribe('Silver')">
@@ -7841,8 +7926,8 @@ window.renderPremiumHubView = function(selectedPeriod = "monthly") {
         <div class="m-plan-vip-pill">👑 ROYAL VIP CONCIERGE</div>
         <div class="m-plan-header">
           <div>
-            <h3 class="m-plan-title">Rajputana Gold</h3>
-            <span class="m-plan-desc">Priority listing & dedicated Rajput matchmaker desk assistance.</span>
+            <h3 class="m-plan-title">Rajputana Gold (VIP)</h3>
+            <span class="m-plan-desc">Priority listing &amp; dedicated Rajput matchmaker desk assistance.</span>
           </div>
           <div class="m-plan-price-wrap">
             <span class="m-plan-price">${currentPrices.gold.display}</span>
@@ -7853,10 +7938,12 @@ window.renderPremiumHubView = function(selectedPeriod = "monthly") {
 
         <ul class="m-plan-features">
           <li><span class="m-feat-check gold">✓</span> <span><strong>Everything in Silver Plan</strong> included</span></li>
-          <li><span class="m-feat-check gold">✓</span> <span><strong>Priority Listing</strong> in member search feeds</span></li>
-          <li><span class="m-feat-check gold">✓</span> <span><strong>Dedicated Rajput Matchmaker Manager</strong></span></li>
-          <li><span class="m-feat-check gold">✓</span> <span>Weekly match reviews and tele-introductions</span></li>
-          <li><span class="m-feat-check gold">✓</span> <span>Circular Wax Seal Gotra Audit badge</span></li>
+          <li><span class="m-feat-check gold">✓</span> <span><strong>Dedicated Royal Matchmaker Manager</strong> (Personal family coordinator)</span></li>
+          <li><span class="m-feat-check gold">✓</span> <span><strong>Unlimited Direct Phone &amp; WhatsApp</strong> (100+ Contacts)</span></li>
+          <li><span class="m-feat-check gold">✓</span> <span><strong>#1 Top Priority Search Placement</strong></span></li>
+          <li><span class="m-feat-check gold">✓</span> <span><strong>VIP Confidentiality Mode:</strong> Stealth browsing &amp; Photo protection</span></li>
+          <li><span class="m-feat-check gold">✓</span> <span><strong>👑 Royal Gold Crown &amp; Wax Seal</strong> Verification Badge</span></li>
+          <li><span class="m-feat-check gold">✓</span> <span>1-on-1 Kundali Consultation with Royal Pandit</span></li>
         </ul>
 
         <button type="button" class="m-plan-cta btn-vip" onclick="handleSubscribe('Gold')">
@@ -7873,10 +7960,19 @@ window.renderPremiumHubView = function(selectedPeriod = "monthly") {
           </div>
           <div class="m-plan-price-wrap">
             <span class="m-plan-price">Free</span>
-            <span class="m-plan-period">/ 1 month trial</span>
+            <span class="m-plan-period">/ lifetime</span>
           </div>
         </div>
-        <div class="m-plan-note">Free 1 Month Trial</div>
+        <div class="m-plan-note">Free Registration &amp; Browsing</div>
+
+        <ul class="m-plan-features">
+          <li><span class="m-feat-check">✓</span> <span>Verifiable profile creation (4 Gotras &amp; Thikana)</span></li>
+          <li><span class="m-feat-check">✓</span> <span>Browse verified Rajput profiles</span></li>
+          <li><span class="m-feat-check">✓</span> <span>Send up to 5 Express Interests daily</span></li>
+          <li><span class="m-feat-check">✓</span> <span>Receive &amp; respond to unlimited match requests</span></li>
+          <li><span class="m-feat-check">✓</span> <span>Basic Rajput Clan, Age &amp; City filters</span></li>
+          <li><span class="m-feat-check">✓</span> <span>Basic Kundali match (Rashi &amp; Manglik status)</span></li>
+        </ul>
 
         <ul class="m-plan-features">
           <li><span class="m-feat-check">✓</span> <span>Verifiable profile creation & gotra listing</span></li>
