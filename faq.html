@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>FAQ & Guidelines | Shree Rajput Sagai Sambandh</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=4.0">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
@@ -76,9 +76,136 @@
       align-items: center;
       gap: 8px;
     }
+
+    /* Mobile View Responsiveness (Phones <= 768px) */
+    @media (max-width: 768px) {
+      html {
+        background-color: #4A0D18 !important;
+        overflow-x: hidden !important;
+      }
+      body {
+        padding-top: 66px !important;
+        padding-bottom: 84px !important;
+        overflow-x: hidden !important;
+        background-color: transparent !important;
+        max-width: 100vw !important;
+        width: 100% !important;
+      }
+      body > header,
+      .dashboard-subnav {
+        display: none !important;
+      }
+      .mobile-matches-header {
+        display: flex !important;
+      }
+      .mobile-bottom-nav {
+        display: flex !important;
+      }
+      .faq-page-container {
+        margin: 12px auto 20px auto !important;
+        padding: 0 14px !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+      }
+      .faq-card-section {
+        padding: 20px 16px !important;
+        background: #FFFFFF !important;
+        border: 1.5px solid #E5E7EB !important;
+        border-radius: 20px !important;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08) !important;
+        color: #111827 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+      }
+      .faq-card-section h2 {
+        color: #8B1E2D !important;
+        font-size: 1.25rem !important;
+      }
+      .faq-card-section p {
+        color: #4B5563 !important;
+      }
+      .guidelines-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+        margin-top: 16px !important;
+      }
+      .guideline-card {
+        background: #F9FAFB !important;
+        border: 1px solid #E5E7EB !important;
+        border-radius: 14px !important;
+        padding: 14px 16px !important;
+      }
+      .guideline-card h4 {
+        color: #8B1E2D !important;
+        font-size: 0.95rem !important;
+        margin-bottom: 6px !important;
+      }
+      .guideline-card p {
+        color: #4B5563 !important;
+        font-size: 0.82rem !important;
+        line-height: 1.4 !important;
+      }
+      .faq-item {
+        background: #FFFFFF !important;
+        border: 1.5px solid #E5E7EB !important;
+        border-radius: 14px !important;
+        margin-bottom: 10px !important;
+        overflow: hidden !important;
+      }
+      .faq-question {
+        color: #111827 !important;
+        font-size: 0.88rem !important;
+        padding: 14px 16px !important;
+        background: #FFFFFF !important;
+      }
+      .faq-answer {
+        background: #F9FAFB !important;
+        border-top: 1px solid #F3F4F6 !important;
+        padding: 12px 16px !important;
+      }
+      .faq-answer p {
+        color: #4B5563 !important;
+        font-size: 0.82rem !important;
+        line-height: 1.5 !important;
+      }
+      .whatsapp-float {
+        bottom: 74px !important;
+        right: 14px !important;
+        width: 44px !important;
+        height: 44px !important;
+        z-index: 99 !important;
+      }
+      footer {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
+
+  <!-- Mobile Header for FAQ & Guidelines -->
+  <div class="mobile-matches-header" id="mobileFaqHeader">
+    <div class="mobile-matches-left">
+      <a href="dashboard.html" class="mobile-header-user-btn" style="text-decoration: none;" aria-label="Back to Dashboard" title="Back to Dashboard">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#111827" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </a>
+      <h1 class="mobile-matches-title" style="font-size: 1.15rem !important;">Guidelines &amp; Support</h1>
+    </div>
+    <div class="mobile-matches-right">
+      <button type="button" class="mobile-header-logout-btn" onclick="handleLogout()" aria-label="Logout" title="Log Out">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        <span>Logout</span>
+      </button>
+    </div>
+  </div>
 
   <!-- Main Navigation Header -->
   <header>
@@ -251,10 +378,49 @@
     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.417 9.864-9.848.002-2.63-1.023-5.101-2.887-6.968C16.621 1.936 14.15 1.087 11.996 1.087c-5.43 0-9.852 4.415-9.856 9.847-.001 1.765.467 3.487 1.355 5.027l-.988 3.606 3.693-.97.157.093zm12.338-7.536c-.328-.164-1.942-.959-2.242-1.069-.3-.11-.519-.164-.738.164-.219.328-.847 1.069-1.039 1.288-.192.219-.384.246-.712.083-1.826-.913-2.997-1.637-3.947-3.268-.252-.433.252-.401.72-1.332.077-.154.038-.288-.019-.397-.058-.11-.519-1.25-.712-1.713-.188-.452-.378-.39-.519-.398-.135-.007-.29-.009-.445-.009-.156 0-.409.058-.623.288-.214.23-.817.799-.817 1.95s.836 2.262.95 2.416c.115.154 1.645 2.512 3.985 3.522.556.24 1.053.404 1.409.518.572.181 1.092.155 1.503.094.458-.068 1.942-.795 2.215-1.528.272-.732.272-1.359.191-1.492-.081-.133-.298-.214-.626-.378z"/></svg>
   </a>
 
+  <!-- Fixed Mobile Bottom Navigation Bar -->
+  <nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <a href="dashboard.html?view=home" class="mobile-bottom-tab" id="mNavHome" aria-label="Royal Hub">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="dashboard.html?view=matches" class="mobile-bottom-tab" id="mNavMatches" aria-label="Matches Feed">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+      </svg>
+      <span>Matches</span>
+    </a>
+    <a href="dashboard.html?view=inbox" class="mobile-bottom-tab" id="mNavInbox" aria-label="Inbox and Requests">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+        <polyline points="22,6 12,13 2,6"></polyline>
+      </svg>
+      <span>Inbox</span>
+    </a>
+    <a href="dashboard.html?view=chat" class="mobile-bottom-tab" id="mNavChat" aria-label="Royal Messenger">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span>Chat</span>
+    </a>
+    <a href="membership.html" class="mobile-bottom-tab" id="mNavPremium" aria-label="Premium Membership">
+      <div class="m-premium-badge-wrapper">
+        <span class="m-premium-pill">85% OFF</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
+        </svg>
+      </div>
+      <span>Premium</span>
+    </a>
+  </nav>
+
   <!-- Scripts -->
   <script src="js/data.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=4.0"></script>
 </body>
 </html>
