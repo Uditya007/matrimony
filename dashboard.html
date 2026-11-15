@@ -422,6 +422,11 @@
       <!-- Populated dynamically via renderChatHubView() -->
     </section>
 
+    <!-- View 5: Regal Membership / Premium Plans Section -->
+    <section class="app-view-section premium-hub-container" id="viewPremiumSection" style="display: none;">
+      <!-- Populated dynamically via renderPremiumHubView() -->
+    </section>
+
     <!-- Right Column: Online sidebar + Real-time Lineage Filters -->
     <aside class="dashboard-online-right-panel" style="display: flex; flex-direction: column; gap: 20px;">
       
@@ -894,16 +899,13 @@
       <span class="m-bottom-nav-dot" id="mNavChatBadge" style="display: none;"></span>
       <span>Chat</span>
     </a>
-    <a href="membership.html" class="mobile-bottom-tab" id="mNavPremium" aria-label="Premium Membership">
+    <a href="javascript:void(0)" onclick="switchAppView('premium')" class="mobile-bottom-tab" id="mNavPremium" aria-label="Premium Membership">
       <div class="m-premium-badge-wrapper">
         <span class="m-premium-pill">85% OFF</span>
         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
           <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
         </svg>
       </div>
-      <span>Premium</span>
-    </a>
-  </nav>
       <span>Premium</span>
     </a>
   </nav>
@@ -970,8 +972,121 @@
     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.417 9.864-9.848.002-2.63-1.023-5.101-2.887-6.968C16.621 1.936 14.15 1.087 11.996 1.087c-5.43 0-9.852 4.415-9.856 9.847-.001 1.765.467 3.487 1.355 5.027l-.988 3.606 3.693-.97.157.093zm12.338-7.536c-.328-.164-1.942-.959-2.242-1.069-.3-.11-.519-.164-.738.164-.219.328-.847 1.069-1.039 1.288-.192.219-.384.246-.712.083-1.826-.913-2.997-1.637-3.947-3.268-.252-.433.252-.401.72-1.332.077-.154.038-.288-.019-.397-.058-.11-.519-1.25-.712-1.713-.188-.452-.378-.39-.519-.398-.135-.007-.29-.009-.445-.009-.156 0-.409.058-.623.288-.214.23-.817.799-.817 1.95s.836 2.262.95 2.416c.115.154 1.645 2.512 3.985 3.522.556.24 1.053.404 1.409.518.572.181 1.092.155 1.503.094.458-.068 1.942-.795 2.215-1.528.272-.732.272-1.359.191-1.492-.081-.133-.298-.214-.626-.378z"/></svg>
   </a>
 
+  <!-- Royal YouPI & Razorpay Payment Modal -->
+  <div id="youpiPaymentModal" class="youpi-modal-overlay">
+    <div class="youpi-modal-card">
+      <div class="youpi-modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">👑</span>
+          <div>
+            <h3 style="margin: 0; color: #fff; font-size: 16px; font-family: 'Cinzel', serif;">Shree Rajput Sagai Sambandh</h3>
+            <span style="font-size: 11px; color: #E8C766;">Royal Payment Gateway • 0% Platform Fee</span>
+          </div>
+        </div>
+        <button class="youpi-modal-close" onclick="closeYoupiModal()">&times;</button>
+      </div>
+
+      <div class="youpi-modal-body">
+        <!-- Order Summary Card -->
+        <div class="youpi-order-summary">
+          <div>
+            <span class="youpi-summary-title" id="youpiModalPlanTitle">Rajputana Silver Plan</span>
+            <span class="youpi-summary-sub" id="youpiModalPeriod">1 Month Access</span>
+          </div>
+          <div class="youpi-summary-amount" id="youpiModalAmount">₹11,999</div>
+        </div>
+
+        <!-- Payment Tabs -->
+        <div class="youpi-tabs">
+          <button id="tabYoupiUpi" class="youpi-tab active" onclick="switchPaymentTab('upi')">
+            👑 Royal UPI (Recommended)
+          </button>
+          <button id="tabRazorpay" class="youpi-tab" onclick="switchPaymentTab('razorpay')">
+            💳 Card / NetBanking
+          </button>
+        </div>
+
+        <!-- UPI Payment View -->
+        <div id="youpiUpiView" class="youpi-tab-content">
+          <!-- 1-Tap UPI Apps Section -->
+          <div style="text-align: center; margin-bottom: 12px;">
+            <span style="font-size: 11.5px; color: #6B7280; font-weight: 700; letter-spacing: 0.5px;">1-TAP INSTANT PAYMENT APPS</span>
+            <div class="youpi-app-grid">
+              <a id="btnPayGPay" href="#" class="youpi-app-btn">
+                <span>🟢</span> GPay
+              </a>
+              <a id="btnPayPhonePe" href="#" class="youpi-app-btn">
+                <span>🟣</span> PhonePe
+              </a>
+              <a id="btnPayPaytm" href="#" class="youpi-app-btn">
+                <span>🔵</span> Paytm
+              </a>
+              <a id="btnPayAnyUpi" href="#" class="youpi-app-btn" style="grid-column: span 3; background: #6B1220; color: #fff; font-weight: 700;">
+                ⚡ Launch Any UPI App on Device
+              </a>
+            </div>
+          </div>
+
+          <!-- Dynamic QR Code & VPA -->
+          <div class="youpi-qr-section">
+            <div class="youpi-qr-box">
+              <img id="youpiQrImage" src="" alt="UPI QR Code" style="width: 165px; height: 165px; border-radius: 8px; display: block; margin: 0 auto;">
+              <div id="youpiQrLoading" style="display: none; padding: 60px 20px; font-size: 12px; color: #888;">Generating Royal QR...</div>
+            </div>
+            <div style="margin-top: 8px;">
+              <span style="font-size: 11px; color: #6B7280;">Scan with GPay, PhonePe, Paytm, or BHIM</span>
+              <div>
+                <div class="youpi-vpa-chip">
+                  <span id="youpiVpaText">7665941949@kotak</span>
+                  <button type="button" onclick="copyYoupiVpa()" class="youpi-copy-btn">Copy</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 12-Digit UTR Entry & Confirm -->
+          <div class="youpi-utr-box">
+            <label style="display: block; font-size: 11.5px; font-weight: 600; color: #374151; margin-bottom: 5px;">
+              Enter 12-Digit Bank UTR / Reference Number
+            </label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="youpiUtrInput" placeholder="e.g. 428901234567" maxlength="18" class="youpi-input">
+              <button type="button" id="btnVerifyUtr" onclick="submitYoupiUtr()" class="youpi-verify-btn">Verify & Activate</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+              <span id="youpiStatusNotice" style="font-size: 10.5px; color: #059669;">
+                🛡️ Direct Kotak Settlement • Powered by YouPI-PG
+              </span>
+              <a id="youpiCheckoutPortalLink" href="#" target="_blank" style="font-size: 10.5px; color: #6B1220; text-decoration: underline; font-weight: 600; display: none;">
+                Open YouPI Portal ↗
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Razorpay View -->
+        <div id="youpiRazorpayView" class="youpi-tab-content" style="display: none;">
+          <div style="padding: 24px 16px; text-align: center;">
+            <div style="font-size: 32px; margin-bottom: 8px;">💳</div>
+            <h4 style="margin: 0 0 6px 0; color: #1F2937;">Cards, NetBanking & Wallets</h4>
+            <p style="font-size: 13px; color: #6B7280; margin: 0 0 16px 0;">
+              Pay securely using Credit Card, Debit Card, or NetBanking powered by Razorpay.
+            </p>
+            <button type="button" id="btnProceedRazorpay" onclick="proceedWithRazorpay()" class="btn btn-royal" style="width: 100%; padding: 12px; font-weight: 700;">
+              Continue with Razorpay
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="js/data.js"></script>
+  <!-- Razorpay Standard Web Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <!-- YouPI PG Universal Checkout SDK -->
+  <script src="js/youpi-checkout.js"></script>
   <!-- Supabase JS Client SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
