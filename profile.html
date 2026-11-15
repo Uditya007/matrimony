@@ -34,57 +34,61 @@
     
     /* Profile Page Custom Styles overrides */
     body {
-      padding-top: 104px; /* Ensure space for fixed header and borders */
+      padding-top: 104px; /* Space for desktop header */
     }
     
     .profile-edit-container {
       max-width: 1200px;
-      margin: 40px auto;
+      margin: 30px auto;
       padding: 0 20px;
       display: grid;
       grid-template-columns: 320px 1fr;
-      gap: 40px;
+      gap: 30px;
+      box-sizing: border-box;
     }
     
     @media (max-width: 992px) {
       .profile-edit-container {
         grid-template-columns: 1fr;
-        gap: 30px;
+        gap: 25px;
       }
     }
     
+    /* ─── White Cards (Desktop & Global Defaults) ─── */
     .profile-card-left {
-      background-color: var(--bg-card);
-      border: 2px solid var(--gold-antique);
-      border-radius: var(--border-radius-lg);
-      padding: 30px 20px;
-      text-align: center;
-      box-shadow: var(--shadow-royal);
+      background: #FFFFFF !important;
+      border: 1.5px solid #E5E7EB !important;
+      border-radius: var(--border-radius-lg, 18px) !important;
+      padding: 28px 20px !important;
+      text-align: center !important;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06) !important;
       height: fit-content;
       position: sticky;
-      top: 170px;
+      top: 130px;
+      color: #111827 !important;
     }
     
     .profile-avatar-upload-wrapper {
       position: relative;
-      width: 160px;
-      height: 200px;
-      margin: 0 auto 20px auto;
+      width: 140px;
+      height: 140px;
+      margin: 0 auto 16px auto;
     }
     
     .profile-avatar-frame {
       width: 100%;
       height: 100%;
-      border-radius: 8px;
-      border: 2px solid var(--gold-antique);
+      border-radius: 50% !important;
+      border: 2.5px solid #D4AF37 !important;
       overflow: hidden;
-      background-color: var(--primary-color);
+      background: #F3F4F6 !important;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 5rem;
-      font-family: var(--font-royal);
-      color: var(--gold-bright);
+      font-size: 3.5rem;
+      font-family: var(--font-royal, 'Cinzel', serif);
+      color: #111827 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       position: relative;
     }
     
@@ -99,20 +103,19 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      background: rgba(92, 6, 18, 0.85);
-      color: var(--gold-bright);
-      padding: 8px 0;
-      font-size: 0.75rem;
+      background: rgba(17, 24, 39, 0.75) !important;
+      color: #FFFFFF !important;
+      padding: 5px 0;
+      font-size: 0.72rem;
       font-weight: 600;
       cursor: pointer;
-      border-bottom-left-radius: 6px;
-      border-bottom-right-radius: 6px;
-      transition: var(--transition);
-      border-top: 1px solid rgba(170, 124, 17, 0.4);
+      border-radius: 0 0 70px 70px;
+      transition: var(--transition, all 0.2s ease);
+      border: none;
     }
     
     .avatar-upload-overlay:hover {
-      background: var(--primary-color);
+      background: rgba(17, 24, 39, 0.9) !important;
     }
     
     .profile-avatar-upload-wrapper input[type="file"] {
@@ -125,28 +128,62 @@
       cursor: pointer;
       z-index: 5;
     }
-    
-    .profile-form-right {
-      background-color: var(--bg-card);
-      border: 1px solid rgba(170, 124, 17, 0.25);
-      border-radius: var(--border-radius-lg);
-      padding: 40px;
-      box-shadow: var(--shadow-royal);
+
+    .user-card-name {
+      color: #111827 !important;
+      font-family: var(--font-royal, 'Cinzel', serif) !important;
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin: 4px 0 2px 0;
+    }
+
+    .user-card-id {
+      color: #6B7280 !important;
+      font-family: monospace;
+      font-size: 0.8rem;
+      margin-bottom: 10px;
+    }
+
+    .user-card-membership {
+      display: inline-block;
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+      color: #FFFFFF !important;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 14px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(217, 119, 6, 0.2);
     }
     
-    @media (max-width: 576px) {
-      .profile-form-right {
-        padding: 25px 20px;
-      }
+    .profile-form-right {
+      background: #FFFFFF !important;
+      border: 1.5px solid #E5E7EB !important;
+      border-radius: var(--border-radius-lg, 18px) !important;
+      padding: 35px 30px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06) !important;
+      box-sizing: border-box;
+      color: #111827 !important;
+    }
+    
+    .profile-hero-title-main {
+      font-family: var(--font-royal, 'Cinzel', serif);
+      color: #111827 !important;
+      font-size: 1.6rem;
+      font-weight: 700;
+      border-bottom: 2px solid #E5E7EB;
+      padding-bottom: 12px;
+      margin: 0 0 24px 0;
     }
     
     .profile-form-section-title {
-      font-family: var(--font-royal);
-      color: var(--text-white);
-      font-size: 1.25rem;
-      margin: 35px 0 15px 0;
-      padding-bottom: 6px;
-      border-bottom: 1.5px solid rgba(170, 124, 17, 0.25);
+      font-family: var(--font-royal, 'Cinzel', serif);
+      color: #111827 !important;
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 28px 0 14px 0;
+      padding-bottom: 8px;
+      border-bottom: 1.5px solid #F3F4F6;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -159,123 +196,64 @@
     .form-grid-2col {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px 25px;
-    }
-    
-    @media (max-width: 768px) {
-      .form-grid-2col {
-        grid-template-columns: 1fr;
-        gap: 15px;
-      }
-      .profile-card-left {
-        position: relative !important;
-        top: auto !important;
-        background: rgba(43, 8, 12, 0.45) !important;
-        border: 1px solid rgba(170, 124, 17, 0.25) !important;
-        box-shadow: none !important;
-        padding: 20px 15px !important;
-        margin-bottom: 20px !important;
-        backdrop-filter: blur(4px);
-      }
-      .profile-avatar-upload-wrapper {
-        width: 110px !important;
-        height: 137px !important;
-        margin-bottom: 12px !important;
-      }
-      .profile-avatar-frame {
-        font-size: 3rem !important;
-      }
-      .user-card-name {
-        font-size: 1.15rem !important;
-      }
-      .user-card-id {
-        margin-bottom: 12px !important;
-      }
-      .user-card-membership {
-        margin-bottom: 15px !important;
-        padding: 5px 12px !important;
-        font-size: 0.75rem !important;
-      }
+      gap: 18px 24px;
     }
 
-    /* ─── White form inputs with golden text ─── */
+    .form-group label {
+      display: block;
+      color: #374151 !important;
+      font-weight: 600 !important;
+      font-size: 0.82rem !important;
+      margin-bottom: 6px;
+    }
+
+    /* ─── Crisp White Form Inputs with Dark Typography ─── */
     .profile-form-right .form-group input,
     .profile-form-right .form-group select,
     .profile-form-right .form-group textarea {
-      background-color: #ffffff !important;
-      color: #8B6914 !important;
-      border: 1.5px solid rgba(170, 124, 17, 0.45) !important;
+      background-color: #FFFFFF !important;
+      color: #111827 !important;
+      border: 1.5px solid #D1D5DB !important;
+      border-radius: 10px !important;
+      font-size: 15px !important;
+      padding: 10px 14px !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
     }
+
     .profile-form-right .form-group input::placeholder,
     .profile-form-right .form-group textarea::placeholder {
-      color: rgba(139, 105, 20, 0.5) !important;
+      color: #9CA3AF !important;
     }
+
     .profile-form-right .form-group select option {
-      background-color: #ffffff;
-      color: #8B6914;
+      background-color: #FFFFFF !important;
+      color: #111827 !important;
     }
+
     .profile-form-right .form-group input:focus,
     .profile-form-right .form-group select:focus,
     .profile-form-right .form-group textarea:focus {
-      border-color: var(--gold-antique) !important;
-      box-shadow: 0 0 0 3px rgba(170, 124, 17, 0.12) !important;
-      outline: none;
+      border-color: #8B1E2D !important;
+      box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.12) !important;
+      outline: none !important;
     }
 
-    /* ─── White Cards ─── */
-    .profile-card-left {
-      background-color: #ffffff !important;
-      border: 2px solid var(--gold-antique) !important;
-    }
-    .profile-form-right {
-      background-color: #ffffff !important;
-      border: 1px solid rgba(170, 124, 17, 0.3) !important;
-    }
-
-    /* Left card text on white */
-    .user-card-name {
-      color: #2D3748 !important;
-    }
-    .user-card-id {
-      color: var(--primary-color) !important;
-    }
-    #sideCardVerification {
-      color: #4A5568 !important;
-    }
-    .profile-card-left h4 {
-      color: var(--primary-color) !important;
-    }
-    .profile-card-left > div[style*="bg-warm"] ,
-    div[style*="bg-warm"] {
-      background-color: #f9f4ef !important;
-    }
-
-    /* Right form on white */
-    .profile-form-right h2 {
-      color: var(--primary-color) !important;
-    }
-    .profile-form-section-title {
-      color: #2D3748 !important;
-    }
-    .form-group label {
-      color: #5C0612 !important;
-      font-weight: 700 !important;
-    }
-
-    /* Subnav white tabs */
+    /* Desktop subnav tabs */
     .subnav-tab {
       color: rgba(255, 255, 255, 0.85) !important;
     }
     .subnav-tab:hover,
     .subnav-tab.active {
-      color: #ffffff !important;
+      color: #FFFFFF !important;
     }
 
-    /* mobile card stays semi-transparent */
+    /* ─── Mobile View Responsiveness (Phones <= 768px) ─── */
     @media (max-width: 768px) {
       body {
-        padding-top: 60px !important;
-        padding-bottom: 74px !important;
+        padding-top: 72px !important;
+        padding-bottom: 84px !important;
       }
       body > header,
       .dashboard-subnav {
@@ -288,20 +266,101 @@
         display: flex !important;
       }
       .profile-edit-container {
-        margin: 10px auto !important;
-        padding: 0 12px !important;
-        gap: 20px !important;
+        max-width: 520px !important;
+        margin: 0 auto 20px auto !important;
+        padding: 0 16px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 16px !important;
       }
       .profile-card-left {
         position: static !important;
-        padding: 20px 14px !important;
-        background: rgba(255,255,255,0.95) !important;
+        padding: 22px 18px !important;
+        background: #FFFFFF !important;
+        border: 1.5px solid #E5E7EB !important;
+        border-radius: 18px !important;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06) !important;
+        margin: 0 !important;
+      }
+      .profile-avatar-upload-wrapper {
+        width: 110px !important;
+        height: 110px !important;
+        margin: 0 auto 12px auto !important;
+      }
+      .profile-avatar-frame {
+        font-size: 2.6rem !important;
+      }
+      .avatar-upload-overlay {
+        border-radius: 0 0 55px 55px !important;
+        font-size: 0.68rem !important;
+        padding: 4px 0 !important;
+      }
+      .user-card-name {
+        font-size: 1.25rem !important;
+      }
+      .user-card-id {
+        margin-bottom: 8px !important;
+        font-size: 0.78rem !important;
+      }
+      .user-card-membership {
+        margin-bottom: 14px !important;
+        padding: 4px 14px !important;
+        font-size: 0.75rem !important;
       }
       .profile-form-right {
-        padding: 20px 14px !important;
+        padding: 22px 18px !important;
+        background: #FFFFFF !important;
+        border: 1.5px solid #E5E7EB !important;
+        border-radius: 18px !important;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06) !important;
+      }
+      .profile-hero-title-main {
+        font-size: 1.25rem !important;
+        margin-bottom: 18px !important;
+        padding-bottom: 10px !important;
+      }
+      .profile-form-section-title {
+        font-size: 1.02rem !important;
+        margin: 24px 0 12px 0 !important;
+        gap: 8px !important;
+        line-height: 1.3 !important;
       }
       .form-grid-2col {
-        grid-template-columns: 1fr !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 14px !important;
+      }
+      .profile-action-btn-row {
+        display: flex !important;
+        flex-direction: column-reverse !important;
+        gap: 10px !important;
+        border-top: 1.5px solid #F3F4F6 !important;
+        padding-top: 18px !important;
+        margin-top: 10px !important;
+      }
+      .profile-action-btn-row .btn-cancel {
+        width: 100% !important;
+        background: #F3F4F6 !important;
+        border: 1.5px solid #D1D5DB !important;
+        color: #374151 !important;
+        border-radius: 12px !important;
+        text-align: center !important;
+        padding: 12px !important;
+        font-weight: 600 !important;
+        box-sizing: border-box !important;
+        text-decoration: none !important;
+      }
+      .profile-action-btn-row .btn-save {
+        width: 100% !important;
+        background: #8B1E2D !important;
+        border: none !important;
+        color: #FFFFFF !important;
+        border-radius: 12px !important;
+        text-align: center !important;
+        padding: 14px !important;
+        font-weight: 700 !important;
+        box-sizing: border-box !important;
+        box-shadow: 0 4px 14px rgba(139, 30, 45, 0.25) !important;
       }
     }
   </style>
@@ -312,9 +371,12 @@
   <div class="mobile-matches-header" id="mobileProfileHeader">
     <div class="mobile-matches-left">
       <a href="dashboard.html" class="mobile-header-user-btn" style="text-decoration: none;" aria-label="Back to Matches" title="Back to Matches">
-        <span style="font-size: 1.3rem; color: #FCD34D; font-weight: bold; line-height: 1; padding: 0 4px;">&larr;</span>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#111827" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
       </a>
-      <h1 class="mobile-matches-title" style="font-size: 1.15rem !important;">My Profile &amp; Settings</h1>
+      <h1 class="mobile-matches-title" style="font-size: 1.05rem !important; font-weight: 700; color: #111827 !important; font-family: var(--font-royal, 'Cinzel', serif);">My Profile &amp; Settings</h1>
     </div>
     <div class="mobile-matches-right">
       <button type="button" class="mobile-header-logout-btn" onclick="handleLogout()" aria-label="Logout" title="Log Out">
@@ -373,23 +435,23 @@
         <button type="button" onclick="handleRemovePhoto()" style="background: transparent; color: var(--gold-bright); border: none; font-size: 0.75rem; cursor: pointer; text-decoration: underline; font-weight: 500;">Remove Photo</button>
       </div>
       
-      <h3 class="user-card-name" id="sideCardName" style="font-size: 1.4rem; margin-bottom: 5px;">Noble User</h3>
-      <p class="user-card-id" id="sideCardId" style="font-size: 0.8rem; margin-bottom: 20px;">SRS-XXXXXX</p>
+      <h3 class="user-card-name" id="sideCardName">Noble User</h3>
+      <p class="user-card-id" id="sideCardId">SRS-XXXXXX</p>
       
-      <div class="user-card-membership" id="sideCardTier" style="margin-bottom: 25px;">Starter Plan</div>
+      <div class="user-card-membership" id="sideCardTier">Starter Plan</div>
       
-      <div style="background-color: #f9f4ef; padding: 15px; border-radius: var(--border-radius); border: 1px solid rgba(170, 124, 17, 0.25); text-align: left;">
-        <h4 style="font-family: var(--font-royal); color: var(--primary-color); font-size: 0.9rem; margin-bottom: 10px; border-bottom: 1px solid rgba(170, 124, 17, 0.2); padding-bottom: 4px;">Lineage Verified</h4>
-        <div style="display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: #4A5568;" id="sideCardVerification">
-          <span style="font-size: 1.2rem;">🛡️</span> Unverified Profile
+      <div style="background-color: #F9FAFB; padding: 14px; border-radius: 14px; border: 1.5px solid #E5E7EB; text-align: left;">
+        <h4 style="font-family: var(--font-royal); color: #111827; font-size: 0.88rem; margin-bottom: 8px; border-bottom: 1px solid #E5E7EB; padding-bottom: 4px;">Lineage Verified</h4>
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: #4B5563;" id="sideCardVerification">
+          <span style="font-size: 1.1rem;">🛡️</span> Unverified Profile
         </div>
-        <button onclick="purchaseAddon('Verification')" class="btn btn-royal" style="width: 100%; margin-top: 15px; font-size: 0.75rem; padding: 6px;">Request Audit</button>
+        <button onclick="purchaseAddon('Verification')" class="btn" style="width: 100%; margin-top: 12px; font-size: 0.8rem; font-weight: 700; padding: 8px 12px; background: #8B1E2D; color: #FFFFFF; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 2px 8px rgba(139, 30, 45, 0.2);">Request Audit</button>
       </div>
     </aside>
     
     <!-- Right Column: Editing Form -->
     <main class="profile-form-right">
-      <h2 style="font-family: var(--font-royal); color: var(--text-white); font-size: 2rem; border-bottom: 2px solid var(--gold-antique); padding-bottom: 10px; margin-bottom: 30px;">
+      <h2 class="profile-hero-title-main">
         Ancestral Profile Manager
       </h2>
       
@@ -554,17 +616,17 @@
         
         <div class="form-group" style="margin-bottom: 25px;">
           <label>Upload Ancestral Biodata (PDF format only, max 5MB)</label>
-          <div id="biodataUploadContainer" style="border: 2px dashed rgba(201, 162, 39, 0.4); padding: 25px; border-radius: var(--border-radius); text-align: center; background: rgba(255,255,255,0.02); transition: border-color 0.3s, background-color 0.3s; cursor: pointer; position: relative;">
+          <div id="biodataUploadContainer" style="border: 2px dashed #D1D5DB; padding: 22px 16px; border-radius: 14px; text-align: center; background: #F9FAFB; transition: border-color 0.3s, background-color 0.3s; cursor: pointer; position: relative;">
             <input type="file" id="profBiodataPdf" accept=".pdf" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="handleBiodataPdfChange(event)">
             <div id="biodataUploadStatus">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gold-antique)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; display: inline-block;">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#8B1E2D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px; display: inline-block;">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
                 <line x1="12" y1="18" x2="12" y2="12"></line>
                 <polyline points="9 15 12 12 15 15"></polyline>
               </svg>
-              <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-white); margin-bottom: 5px;">Drag & Drop your Biodata PDF here or Click to browse</div>
-              <div style="font-size: 0.75rem; color: var(--gold-bright);">Supports PDF files up to 5MB</div>
+              <div style="font-size: 0.88rem; font-weight: 600; color: #111827; margin-bottom: 4px;">Drag & Drop your Biodata PDF here or Click to browse</div>
+              <div style="font-size: 0.74rem; color: #6B7280;">Supports PDF files up to 5MB</div>
             </div>
           </div>
         </div>
@@ -670,10 +732,10 @@
         </div>
 
         <!-- Blocked Profiles Manager -->
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; padding: 14px 16px; margin-bottom: 25px;">
-          <h4 style="font-size: 0.9rem; color: #FFFFFF; margin: 0 0 6px 0; font-family: var(--font-royal);">🛡️ Blocked &amp; Reported Profiles</h4>
-          <p style="font-size: 0.74rem; color: rgba(255,255,255,0.7); margin: 0 0 10px 0;">Members you block cannot view your biodata, see your photos, or send match interests.</p>
-          <div id="blockedProfilesList" style="font-size: 0.75rem; color: var(--gold-bright);">
+        <div style="background: #F9FAFB; border: 1.5px solid #E5E7EB; border-radius: 14px; padding: 14px 16px; margin-bottom: 22px;">
+          <h4 style="font-size: 0.9rem; color: #111827; margin: 0 0 4px 0; font-family: var(--font-royal);">🛡️ Blocked &amp; Reported Profiles</h4>
+          <p style="font-size: 0.74rem; color: #4B5563; margin: 0 0 8px 0;">Members you block cannot view your biodata, see your photos, or send match interests.</p>
+          <div id="blockedProfilesList" style="font-size: 0.75rem; color: #6B7280;">
             No profiles currently blocked. You can block or report any profile directly from the match card options menu (...).
           </div>
         </div>
@@ -683,19 +745,19 @@
           <span>🛡️</span> Traditional Rajputana Safety &amp; Verification Guidelines
         </h3>
 
-        <div style="background: linear-gradient(145deg, rgba(32, 4, 10, 0.9) 0%, rgba(20, 2, 6, 0.9) 100%); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 14px; padding: 16px; margin-bottom: 30px;">
-          <ul style="margin: 0; padding-left: 20px; font-size: 0.78rem; color: rgba(255,255,255,0.85); line-height: 1.6;">
-            <li><strong>Four-Gotra Exclusions:</strong> Ensure neither candidate shares paternal gotra, maternal gotra, dadi's gotra, or nani's gotra.</li>
-            <li><strong>Lineage Record Verification:</strong> Always request our Rajput screening desk or family bhats to verify ancestral jagir and thikana records.</li>
-            <li><strong>Elder Coordination:</strong> Never commit to marriage alliances without direct telephone and in-person consultations between family elders.</li>
-            <li><strong>Anti-Fraud Warning:</strong> Never send financial remittances, gift customs, or travel fees before official engagement (Roka/Sagai).</li>
+        <div style="background: #FFFBEB; border: 1.5px solid #FDE68A; border-radius: 14px; padding: 16px; margin-bottom: 26px;">
+          <ul style="margin: 0; padding-left: 20px; font-size: 0.78rem; color: #78350F; line-height: 1.6;">
+            <li><strong style="color: #92400E;">Four-Gotra Exclusions:</strong> Ensure neither candidate shares paternal gotra, maternal gotra, dadi's gotra, or nani's gotra.</li>
+            <li><strong style="color: #92400E;">Lineage Record Verification:</strong> Always request our Rajput screening desk or family bhats to verify ancestral jagir and thikana records.</li>
+            <li><strong style="color: #92400E;">Elder Coordination:</strong> Never commit to marriage alliances without direct telephone and in-person consultations between family elders.</li>
+            <li><strong style="color: #92400E;">Anti-Fraud Warning:</strong> Never send financial remittances, gift customs, or travel fees before official engagement (Roka/Sagai).</li>
           </ul>
         </div>
 
         <!-- Action Buttons -->
-        <div style="display: flex; gap: 20px; justify-content: flex-end; border-top: 1.5px solid rgba(170, 124, 17, 0.2); padding-top: 25px;">
-          <a href="dashboard.html" class="btn btn-minimal" style="padding: 12px 25px;">Cancel</a>
-          <button type="submit" class="btn btn-royal" id="saveProfileBtn" style="padding: 12px 40px; font-weight: bold;">
+        <div class="profile-action-btn-row" style="display: flex; gap: 16px; justify-content: flex-end; border-top: 1.5px solid #F3F4F6; padding-top: 22px;">
+          <a href="dashboard.html" class="btn btn-cancel" style="padding: 12px 24px; text-decoration: none;">Cancel</a>
+          <button type="submit" class="btn btn-save" id="saveProfileBtn" style="padding: 12px 36px; font-weight: bold; cursor: pointer;">
             Save Ancestral Profile
           </button>
         </div>

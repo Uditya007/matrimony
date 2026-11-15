@@ -7478,7 +7478,7 @@ body:has(.dashboard-subnav) {
 }
 
 /* ==========================================================================
-   AREA 1: ROYAL HUB / HOME VIEW
+   AREA 1: ROYAL HUB / HOME VIEW (ELEGANT CRISP WHITE CARDS)
    ========================================================================== */
 .home-hub-container {
   width: 100%;
@@ -7491,21 +7491,22 @@ body:has(.dashboard-subnav) {
 }
 
 .home-member-hero-card {
-  background: linear-gradient(145deg, #2A050D 0%, #1A0307 100%);
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  border-radius: 20px;
-  padding: 18px 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  background: #FFFFFF !important;
+  border: 1.5px solid #E5E7EB !important;
+  border-radius: 20px !important;
+  padding: 18px 20px !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08) !important;
   position: relative;
   overflow: hidden;
+  color: #111827 !important;
 }
 
 .home-member-hero-card::before {
   content: "";
   position: absolute;
   top: 0; right: 0;
-  width: 120px; height: 120px;
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+  width: 140px; height: 140px;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -7525,14 +7526,14 @@ body:has(.dashboard-subnav) {
   height: 64px;
   border-radius: 50%;
   background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%);
-  color: #1A050B;
+  color: #FFFFFF;
   font-weight: 800;
   font-size: 1.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2.5px solid #FCD34D;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  border: 2.5px solid #D4AF37;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
   overflow: hidden;
 }
 
@@ -7546,7 +7547,7 @@ body:has(.dashboard-subnav) {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  background: #2ECC71;
+  background: #10B981;
   color: #FFFFFF;
   border-radius: 50%;
   width: 20px;
@@ -7555,8 +7556,8 @@ body:has(.dashboard-subnav) {
   align-items: center;
   justify-content: center;
   font-size: 0.65rem;
-  border: 2px solid #1A0307;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 .home-hero-info {
@@ -7567,7 +7568,7 @@ body:has(.dashboard-subnav) {
 .home-hero-name {
   font-family: var(--font-royal, "Cinzel", serif);
   font-size: 1.25rem;
-  color: #FFFFFF;
+  color: #111827 !important;
   font-weight: 700;
   margin: 0 0 4px 0;
   white-space: nowrap;
@@ -7577,7 +7578,7 @@ body:has(.dashboard-subnav) {
 
 .home-hero-lineage {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.78);
+  color: #4B5563 !important;
   margin-bottom: 6px;
   display: flex;
   align-items: center;
@@ -7596,9 +7597,9 @@ body:has(.dashboard-subnav) {
   font-family: monospace;
   font-size: 0.68rem;
   font-weight: 700;
-  color: #FCD34D;
-  background: rgba(212, 175, 55, 0.12);
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: #92400E !important;
+  background: #FEF3C7 !important;
+  border: 1px solid #F59E0B !important;
   padding: 2px 8px;
   border-radius: 12px;
 }
@@ -7606,16 +7607,17 @@ body:has(.dashboard-subnav) {
 .home-pill-tier {
   font-size: 0.68rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #AA7C11 0%, #D4AF37 100%);
-  color: #1A050B;
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+  color: #FFFFFF !important;
   padding: 2px 8px;
   border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.2);
 }
 
 .home-hero-action-row {
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid rgba(212, 175, 55, 0.18);
+  border-top: 1px solid #F3F4F6 !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -7623,9 +7625,9 @@ body:has(.dashboard-subnav) {
 }
 
 .home-edit-btn {
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.4);
-  color: #FCD34D;
+  background: #8B1E2D !important;
+  border: none !important;
+  color: #FFFFFF !important;
   font-size: 0.82rem;
   font-weight: 700;
   padding: 8px 16px;
@@ -7635,33 +7637,41 @@ body:has(.dashboard-subnav) {
   align-items: center;
   gap: 6px;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(139, 30, 45, 0.2);
 }
 
 .home-edit-btn:hover,
 .home-edit-btn:active {
-  background: rgba(212, 175, 55, 0.3);
+  background: #731724 !important;
   transform: translateY(-1px);
 }
 
 .home-view-profile-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #FFFFFF;
+  background: #FFFFFF !important;
+  border: 1.5px solid #D1D5DB !important;
+  color: #1F2937 !important;
   font-size: 0.82rem;
   font-weight: 600;
   padding: 8px 14px;
   border-radius: 10px;
   text-decoration: none;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-/* Profile Completion Card */
+.home-view-profile-btn:hover,
+.home-view-profile-btn:active {
+  background: #F9FAFB !important;
+  border-color: #9CA3AF !important;
+}
+
+/* Profile Completion Card (Pure White) */
 .home-completion-card {
-  background: #22050B;
-  border: 1px solid rgba(212, 175, 55, 0.25);
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  background: #FFFFFF !important;
+  border: 1.5px solid #E5E7EB !important;
+  border-radius: 18px !important;
+  padding: 16px !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08) !important;
 }
 
 .home-completion-header {
@@ -7674,7 +7684,7 @@ body:has(.dashboard-subnav) {
 .home-completion-title {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #111827 !important;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -7683,14 +7693,15 @@ body:has(.dashboard-subnav) {
 .home-completion-percent {
   font-size: 0.88rem;
   font-weight: 800;
-  color: #FCD34D;
+  color: #B45309 !important;
   font-family: monospace;
 }
 
 .home-progress-bar-bg {
   width: 100%;
   height: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: #F3F4F6 !important;
+  border: 1px solid #E5E7EB !important;
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 12px;
@@ -7698,7 +7709,7 @@ body:has(.dashboard-subnav) {
 
 .home-progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #D4AF37 0%, #FCD34D 100%);
+  background: linear-gradient(90deg, #F59E0B 0%, #D97706 100%) !important;
   border-radius: 8px;
   transition: width 0.5s ease;
 }
@@ -7713,9 +7724,9 @@ body:has(.dashboard-subnav) {
 .home-completion-chips::-webkit-scrollbar { display: none; }
 
 .home-chip-pending {
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px dashed rgba(212, 175, 55, 0.4);
-  color: #FCD34D;
+  background: #FFFBEB !important;
+  border: 1.5px dashed #F59E0B !important;
+  color: #92400E !important;
   font-size: 0.72rem;
   font-weight: 600;
   padding: 5px 10px;
@@ -7732,11 +7743,17 @@ body:has(.dashboard-subnav) {
   font-family: var(--font-royal, "Cinzel", serif);
   font-size: 1rem;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #FFFFFF !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
   margin: 6px 0 10px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.home-section-heading small {
+  color: #FCD34D !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
 .home-next-steps-grid {
@@ -7752,10 +7769,10 @@ body:has(.dashboard-subnav) {
 }
 
 .home-step-card {
-  background: #24050D;
-  border: 1px solid rgba(212, 175, 55, 0.22);
-  border-radius: 16px;
-  padding: 14px;
+  background: #FFFFFF !important;
+  border: 1.5px solid #E5E7EB !important;
+  border-radius: 16px !important;
+  padding: 14px !important;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -7763,35 +7780,36 @@ body:has(.dashboard-subnav) {
   align-items: flex-start;
   text-decoration: none;
   color: inherit;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06) !important;
 }
 
 .home-step-card:hover,
 .home-step-card:active {
-  background: #2E0711;
-  border-color: rgba(212, 175, 55, 0.45);
+  background: #F9FAFB !important;
+  border-color: #D1D5DB !important;
   transform: translateY(-2px);
 }
 
 .home-step-icon {
   font-size: 1.5rem;
   line-height: 1;
-  background: rgba(212, 175, 55, 0.12);
+  background: #F3F4F6 !important;
   padding: 8px;
   border-radius: 12px;
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  border: 1px solid #E5E7EB !important;
   flex-shrink: 0;
 }
 
 .home-step-body h4 {
   font-size: 0.88rem;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #111827 !important;
   margin: 0 0 3px 0;
 }
 
 .home-step-body p {
   font-size: 0.73rem;
-  color: rgba(255, 255, 255, 0.68);
+  color: #4B5563 !important;
   margin: 0;
   line-height: 1.35;
 }
@@ -7810,33 +7828,34 @@ body:has(.dashboard-subnav) {
 }
 
 .home-stat-tile {
-  background: #22050B;
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 14px;
-  padding: 12px;
+  background: #FFFFFF !important;
+  border: 1.5px solid #E5E7EB !important;
+  border-radius: 14px !important;
+  padding: 12px !important;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06) !important;
 }
 
 .home-stat-tile:hover,
 .home-stat-tile:active {
-  background: #2C0710;
-  border-color: rgba(212, 175, 55, 0.4);
+  background: #F9FAFB !important;
+  border-color: #D1D5DB !important;
 }
 
 .home-stat-num {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: #FCD34D;
+  font-size: 1.4rem !important;
+  font-weight: 800 !important;
+  color: #8B1E2D !important;
   font-family: monospace;
   display: block;
 }
 
 .home-stat-label {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 600;
+  font-size: 0.72rem !important;
+  color: #4B5563 !important;
+  font-weight: 600 !important;
   margin-top: 3px;
   display: block;
 }
@@ -7854,13 +7873,14 @@ body:has(.dashboard-subnav) {
 .home-visitor-card {
   min-width: 170px;
   max-width: 170px;
-  background: #24050D;
-  border: 1px solid rgba(212, 175, 55, 0.22);
-  border-radius: 16px;
-  padding: 12px;
+  background: #FFFFFF !important;
+  border: 1.5px solid #E5E7EB !important;
+  border-radius: 16px !important;
+  padding: 12px !important;
   text-align: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+  color: #111827 !important;
 }
 
 .home-visitor-avatar {
@@ -7868,13 +7888,14 @@ body:has(.dashboard-subnav) {
   height: 52px;
   border-radius: 50%;
   margin: 0 auto 8px auto;
-  border: 2px solid var(--gold-antique);
+  border: 2px solid #D4AF37;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #111827;
+  background: #F3F4F6;
 }
 
 .home-visitor-avatar img {
@@ -7886,7 +7907,7 @@ body:has(.dashboard-subnav) {
 .home-visitor-name {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #111827 !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -7895,45 +7916,58 @@ body:has(.dashboard-subnav) {
 
 .home-visitor-sub {
   font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.65);
+  color: #4B5563 !important;
   margin-bottom: 8px;
 }
 
 .home-visitor-action {
   width: 100%;
-  padding: 5px 8px;
+  padding: 6px 8px;
   font-size: 0.72rem;
   font-weight: 700;
   border-radius: 8px;
   border: none;
-  background: var(--gold-gradient);
-  color: #1A050B;
+  background: #8B1E2D !important;
+  color: #FFFFFF !important;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-/* Support & Guidelines Card */
+.home-visitor-action:hover {
+  background: #731724 !important;
+}
+
+/* Support & Guidelines Card (Pure White) */
 .home-support-card {
-  background: #1C0307;
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 16px;
-  padding: 14px 16px;
+  background: #FFFFFF !important;
+  border: 1.5px solid #E5E7EB !important;
+  border-radius: 16px !important;
+  padding: 14px 16px !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06) !important;
 }
 
 .home-support-text h4 {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #111827 !important;
   margin: 0 0 2px 0;
 }
 
 .home-support-text p {
   font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.65);
+  color: #4B5563 !important;
   margin: 0;
+}
+
+.home-support-card .btn-minimal {
+  background: #F4F4F6 !important;
+  border: 1px solid #D1D5DB !important;
+  color: #111827 !important;
+  font-weight: 600 !important;
 }
 
 /* ==========================================================================
