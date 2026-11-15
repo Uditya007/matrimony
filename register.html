@@ -35,13 +35,17 @@
   <link rel="stylesheet" href="css/styles.css?v=4.0">
   <!-- Google Identity Services (GIS) SDK -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Lottie Web Animation Engine -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 </head>
 <body class="auth-body">
 
   <header>
     <div class="nav-container">
       <a href="index.html" class="logo" id="registerLogoLink">
-        <img src="images/logo.jpg" class="logo-img" alt="Sagai Sambaandh Logo" />
+        <div id="navAnimatedLogo" class="nav-animated-logo">
+          <img src="images/logo-transparent.png" class="logo-img nav-logo-fallback" alt="Sagai Sambaandh Logo" />
+        </div>
         <div>
           <span class="logo-text">Shree Rajput Sagai Sambandh</span>
           <span class="logo-subtext">Rajput Matrimony</span>

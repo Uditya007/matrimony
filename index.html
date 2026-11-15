@@ -124,15 +124,22 @@
 
   <!-- CSS Stylesheets -->
   <link rel="stylesheet" href="css/styles.css?v=4.0">
+  <!-- Lottie Web Animation Engine -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 </head>
 <body>
 
-  <!-- Web Splash Screen Onboarding Loader -->
+  <!-- Web Splash Screen Onboarding Loader with Animated Rajput Emblem -->
   <div id="webSplash" class="web-splash">
     <div class="web-splash-logo-container">
-      <img src="images/logo.jpg" alt="Shree Rajput Sagai Sambandh Logo" class="web-splash-logo" />
+      <div id="splashAnimatedLogo" class="web-splash-lottie">
+        <img src="images/logo-transparent.png" alt="Shree Rajput Sagai Sambandh" class="web-splash-fallback" />
+      </div>
       <div class="web-splash-title">SHREE RAJPUT SAGAI SAMBANDH</div>
-      <div class="web-splash-spinner"></div>
+      <div class="web-splash-subtext">Padharo Mhare Desh • Royal Matrimony</div>
+      <div class="web-splash-progress-track">
+        <div class="web-splash-progress-bar"></div>
+      </div>
     </div>
   </div>
 
@@ -149,7 +156,9 @@
   <header>
     <div class="nav-container">
       <a href="index.html" class="logo" id="headerLogoLink">
-        <img src="images/logo.jpg" class="logo-img" alt="Sagai Sambaandh Logo" />
+        <div id="navAnimatedLogo" class="nav-animated-logo">
+          <img src="images/logo-transparent.png" class="logo-img nav-logo-fallback" alt="Sagai Sambandh Logo" />
+        </div>
         <div>
           <span class="logo-text">Shree Rajput Sagai Sambandh</span>
           <span class="logo-subtext">Rajput Matrimony</span>

@@ -13,6 +13,8 @@
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
   <link rel="stylesheet" href="css/styles.css?v=4.0">
+  <!-- Lottie Web Animation Engine -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 </head>
 <body class="dashboard-layout">
 
@@ -172,7 +174,9 @@
   <header>
     <div class="nav-container">
       <a href="index.html" class="logo" id="dashboardLogoLink">
-        <img src="images/logo.jpg" class="logo-img" alt="Sagai Sambaandh Logo" />
+        <div id="navAnimatedLogo" class="nav-animated-logo">
+          <img src="images/logo-transparent.png" class="logo-img nav-logo-fallback" alt="Sagai Sambaandh Logo" />
+        </div>
         <div>
           <span class="logo-text">Shree Rajput Sagai Sambandh</span>
           <span class="logo-subtext">Rajput Matrimony</span>

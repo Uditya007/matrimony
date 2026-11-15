@@ -1,18 +1,99 @@
 // Sagai Sambaandh - Central State Controller & Application Logic
 
+// Global Lottie Animation Instances & Data Cache
+let lottieAnimationDataCache = null;
+
+async function getLottieAnimationData() {
+  if (lottieAnimationDataCache) return lottieAnimationDataCache;
+  try {
+    const res = await fetch('images/animated-logo.json');
+    if (!res.ok) throw new Error('Could not load animation json');
+    lottieAnimationDataCache = await res.json();
+    return lottieAnimationDataCache;
+  } catch (e) {
+    console.warn('Lottie json load note:', e);
+    return null;
+  }
+}
+
+// Initialize Animated Sagai Sambandh Logo for Splash Screen and Header Navbar
+async function initLottieAnimatedLogos() {
+  if (typeof lottie === 'undefined') return;
+
+  const animData = await getLottieAnimationData();
+
+  const splashContainer = document.getElementById('splashAnimatedLogo');
+  if (splashContainer && !splashContainer.dataset.lottieLoaded) {
+    splashContainer.dataset.lottieLoaded = 'true';
+    try {
+      const config = {
+        container: splashContainer,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true
+      };
+      if (animData) {
+        config.animationData = animData;
+      } else {
+        config.path = 'images/animated-logo.json';
+      }
+      const animSplash = lottie.loadAnimation(config);
+      animSplash.addEventListener('DOMLoaded', () => {
+        const fallback = splashContainer.querySelector('.web-splash-fallback');
+        if (fallback) fallback.style.display = 'none';
+      });
+    } catch (err) {
+      console.warn('Lottie splash container init error:', err);
+    }
+  }
+
+  const navContainer = document.getElementById('navAnimatedLogo');
+  if (navContainer && !navContainer.dataset.lottieLoaded) {
+    navContainer.dataset.lottieLoaded = 'true';
+    try {
+      const navConfig = {
+        container: navContainer,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true
+      };
+      if (animData) {
+        navConfig.animationData = animData;
+      } else {
+        navConfig.path = 'images/animated-logo.json';
+      }
+      const animNav = lottie.loadAnimation(navConfig);
+      animNav.addEventListener('DOMLoaded', () => {
+        const fallback = navContainer.querySelector('.nav-logo-fallback');
+        if (fallback) fallback.style.display = 'none';
+      });
+    } catch (err) {
+      console.warn('Lottie navbar container init error:', err);
+    }
+  }
+}
+
 // Web Onboarding Splash Screen Controller (safeguarded against script load race condition)
 function handleWebSplash() {
   const webSplash = document.getElementById('webSplash');
   if (webSplash) {
+    // 1.5s delay allows presentation of the animated Rajput crest
     setTimeout(() => {
       webSplash.classList.add('fade-out');
-    }, 1000); // 1.0 second snappier delay
+      setTimeout(() => {
+        webSplash.style.display = 'none';
+      }, 850);
+    }, 1500);
   }
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', handleWebSplash);
+  document.addEventListener('DOMContentLoaded', () => {
+    initLottieAnimatedLogos();
+    handleWebSplash();
+  });
 } else {
+  initLottieAnimatedLogos();
   handleWebSplash();
 }
 

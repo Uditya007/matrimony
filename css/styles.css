@@ -3001,7 +3001,7 @@ body:has(.dashboard-subnav) {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(180deg, #6B1220 0%, #3D0A12 100%);
+  background: radial-gradient(circle at center, #5A0E1A 0%, #2D050B 70%, #150204 100%);
   z-index: 999999;
   display: flex;
   justify-content: center;
@@ -3022,44 +3022,120 @@ body:has(.dashboard-subnav) {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  transform: scale(0.9);
+  padding: 24px;
+  max-width: 90vw;
+  transform: scale(0.92);
   opacity: 0;
-  animation: splashZoomIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: splashZoomIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.web-splash-logo {
-  width: 130px;
-  height: 130px;
-  border-radius: 50%;
-  border: 3.5px solid var(--gold-antique);
-  box-shadow: var(--shadow-royal);
-  margin-bottom: 20px;
+.web-splash-lottie {
+  width: 170px;
+  height: 170px;
+  position: relative;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 12px 28px rgba(212, 175, 55, 0.38));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.web-splash-lottie svg {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.web-splash-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .web-splash-title {
-  font-family: var(--font-eyebrow);
-  font-size: 1.4rem;
-  color: var(--gold-bright);
+  font-family: var(--font-eyebrow, 'Cinzel', serif);
+  font-size: 1.35rem;
+  color: var(--gold-bright, #FCD34D);
   letter-spacing: 3px;
   font-weight: 700;
-  margin-bottom: 24px;
+  margin-bottom: 6px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.85);
   white-space: nowrap; /* Keep on a single line */
 }
 
+.web-splash-subtext {
+  font-size: 0.82rem;
+  color: rgba(255, 235, 180, 0.85);
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  font-weight: 600;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.web-splash-progress-track {
+  width: 150px;
+  height: 3px;
+  background: rgba(212, 175, 55, 0.2);
+  border-radius: 99px;
+  overflow: hidden;
+  position: relative;
+}
+
+.web-splash-progress-bar {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #B8860B 0%, #FCD34D 50%, #B8860B 100%);
+  animation: splashProgressFill 1.4s ease-in-out infinite;
+}
+
+@keyframes splashProgressFill {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
 @media (max-width: 480px) {
+  .web-splash-lottie {
+    width: 135px;
+    height: 135px;
+    margin-bottom: 12px;
+  }
   .web-splash-title {
     font-size: 1.05rem; /* scale down on mobile to fit in single line */
     letter-spacing: 2px;
   }
+  .web-splash-subtext {
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+  }
 }
 
-.web-splash-spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid rgba(232, 199, 102, 0.2);
-  border-top-color: var(--gold-bright);
+/* Navbar Animated Lottie Logo */
+.nav-animated-logo {
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  animation: splashSpin 1s linear infinite;
+  overflow: hidden;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--gold-antique, #D4AF37);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.25);
+  flex-shrink: 0;
+  background: #1A050A;
+}
+
+.nav-animated-logo svg {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.nav-animated-logo .nav-logo-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 @keyframes splashZoomIn {
@@ -3070,15 +3146,6 @@ body:has(.dashboard-subnav) {
   100% {
     transform: scale(1);
     opacity: 1;
-  }
-}
-
-@keyframes splashSpin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
   }
 }
 
