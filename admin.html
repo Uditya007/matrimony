@@ -627,9 +627,7 @@
 
       <div class="admin-filters">
         <select id="filterMemberType" class="admin-select" onchange="handleFilterChange()" style="border-color: var(--gold-bright); font-weight: 600;">
-          <option value="">All Profiles (Real & Demo)</option>
           <option value="real" selected>👤 Real Registered Members Only</option>
-          <option value="demo">🛡️ Demo Showcase Profiles Only</option>
         </select>
 
         <select id="filterGender" class="admin-select" onchange="handleFilterChange()">
@@ -697,6 +695,107 @@
       <div id="adminBioModalContent">
         <!-- Injected dynamically -->
       </div>
+    </div>
+  </div>
+
+  <!-- ADMIN EDIT PROFILE MODAL -->
+  <div class="admin-modal-overlay" id="adminEditModal" onclick="if(event.target === this) closeEditModal()">
+    <div class="admin-modal-card" style="max-width: 650px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--admin-border); padding-bottom: 14px; margin-bottom: 16px;">
+        <h2 style="margin: 0; color: var(--gold-bright); font-family: var(--font-royal); font-size: 1.25rem;">
+          ✏️ Edit Member Profile
+        </h2>
+        <button onclick="closeEditModal()" style="background: none; border: none; color: #CBD5E0; font-size: 1.4rem; cursor: pointer;">&times;</button>
+      </div>
+      <form id="adminEditForm" onsubmit="handleAdminSaveProfile(event)">
+        <input type="hidden" id="editProfileId">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Full Name</label>
+            <input type="text" id="editAdminName" class="admin-input" required style="width: 100%; margin-top: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Gender</label>
+            <select id="editAdminGender" class="admin-select" style="width: 100%; margin-top: 4px;">
+              <option value="Groom">Groom (Banna)</option>
+              <option value="Bride">Bride (Ladi)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Mobile Phone</label>
+            <input type="text" id="editAdminPhone" class="admin-input" style="width: 100%; margin-top: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Email Address</label>
+            <input type="email" id="editAdminEmail" class="admin-input" style="width: 100%; margin-top: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Rajput Clan</label>
+            <input type="text" id="editAdminClan" class="admin-input" style="width: 100%; margin-top: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Gotra (Father)</label>
+            <input type="text" id="editAdminGotra" class="admin-input" style="width: 100%; margin-top: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Mother Gotra</label>
+            <input type="text" id="editAdminMotherGotra" class="admin-input" style="width: 100%; margin-top: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Thikana</label>
+            <input type="text" id="editAdminThikana" class="admin-input" style="width: 100%; margin-top: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Age</label>
+            <input type="number" id="editAdminAge" class="admin-input" style="width: 100%; margin-top: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Date of Birth</label>
+            <input type="date" id="editAdminDOB" class="admin-input" style="width: 100%; margin-top: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Native / City</label>
+            <input type="text" id="editAdminLocation" class="admin-input" style="width: 100%; margin-top: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Membership Tier</label>
+            <select id="editAdminTier" class="admin-select" style="width: 100%; margin-top: 4px;">
+              <option value="Starter">Starter (Free)</option>
+              <option value="Silver">Silver Plan</option>
+              <option value="Gold">Rajputana Gold</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Education</label>
+            <input type="text" id="editAdminEducation" class="admin-input" style="width: 100%; margin-top: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Occupation</label>
+            <input type="text" id="editAdminOccupation" class="admin-input" style="width: 100%; margin-top: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Annual Income</label>
+            <input type="text" id="editAdminIncome" class="admin-input" style="width: 100%; margin-top: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">Marital Status</label>
+            <select id="editAdminMaritalStatus" class="admin-select" style="width: 100%; margin-top: 4px;">
+              <option value="Never Married">Never Married</option>
+              <option value="Divorced">Divorced</option>
+              <option value="Widowed">Widowed</option>
+              <option value="Awaiting Divorce">Awaiting Divorce</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top: 12px;">
+          <label style="font-size: 0.78rem; color: var(--gold-bright); font-weight: 600;">About Profile</label>
+          <textarea id="editAdminAbout" class="admin-input" rows="2" style="width: 100%; margin-top: 4px; resize: vertical;"></textarea>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; border-top: 1px solid var(--admin-border); padding-top: 14px;">
+          <button type="button" onclick="closeEditModal()" class="admin-btn admin-btn-outline">Cancel</button>
+          <button type="submit" class="admin-btn admin-btn-gold" id="btnAdminSaveProfile">💾 Save Changes</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -934,23 +1033,8 @@
       // 2. Fetch from LocalStorage
       const localUsers = JSON.parse(localStorage.getItem('users')) || [];
 
-      // 3. Fallback to SEED_PROFILES
-      const seeds = typeof SEED_PROFILES !== 'undefined' ? SEED_PROFILES : [];
-
       // Combine and deduplicate by email or id
       const profileMap = new Map();
-
-      // Seed profiles first (Marked clearly as Demo Showcase)
-      seeds.forEach(s => {
-        profileMap.set(s.id, {
-          ...s,
-          isRealMember: false,
-          phone: '', // No fake demo phone!
-          email: `${s.name.toLowerCase().replace(/[^a-z]/g, '')}@shreerajput.in`,
-          tier: s.tier || 'Gold',
-          created_at: 'Showcase Demo Profile'
-        });
-      });
 
       // Overlay Local Users
       localUsers.forEach(u => {
@@ -1115,9 +1199,17 @@
             <span class="tier-badge ${tierClass}">${profile.tier || 'Starter'}</span>
           </td>
           <td>
-            <button class="admin-btn admin-btn-outline" style="padding: 5px 10px; font-size: 0.76rem;" onclick="viewBiodataModal('${profile.id}')">
-              👁️ View Bio
-            </button>
+            <div style="display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap;">
+              <button class="admin-btn admin-btn-outline" style="padding: 4px 8px; font-size: 0.72rem;" onclick="viewBiodataModal('${profile.id}')" title="View Full Biodata">
+                👁️ View
+              </button>
+              <button class="admin-btn admin-btn-outline" style="padding: 4px 8px; font-size: 0.72rem; color: #60A5FA; border-color: rgba(96,165,250,0.5);" onclick="openEditProfileModal('${profile.id}')" title="Edit Profile Details">
+                ✏️ Edit
+              </button>
+              <button class="admin-btn admin-btn-outline" style="padding: 4px 8px; font-size: 0.72rem; color: #F87171; border-color: rgba(248,113,113,0.5);" onclick="deleteProfileAdmin('${profile.id}', '${(profile.name || '').replace(/'/g, "\\'")}')" title="Delete Profile Permanently">
+                🗑️ Delete
+              </button>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
@@ -1199,6 +1291,164 @@
 
     function closeBioModal() {
       document.getElementById('adminBioModal').classList.remove('active');
+    }
+
+    // ─── Profile Management: Edit & Delete Handlers ───────────────────────
+    function openEditProfileModal(profileId) {
+      const p = allProfilesList.find(item => item.id === profileId);
+      if (!p) return;
+
+      document.getElementById('editProfileId').value = p.id || '';
+      document.getElementById('editAdminName').value = p.name || '';
+      document.getElementById('editAdminGender').value = p.gender || 'Groom';
+      document.getElementById('editAdminPhone').value = p.phone || '';
+      document.getElementById('editAdminEmail').value = p.email || '';
+      document.getElementById('editAdminClan').value = p.clan || 'Rathore';
+      document.getElementById('editAdminGotra').value = p.gotra || '';
+      document.getElementById('editAdminMotherGotra').value = p.motherGotra || '';
+      document.getElementById('editAdminThikana').value = p.thikana || '';
+      document.getElementById('editAdminAge').value = p.age || '';
+      document.getElementById('editAdminDOB').value = p.dob || '';
+      document.getElementById('editAdminLocation').value = p.location || p.native || '';
+      document.getElementById('editAdminTier').value = p.tier || 'Starter';
+      document.getElementById('editAdminEducation').value = p.education || '';
+      document.getElementById('editAdminOccupation').value = p.occupation || '';
+      document.getElementById('editAdminIncome').value = p.income || '';
+      document.getElementById('editAdminMaritalStatus').value = p.maritalStatus || 'Never Married';
+      document.getElementById('editAdminAbout').value = p.about || '';
+
+      document.getElementById('adminEditModal').classList.add('active');
+    }
+
+    function closeEditModal() {
+      document.getElementById('adminEditModal').classList.remove('active');
+    }
+
+    async function handleAdminSaveProfile(e) {
+      e.preventDefault();
+      const saveBtn = document.getElementById('btnAdminSaveProfile');
+      saveBtn.disabled = true;
+      saveBtn.textContent = '⏳ Saving...';
+
+      const id = document.getElementById('editProfileId').value;
+      const token = sessionStorage.getItem('royal_admin_token');
+
+      const profileData = {
+        name: document.getElementById('editAdminName').value.trim(),
+        gender: document.getElementById('editAdminGender').value,
+        phone: document.getElementById('editAdminPhone').value.trim(),
+        email: document.getElementById('editAdminEmail').value.trim(),
+        clan: document.getElementById('editAdminClan').value.trim(),
+        gotra: document.getElementById('editAdminGotra').value.trim(),
+        motherGotra: document.getElementById('editAdminMotherGotra').value.trim(),
+        thikana: document.getElementById('editAdminThikana').value.trim(),
+        age: parseInt(document.getElementById('editAdminAge').value) || null,
+        dob: document.getElementById('editAdminDOB').value,
+        location: document.getElementById('editAdminLocation').value.trim(),
+        tier: document.getElementById('editAdminTier').value,
+        education: document.getElementById('editAdminEducation').value.trim(),
+        occupation: document.getElementById('editAdminOccupation').value.trim(),
+        income: document.getElementById('editAdminIncome').value.trim(),
+        maritalStatus: document.getElementById('editAdminMaritalStatus').value,
+        about: document.getElementById('editAdminAbout').value.trim(),
+        updated_at: new Date().toISOString()
+      };
+
+      try {
+        let saved = false;
+
+        // 1. Try serverless admin endpoint
+        if (token) {
+          const res = await fetch('/api/admin-members', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ action: 'edit', id, profileData })
+          });
+          const result = await res.json();
+          if (res.ok && result.success) {
+            saved = true;
+          }
+        }
+
+        // 2. Fallback: direct Supabase client
+        if (!saved && window.supabaseActive && window.supabaseClient) {
+          const { error } = await window.supabaseClient.from('profiles').update(profileData).eq('id', id);
+          if (!error) saved = true;
+        }
+
+        if (saved) {
+          // Update in-memory profile list
+          const idx = allProfilesList.findIndex(item => item.id === id);
+          if (idx !== -1) {
+            allProfilesList[idx] = { ...allProfilesList[idx], ...profileData };
+          }
+          // Also update localStorage cache if present
+          const localUsers = JSON.parse(localStorage.getItem('users')) || [];
+          const lIdx = localUsers.findIndex(u => u.id === id || (u.email && u.email === profileData.email));
+          if (lIdx !== -1) {
+            localUsers[lIdx] = { ...localUsers[lIdx], ...profileData };
+            localStorage.setItem('users', JSON.stringify(localUsers));
+          }
+
+          closeEditModal();
+          handleFilterChange();
+          alert('👑 Profile updated successfully!');
+        } else {
+          alert('⚠️ Failed to save changes. Please try again.');
+        }
+      } catch (err) {
+        console.error('Save profile error:', err);
+        alert('⚠️ An error occurred while saving: ' + (err.message || err));
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Save Changes';
+      }
+    }
+
+    async function deleteProfileAdmin(profileId, profileName) {
+      if (!confirm(`⚠️ Are you sure you want to permanently delete the profile of "${profileName}"? This action cannot be undone.`)) {
+        return;
+      }
+
+      const token = sessionStorage.getItem('royal_admin_token');
+      try {
+        let deleted = false;
+
+        // 1. Try serverless admin endpoint
+        if (token) {
+          const res = await fetch('/api/admin-members', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ action: 'delete', id: profileId })
+          });
+          const result = await res.json();
+          if (res.ok && result.success) {
+            deleted = true;
+          }
+        }
+
+        // 2. Fallback: direct Supabase client
+        if (!deleted && window.supabaseActive && window.supabaseClient) {
+          const { error } = await window.supabaseClient.from('profiles').delete().eq('id', profileId);
+          if (!error) deleted = true;
+        }
+
+        if (deleted) {
+          allProfilesList = allProfilesList.filter(item => item.id !== profileId);
+          const localUsers = JSON.parse(localStorage.getItem('users')) || [];
+          const updatedLocals = localUsers.filter(u => u.id !== profileId);
+          localStorage.setItem('users', JSON.stringify(updatedLocals));
+
+          updateStatsCounters();
+          handleFilterChange();
+          alert(`🗑️ Profile of "${profileName}" has been permanently deleted.`);
+        } else {
+          alert('⚠️ Failed to delete profile. Please check console or try again.');
+        }
+      } catch (err) {
+        console.error('Delete profile error:', err);
+        alert('⚠️ An error occurred while deleting: ' + (err.message || err));
+      }
     }
 
     // ─── Royal Communicator: WhatsApp & SMS Handlers ───────────────────────

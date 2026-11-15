@@ -54,11 +54,12 @@ module.exports = async function handler(req, res) {
   const authHeader = req.headers['authorization'] || '';
   let token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
 
-  if (!token && req.body) {
-    let body = req.body;
-    if (typeof body === 'string') {
-      try { body = JSON.parse(body); } catch (e) {}
-    }
+  let body = req.body || {};
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch (e) {}
+  }
+
+  if (!token) {
     token = body?.token;
   }
 
@@ -71,7 +72,45 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // Fetch live profiles directly from Supabase REST endpoint on server
+    // 1. DELETE ACTION
+    if (body.action === 'delete' && body.id) {
+      const deleteEndpoint = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/profiles?id=eq.${encodeURIComponent(body.id)}`;
+      const delResponse = await fetch(deleteEndpoint, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      if (!delResponse.ok) {
+        const errText = await delResponse.text();
+        return res.status(500).json({ success: false, error: errText || 'Failed to delete profile' });
+      }
+      return res.status(200).json({ success: true, message: 'Profile deleted successfully' });
+    }
+
+    // 2. EDIT / UPDATE ACTION
+    if (body.action === 'edit' && body.id && body.profileData) {
+      const editEndpoint = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/profiles?id=eq.${encodeURIComponent(body.id)}`;
+      const patchResponse = await fetch(editEndpoint, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(body.profileData)
+      });
+      if (!patchResponse.ok) {
+        const errText = await patchResponse.text();
+        return res.status(500).json({ success: false, error: errText || 'Failed to update profile' });
+      }
+      const updated = await patchResponse.json();
+      return res.status(200).json({ success: true, message: 'Profile updated successfully', profile: updated[0] || body.profileData });
+    }
+
+    // 3. DEFAULT: FETCH ALL PROFILES
     const endpoint = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/profiles?select=*`;
     const response = await fetch(endpoint, {
       headers: {

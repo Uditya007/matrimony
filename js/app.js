@@ -1103,17 +1103,8 @@ function getAllProfiles() {
     localUsers = JSON.parse(localStorage.getItem('users')) || [];
   }
   
-  // Merge database/localStorage users with SEED_PROFILES
-  const seedProfiles = window.SEED_PROFILES || [];
-  
-  // Combine them, ensuring we don't have duplicate IDs
+  // Real registered users from cloud database or local storage
   const combined = [...localUsers];
-  seedProfiles.forEach(seed => {
-    // If database already has a profile with the same ID or email, don't duplicate
-    if (!combined.some(u => (u.id && u.id === seed.id) || (u.email && seed.email && u.email === seed.email))) {
-      combined.push(seed);
-    }
-  });
   
   const formattedLocals = combined
     .filter(user => user && user.gender !== 'System' && user.id !== '00000000-0000-0000-0000-000000000001' && !user.isSystem)
