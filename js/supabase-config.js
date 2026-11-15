@@ -7,7 +7,10 @@
  * 3. Replace the placeholder credentials below with your Supabase URL & Anon Key
  */
 
-const supabaseUrl = "http://130.210.15.192:8000";
+const isHttps = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
+const supabaseUrl = isHttps 
+  ? (window.location.origin + "/supabase-api") 
+  : "http://130.210.15.192:8000";
 const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzk0NzQ2MjU2LCJleHAiOjE5NTI0MjYyNTZ9.EIjUUXzF8v9qjjMFh634rU4sHIPhrl9NB7_wswFLkgo";
 
 // Check if Supabase credentials are customized
