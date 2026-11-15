@@ -1,8 +1,8 @@
 const crypto = require('crypto');
 
 const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || 'rajput_royal_vault_secret_key_2026_secured';
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://afbrznllcfgfcjuinnlf.supabase.co';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYnJ6bmxsY2ZnZmNqdWlubmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMzY3MDMsImV4cCI6MjA5OTcxMjcwM30.manruSm0oxHES5Scyzs6NRFTpkVynZQKGT9B1ORPne0';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'http://130.210.15.192:8000';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzk0NzQ2MjU2LCJleHAiOjE5NTI0MjYyNTZ9.EIjUUXzF8v9qjjMFh634rU4sHIPhrl9NB7_wswFLkgo';
 
 function verifyAdminToken(token) {
   if (!token || typeof token !== 'string') return false;
