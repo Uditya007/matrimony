@@ -2670,11 +2670,8 @@ async function initDashboardPage() {
     </span>
   `;
 
-  // Populate Mobile Matches Header Avatar
-  const mAvatar = document.getElementById('mHeaderAvatar');
-  if (mAvatar && currentUser && currentUser.name) {
-    mAvatar.textContent = currentUser.name.trim().charAt(0).toUpperCase();
-  }
+  // Populate Mobile Matches Header & Drawer Avatar (shows profile photo if available)
+  updateMobileHeaderUserAvatar(currentUser);
 
   // Render stats in dashboard top greeting bar
   updateDashboardStats();
@@ -3994,6 +3991,39 @@ window.initDeckSwipeGestures = function() {
   }, { passive: true });
 };
 
+window.updateMobileHeaderUserAvatar = function(user) {
+  let currentUser = user;
+  if (!currentUser) {
+    try {
+      currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+    } catch (e) {
+      currentUser = {};
+    }
+  }
+  const rawPic = currentUser.profilePic || currentUser.photo || (currentUser.photos && currentUser.photos[0]) || currentUser.img;
+  const photo = typeof resolveProfileImageUrl === 'function' ? resolveProfileImageUrl(rawPic) : rawPic;
+  const name = currentUser.name || 'Noble Member';
+  const initial = name.trim().charAt(0).toUpperCase() || 'U';
+
+  const mAvatar = document.getElementById('mHeaderAvatar');
+  if (mAvatar) {
+    if (photo && !photo.startsWith('mock_')) {
+      mAvatar.innerHTML = `<img src="${photo}" alt="${name}" onerror="this.onerror=null; this.parentElement.textContent='${initial}';" />`;
+    } else {
+      mAvatar.textContent = initial;
+    }
+  }
+
+  const drawerAvatar = document.getElementById('mDrawerAvatar');
+  if (drawerAvatar) {
+    if (photo && !photo.startsWith('mock_')) {
+      drawerAvatar.innerHTML = `<img src="${photo}" alt="${name}" onerror="this.onerror=null; this.parentElement.textContent='${initial}';" />`;
+    } else {
+      drawerAvatar.textContent = initial;
+    }
+  }
+};
+
 window.toggleMobileUserMenu = function() {
   const drawer = document.getElementById('mobileUserDrawer');
   if (!drawer) return;
@@ -4010,15 +4040,12 @@ window.toggleMobileUserMenu = function() {
     const clanEl = document.getElementById('mDrawerClan');
     const idEl = document.getElementById('mDrawerId');
     const planEl = document.getElementById('mDrawerPlan');
-    const avatarEl = document.getElementById('mDrawerAvatar');
-    const headerAvatarEl = document.getElementById('mHeaderAvatar');
 
     if (nameEl) nameEl.textContent = name;
     if (clanEl) clanEl.textContent = `${clan} Clan`;
     if (idEl) idEl.textContent = memberId.slice(-8);
     if (planEl) planEl.textContent = `👑 ${tier} Plan`;
-    if (avatarEl) avatarEl.textContent = initial;
-    if (headerAvatarEl) headerAvatarEl.textContent = initial;
+    updateMobileHeaderUserAvatar(currentUser);
 
     drawer.classList.add('active');
   } else {
@@ -6686,6 +6713,7 @@ window.switchAppView = function(viewName, param) {
 
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (typeof updateNavigationBadges === "function") updateNavigationBadges();
+  if (typeof updateMobileHeaderUserAvatar === "function") updateMobileHeaderUserAvatar();
 };
 
 window.renderHomeHubView = function() {
@@ -6694,6 +6722,7 @@ window.renderHomeHubView = function() {
 
   const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
   ensureDefaultAppData(currentUser);
+  if (typeof updateMobileHeaderUserAvatar === "function") updateMobileHeaderUserAvatar(currentUser);
 
   const name = currentUser.name || "Noble Member";
   const initial = name.trim().charAt(0).toUpperCase() || "U";

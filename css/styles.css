@@ -6477,10 +6477,17 @@ body:has(.dashboard-subnav) {
     scrollbar-width: none !important;
   }
 
-  html,
+  html {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   body.dashboard-layout {
     max-width: 100vw !important;
     overflow-x: hidden !important;
+    margin: 0 !important;
     padding-top: 104px !important;
     padding-bottom: 78px !important;
     background: transparent !important;
@@ -6544,8 +6551,8 @@ body:has(.dashboard-subnav) {
   }
 
   .m-user-avatar-circle {
-    width: 32px !important;
-    height: 32px !important;
+    width: 34px !important;
+    height: 34px !important;
     border-radius: 50% !important;
     background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%) !important;
     color: #1A050B !important;
@@ -6555,7 +6562,16 @@ body:has(.dashboard-subnav) {
     align-items: center !important;
     justify-content: center !important;
     border: 1.5px solid rgba(252, 211, 77, 0.75) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    overflow: hidden !important;
+  }
+
+  .m-user-avatar-circle img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
+    display: block !important;
   }
 
   .mobile-matches-right {
@@ -6706,6 +6722,15 @@ body:has(.dashboard-subnav) {
     justify-content: center !important;
     border: 2px solid var(--gold-bright, #FCD34D) !important;
     flex-shrink: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .m-user-drawer-avatar img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
+    display: block !important;
   }
 
   .m-user-drawer-info {
@@ -6915,7 +6940,7 @@ body:has(.dashboard-subnav) {
   }
 
   body.dashboard-layout.subtabs-hidden {
-    padding-top: 64px !important;
+    padding-top: 58px !important;
   }
 
   .mobile-subtabs-scroll {
@@ -6970,7 +6995,7 @@ body:has(.dashboard-subnav) {
 
   /* Hide Desktop sidebars and clutter on mobile */
   .dashboard-wrapper {
-    padding: 10px 14px 84px 14px !important;
+    padding: 6px 12px 84px 12px !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
