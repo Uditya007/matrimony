@@ -973,7 +973,7 @@ fun sendWhatsAppOtpAndroid(phoneDigits: String, code: String) {
             val clean10 = phoneDigits.filter { it.isDigit() }.takeLast(10)
             val json = JSONObject().apply {
                 put("number", "91$clean10")
-                put("text", "👑 *Shree Rajput Sagai Sambandh* 👑\n\n_Khammaghani Sa!_\n\nYour mobile verification OTP is: *${code}*\n\nValid for 5 minutes.\n\n🙏 Dhanyawad\n*Team Shree Rajput Sagai Sambandh*")
+                put("text", "${code} – Your OTP\n\nSHREE RAJPUT SAGAI SAMBANDH\n\nYour profile verification OTP is valid for 5 minutes.\n\nPlease do not share this OTP with anyone.\n\n– Team Shree Rajput Sagai Sambandh")
             }
             val body = json.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
             val request = Request.Builder()

@@ -43,7 +43,7 @@ module.exports = async function handler(req, res) {
         },
         body: JSON.stringify({
           number: targetNumber.length === 10 ? `91${targetNumber}` : targetNumber,
-          text: '👑 *Shree Rajput Sagai Sambandh* 👑\n\nKhammaghani Sa!\n\nThis is a test OTP verification from your royal gateway.\n\n👉 *654321* 👈\n\nGateway is online and operating properly!'
+          text: '654321 – Your OTP\n\nSHREE RAJPUT SAGAI SAMBANDH\n\nYour profile verification OTP is valid for 5 minutes.\n\nPlease do not share this OTP with anyone.\n\n– Team Shree Rajput Sagai Sambandh'
         })
       });
       const data = await sendRes.json();

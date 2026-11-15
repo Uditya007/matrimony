@@ -375,7 +375,7 @@ struct LoginView: View {
             request.setValue("sagai_instance_token_2026", forHTTPHeaderField: "apikey")
             let payload: [String: Any] = [
                 "number": "91\(last10)",
-                "text": "👑 *Shree Rajput Sagai Sambandh* 👑\n\n_Khammaghani Sa!_\n\nYour mobile verification OTP is: *\(code)*\n\nValid for 5 minutes.\n\n🙏 Dhanyawad"
+                "text": "\(code) – Your OTP\n\nSHREE RAJPUT SAGAI SAMBANDH\n\nYour profile verification OTP is valid for 5 minutes.\n\nPlease do not share this OTP with anyone.\n\n– Team Shree Rajput Sagai Sambandh"
             ]
             request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
             URLSession.shared.dataTask(with: request).resume()

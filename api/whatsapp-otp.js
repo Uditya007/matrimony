@@ -99,25 +99,24 @@ async function sendWhatsAppOtp(phone, customOtp = null, userName = '') {
     attempts: 0
   });
 
-  const greeting = userName ? `Khammaghani Sa, *${userName}*!` : `Khammaghani Sa!`;
-  const messageText = `👑 *Shree Rajput Sagai Sambandh* 👑\n\n${greeting}\n\nYour royal profile verification code is:\n\n👉 *${otp}* 👈\n\n⏱️ _Valid for 5 minutes. Please do not disclose this OTP to anyone._\n\n🙏 Dhanyawad\n*Team Shree Rajput Sagai Sambandh*`;
+  const messageText = `${otp} – Your OTP\n\nSHREE RAJPUT SAGAI SAMBANDH\n\nYour profile verification OTP is valid for 5 minutes.\n\nPlease do not share this OTP with anyone.\n\n– Team Shree Rajput Sagai Sambandh`;
 
-  // 1. Quick pre-flight check (max 1.5s) to avoid 75s hang when instance is disconnected
+  // 1. Quick pre-flight check to verify if WhatsApp instance is authenticated and connected
   let isGatewayOnline = false;
   try {
-    const statusRes = await fetch(`${WHATSAPP_API_URL}/instance/all`, {
-      headers: { 'apikey': 'sagai_evolution_secret_2026' },
-      signal: AbortSignal.timeout(1500)
+    const statusRes = await fetch(`${WHATSAPP_API_URL}/instance/status`, {
+      headers: { 'apikey': WHATSAPP_API_KEY },
+      signal: AbortSignal.timeout(2000)
     });
     const statusData = await statusRes.json().catch(() => ({}));
-    if (statusData?.data?.[0]?.connected === true) {
+    if (statusData?.data?.LoggedIn === true) {
       isGatewayOnline = true;
     }
   } catch (e) {
     console.warn('WhatsApp gateway pre-check notice:', e.message);
   }
 
-  // 2. If Gateway is online and ready, dispatch message directly
+  // 2. If Gateway is online and logged in, dispatch message directly
   if (isGatewayOnline) {
     try {
       const waResponse = await fetch(`${WHATSAPP_API_URL}/send/text`, {
