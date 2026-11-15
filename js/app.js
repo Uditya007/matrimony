@@ -786,6 +786,13 @@ function getOppositeGender(genderStr) {
   return normalized === 'Groom' ? 'Bride' : 'Groom';
 }
 
+function getCompatibleProfiles(currentUser) {
+  const all = getAllProfiles();
+  if (!currentUser) return all;
+  const targetGender = getOppositeGender(currentUser.gender);
+  return all.filter(p => p.id !== currentUser.id && normalizeGender(p.gender) === targetGender);
+}
+
 function updateNavigationState() {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   const authContainer = document.getElementById('navAuthButtons');
@@ -1108,7 +1115,9 @@ function getAllProfiles() {
     }
   });
   
-  const formattedLocals = combined.map(user => {
+  const formattedLocals = combined
+    .filter(user => user && user.gender !== 'System' && user.id !== '00000000-0000-0000-0000-000000000001' && !user.isSystem)
+    .map(user => {
     const rawPic = user.profilePic || user.img || '';
     const resolvedPic = resolveProfileImageUrl(rawPic);
     
@@ -2847,15 +2856,20 @@ function renderMatchesGrid() {
   // Scan and register any incoming interests from other users to unlock chats
   checkIncomingInterests();
 
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  const targetGender = currentUser ? getOppositeGender(currentUser.gender) : (activeFilters.gender !== 'All' ? activeFilters.gender : 'Bride');
+
   // 1. If Kunwar AI Match filter is active, display the AI curated results in ranked order
   if (window.currentAIMatches && Array.isArray(window.currentAIMatches) && window.currentAIMatches.length > 0) {
     const aiResults = window.currentAIMatches;
-    const aiProfiles = aiResults.map(item => {
-      const p = { ...item.profile };
-      p.aiScore = item.matchScore;
-      p.aiMatchReasons = item.reasons;
-      return p;
-    });
+    const aiProfiles = aiResults
+      .map(item => {
+        const p = { ...item.profile };
+        p.aiScore = item.matchScore;
+        p.aiMatchReasons = item.reasons;
+        return p;
+      })
+      .filter(p => !currentUser || (p.id !== currentUser.id && normalizeGender(p.gender) === targetGender));
 
     const countSpan = document.getElementById('resultsCountSpan');
     if (countSpan) {
@@ -2866,12 +2880,13 @@ function renderMatchesGrid() {
     return;
   }
 
-  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   const profiles = getAllProfiles();
   const shortlists = JSON.parse(localStorage.getItem('shortlisted')) || [];
 
   const filtered = profiles.filter(profile => {
     if (currentUser && profile.id === currentUser.id) return false;
+    // Strict gender filtering: Groom sees ONLY Bride, Bride sees ONLY Groom
+    if (currentUser && normalizeGender(profile.gender) !== targetGender) return false;
     if (window.passedProfiles && window.passedProfiles.includes(profile.id)) return false;
     if (activeFilters.gender !== 'All' && normalizeGender(profile.gender) !== normalizeGender(activeFilters.gender)) return false;
     if (activeFilters.caste !== 'All' && profile.caste !== activeFilters.caste) return false;
@@ -3264,9 +3279,10 @@ function checkIncomingInterests() {
         updated = true;
       }
       
-      // Trigger floating alert banner on matches/home feed if not dismissed in this session and not in inbox/chat
+      // Trigger floating alert banner ONLY on desktop (never in mobile view or on profile edit screen)
+      const isMobileView = window.innerWidth <= 768 || (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) || document.body.classList.contains('mobile-view') || window.location.pathname.includes('profile');
       const dismissedKey = `dismissed_alert_${p.id}`;
-      if (window.currentAppView !== 'inbox' && window.currentAppView !== 'chat' && !sessionStorage.getItem(dismissedKey) && !document.getElementById(`royalInterestAlert_${p.id}`) && !document.getElementById('royalPageAlertBanner')) {
+      if (!isMobileView && window.currentAppView !== 'inbox' && window.currentAppView !== 'chat' && !sessionStorage.getItem(dismissedKey) && !document.getElementById(`royalInterestAlert_${p.id}`) && !document.getElementById('royalPageAlertBanner')) {
         showFloatingInterestAlert(p);
       }
     } else if (incomingInterests[currentUser.id] === 'accepted' && myInterests[p.id] === 'sent') {
@@ -3616,15 +3632,16 @@ function updateDashboardStats() {
     actChats.textContent = acceptedCount;
   }
 
-  // Update mobile subtab pill counters (Shaadi Mobile Layout)
+  // Update mobile subtab pill counters (Shaadi Mobile Layout) - Strictly opposite gender
+  const compatibleProfiles = getCompatibleProfiles(currentUser);
   const mNew = document.getElementById('mCountNew');
-  if (mNew) mNew.textContent = profiles.length;
+  if (mNew) mNew.textContent = compatibleProfiles.length;
   const mDaily = document.getElementById('mCountDaily');
-  if (mDaily) mDaily.textContent = Math.min(9, profiles.length);
+  if (mDaily) mDaily.textContent = Math.min(9, compatibleProfiles.length);
   const mAll = document.getElementById('mCountAll');
-  if (mAll) mAll.textContent = profiles.length;
+  if (mAll) mAll.textContent = compatibleProfiles.length;
   const mShort = document.getElementById('mCountShortlist');
-  if (mShort) mShort.textContent = shortlists.length;
+  if (mShort) mShort.textContent = shortlists.filter(id => compatibleProfiles.some(p => p.id === id)).length;
 }
 
 // ==========================================
@@ -3740,7 +3757,8 @@ window.switchMobileSubtab = function(tabKey) {
   if (activeBtn) activeBtn.classList.add('active');
 
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-  const all = getAllProfiles().filter(p => !currentUser || p.id !== currentUser.id);
+  // Strictly filter by opposite gender: Groom sees only Brides, Bride sees only Grooms
+  const all = getCompatibleProfiles(currentUser);
   const shortlists = JSON.parse(localStorage.getItem('shortlisted')) || [];
 
   if (tabKey === 'new') {
@@ -4067,7 +4085,7 @@ window.toggleMobileSearchDrawer = function() {
 window.handleMobileSearchInput = function(query) {
   const q = (query || '').toLowerCase().trim();
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-  const all = getAllProfiles().filter(p => !currentUser || p.id !== currentUser.id);
+  const all = getCompatibleProfiles(currentUser);
   if (!q) {
     renderMatchesListCustom(all.slice(0, 9));
     return;
@@ -4085,7 +4103,7 @@ window.setMobileClanFilter = function(clan, btnEl) {
   if (btnEl) btnEl.classList.add('active');
 
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-  const all = getAllProfiles().filter(p => !currentUser || p.id !== currentUser.id);
+  const all = getCompatibleProfiles(currentUser);
   if (clan === 'All') {
     renderMatchesListCustom(all);
   } else {
@@ -4433,6 +4451,12 @@ window.handleCancelInterest = async function(id) {
 
 // Real-time floating alert banner renderer
 window.showFloatingInterestAlert = function(p) {
+  // Never show intrusive floating notification banners in mobile view or on profile edit screen;
+  // requests are viewed directly in Inbox -> Requests tab
+  if (window.innerWidth <= 768 || (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) || document.body.classList.contains('mobile-view') || window.location.pathname.includes('profile')) {
+    return;
+  }
+
   if (document.getElementById(`royalInterestAlert_${p.id}`)) return;
 
   const container = document.createElement('div');
@@ -6236,6 +6260,10 @@ window.markAllNotificationsAsRead = function(e) {
 
 // Royal Page Entry / Page Navigation Notification Alert Banner
 window.showPageEntryNotificationAlert = function(force = false) {
+  // Mobile & Profile view: Never show intrusive floating alert banners; notifications remain inside Inbox -> Requests
+  const isMobile = window.innerWidth <= 768 || (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) || document.body.classList.contains('mobile-view') || window.location.pathname.includes('profile');
+  if (isMobile) return;
+
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   if (!currentUser) return;
 
@@ -6892,12 +6920,14 @@ window.renderInboxHubView = function(activeTab = "received") {
   ensureDefaultAppData(currentUser);
 
   const allProfiles = getAllProfiles();
+  const targetGender = currentUser.gender ? getOppositeGender(currentUser.gender) : null;
   const myInterests = getProfileInterests(currentUser);
   const notifications = (JSON.parse(localStorage.getItem("notifications")) || []).filter(n => !n.recipientId || n.recipientId === currentUser.id);
 
-  // Incoming received interests (profiles that expressed interest in currentUser)
+  // Incoming received requests (strictly opposite gender, profiles that expressed interest in currentUser)
   const incomingProfiles = allProfiles.filter(p => {
     if (p.id === currentUser.id) return false;
+    if (targetGender && normalizeGender(p.gender) !== targetGender) return false;
     const theirInterests = getProfileInterests(p);
     return theirInterests[currentUser.id] === "sent" && myInterests[p.id] !== "accepted" && myInterests[p.id] !== "declined";
   });
@@ -6905,12 +6935,13 @@ window.renderInboxHubView = function(activeTab = "received") {
   // Accepted mutual connections
   const acceptedProfiles = allProfiles.filter(p => {
     if (p.id === currentUser.id) return false;
+    if (targetGender && normalizeGender(p.gender) !== targetGender) return false;
     return areProfilesConnected(currentUser, p);
   });
 
   // Outgoing sent interests
   const sentProfileIds = Object.keys(myInterests).filter(k => myInterests[k] === "sent");
-  const sentProfiles = allProfiles.filter(p => sentProfileIds.includes(p.id));
+  const sentProfiles = allProfiles.filter(p => sentProfileIds.includes(p.id) && (!targetGender || normalizeGender(p.gender) === targetGender));
 
   // Unread notifications count
   const unreadNotifs = notifications.filter(n => n.read !== true);
@@ -6918,8 +6949,8 @@ window.renderInboxHubView = function(activeTab = "received") {
   container.innerHTML = `
     <!-- Segmented Subtabs Navigation -->
     <div class="inbox-subtabs-nav">
-      <button type="button" class="inbox-subtab-btn ${activeTab === "received" ? "active" : ""}" onclick="renderInboxHubView('received')">
-        <span>Received</span>
+      <button type="button" class="inbox-subtab-btn ${activeTab === "received" || activeTab === "requests" ? "active" : ""}" onclick="renderInboxHubView('received')">
+        <span>Requests</span>
         ${incomingProfiles.length > 0 ? `<span class="inbox-tab-badge">${incomingProfiles.length}</span>` : ""}
       </button>
       <button type="button" class="inbox-subtab-btn ${activeTab === "accepted" ? "active" : ""}" onclick="renderInboxHubView('accepted')">
@@ -6945,13 +6976,13 @@ window.renderInboxHubView = function(activeTab = "received") {
   const contentArea = document.getElementById("inboxTabContentArea");
   if (!contentArea) return;
 
-  if (activeTab === "received") {
+  if (activeTab === "received" || activeTab === "requests") {
     if (incomingProfiles.length === 0) {
       contentArea.innerHTML = `
         <div class="inbox-empty-state">
           <span class="inbox-empty-icon">💌</span>
           <h3 class="inbox-empty-title">No Pending Requests</h3>
-          <p class="inbox-empty-desc">You are all caught up! When noble brides or grooms express interest in your profile, their requests will appear here.</p>
+          <p class="inbox-empty-desc">You are all caught up! When noble ${targetGender ? targetGender.toLowerCase() + 's' : 'matches'} express interest in your profile, their requests will appear here.</p>
           <button type="button" class="btn btn-royal" onclick="switchAppView('matches')" style="font-size: 0.8rem; padding: 8px 18px;">
             Browse Daily Matches
           </button>
@@ -6971,14 +7002,22 @@ window.renderInboxHubView = function(activeTab = "received") {
             <div class="inbox-item-time">Today</div>
           </div>
           <div class="inbox-item-note">
-            "Khammaghani! Our family reviewed your noble biodata and found your gotras and heritage warmly aligned with our traditions."
+            "Khammaghani! Our family reviewed your noble biodata and has expressed Royal Match Interest with your profile."
           </div>
-          <div class="inbox-item-actions">
+          <div style="margin: 4px 0 10px 0;">
+            <span style="font-size: 0.72rem; color: #047857; background: #ECFDF5; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid #A7F3D0;">
+              🔒 Contact details (Phone &amp; Email) unlocked upon accepting
+            </span>
+          </div>
+          <div class="inbox-item-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-outline" style="font-size: 0.76rem; padding: 7px 12px; border-radius: 8px; border: 1px solid #D1D5DB; color: #111827; background: #FFFFFF; font-weight: 600; cursor: pointer;" onclick="openProfileDetailModal('${p.id}')">
+              👁️ View Profile
+            </button>
             <button type="button" class="inbox-btn-decline" onclick="handleDeclineInterest('${p.id}'); renderInboxHubView('received');">
               ✕ Decline
             </button>
             <button type="button" class="inbox-btn-accept" onclick="handleAcceptInterest('${p.id}'); renderInboxHubView('accepted');">
-              ✓ Accept Connection
+              👑 Accept
             </button>
           </div>
         </div>
@@ -7358,9 +7397,11 @@ window.updateNavigationBadges = function() {
   const myInterests = getProfileInterests(currentUser);
   const notifications = (JSON.parse(localStorage.getItem("notifications")) || []).filter(n => !n.recipientId || n.recipientId === currentUser.id);
 
+  const targetGender = currentUser.gender ? getOppositeGender(currentUser.gender) : null;
   // Incoming pending
   const incoming = allProfiles.filter(p => {
     if (p.id === currentUser.id) return false;
+    if (targetGender && normalizeGender(p.gender) !== targetGender) return false;
     const theirInterests = getProfileInterests(p);
     return theirInterests[currentUser.id] === "sent" && myInterests[p.id] !== "accepted" && myInterests[p.id] !== "declined";
   });
@@ -7423,7 +7464,8 @@ window.handleViewContactNumber = function(profileId) {
 };
 
 window.showVisitorsModal = function() {
-  const all = getAllProfiles();
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  const all = getCompatibleProfiles(currentUser);
   const visitors = all.slice(0, 5);
   let html = `
     <div style="font-size:0.85rem; color:#FFFFFF; margin-bottom:12px;">

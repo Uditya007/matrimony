@@ -6604,20 +6604,12 @@ body:has(.dashboard-subnav) {
     background: #E4E4E7 !important;
   }
 
-  /* Mobile Royal Alert Banners (Crisp White Floating Toast) */
+  /* Mobile: Never show intrusive floating popup banners - notifications stay inside Inbox -> Requests */
   .royal-interest-alert-banner,
   .royal-page-alert-banner {
-    top: 110px !important;
-    left: 14px !important;
-    right: 14px !important;
-    width: auto !important;
-    max-width: none !important;
-    background: #FFFFFF !important;
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
-    color: #1A1A1A !important;
-    padding: 14px 16px !important;
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
 
   .royal-alert-badge,
@@ -8044,15 +8036,16 @@ body:has(.dashboard-subnav) {
 }
 
 .inbox-item-card {
-  background: #23050B;
-  border: 1px solid rgba(212, 175, 55, 0.25);
-  border-radius: 18px;
-  padding: 14px 16px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  background: #FFFFFF !important;
+  border: 1.5px solid #E5E7EB !important;
+  border-radius: 18px !important;
+  padding: 14px 16px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06) !important;
   display: flex;
   flex-direction: column;
   gap: 12px;
   transition: all 0.2s ease;
+  color: #111827 !important;
 }
 
 .inbox-item-header {
@@ -8091,7 +8084,7 @@ body:has(.dashboard-subnav) {
 .inbox-item-name {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #111827 !important;
   margin: 0 0 2px 0;
   display: flex;
   align-items: center;
@@ -8100,7 +8093,7 @@ body:has(.dashboard-subnav) {
 
 .inbox-item-meta {
   font-size: 0.74rem;
-  color: rgba(255, 255, 255, 0.68);
+  color: #4B5563 !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -8108,18 +8101,18 @@ body:has(.dashboard-subnav) {
 
 .inbox-item-time {
   font-size: 0.68rem;
-  color: #FCD34D;
+  color: #B45309 !important;
   font-weight: 600;
   flex-shrink: 0;
 }
 
 .inbox-item-note {
-  background: rgba(255, 255, 255, 0.04);
-  border-left: 3px solid var(--gold-antique);
+  background: #F9FAFB !important;
+  border-left: 3px solid #D4AF37 !important;
   padding: 8px 12px;
   border-radius: 0 8px 8px 0;
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.85);
+  color: #374151 !important;
   font-style: italic;
 }
 
@@ -8132,8 +8125,8 @@ body:has(.dashboard-subnav) {
 }
 
 .inbox-btn-accept {
-  background: linear-gradient(135deg, #11998E 0%, #38EF7D 100%);
-  color: #FFFFFF;
+  background: #10B981 !important;
+  color: #FFFFFF !important;
   border: none;
   font-size: 0.78rem;
   font-weight: 700;
@@ -8143,12 +8136,13 @@ body:has(.dashboard-subnav) {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
 }
 
 .inbox-btn-decline {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.8);
+  background: #F3F4F6 !important;
+  border: 1px solid #D1D5DB !important;
+  color: #374151 !important;
   font-size: 0.78rem;
   font-weight: 600;
   padding: 8px 14px;
@@ -8157,8 +8151,8 @@ body:has(.dashboard-subnav) {
 }
 
 .inbox-btn-chat {
-  background: var(--gold-gradient);
-  color: #1A050B;
+  background: #8B1E2D !important;
+  color: #FFFFFF !important;
   border: none;
   font-size: 0.78rem;
   font-weight: 700;
@@ -8168,12 +8162,13 @@ body:has(.dashboard-subnav) {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  box-shadow: 0 2px 6px rgba(139, 30, 45, 0.25);
 }
 
 .inbox-btn-cancel {
-  background: rgba(255, 77, 77, 0.12);
-  border: 1px solid rgba(255, 77, 77, 0.4);
-  color: #FF6B6B;
+  background: #FEE2E2 !important;
+  border: 1px solid #FCA5A5 !important;
+  color: #DC2626 !important;
   font-size: 0.75rem;
   font-weight: 600;
   padding: 6px 12px;
@@ -8183,18 +8178,19 @@ body:has(.dashboard-subnav) {
 
 /* Notification Items */
 .inbox-notif-card {
-  background: #21040A;
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 16px;
+  background: #FFFFFF !important;
+  border: 1.5px solid #E5E7EB !important;
+  border-radius: 16px !important;
   padding: 12px 14px;
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
 }
 
 .inbox-notif-card.unread {
-  background: #2C0710;
-  border-color: rgba(212, 175, 55, 0.45);
+  background: #FEF9F5 !important;
+  border-color: #FCD34D !important;
 }
 
 .inbox-notif-icon {
@@ -8211,14 +8207,14 @@ body:has(.dashboard-subnav) {
 
 .inbox-notif-msg {
   font-size: 0.82rem;
-  color: #FFFFFF;
+  color: #111827 !important;
   margin: 0 0 4px 0;
   line-height: 1.35;
 }
 
 .inbox-notif-time {
   font-size: 0.68rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: #6B7280 !important;
 }
 
 .inbox-notif-dot {
@@ -8234,10 +8230,11 @@ body:has(.dashboard-subnav) {
 .inbox-empty-state {
   text-align: center;
   padding: 40px 20px;
-  background: #20040A;
-  border: 1px dashed rgba(212, 175, 55, 0.35);
-  border-radius: 20px;
+  background: #FFFFFF !important;
+  border: 1.5px dashed #D1D5DB !important;
+  border-radius: 20px !important;
   margin: 20px 0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06) !important;
 }
 
 .inbox-empty-icon {
@@ -8249,13 +8246,13 @@ body:has(.dashboard-subnav) {
 .inbox-empty-title {
   font-family: var(--font-royal, "Cinzel", serif);
   font-size: 1.1rem;
-  color: #FFFFFF;
+  color: #111827 !important;
   margin: 0 0 6px 0;
 }
 
 .inbox-empty-desc {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.68);
+  color: #4B5563 !important;
   max-width: 380px;
   margin: 0 auto 16px auto;
   line-height: 1.4;
