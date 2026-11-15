@@ -8760,7 +8760,15 @@ body:has(.dashboard-subnav) {
   }
 
   .deck-indicator-bar {
-    display: none !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 6px 6px 6px;
+    margin: 0 0 4px 0;
+    z-index: 25;
+    flex-shrink: 0;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .deck-counter-badge {

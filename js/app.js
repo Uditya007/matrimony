@@ -790,7 +790,11 @@ function getCompatibleProfiles(currentUser) {
   const all = getAllProfiles();
   if (!currentUser) return all;
   const targetGender = getOppositeGender(currentUser.gender);
-  return all.filter(p => p.id !== currentUser.id && normalizeGender(p.gender) === targetGender);
+  return all.filter(p => {
+    if (p.id === currentUser.id) return false;
+    if (currentUser.email && p.email && p.email.toLowerCase() === currentUser.email.toLowerCase()) return false;
+    return normalizeGender(p.gender) === targetGender;
+  });
 }
 
 function updateNavigationState() {
@@ -2652,7 +2656,7 @@ async function initDashboardPage() {
         .then(({ data, error }) => {
           if (!error && data) {
             window.firestoreUsers = data;
-            renderMatchesGrid();
+            // Note: Never re-render matchesGrid in the background as it destroys active user card swipes!
             updateDashboardStats();
             populateOnlineSidebar(currentUser);
           }
@@ -2846,6 +2850,13 @@ function renderMatchesGrid() {
 
   // Scan and register any incoming interests from other users to unlock chats
   checkIncomingInterests();
+
+  // On mobile devices, respect the active mobile subtab (daily, all, new, shortlist)
+  if (window.innerWidth <= 768 && typeof switchMobileSubtab === 'function') {
+    const activeTab = window.activeMobileSubtab || 'daily';
+    switchMobileSubtab(activeTab);
+    return;
+  }
 
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   const targetGender = currentUser ? getOppositeGender(currentUser.gender) : (activeFilters.gender !== 'All' ? activeFilters.gender : 'Bride');
@@ -3749,7 +3760,7 @@ window.switchMobileSubtab = function(tabKey) {
 
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   // Strictly filter by opposite gender: Groom sees only Brides, Bride sees only Grooms
-  const all = getCompatibleProfiles(currentUser);
+  const all = getCompatibleProfiles(currentUser).filter(p => !window.passedProfiles || !window.passedProfiles.includes(p.id));
   const shortlists = JSON.parse(localStorage.getItem('shortlisted')) || [];
 
   if (tabKey === 'new') {
@@ -3789,8 +3800,19 @@ window.renderMatchesListCustom = function(profilesList) {
     return;
   }
 
-  // Render cards deck (clean full-bleed swipe deck)
+  // Render top indicator bar and cards deck (clean full-bleed swipe deck)
   container.innerHTML = `
+    <!-- Top Progress & Navigation HUD -->
+    <div class="deck-indicator-bar" id="deckIndicatorBar">
+      <div class="deck-counter-badge" id="deckCounterBadge">
+        1 / ${list.length} &bull; Swipe up &#9650;
+      </div>
+      <div class="deck-nav-arrows">
+        <button type="button" class="deck-arrow-btn" id="deckPrevBtn" onclick="swipeToPrevProfile()" title="Previous Profile" aria-label="Previous Profile">&#9650;</button>
+        <button type="button" class="deck-arrow-btn" id="deckNextBtn" onclick="swipeToNextProfile()" title="Next Profile" aria-label="Next Profile">&#9660;</button>
+      </div>
+    </div>
+
     <!-- Cards Deck Wrapper -->
     <div class="deck-cards-wrapper" id="deckCardsWrapper">
       ${list.map((p, idx) => `
@@ -3805,12 +3827,34 @@ window.renderMatchesListCustom = function(profilesList) {
   initDeckSwipeGestures();
 };
 
+window.updateDeckSlotClasses = function(activeIndex) {
+  const total = window.currentDeckProfiles ? window.currentDeckProfiles.length : 0;
+  for (let i = 0; i < total; i++) {
+    const slot = document.getElementById(`deckSlot_${i}`);
+    if (!slot) continue;
+    slot.style.transform = '';
+    slot.style.transition = '';
+    slot.style.opacity = '';
+    if (i < activeIndex - 1) {
+      slot.className = 'profile-deck-slot slot-hidden';
+    } else if (i === activeIndex - 1) {
+      slot.className = 'profile-deck-slot slot-prev';
+    } else if (i === activeIndex) {
+      slot.className = 'profile-deck-slot slot-active';
+    } else if (i === activeIndex + 1) {
+      slot.className = 'profile-deck-slot slot-next';
+    } else {
+      slot.className = 'profile-deck-slot slot-hidden';
+    }
+  }
+};
+
 window.swipeToNextProfile = function() {
   const total = window.currentDeckProfiles ? window.currentDeckProfiles.length : 0;
   if (total === 0) return;
 
   if (window.currentDeckIndex >= total - 1) {
-    showToast("You have reached the end of this matches list! ✨", "gold");
+    showToast("👑 You have reached the end of this matches list! ✨", "gold");
     return;
   }
 
@@ -3821,24 +3865,23 @@ window.swipeToNextProfile = function() {
   const nextSlot = document.getElementById(`deckSlot_${nextIdx}`);
 
   if (currentSlot) {
-    currentSlot.className = 'profile-deck-slot slot-prev';
-    currentSlot.style.transform = '';
+    currentSlot.style.transition = 'transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.35s ease';
+    currentSlot.style.transform = 'translateY(-105%)';
+    currentSlot.style.opacity = '0.3';
   }
 
   if (nextSlot) {
-    nextSlot.className = 'profile-deck-slot slot-active';
-    nextSlot.style.transform = '';
-  }
-
-  // Pre-prepare next+1 slot if it exists so it is ready in slot-next
-  const upcomingSlot = document.getElementById(`deckSlot_${nextIdx + 1}`);
-  if (upcomingSlot) {
-    upcomingSlot.className = 'profile-deck-slot slot-next';
-    upcomingSlot.style.transform = '';
+    nextSlot.className = 'profile-deck-slot slot-next';
+    nextSlot.style.transition = 'transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.35s ease';
+    nextSlot.style.transform = 'translateY(0)';
+    nextSlot.style.opacity = '1';
   }
 
   window.currentDeckIndex = nextIdx;
-  updateDeckControls();
+  setTimeout(() => {
+    window.updateDeckSlotClasses(nextIdx);
+    window.updateDeckControls();
+  }, 360);
 };
 
 window.swipeToPrevProfile = function() {
@@ -3854,24 +3897,23 @@ window.swipeToPrevProfile = function() {
   const prevSlot = document.getElementById(`deckSlot_${prevIdx}`);
 
   if (currentSlot) {
-    currentSlot.className = 'profile-deck-slot slot-next';
-    currentSlot.style.transform = '';
+    currentSlot.style.transition = 'transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.35s ease';
+    currentSlot.style.transform = 'translateY(105%)';
+    currentSlot.style.opacity = '0.3';
   }
 
   if (prevSlot) {
-    prevSlot.className = 'profile-deck-slot slot-active';
-    prevSlot.style.transform = '';
-  }
-
-  // Pre-prepare prev-1 slot if it exists
-  const pastSlot = document.getElementById(`deckSlot_${prevIdx - 1}`);
-  if (pastSlot) {
-    pastSlot.className = 'profile-deck-slot slot-prev';
-    pastSlot.style.transform = '';
+    prevSlot.className = 'profile-deck-slot slot-prev';
+    prevSlot.style.transition = 'transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.35s ease';
+    prevSlot.style.transform = 'translateY(0)';
+    prevSlot.style.opacity = '1';
   }
 
   window.currentDeckIndex = prevIdx;
-  updateDeckControls();
+  setTimeout(() => {
+    window.updateDeckSlotClasses(prevIdx);
+    window.updateDeckControls();
+  }, 360);
 };
 
 window.updateDeckControls = function() {
@@ -3908,11 +3950,13 @@ window.initDeckSwipeGestures = function() {
   let startX = 0;
   let startTime = 0;
   let isDragging = false;
+  let isAnimating = false;
   let currentDeltaY = 0;
 
   wrapper.addEventListener('touchstart', (e) => {
+    if (isAnimating) return;
     if (e.touches.length !== 1) return;
-    if (e.target.closest('button, a, input, select, textarea, .shaadi-badge-btn, .shaadi-badge-pill, .shaadi-pass-btn, .shaadi-connect-btn')) return;
+    if (e.target.closest('button, a, input, select, textarea, .shaadi-badge-btn, .shaadi-badge-pill, .shaadi-pass-btn, .shaadi-fab-btn, .shaadi-action-text')) return;
 
     startY = e.touches[0].clientY;
     startX = e.touches[0].clientX;
@@ -3933,14 +3977,17 @@ window.initDeckSwipeGestures = function() {
     const deltaY = currentY - startY;
     const deltaX = currentX - startX;
 
-    // Fully lock down vertical scroll so the browser cannot scroll the webpage
-    if (e.cancelable) e.preventDefault();
+    // Fully lock down vertical scroll so the browser does not bounce the viewport
+    if (Math.abs(deltaY) > 5) {
+      if (e.cancelable) e.preventDefault();
+    }
 
     currentDeltaY = deltaY;
     const activeSlot = document.getElementById(`deckSlot_${window.currentDeckIndex}`);
     if (activeSlot) {
       let dragY = deltaY;
-      if (window.currentDeckIndex === 0 && deltaY > 0) {
+      const total = window.currentDeckProfiles ? window.currentDeckProfiles.length : 0;
+      if ((window.currentDeckIndex === 0 && deltaY > 0) || (window.currentDeckIndex >= total - 1 && deltaY < 0)) {
         dragY = deltaY * 0.25;
       }
       activeSlot.style.transform = `translateY(${dragY}px)`;
@@ -3952,25 +3999,31 @@ window.initDeckSwipeGestures = function() {
     isDragging = false;
 
     const activeSlot = document.getElementById(`deckSlot_${window.currentDeckIndex}`);
-    if (activeSlot) {
-      activeSlot.style.transition = 'transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.32s ease';
-    }
-
     const duration = Date.now() - startTime;
     const velocity = Math.abs(currentDeltaY) / (duration || 1);
 
-    if (currentDeltaY < -30 || (currentDeltaY < -15 && velocity > 0.22)) {
+    if (currentDeltaY < -35 || (currentDeltaY < -15 && velocity > 0.2)) {
       // SWIPE UP -> NEXT PROFILE
+      isAnimating = true;
       swipeToNextProfile();
-    } else if (currentDeltaY > 30 || (currentDeltaY > 15 && velocity > 0.22)) {
+      setTimeout(() => { isAnimating = false; }, 370);
+    } else if (currentDeltaY > 35 || (currentDeltaY > 15 && velocity > 0.2)) {
       // SWIPE DOWN -> PREVIOUS PROFILE
       if (window.currentDeckIndex > 0) {
+        isAnimating = true;
         swipeToPrevProfile();
+        setTimeout(() => { isAnimating = false; }, 370);
       } else {
-        if (activeSlot) activeSlot.style.transform = 'translateY(0)';
+        if (activeSlot) {
+          activeSlot.style.transition = 'transform 0.25s ease';
+          activeSlot.style.transform = 'translateY(0)';
+        }
       }
     } else {
-      if (activeSlot) activeSlot.style.transform = 'translateY(0)';
+      if (activeSlot) {
+        activeSlot.style.transition = 'transform 0.25s ease';
+        activeSlot.style.transform = 'translateY(0)';
+      }
     }
     currentDeltaY = 0;
   });
@@ -3979,7 +4032,7 @@ window.initDeckSwipeGestures = function() {
     isDragging = false;
     const activeSlot = document.getElementById(`deckSlot_${window.currentDeckIndex}`);
     if (activeSlot) {
-      activeSlot.style.transition = 'transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.32s ease';
+      activeSlot.style.transition = 'transform 0.25s ease';
       activeSlot.style.transform = 'translateY(0)';
     }
     currentDeltaY = 0;
@@ -3988,9 +4041,9 @@ window.initDeckSwipeGestures = function() {
   // Trackpad / Wheel listener
   let wheelTimer = null;
   wrapper.addEventListener('wheel', (e) => {
-    if (wheelTimer) return;
+    if (wheelTimer || isAnimating) return;
     if (Math.abs(e.deltaY) > 24) {
-      wheelTimer = setTimeout(() => { wheelTimer = null; }, 360);
+      wheelTimer = setTimeout(() => { wheelTimer = null; }, 380);
       if (e.deltaY > 0) {
         swipeToNextProfile();
       } else {
@@ -4530,7 +4583,6 @@ window.initGlobalInterestWatcher = function() {
         const { data, error } = await window.supabaseClient.from('profiles').select('*');
         if (!error && data) {
           window.firestoreUsers = data;
-          if (typeof renderMatchesGrid === 'function') renderMatchesGrid();
           if (typeof populateOnlineSidebar === 'function') populateOnlineSidebar(user);
         }
       } catch (e) {}
