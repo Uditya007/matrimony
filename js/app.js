@@ -71,7 +71,56 @@ async function initLottieAnimatedLogos() {
       console.warn('Lottie navbar container init error:', err);
     }
   }
+
+  const loginOverlayContainer = document.getElementById('loginOverlayAnimatedLogo');
+  if (loginOverlayContainer && !loginOverlayContainer.dataset.lottieLoaded) {
+    loginOverlayContainer.dataset.lottieLoaded = 'true';
+    try {
+      const overlayConfig = {
+        container: loginOverlayContainer,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true
+      };
+      if (animData) {
+        overlayConfig.animationData = animData;
+      } else {
+        overlayConfig.path = 'images/animated-logo.json';
+      }
+      const animOverlay = lottie.loadAnimation(overlayConfig);
+      animOverlay.addEventListener('DOMLoaded', () => {
+        const fallback = loginOverlayContainer.querySelector('.web-splash-fallback');
+        if (fallback) fallback.style.display = 'none';
+      });
+    } catch (err) {
+      console.warn('Lottie login overlay container init error:', err);
+    }
+  }
 }
+
+// Royal Login Transition Overlay Controls
+window.showLoginLoadingOverlay = function(message) {
+  const overlay = document.getElementById('loginTransitionOverlay');
+  if (!overlay) return;
+  const statusEl = document.getElementById('loginOverlayStatusText');
+  if (statusEl && message) {
+    statusEl.textContent = message;
+  }
+  overlay.classList.add('active');
+
+  // Trigger lottie load if container element exists but not initialized
+  const container = document.getElementById('loginOverlayAnimatedLogo');
+  if (container && !container.dataset.lottieLoaded && typeof lottie !== 'undefined') {
+    initLottieAnimatedLogos();
+  }
+};
+
+window.hideLoginLoadingOverlay = function() {
+  const overlay = document.getElementById('loginTransitionOverlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+  }
+};
 
 // Web Onboarding Splash Screen Controller (safeguarded against script load race condition)
 function handleWebSplash() {
@@ -1689,6 +1738,10 @@ window.handleVerifyLoginOtp = async function() {
   const channel = sessionStorage.getItem('royal_login_channel') || 'phone';
   const target = sessionStorage.getItem('royal_login_target') || '';
 
+  if (typeof window.showLoginLoadingOverlay === 'function') {
+    window.showLoginLoadingOverlay('Verifying Code & Authenticating Noble Lineage...');
+  }
+
   let isOtpValid = (enteredOtp && (enteredOtp === storedOtp || enteredOtp === pendingOtp || enteredOtp === '123456'));
 
   // Also verify with backend API if needed
@@ -1711,6 +1764,9 @@ window.handleVerifyLoginOtp = async function() {
   }
 
   if (!isOtpValid) {
+    if (typeof window.hideLoginLoadingOverlay === 'function') {
+      window.hideLoginLoadingOverlay();
+    }
     if (errEl) {
       errEl.textContent = 'Invalid OTP code. Please enter the valid 6-digit code received on WhatsApp.';
       errEl.style.display = 'block';
@@ -1721,6 +1777,10 @@ window.handleVerifyLoginOtp = async function() {
   }
 
   if (errEl) errEl.style.display = 'none';
+
+  if (typeof window.showLoginLoadingOverlay === 'function') {
+    window.showLoginLoadingOverlay('Access Granted! Entering Royal Dashboard...');
+  }
 
   // Look up user profile in database / localStorage / demo
   const userProfile = await findUserProfileByIdentifier(target);
@@ -1736,7 +1796,7 @@ window.handleVerifyLoginOtp = async function() {
     showToast(`Khammaghani! Welcome, ${(userProfile.name || 'Noble Member').split(' ')[0]}`, 'gold');
     setTimeout(() => {
       window.location.href = 'dashboard.html';
-    }, 1200);
+    }, 1100);
   } else {
     // New user whose contact is verified! Forward smoothly to registration
     if (channel === 'phone') {
@@ -1744,13 +1804,13 @@ window.handleVerifyLoginOtp = async function() {
       showToast('✓ Mobile number verified! Welcome to Shree Rajput Sagai Sambandh. Proceeding to registration...', 'gold');
       setTimeout(() => {
         window.location.href = `register.html?phone=${target}&verified=true`;
-      }, 1200);
+      }, 1100);
     } else {
       sessionStorage.setItem('royal_verified_signup_email', target);
       showToast('✓ Email address verified! Welcome to Shree Rajput Sagai Sambandh. Proceeding to registration...', 'gold');
       setTimeout(() => {
         window.location.href = `register.html?email=${encodeURIComponent(target)}&verified=true`;
-      }, 1200);
+      }, 1100);
     }
   }
 };
@@ -1848,6 +1908,9 @@ function initLoginPage() {
 
   async function handleGoogleAuthProfile(accessToken) {
     try {
+      if (typeof window.showLoginLoadingOverlay === 'function') {
+        window.showLoginLoadingOverlay('Connecting with Google & Accessing Dashboard...');
+      }
       showToast('👑 Khammaghani! Connecting with Google...', 'gold');
       const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { Authorization: `Bearer ${accessToken}` }
@@ -1856,6 +1919,9 @@ function initLoginPage() {
       const googleUser = await res.json();
 
       if (!googleUser || !googleUser.email) {
+        if (typeof window.hideLoginLoadingOverlay === 'function') {
+          window.hideLoginLoadingOverlay();
+        }
         showToast('⚠️ Could not obtain email from Google account.', 'normal');
         return;
       }
@@ -1874,6 +1940,9 @@ function initLoginPage() {
           member.profilePic = photo;
         }
         localStorage.setItem('currentUser', JSON.stringify(member));
+        if (typeof window.showLoginLoadingOverlay === 'function') {
+          window.showLoginLoadingOverlay(`Welcome, ${(member.name || 'Noble Member').split(' ')[0]}! Entering Dashboard...`);
+        }
         showToast(`Khammaghani, Welcome ${(member.name || 'Noble Member').split(' ')[0]}!`, 'gold');
         setTimeout(() => {
           window.location.href = 'dashboard.html';
@@ -1912,11 +1981,17 @@ function initLoginPage() {
       }
 
       localStorage.setItem('currentUser', JSON.stringify(newProfile));
+      if (typeof window.showLoginLoadingOverlay === 'function') {
+        window.showLoginLoadingOverlay(`Welcome, ${fullName.split(' ')[0]}! Entering Dashboard...`);
+      }
       showToast(`Khammaghani! Welcome to Shree Rajput Sagai Sambandh, ${fullName.split(' ')[0]}!`, 'gold');
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 1000);
     } catch (err) {
+      if (typeof window.hideLoginLoadingOverlay === 'function') {
+        window.hideLoginLoadingOverlay();
+      }
       console.error('Google profile handling error:', err);
       showToast('⚠️ Google Sign-In error: ' + err.message, 'normal');
     }
@@ -2023,6 +2098,10 @@ function initLoginPage() {
       return;
     }
 
+    if (typeof window.showLoginLoadingOverlay === 'function') {
+      window.showLoginLoadingOverlay('Verifying Credentials & Entering Royal Hub...');
+    }
+
     const digits = identifier.replace(/[^0-9]/g, '').slice(-10);
     const isPhone = digits.length === 10 && !identifier.includes('@');
 
@@ -2044,10 +2123,13 @@ function initLoginPage() {
         tier: 'Starter' // Default Starter Tier
       };
       localStorage.setItem('currentUser', JSON.stringify(demoUser));
+      if (typeof window.showLoginLoadingOverlay === 'function') {
+        window.showLoginLoadingOverlay('Welcome, Kunwar Shivraj! Entering Dashboard...');
+      }
       showToast('Khammaghani! Welcome to Shree Rajput Sagai Sambandh', 'gold');
       setTimeout(() => {
         window.location.href = 'dashboard.html';
-      }, 1200);
+      }, 1000);
       return;
     }
 
@@ -2067,6 +2149,9 @@ function initLoginPage() {
           if (matchedProfiles && matchedProfiles.length > 0 && matchedProfiles[0].email) {
             authEmail = matchedProfiles[0].email;
           } else {
+            if (typeof window.hideLoginLoadingOverlay === 'function') {
+              window.hideLoginLoadingOverlay();
+            }
             showToast('No registered account found with this mobile number. Please use OTP Login!', 'normal');
             return;
           }
@@ -2081,6 +2166,9 @@ function initLoginPage() {
       });
 
       if (error) {
+        if (typeof window.hideLoginLoadingOverlay === 'function') {
+          window.hideLoginLoadingOverlay();
+        }
         showToast('Login failed: ' + error.message, 'normal');
         return;
       }
@@ -2094,10 +2182,13 @@ function initLoginPage() {
 
       if (profile) {
         localStorage.setItem('currentUser', JSON.stringify(profile));
+        if (typeof window.showLoginLoadingOverlay === 'function') {
+          window.showLoginLoadingOverlay(`Welcome, ${(profile.name || 'Noble Member').split(' ')[0]}! Entering Dashboard...`);
+        }
         showToast(`Khammaghani, Welcome ${(profile.name || 'Noble Member').split(' ')[0]}`, 'gold');
         setTimeout(() => {
           window.location.href = 'dashboard.html';
-        }, 1200);
+        }, 1000);
       } else {
         // Auth succeeded but profile records are missing, redirect to register onboarding
         const tempGoogleUser = {
@@ -2109,7 +2200,7 @@ function initLoginPage() {
         showToast('Welcome! Please complete your lineage details to finish registration.', 'gold');
         setTimeout(() => {
           window.location.href = 'register.html';
-        }, 1200);
+        }, 1100);
       }
       return;
     }
@@ -2126,11 +2217,17 @@ function initLoginPage() {
     if (matchedUser) {
       matchedUser.tier = matchedUser.tier || 'Starter';
       localStorage.setItem('currentUser', JSON.stringify(matchedUser));
+      if (typeof window.showLoginLoadingOverlay === 'function') {
+        window.showLoginLoadingOverlay(`Welcome, ${(matchedUser.name || 'Noble Member').split(' ')[0]}! Entering Dashboard...`);
+      }
       showToast(`Khammaghani, Welcome ${(matchedUser.name || 'Noble Member').split(' ')[0]}`, 'gold');
       setTimeout(() => {
         window.location.href = 'dashboard.html';
-      }, 1200);
+      }, 1000);
     } else {
+      if (typeof window.hideLoginLoadingOverlay === 'function') {
+        window.hideLoginLoadingOverlay();
+      }
       showToast('Invalid credentials. Please verify your details or use Instant OTP Login.', 'normal');
     }
   });
@@ -2423,7 +2520,14 @@ function initRegisterPage() {
       submitBtn.innerHTML = '👑 Publishing Royal Profile...';
     }
 
+    if (typeof window.showLoginLoadingOverlay === 'function') {
+      window.showLoginLoadingOverlay('Publishing Royal Profile & Entering Dashboard...');
+    }
+
     const resetSubmitBtn = () => {
+      if (typeof window.hideLoginLoadingOverlay === 'function') {
+        window.hideLoginLoadingOverlay();
+      }
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalBtnText;
