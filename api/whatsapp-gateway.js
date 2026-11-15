@@ -35,6 +35,7 @@ module.exports = async function handler(req, res) {
 
     if (action === 'test-send') {
       const targetNumber = (req.body?.number || phone || '917665941949').replace(/[^0-9]/g, '');
+      const otpCode = req.body?.otp || req.query?.otp || '654321';
       const sendRes = await fetch(`${WHATSAPP_API_URL}/send/text`, {
         method: 'POST',
         headers: {
@@ -43,7 +44,7 @@ module.exports = async function handler(req, res) {
         },
         body: JSON.stringify({
           number: targetNumber.length === 10 ? `91${targetNumber}` : targetNumber,
-          text: '654321 – Your OTP\n\nSHREE RAJPUT SAGAI SAMBANDH\n\nYour profile verification OTP is valid for 5 minutes.\n\nPlease do not share this OTP with anyone.\n\n– Team Shree Rajput Sagai Sambandh'
+          text: `${otpCode} – Your OTP\n\nSHREE RAJPUT SAGAI SAMBANDH\n\nYour profile verification OTP is valid for 5 minutes.\n\nPlease do not share this OTP with anyone.\n\n– Team Shree Rajput Sagai Sambandh`
         })
       });
       const data = await sendRes.json();

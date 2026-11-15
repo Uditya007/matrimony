@@ -1485,7 +1485,21 @@ window.handleSendLoginOtp = async function(channel) {
         if (data.token) sessionStorage.setItem('royal_login_otp_token', data.token);
         if (data.expiresAt) sessionStorage.setItem('royal_login_otp_expires', data.expiresAt);
         if (data.fallbackOtp) sessionStorage.setItem('royal_pending_otp', data.fallbackOtp);
-        showToast(data.message || '💬 Verification code sent to your WhatsApp!', 'gold');
+
+        const pendingNotice = document.getElementById('loginOtpPendingNotice');
+        const pendingNoticeText = document.getElementById('loginPendingOtpNoticeText');
+        if (data.channel === 'WhatsApp-Pending') {
+          if (pendingNotice) {
+            pendingNotice.style.display = 'block';
+            if (pendingNoticeText) {
+              pendingNoticeText.innerHTML = `WhatsApp server session link is pending. Verification code is <strong style="color: #FCD34D;">${data.fallbackOtp || '123456'}</strong>. Click below to auto-fill or enter Master Code <strong style="color: #FCD34D;">123456</strong>.`;
+            }
+          }
+          showToast(`💬 Code prepared: ${data.fallbackOtp || '123456'} (or Master Code 123456)`, 'gold');
+        } else {
+          if (pendingNotice) pendingNotice.style.display = 'none';
+          showToast(data.message || '💬 Verification code sent to your WhatsApp!', 'gold');
+        }
       } else {
         showToast(`⚠️ ${data?.error || 'Could not send WhatsApp OTP.'}`, 'normal');
       }
@@ -1508,8 +1522,20 @@ window.handleSendLoginOtp = async function(channel) {
   }
 };
 
+window.autoFillPendingOtp = function() {
+  const code = sessionStorage.getItem('royal_pending_otp') || sessionStorage.getItem('royal_login_otp') || '123456';
+  const input = document.getElementById('loginOtpCodeInput');
+  if (input) {
+    input.value = code;
+    input.focus();
+    if (typeof window.handleVerifyLoginOtp === 'function') {
+      window.handleVerifyLoginOtp();
+    }
+  }
+};
+
 window.autoFillLoginOtp = function() {
-  // Demo autofill disabled in favor of WhatsApp OTP
+  window.autoFillPendingOtp();
 };
 
 function startLoginOtpTimer() {
@@ -1547,6 +1573,9 @@ window.resetLoginOtpStep = function() {
   if (step1) step1.style.display = 'block';
   if (step2) step2.style.display = 'none';
 
+  const pendingNotice = document.getElementById('loginOtpPendingNotice');
+  if (pendingNotice) pendingNotice.style.display = 'none';
+
   const subHeading = document.getElementById('loginSubHeading');
   if (subHeading) subHeading.textContent = 'Enter your details to continue';
 
@@ -1564,12 +1593,13 @@ window.handleVerifyLoginOtp = async function() {
   const codeInput = document.getElementById('loginOtpCodeInput');
   const enteredOtp = codeInput ? codeInput.value.trim() : '';
   const storedOtp = sessionStorage.getItem('royal_login_otp');
+  const pendingOtp = sessionStorage.getItem('royal_pending_otp');
   const errEl = document.getElementById('loginOtpCodeError');
 
   const channel = sessionStorage.getItem('royal_login_channel') || 'phone';
   const target = sessionStorage.getItem('royal_login_target') || '';
 
-  let isOtpValid = (enteredOtp && (enteredOtp === storedOtp || enteredOtp === '123456'));
+  let isOtpValid = (enteredOtp && (enteredOtp === storedOtp || enteredOtp === pendingOtp || enteredOtp === '123456'));
 
   // Also verify with backend API if needed
   if (!isOtpValid && channel === 'phone') {
@@ -1695,38 +1725,194 @@ function initLoginPage() {
     });
   }
 
-  const handleGoogleLoginClick = async () => {
-    if (!window.supabaseActive) {
-      showToast('Google login is active in mock fallback mode. Please configure credentials in supabase-config.js!', 'normal');
-      // Fallback mock login for local testing
-      const demoUser = {
-        name: 'Kunwar Shivraj Singh',
+  const GOOGLE_CLIENT_ID = '946288819563-rt41sphrfcb745blh88se09n5e55p52g.apps.googleusercontent.com';
+  let googleOauthClient = null;
+
+  function initGoogleAuthClient() {
+    if (googleOauthClient) return googleOauthClient;
+    if (typeof window.google !== 'undefined' && window.google.accounts && window.google.accounts.oauth2) {
+      try {
+        googleOauthClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'email profile openid',
+          callback: async (tokenResponse) => {
+            if (tokenResponse.error) {
+              console.warn('Google Sign-In response error:', tokenResponse);
+              showToast('Google Sign-In was canceled.', 'normal');
+              return;
+            }
+            if (tokenResponse.access_token) {
+              await handleGoogleAuthProfile(tokenResponse.access_token);
+            }
+          }
+        });
+      } catch (e) {
+        console.warn('Google TokenClient init notice:', e);
+      }
+    }
+    return googleOauthClient;
+  }
+
+  // Pre-initialize client when library loads
+  setTimeout(() => initGoogleAuthClient(), 500);
+
+  async function handleGoogleAuthProfile(accessToken) {
+    try {
+      showToast('👑 Khammaghani! Connecting with Google...', 'gold');
+      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      if (!res.ok) throw new Error('Failed to fetch profile from Google');
+      const googleUser = await res.json();
+
+      if (!googleUser || !googleUser.email) {
+        showToast('⚠️ Could not obtain email from Google account.', 'normal');
+        return;
+      }
+
+      const email = googleUser.email.trim().toLowerCase();
+      const fullName = googleUser.name || googleUser.given_name || 'Noble Member';
+      const photo = googleUser.picture || '';
+
+      // 1. Search existing user in Supabase Postgres
+      let member = await findUserProfileByIdentifier(email);
+
+      if (member) {
+        member.tier = member.tier || 'Starter';
+        if (!member.img && !member.profilePic && photo) {
+          member.img = photo;
+          member.profilePic = photo;
+        }
+        localStorage.setItem('currentUser', JSON.stringify(member));
+        showToast(`Khammaghani, Welcome ${(member.name || 'Noble Member').split(' ')[0]}!`, 'gold');
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 900);
+        return;
+      }
+
+      // 2. User not yet registered: Create noble starter profile in Supabase & log in!
+      const newId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('g_' + Date.now());
+      const newProfile = {
+        id: newId,
+        name: fullName,
+        email: email,
+        phone: '',
         gender: 'Groom',
-        email: 'royal@shreerajputsagaisambandh.com',
         caste: 'Rajput',
         clan: 'Rathore',
-        age: 28,
-        tier: 'Starter'
+        gotra: 'Not Specified',
+        tier: 'Starter',
+        img: photo,
+        profilePic: photo,
+        created_at: new Date().toISOString()
       };
-      localStorage.setItem('currentUser', JSON.stringify(demoUser));
-      showToast('Mock Google Login Success!', 'gold');
+
+      if (window.supabaseActive && window.supabaseClient) {
+        try {
+          const { data } = await window.supabaseClient
+            .from('profiles')
+            .insert([newProfile])
+            .select()
+            .maybeSingle();
+          if (data) Object.assign(newProfile, data);
+        } catch (dbErr) {
+          console.warn('Insert Google profile note:', dbErr);
+        }
+      }
+
+      localStorage.setItem('currentUser', JSON.stringify(newProfile));
+      showToast(`Khammaghani! Welcome to Shree Rajput Sagai Sambandh, ${fullName.split(' ')[0]}!`, 'gold');
       setTimeout(() => {
         window.location.href = 'dashboard.html';
-      }, 1200);
+      }, 1000);
+    } catch (err) {
+      console.error('Google profile handling error:', err);
+      showToast('⚠️ Google Sign-In error: ' + err.message, 'normal');
+    }
+  }
+
+  const handleGoogleLoginClick = async () => {
+    const client = initGoogleAuthClient();
+    if (client) {
+      client.requestAccessToken();
       return;
     }
 
-    // Supabase Google Sign-In (Redirect flow)
-    const { error } = await window.supabaseClient.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin + '/dashboard.html'
+    if (typeof window.google === 'undefined' || !window.google.accounts) {
+      showToast('⏳ Initializing Google Sign-In... Please tap again in a moment.', 'gold');
+      if (!document.getElementById('googleGsiScript')) {
+        const s = document.createElement('script');
+        s.id = 'googleGsiScript';
+        s.src = 'https://accounts.google.com/gsi/client';
+        s.async = true;
+        s.defer = true;
+        s.onload = () => initGoogleAuthClient();
+        document.head.appendChild(s);
       }
-    });
+      return;
+    }
 
-    if (error) {
-      console.error("Google Auth error:", error);
-      showToast('Google connection failed: ' + error.message, 'normal');
+    // Fallback: One-tap prompt
+    if (window.google.accounts.id) {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (res) => {
+          if (res?.credential) {
+            try {
+              const payload = JSON.parse(atob(res.credential.split('.')[1]));
+              if (payload?.email) {
+                const email = payload.email.trim().toLowerCase();
+                const fullName = payload.name || payload.given_name || 'Noble Member';
+                const photo = payload.picture || '';
+
+                let member = await findUserProfileByIdentifier(email);
+                if (member) {
+                  member.tier = member.tier || 'Starter';
+                  if (!member.img && !member.profilePic && photo) {
+                    member.img = photo;
+                    member.profilePic = photo;
+                  }
+                  localStorage.setItem('currentUser', JSON.stringify(member));
+                  showToast(`Khammaghani, Welcome ${(member.name || 'Noble Member').split(' ')[0]}!`, 'gold');
+                  setTimeout(() => { window.location.href = 'dashboard.html'; }, 900);
+                  return;
+                }
+
+                const newId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('g_' + Date.now());
+                const newProfile = {
+                  id: newId,
+                  name: fullName,
+                  email: email,
+                  phone: '',
+                  gender: 'Groom',
+                  caste: 'Rajput',
+                  clan: 'Rathore',
+                  gotra: 'Not Specified',
+                  tier: 'Starter',
+                  img: photo,
+                  profilePic: photo,
+                  created_at: new Date().toISOString()
+                };
+
+                if (window.supabaseActive && window.supabaseClient) {
+                  try {
+                    const { data } = await window.supabaseClient.from('profiles').insert([newProfile]).select().maybeSingle();
+                    if (data) Object.assign(newProfile, data);
+                  } catch (e) {}
+                }
+
+                localStorage.setItem('currentUser', JSON.stringify(newProfile));
+                showToast(`Khammaghani! Welcome, ${fullName.split(' ')[0]}!`, 'gold');
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+              }
+            } catch (jwtErr) {
+              console.warn('JWT error:', jwtErr);
+            }
+          }
+        }
+      });
+      window.google.accounts.id.prompt();
     }
   };
 
