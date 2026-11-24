@@ -2981,6 +2981,201 @@ function initRegisterPage() {
   }
 }
 
+// ==========================================================================
+// REGAL MEMBERSHIP PLANS & QUOTA SYSTEM
+// ==========================================================================
+window.ROYAL_PLANS = {
+  Starter: {
+    tier: 'Starter',
+    name: 'Starter Plan (Free)',
+    price: 0,
+    dailyInterests: 5,
+    contactCredits: 0,
+    features: {
+      directContact: false,
+      unlimitedInterests: false,
+      clanFilters: false,
+      fullKundaliReport: false,
+      visitorList: false
+    }
+  },
+  Silver: {
+    tier: 'Silver',
+    name: 'Rajputana Silver',
+    price: 2499,
+    dailyInterests: Infinity,
+    contactCredits: 35,
+    features: {
+      directContact: true,
+      unlimitedInterests: true,
+      clanFilters: true,
+      fullKundaliReport: true,
+      visitorList: true
+    }
+  },
+  Gold: {
+    tier: 'Gold',
+    name: 'Rajputana Gold VIP',
+    price: 5999,
+    dailyInterests: Infinity,
+    contactCredits: 100,
+    features: {
+      directContact: true,
+      unlimitedInterests: true,
+      clanFilters: true,
+      fullKundaliReport: true,
+      visitorList: true,
+      vipConcierge: true
+    }
+  }
+};
+
+window.getUserPlan = function(user) {
+  let tier = (user && user.tier ? user.tier : 'Starter');
+  const normalized = tier.charAt(0).toUpperCase() + tier.slice(1).toLowerCase();
+  if (normalized === 'Free' || normalized === 'Basic') return window.ROYAL_PLANS['Starter'];
+  return window.ROYAL_PLANS[normalized] || window.ROYAL_PLANS['Starter'];
+};
+
+window.getUserContactQuota = function(user) {
+  if (!user) return { total: 0, remaining: 0, used: 0, unlocked: [] };
+  const plan = window.getUserPlan(user);
+  const unlocked = Array.isArray(user.unlockedContacts) ? user.unlockedContacts : [];
+  const total = typeof user.contactCredits === 'number' ? user.contactCredits : plan.contactCredits;
+  const remaining = Math.max(0, total - unlocked.length);
+  return {
+    total,
+    used: unlocked.length,
+    remaining,
+    unlocked
+  };
+};
+
+window.getTodayInterestsQuota = function(user) {
+  if (!user) return { total: 5, used: 0, remaining: 5, isUnlimited: false };
+  const plan = window.getUserPlan(user);
+  if (plan.dailyInterests === Infinity) {
+    return { total: Infinity, used: 0, remaining: Infinity, isUnlimited: true };
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const dailyKey = `royal_interests_${user.id || 'me'}_${today}`;
+  const used = parseInt(localStorage.getItem(dailyKey) || '0', 10);
+  const total = plan.dailyInterests;
+  const remaining = Math.max(0, total - used);
+  return { total, used, remaining, isUnlimited: false };
+};
+
+window.showPaywallModal = function(triggerType = 'contact', targetProfile = null) {
+  const modal = document.getElementById('paywallModal');
+  if (!modal) {
+    window.location.href = 'membership.html';
+    return;
+  }
+  const titleEl = document.getElementById('paywallTitle');
+  const descEl = document.getElementById('paywallDesc');
+
+  if (triggerType === 'contact') {
+    if (titleEl) titleEl.textContent = 'Unlock Direct Phone & WhatsApp';
+    if (descEl) {
+      const name = targetProfile ? (typeof targetProfile === 'string' ? targetProfile : targetProfile.name) : 'noble profiles';
+      descEl.textContent = `Direct contact lines for ${name} are reserved for Silver & Gold members. Upgrade to get instant contact unlock credits!`;
+    }
+  } else if (triggerType === 'filters') {
+    if (titleEl) titleEl.textContent = 'Unlock Advanced Clan & Gotra Lineage Filters';
+    if (descEl) descEl.textContent = 'Filtering by specific Rajput Clans and ancestral Gotras is exclusive to Rajputana Silver & Gold members.';
+  } else if (triggerType === 'astro') {
+    if (titleEl) titleEl.textContent = 'Unlock Complete 36 Guna Ashtakoota Milan';
+    if (descEl) descEl.textContent = 'Deep analysis of all 8 Kootas (Nadi, Bhakoot, Gana, Maitri, Yoni, Tara, Vashya, Varna) is reserved for Silver & Gold members.';
+  } else if (triggerType === 'visitors') {
+    if (titleEl) titleEl.textContent = 'Reveal Who Viewed Your Noble Profile';
+    if (descEl) descEl.textContent = 'See all families and members who reviewed your biodata and lineage. Upgrade to unblur visitor details!';
+  } else if (triggerType === 'interests') {
+    if (titleEl) titleEl.textContent = 'Daily Express Interest Limit Reached';
+    if (descEl) descEl.textContent = 'Starter members can send up to 5 Express Interests per day. Upgrade to Rajputana Silver for Unlimited Interests!';
+  }
+
+  modal.style.display = 'flex';
+  modal.classList.add('active');
+};
+
+window.closePaywallModal = function() {
+  const modal = document.getElementById('paywallModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+};
+
+window.handleSubscribeFromPaywall = function(planName) {
+  closePaywallModal();
+  if (typeof handleSubscribe === 'function') {
+    handleSubscribe(planName);
+  } else {
+    window.location.href = `membership.html?plan=${encodeURIComponent(planName)}`;
+  }
+};
+
+window.handleUnlockContact = function(profileId) {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+    showToast('Please log in to unlock contacts');
+    return;
+  }
+  const profiles = getAllProfiles();
+  const profile = profiles.find(p => p.id === profileId);
+  if (!profile) return;
+
+  const plan = window.getUserPlan(currentUser);
+  if (plan.tier === 'Starter') {
+    window.showPaywallModal('contact', profile);
+    return;
+  }
+
+  currentUser.unlockedContacts = Array.isArray(currentUser.unlockedContacts) ? currentUser.unlockedContacts : [];
+  if (currentUser.unlockedContacts.includes(profileId)) {
+    showToast(`Verified Phone for ${profile.name}: ${profile.phone || '+91 96640 30758'}`, 'gold');
+    if (typeof openProfileDetailModal === 'function') openProfileDetailModal(profileId);
+    return;
+  }
+
+  const quota = window.getUserContactQuota(currentUser);
+  if (quota.remaining <= 0) {
+    showToast(`⚠️ You have used all ${quota.total} contact unlocks on your ${plan.name}. Upgrade to Gold or renew for more credits!`, 'normal');
+    window.showPaywallModal('contact', profile);
+    return;
+  }
+
+  // Deduct 1 credit by adding to unlockedContacts list
+  currentUser.unlockedContacts.push(profileId);
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+  // Update in local users array
+  const users = JSON.parse(localStorage.getItem('users')) || [];
+  const updatedUsers = users.map(u => (u.id === currentUser.id || u.email?.toLowerCase() === currentUser.email?.toLowerCase())
+    ? { ...u, unlockedContacts: currentUser.unlockedContacts }
+    : u
+  );
+  localStorage.setItem('users', JSON.stringify(updatedUsers));
+
+  if (window.supabaseActive && window.supabaseClient) {
+    window.supabaseClient
+      .from('profiles')
+      .update({ unlocked_contacts: currentUser.unlockedContacts })
+      .eq('email', currentUser.email)
+      .then();
+  }
+
+  showToast(`🔓 Contact Unlocked! 1 credit used. (${quota.remaining - 1} unlocks remaining)`, 'gold');
+
+  // Re-render modal or hub if open
+  if (typeof openProfileDetailModal === 'function') {
+    openProfileDetailModal(profileId);
+  }
+  if (typeof renderHomeHubView === 'function') {
+    renderHomeHubView();
+  }
+};
+
 // ==========================================
 // 4. MATCHMAKING DASHBOARD HANDLER
 // ==========================================
@@ -3140,10 +3335,17 @@ async function initDashboardPage() {
 
   document.getElementById('filterCaste').addEventListener('change', (e) => {
     // Intercept advanced caste/gotra filtering for Starter Plan users to enforce paywall!
-    if (userTier === 'Starter' && e.target.value !== 'All') {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+    const plan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter' };
+    if (plan.tier === 'Starter' && e.target.value !== 'All') {
+      const selectedClan = e.target.value;
       e.target.value = 'All'; // Reset input
-      document.getElementById('paywallModal').classList.add('active');
-      showToast('Advanced Caste filters require Silver Plan upgrade!', 'gold');
+      if (typeof window.showPaywallModal === 'function') {
+        window.showPaywallModal('filters');
+      } else {
+        document.getElementById('paywallModal')?.classList.add('active');
+      }
+      showToast(`Advanced Clan filters (${selectedClan}) require Silver or Gold Plan upgrade!`, 'gold');
       return;
     }
     activeFilters.caste = e.target.value;
@@ -3222,10 +3424,12 @@ async function initDashboardPage() {
   const paywallClose = document.getElementById('paywallCloseBtn');
   if (paywallClose && paywallModal) {
     paywallClose.addEventListener('click', () => {
+      paywallModal.style.display = 'none';
       paywallModal.classList.remove('active');
     });
     paywallModal.addEventListener('click', (e) => {
       if (e.target === paywallModal) {
+        paywallModal.style.display = 'none';
         paywallModal.classList.remove('active');
       }
     });
@@ -4147,10 +4351,20 @@ window.shareProfileFromSheet = function() {
   }
 };
 
+window.viewContactFromSheet = function() {
+  closeCardOptionsSheet();
+  if (currentSheetProfileId) {
+    handleViewContactNumber(currentSheetProfileId);
+  }
+};
+
 window.openAstroCompatibilityModal = function(profileId) {
   const profiles = getAllProfiles();
   const profile = profiles.find(p => p.id === profileId);
   if (!profile) return;
+
+  const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+  const plan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter', name: 'Starter' };
 
   const modal = document.getElementById('astroCompatibilityModal');
   const nameEl = document.getElementById('astroProfileName');
@@ -4158,12 +4372,62 @@ window.openAstroCompatibilityModal = function(profileId) {
   const nakshatraEl = document.getElementById('astroNakshatraVal');
   const manglikEl = document.getElementById('astroManglikVal');
   const gunasEl = document.getElementById('astroGunasVal');
+  const ashtakootaEl = document.getElementById('astroAshtakootaSection');
 
   if (nameEl) nameEl.textContent = `${profile.name} & You`;
   if (rashiEl) rashiEl.textContent = profile.rashi || 'Leo (Simha)';
   if (nakshatraEl) nakshatraEl.textContent = profile.nakshatra || 'Purva Phalguni';
   if (manglikEl) manglikEl.textContent = (profile.manglik || 'Non-Manglik') + ' ✓';
-  if (gunasEl) gunasEl.textContent = (profile.aiScore ? Math.round(profile.aiScore * 0.36) : 29) + ' / 36 Auspicious';
+  const score = profile.aiScore ? Math.round(profile.aiScore * 0.36) : 29;
+  if (gunasEl) gunasEl.textContent = `${score} / 36 Auspicious`;
+
+  if (ashtakootaEl) {
+    if (plan.tier === 'Starter') {
+      ashtakootaEl.innerHTML = `
+        <div style="background: rgba(0,0,0,0.25); border: 1.5px dashed rgba(212,175,55,0.4); border-radius: 12px; padding: 14px 16px; text-align: center;">
+          <div style="font-size: 1.2rem; margin-bottom: 4px;">🔒</div>
+          <strong style="color: #FCD34D; font-size: 0.88rem; display: block; margin-bottom: 4px;">Full 36 Guna Ashtakoota Breakdown</strong>
+          <p style="font-size: 0.74rem; color: #D1D5DB; margin: 0 0 10px 0; line-height: 1.35;">
+            Detailed Varna (1), Vashya (2), Tara (3), Yoni (4), Maitri (5), Gana (6), Bhakoot (7) &amp; Nadi (8) analysis is reserved for Rajputana Silver &amp; Gold members.
+          </p>
+          <button type="button" class="btn btn-royal" onclick="closeAstroCompatibilityModal(); showPaywallModal('astro')" style="padding: 7px 18px; font-size: 0.78rem; font-weight: 700; border-radius: 6px;">
+            Unlock Full 36 Guna Milan Report ⚡
+          </button>
+        </div>
+      `;
+    } else {
+      ashtakootaEl.innerHTML = `
+        <div style="background: rgba(255,255,255,0.04); border: 1.5px solid rgba(212,175,55,0.3); border-radius: 12px; padding: 12px 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 6px;">
+            <strong style="color: #FCD34D; font-size: 0.84rem;">⚔️ Ashtakoota 36 Guna Detailed Breakdown (${plan.name})</strong>
+            <span style="font-size: 0.7rem; color: #2ECC71; font-weight: 700;">● Verified Compatible</span>
+          </div>
+          <table style="width: 100%; font-size: 0.72rem; color: #E5E7EB; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="color: var(--gold-bright); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <th style="padding: 4px;">Koota</th>
+                <th style="padding: 4px;">Aspect</th>
+                <th style="padding: 4px; text-align: right;">Points</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="padding: 3px 4px;">1. Varna</td><td style="padding: 3px 4px;">Spiritual Compatibility</td><td style="padding: 3px 4px; text-align: right; color:#2ECC71;">1 / 1</td></tr>
+              <tr><td style="padding: 3px 4px;">2. Vashya</td><td style="padding: 3px 4px;">Mutual Harmony &amp; Dominance</td><td style="padding: 3px 4px; text-align: right; color:#2ECC71;">2 / 2</td></tr>
+              <tr><td style="padding: 3px 4px;">3. Tara</td><td style="padding: 3px 4px;">Destiny &amp; Well-being</td><td style="padding: 3px 4px; text-align: right; color:#2ECC71;">3 / 3</td></tr>
+              <tr><td style="padding: 3px 4px;">4. Yoni</td><td style="padding: 3px 4px;">Physical &amp; Temperamental Affinity</td><td style="padding: 3px 4px; text-align: right; color:#2ECC71;">3 / 4</td></tr>
+              <tr><td style="padding: 3px 4px;">5. Graha Maitri</td><td style="padding: 3px 4px;">Friendship &amp; Psychological Harmony</td><td style="padding: 3px 4px; text-align: right; color:#2ECC71;">5 / 5</td></tr>
+              <tr><td style="padding: 3px 4px;">6. Gana</td><td style="padding: 3px 4px;">Character &amp; Temperament</td><td style="padding: 3px 4px; text-align: right; color:#2ECC71;">5 / 6</td></tr>
+              <tr><td style="padding: 3px 4px;">7. Bhakoot</td><td style="padding: 3px 4px;">Family Prosperity &amp; Longevity</td><td style="padding: 3px 4px; text-align: right; color:#2ECC71;">7 / 7</td></tr>
+              <tr><td style="padding: 3px 4px;">8. Nadi</td><td style="padding: 3px 4px;">Lineage &amp; Genetic Health (Non-conflict)</td><td style="padding: 3px 4px; text-align: right; color:#2ECC71;">8 / 8</td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(212,175,55,0.2); font-size: 0.7rem; color: #A7F3D0; text-align: center;">
+            ✓ Total: 34 / 36 Gunas (Uttam Alignment) &bull; Manglik Dosha: Nil
+          </div>
+        </div>
+      `;
+    }
+  }
 
   if (modal) modal.style.display = 'flex';
 };
@@ -4551,7 +4815,7 @@ window.toggleMobileUserMenu = function() {
     const initial = name.trim().charAt(0).toUpperCase() || 'U';
     const clan = currentUser.caste || currentUser.clan || 'Rajput';
     const memberId = currentUser.id || 'SRS-MEMBER';
-    const tier = (currentUser.tier || 'Royal').toUpperCase();
+    const tier = (currentUser.tier || 'Starter').toUpperCase();
 
     const nameEl = document.getElementById('mDrawerName');
     const clanEl = document.getElementById('mDrawerClan');
@@ -4648,14 +4912,18 @@ window.handleSendInterest = async function(id) {
   }
 
   // Tier Enforcement: Free/Starter members get 5 Express Interests per day; Silver/Gold are Unlimited
-  const userTier = (currentUser.tier || 'Starter').toLowerCase();
-  if (userTier === 'starter' || userTier === 'free') {
+  const plan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter', dailyInterests: 5 };
+  if (plan.dailyInterests !== Infinity) {
     const today = new Date().toISOString().slice(0, 10);
     const dailyKey = `royal_interests_${currentUser.id || 'me'}_${today}`;
     const sentToday = parseInt(localStorage.getItem(dailyKey) || '0', 10);
-    if (sentToday >= 5) {
-      showToast('⚠️ Daily limit reached (5 free interests/day). Upgrade to Rajputana Silver for Unlimited Interests!', 'normal');
-      setTimeout(() => { window.location.href = 'membership.html'; }, 1600);
+    if (sentToday >= (plan.dailyInterests || 5)) {
+      if (typeof window.showPaywallModal === 'function') {
+        window.showPaywallModal('interests');
+      } else {
+        setTimeout(() => { window.location.href = 'membership.html'; }, 1600);
+      }
+      showToast(`⚠️ Daily limit reached (5 free interests/day). Upgrade to Rajputana Silver for Unlimited Interests!`, 'gold');
       return;
     }
     localStorage.setItem(dailyKey, (sentToday + 1).toString());
@@ -5617,11 +5885,28 @@ window.openProfileDetailModal = function(id) {
   const isAdmin = (currentUser && (currentUser.role === 'admin' || currentUser.isAdmin)) || sessionStorage.getItem('royal_admin_auth') === 'true' || localStorage.getItem('royal_admin_auth') === 'true';
   const isOwnProfile = currentUser && currentUser.id === id;
   const isConnected = currentUser && typeof areProfilesConnected === 'function' && areProfilesConnected(currentUser, profile);
-  const userTier = (currentUser?.tier || 'Starter').toLowerCase();
-  const isPaidMember = userTier === 'silver' || userTier === 'gold' || userTier === 'royal';
+  const plan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter', name: 'Starter Plan' };
+  const quota = (typeof window.getUserContactQuota === 'function') ? window.getUserContactQuota(currentUser) : { total: 0, used: 0, remaining: 0, unlocked: [] };
+  const isUnlockedByCredit = currentUser && Array.isArray(currentUser.unlockedContacts) && currentUser.unlockedContacts.includes(id);
 
-  if (isAdmin || isOwnProfile || isConnected || isPaidMember) {
-    if (isPaidMember && !isConnected && !isOwnProfile && !isAdmin) {
+  if (isAdmin || isOwnProfile || isConnected || isUnlockedByCredit) {
+    if (isUnlockedByCredit && !isConnected && !isOwnProfile && !isAdmin) {
+      if (unlockBox) {
+        unlockBox.style.display = 'block';
+        unlockBox.innerHTML = `
+          <div style="background: rgba(46, 204, 113, 0.12); border: 1.5px solid rgba(46, 204, 113, 0.45); border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.3rem;">✓</span>
+              <div style="text-align: left;">
+                <strong style="font-size: 0.88rem; color: #A7F3D0;">${plan.name}: Contact Unlocked!</strong>
+                <div style="font-size: 0.74rem; color: rgba(255,255,255,0.7);">${quota.remaining} of ${quota.total} Contact Unlocks Remaining.</div>
+              </div>
+            </div>
+            ${profile.phone ? `<a href="https://wa.me/${profile.phone.replace(/[^0-9]/g, '')}" target="_blank" rel="noopener noreferrer" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #27ae60; border-color: #27ae60;">💬 Chat on WhatsApp</a>` : ''}
+          </div>
+        `;
+      }
+    } else if (isConnected && !isOwnProfile && !isAdmin) {
       if (unlockBox) {
         unlockBox.style.display = 'block';
         unlockBox.innerHTML = `
@@ -5629,11 +5914,11 @@ window.openProfileDetailModal = function(id) {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 1.3rem;">👑</span>
               <div style="text-align: left;">
-                <strong style="font-size: 0.88rem; color: #FCD34D;">Rajputana ${(currentUser.tier || 'Silver')} Privilege: Direct Contact Unlocked!</strong>
-                <div style="font-size: 0.74rem; color: rgba(255,255,255,0.7);">You can call or message this noble family directly on WhatsApp.</div>
+                <strong style="font-size: 0.88rem; color: #FCD34D;">Mutual Match Connected!</strong>
+                <div style="font-size: 0.74rem; color: rgba(255,255,255,0.7);">Both noble families accepted connection. Direct contact lines open.</div>
               </div>
             </div>
-            ${profile.phone ? `<a href="https://wa.me/${profile.phone.replace(/[^0-9]/g, '')}" target="_blank" rel="noopener noreferrer" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">💬 Open WhatsApp</a>` : ''}
+            ${profile.phone ? `<a href="https://wa.me/${profile.phone.replace(/[^0-9]/g, '')}" target="_blank" rel="noopener noreferrer" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #27ae60; border-color: #27ae60;">💬 Chat on WhatsApp</a>` : ''}
           </div>
         `;
       }
@@ -5698,7 +5983,7 @@ window.openProfileDetailModal = function(id) {
       }
     }
   } else {
-    // Strictly protect contact details before mutual acceptance
+    // Strictly protect contact details before mutual acceptance or credit unlock
     if (unlockedDetails) unlockedDetails.classList.remove('active');
     if (socialsItem) socialsItem.style.display = 'none';
 
@@ -5775,7 +6060,45 @@ window.openProfileDetailModal = function(id) {
               </div>
             </div>
           `;
+        } else if (plan.tier === 'Silver' || plan.tier === 'Gold') {
+          // Paid member with remaining credits can unlock with 1 click!
+          if (quota.remaining > 0) {
+            unlockBox.innerHTML = `
+              <div style="text-align: center; padding: 18px 20px; background: rgba(212, 175, 55, 0.1); border: 1.5px solid rgba(212, 175, 55, 0.45); border-radius: 10px;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
+                  <span style="font-size: 1.3rem;">👑</span>
+                  <h4 style="color: #FCD34D; font-family: var(--font-royal); margin: 0; font-size: 1.05rem;">${plan.name} Privilege</h4>
+                </div>
+                <p style="color: #E5E7EB; font-size: 0.84rem; max-width: 500px; margin: 0 auto 12px; line-height: 1.45;">
+                  You have <strong>${quota.remaining} of ${quota.total}</strong> Direct Contact Unlocks remaining. Reveal phone, WhatsApp &amp; email instantly:
+                </p>
+                <div style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-primary" onclick="handleUnlockContact('${profile.id}')" style="padding: 9px 22px; font-size: 0.86rem; font-weight: 700; background: linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #AA7C11 100%); color: #120407; border-radius: 6px; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(212,175,55,0.25);">
+                    🔓 Reveal Phone &amp; WhatsApp (1 Credit)
+                  </button>
+                  <button type="button" class="btn btn-royal" onclick="handleSendInterest('${profile.id}')" style="padding: 9px 18px; font-size: 0.84rem;">
+                    👑 Express Free Interest
+                  </button>
+                </div>
+              </div>
+            `;
+          } else {
+            unlockBox.innerHTML = `
+              <div style="text-align: center; padding: 18px 20px; background: rgba(239, 68, 68, 0.1); border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 10px;">
+                <div style="font-size: 1.3rem; margin-bottom: 4px;">⚠️</div>
+                <h4 style="color: #FCA5A5; font-family: var(--font-royal); margin: 0 0 6px 0; font-size: 1.05rem;">All ${quota.total} Contact Unlocks Used</h4>
+                <p style="color: #E5E7EB; font-size: 0.84rem; max-width: 500px; margin: 0 auto 12px; line-height: 1.45;">
+                  You have utilized all contact reveals in your current billing cycle. Upgrade to Gold (100+ Contacts) or renew your plan.
+                </p>
+                <button type="button" class="btn btn-royal" onclick="showPaywallModal('contact', '${profile.name}')" style="padding: 8px 20px; font-size: 0.84rem; font-weight: 700;">
+                  ⚡ Upgrade / Add Credits
+                </button>
+              </div>
+            `;
+          }
         } else {
+          // Starter member
+          const interestsQuota = (typeof window.getTodayInterestsQuota === 'function') ? window.getTodayInterestsQuota(currentUser) : { remaining: 5 };
           unlockBox.innerHTML = `
             <div style="text-align: center; padding: 18px 20px; background: rgba(0, 0, 0, 0.3); border: 1.5px solid rgba(170, 124, 17, 0.35); border-radius: 10px;">
               <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
@@ -5783,15 +6106,15 @@ window.openProfileDetailModal = function(id) {
                 <h4 style="color: var(--gold-bright); font-family: var(--font-royal); margin: 0; font-size: 1.05rem;">Lineage Privacy Protected</h4>
               </div>
               <p style="color: var(--text-muted); font-size: 0.84rem; max-width: 500px; margin: 0 auto 14px; line-height: 1.45;">
-                Direct phone number and WhatsApp are protected. Connect for free by sending a Royal Interest, or upgrade to <strong>Rajputana Silver / Gold</strong> to unlock direct contact lines immediately!
+                Direct phone number and WhatsApp are protected. Connect for free by sending an Express Interest (${interestsQuota.remaining} of 5 left today), or upgrade to <strong>Rajputana Silver / Gold</strong> to unlock direct contacts!
               </p>
               <div style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
                 <button type="button" class="btn btn-royal" onclick="handleSendInterest('${profile.id}')" style="padding: 9px 20px; font-size: 0.85rem; font-weight: 700;">
-                  👑 Send Free Interest (5/day)
+                  👑 Send Free Interest (${interestsQuota.remaining}/5 left today)
                 </button>
-                <a href="membership.html" class="btn btn-primary" style="padding: 9px 20px; font-size: 0.85rem; font-weight: 700; background: linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #AA7C11 100%); color: #120407; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(212,175,55,0.25);">
+                <button type="button" class="btn btn-primary" onclick="showPaywallModal('contact', '${profile.name}')" style="padding: 9px 20px; font-size: 0.85rem; font-weight: 700; background: linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #AA7C11 100%); color: #120407; border: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 14px rgba(212,175,55,0.25);">
                   ⚡ Upgrade to Unlock Contacts
-                </a>
+                </button>
               </div>
             </div>
           `;
@@ -7305,7 +7628,10 @@ window.renderHomeHubView = function() {
   const clan = currentUser.caste || currentUser.clan || "Rajput";
   const gotra = (currentUser.gotra || "Sandila Gotra").split("(")[0];
   const memberId = currentUser.id || "SRS-9419AB";
-  const tier = (currentUser.tier || "Royal").toUpperCase();
+  const plan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter', name: 'Starter Plan' };
+  const quota = (typeof window.getUserContactQuota === 'function') ? window.getUserContactQuota(currentUser) : { total: 0, used: 0, remaining: 0 };
+  const intQuota = (typeof window.getTodayInterestsQuota === 'function') ? window.getTodayInterestsQuota(currentUser) : { remaining: 5, isUnlimited: false };
+  const tier = plan.tier.toUpperCase();
   const profilePic = currentUser.profilePic || currentUser.img;
 
   // Calculate profile completion score
@@ -7354,6 +7680,36 @@ window.renderHomeHubView = function() {
         <button type="button" class="home-view-profile-btn" onclick="openProfileDetailModal('${currentUser.id}')">
           View as Others See
         </button>
+      </div>
+    </div>
+
+    <!-- Membership & Quota Status Card -->
+    <div class="home-quota-card" style="background: rgba(255,255,255,0.04); border: 1.5px solid rgba(212,175,55,0.3); border-radius: 14px; padding: 14px 16px; margin-bottom: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.25rem;">${plan.tier === 'Gold' ? '👑' : (plan.tier === 'Silver' ? '⚔️' : '🛡️')}</span>
+          <div>
+            <strong style="color: #FCD34D; font-size: 0.92rem; display: block; line-height: 1.2;">${plan.name}</strong>
+            <span style="font-size: 0.72rem; color: #9CA3AF;">${plan.tier === 'Starter' ? 'Free Lifetime Explorer' : 'Active Regal Membership'}</span>
+          </div>
+        </div>
+        <a href="membership.html" class="btn btn-royal" style="padding: 5px 12px; font-size: 0.74rem; font-weight: 700; text-decoration: none; border-radius: 6px;">
+          ${plan.tier === 'Starter' ? '⚡ Upgrade Plan' : 'Manage Plan'}
+        </a>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div style="background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 12px; text-align: left;">
+          <span style="font-size: 0.68rem; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px;">Contact Unlocks</span>
+          <strong style="font-size: 1rem; color: #F3F4F6;">
+            ${plan.tier === 'Starter' ? '<span style="color:#FCA5A5;">0</span> <span style="font-size: 0.7rem; color: #9CA3AF;">(Locked)</span>' : `${quota.remaining} <span style="font-size: 0.7rem; color: #9CA3AF;">/ ${quota.total} Left</span>`}
+          </strong>
+        </div>
+        <div style="background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 12px; text-align: left;">
+          <span style="font-size: 0.68rem; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px;">Daily Express Interests</span>
+          <strong style="font-size: 1rem; color: #F3F4F6;">
+            ${intQuota.isUnlimited ? '<span style="color:#34D399;">Unlimited</span> <span style="font-size: 0.7rem; color: #10B981;">✓</span>' : `${intQuota.remaining} <span style="font-size: 0.7rem; color: #9CA3AF;">/ 5 Left</span>`}
+          </strong>
+        </div>
       </div>
     </div>
 
@@ -8007,17 +8363,93 @@ window.handleViewContactNumber = function(profileId) {
   const profiles = getAllProfiles();
   const profile = profiles.find(p => p.id === profileId);
   if (!profile) return;
-  const phone = profile.phone || "+91 96640 30758";
-  showToast(`Verified Phone for ${profile.name}: ${phone}`, "gold");
+
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+    showToast('Please log in to view contact details');
+    return;
+  }
+
+  const isAdmin = (currentUser && (currentUser.role === 'admin' || currentUser.isAdmin)) || sessionStorage.getItem('royal_admin_auth') === 'true' || localStorage.getItem('royal_admin_auth') === 'true';
+  const isOwnProfile = currentUser.id === profileId;
+  const isConnected = typeof areProfilesConnected === 'function' && areProfilesConnected(currentUser, profile);
+
+  if (isAdmin || isOwnProfile || isConnected) {
+    const phone = profile.phone || "+91 96640 30758";
+    showToast(`Verified Phone for ${profile.name}: ${phone}`, "gold");
+    if (typeof openProfileDetailModal === 'function') openProfileDetailModal(profileId);
+    return;
+  }
+
+  const plan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter', name: 'Starter Plan' };
+  if (plan.tier === 'Starter') {
+    if (typeof window.showPaywallModal === 'function') {
+      window.showPaywallModal('contact', profile);
+    } else {
+      window.location.href = 'membership.html';
+    }
+    showToast('Direct contact numbers require Silver or Gold Plan upgrade!', 'gold');
+    return;
+  }
+
+  // Silver or Gold member
+  currentUser.unlockedContacts = Array.isArray(currentUser.unlockedContacts) ? currentUser.unlockedContacts : [];
+  if (currentUser.unlockedContacts.includes(profileId)) {
+    const phone = profile.phone || "+91 96640 30758";
+    showToast(`Verified Phone for ${profile.name}: ${phone}`, "gold");
+    if (typeof openProfileDetailModal === 'function') openProfileDetailModal(profileId);
+  } else {
+    // Prompt unlock using 1 credit or auto-call handleUnlockContact
+    if (typeof window.handleUnlockContact === 'function') {
+      window.handleUnlockContact(profileId);
+    }
+  }
 };
 
 window.showVisitorsModal = function() {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  const plan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter', name: 'Starter Plan' };
   const all = getCompatibleProfiles(currentUser);
   const visitors = all.slice(0, 5);
+
+  if (plan.tier === 'Starter') {
+    let html = `
+      <div style="background: rgba(212,175,55,0.08); border: 1.5px dashed rgba(212,175,55,0.4); border-radius: 12px; padding: 16px; margin-bottom: 14px; text-align: center;">
+        <div style="font-size: 1.6rem; margin-bottom: 4px;">🔒</div>
+        <strong style="color: #FCD34D; font-size: 0.95rem; display: block; margin-bottom: 4px;">14 Noble Profiles Viewed Your Biodata!</strong>
+        <p style="font-size: 0.78rem; color: #D1D5DB; margin: 0 0 12px 0; line-height: 1.45;">
+          Unblur full names, Rajput clans, gotras, photos, and contact access for all profile visitors with Rajputana Silver or Gold membership.
+        </p>
+        <button type="button" class="btn btn-royal" onclick="closeInterestsOrChatsModal(); showPaywallModal('visitors')" style="padding: 8px 20px; font-size: 0.82rem; font-weight: 700; border-radius: 6px;">
+          ⚡ Upgrade to Reveal Visitors
+        </button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px; filter: blur(4px); opacity: 0.6; pointer-events: none; user-select: none;">
+        ${visitors.slice(0, 3).map(p => `
+          <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.04); padding:10px; border-radius:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="width:36px; height:36px; border-radius:50%; background:${getAvatarGradient(p.clan)}; overflow:hidden; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold;">
+                ${p.initials}
+              </div>
+              <div>
+                <div style="font-weight:bold; font-size:0.88rem; color:#fff;">•••••••• •••••</div>
+                <div style="font-size:0.72rem; color:var(--gold-bright);">${p.clan} Clan &bull; Lineage Protected</div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-royal" style="padding:4px 10px; font-size:0.72rem;">View</button>
+          </div>
+        `).join("")}
+      </div>
+    `;
+    showInterestsOrChatsModal("Recent Profile Visitors (14)", html);
+    return;
+  }
+
+  // Silver or Gold (Full Unblurred Access)
   let html = `
-    <div style="font-size:0.85rem; color:#FFFFFF; margin-bottom:12px;">
-      These noble members recently reviewed your traditional biodata:
+    <div style="font-size:0.85rem; color:#FFFFFF; margin-bottom:12px; display: flex; justify-content: space-between; align-items: center;">
+      <span>These noble members recently reviewed your traditional biodata:</span>
+      <span style="font-size: 0.72rem; color: #FCD34D; font-weight: 700;">⚔️ ${plan.name}</span>
     </div>
     <div style="display:flex; flex-direction:column; gap:10px;">
       ${visitors.map(p => `
@@ -8043,6 +8475,26 @@ window.showVisitorsModal = function() {
 
 window.ensureDefaultAppData = function(currentUser) {
   if (!currentUser) return;
+
+  // Ensure default tier and contact credits for quota tracking
+  let updated = false;
+  if (!currentUser.tier) {
+    currentUser.tier = 'Starter';
+    updated = true;
+  }
+  if (typeof currentUser.contactCredits !== 'number') {
+    const t = currentUser.tier.toLowerCase();
+    currentUser.contactCredits = t === 'gold' ? 100 : (t === 'silver' ? 35 : 0);
+    updated = true;
+  }
+  if (!Array.isArray(currentUser.unlockedContacts)) {
+    currentUser.unlockedContacts = [];
+    updated = true;
+  }
+
+  if (updated) {
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+  }
 
   // 1. Ensure realistic notifications
   let notifs = JSON.parse(localStorage.getItem("notifications")) || [];
@@ -8524,16 +8976,18 @@ window.completeUpgrade = function(methodName, refId) {
   const { user, planName, periodLabel } = activePaymentState;
 
   user.tier = planName;
+  user.contactCredits = planName === 'Gold' ? 100 : (planName === 'Silver' ? 35 : 0);
+  user.unlockedContacts = user.unlockedContacts || [];
   localStorage.setItem('currentUser', JSON.stringify(user));
 
   const users = JSON.parse(localStorage.getItem('users')) || [];
-  const updatedUsers = users.map(u => u.email?.toLowerCase() === user.email?.toLowerCase() ? { ...u, tier: planName } : u);
+  const updatedUsers = users.map(u => u.email?.toLowerCase() === user.email?.toLowerCase() ? { ...u, tier: planName, contactCredits: user.contactCredits, unlockedContacts: user.unlockedContacts } : u);
   localStorage.setItem('users', JSON.stringify(updatedUsers));
 
   if (window.supabaseActive && window.supabaseClient) {
     window.supabaseClient
       .from('profiles')
-      .update({ tier: planName })
+      .update({ tier: planName, unlocked_contacts: user.unlockedContacts })
       .eq('email', user.email)
       .then();
   }
@@ -8621,9 +9075,11 @@ window.handleSubscribe = async function(planName) {
   const amountInPaise = getPlanPricingInPaise(planName, period);
   if (amountInPaise === 0) {
     user.tier = planName;
+    user.contactCredits = 0;
+    user.unlockedContacts = user.unlockedContacts || [];
     localStorage.setItem('currentUser', JSON.stringify(user));
     const users = JSON.parse(localStorage.getItem('users')) || [];
-    const updatedUsers = users.map(u => u.email?.toLowerCase() === user.email?.toLowerCase() ? { ...u, tier: planName } : u);
+    const updatedUsers = users.map(u => u.email?.toLowerCase() === user.email?.toLowerCase() ? { ...u, tier: planName, contactCredits: 0, unlockedContacts: user.unlockedContacts } : u);
     localStorage.setItem('users', JSON.stringify(updatedUsers));
     showToast(`👑 Activated Free Starter Plan! Enjoy exploring matches.`);
     renderHomeHubView();

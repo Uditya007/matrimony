@@ -773,36 +773,47 @@
   </div>
 
   <!-- Regal Paywall / Upgrade Modal Overlay -->
-  <div class="profile-modal" id="paywallModal">
-    <div class="modal-content" style="max-width: 500px;" id="paywallModalCard">
-      <button class="modal-close-btn" id="paywallCloseBtn" aria-label="Close Upgrade Overlay">&times;</button>
-      <div class="paywall-modal">
-        <div class="paywall-crown">
-          <svg viewBox="0 0 24 24">
-            <path d="M2 4l3 5 7-6 7 6 3-5v14c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V4zm2 7.74V18h16v-6.26l-1.97-1.69-2.52 4.41L12 9.21l-3.51 5.25-2.52-4.41L4 11.74z"/>
-          </svg>
-        </div>
-        <h2 style="font-size: 1.8rem; margin-bottom: 8px;">Upgrade Required</h2>
-        <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 400px; margin: 0 auto 20px;">
-          The Starter plan does not include contact number access or advanced filters. Upgrade your membership to view complete lineage details!
+  <div class="profile-modal" id="paywallModal" style="display: none;">
+    <div class="modal-content" style="max-width: 520px; background: #FFFFFF; border-radius: 18px; color: #1A1A1A; padding: 24px 20px; position: relative;" id="paywallModalCard">
+      <button class="modal-close-btn" id="paywallCloseBtn" onclick="closePaywallModal()" aria-label="Close Upgrade Overlay" style="color: #6B1220; font-size: 1.8rem; position: absolute; top: 12px; right: 16px; background: transparent; border: none; cursor: pointer;">&times;</button>
+      <div class="paywall-modal" style="text-align: center;">
+        <div class="paywall-crown" style="font-size: 2.4rem; margin-bottom: 8px;">👑</div>
+        <h2 id="paywallTitle" style="font-family: var(--font-royal, 'Cinzel', serif); font-size: 1.4rem; color: #6B1220; margin-bottom: 6px;">Upgrade to Rajputana Regal</h2>
+        <p id="paywallDesc" style="color: #71717A; font-size: 0.85rem; max-width: 420px; margin: 0 auto 20px; line-height: 1.45;">
+          Direct phone and WhatsApp numbers are reserved for Rajputana Silver &amp; Gold members. Upgrade to connect directly with noble families!
         </p>
 
-        <div class="paywall-plans-grid">
-          <div class="paywall-plan-option" onclick="location.href='membership.html'">
-            <strong style="color: var(--primary-color); font-size: 0.95rem; display: block; margin-bottom: 5px;">Silver Plan</strong>
-            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; line-height: 1.4;">Direct phone numbers & unlimited chats.</span>
-            <span style="font-size: 0.9rem; font-weight: bold; color: var(--gold-antique); display: block; margin-top: 10px;">₹1,999/mo</span>
+        <div class="paywall-plans-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; text-align: left;">
+          <!-- Silver Card -->
+          <div class="paywall-plan-option" onclick="handleSubscribeFromPaywall('Silver')" style="border: 2px solid #AA7C11; border-radius: 12px; padding: 14px; cursor: pointer; background: #FFFDF9; transition: all 0.2s ease;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <strong style="color: #6B1220; font-size: 0.95rem;">⚔️ Silver Plan</strong>
+              <span style="font-size: 0.65rem; background: #AA7C11; color: #FFF; padding: 2px 6px; border-radius: 10px; font-weight: 700;">35 Contacts</span>
+            </div>
+            <span style="font-size: 0.72rem; color: #71717A; display: block; line-height: 1.35; margin-bottom: 8px;">
+              35 Phone unlocks, unlimited chat &amp; interests, full 36 Gunas.
+            </span>
+            <div style="font-size: 1.05rem; font-weight: 800; color: #AA7C11;">₹2,499<span style="font-size: 0.7rem; font-weight: 500; color: #71717A;">/mo</span></div>
+            <button type="button" class="btn btn-royal" style="width: 100%; font-size: 0.75rem; padding: 6px; margin-top: 8px; border-radius: 6px;">Select Silver</button>
           </div>
 
-          <div class="paywall-plan-option selected" onclick="location.href='membership.html'">
-            <strong style="color: var(--primary-color); font-size: 0.95rem; display: block; margin-bottom: 5px;">Gold Plan</strong>
-            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; line-height: 1.4;">Personal matchmaker & background audit.</span>
-            <span style="font-size: 0.9rem; font-weight: bold; color: var(--gold-antique); display: block; margin-top: 10px;">₹5,999/mo</span>
+          <!-- Gold Card -->
+          <div class="paywall-plan-option selected" onclick="handleSubscribeFromPaywall('Gold')" style="border: 2px solid #D4AF37; border-radius: 12px; padding: 14px; cursor: pointer; background: linear-gradient(180deg, #FFFDF5 0%, #FFF9E6 100%); position: relative; transition: all 0.2s ease;">
+            <div style="position: absolute; top: -10px; right: 10px; background: linear-gradient(135deg, #B8860B, #FCD34D); color: #120407; font-size: 0.62rem; font-weight: 800; padding: 2px 8px; border-radius: 10px;">👑 VIP</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <strong style="color: #6B1220; font-size: 0.95rem;">👑 Gold (VIP)</strong>
+              <span style="font-size: 0.65rem; background: #D4AF37; color: #1A050B; padding: 2px 6px; border-radius: 10px; font-weight: 800;">100+ Contacts</span>
+            </div>
+            <span style="font-size: 0.72rem; color: #71717A; display: block; line-height: 1.35; margin-bottom: 8px;">
+              Personal matchmaker, 100+ unlocks, stealth mode &amp; #1 ranking.
+            </span>
+            <div style="font-size: 1.05rem; font-weight: 800; color: #6B1220;">₹5,999<span style="font-size: 0.7rem; font-weight: 500; color: #71717A;">/mo</span></div>
+            <button type="button" class="btn btn-primary" style="width: 100%; font-size: 0.75rem; padding: 6px; margin-top: 8px; border-radius: 6px; background: linear-gradient(135deg, #B8860B, #FCD34D); color: #1A050B; font-weight: 800;">Acquire Gold</button>
           </div>
         </div>
 
-        <div style="margin-top: 25px;">
-          <a href="membership.html" class="btn btn-royal" style="width: 100%; display: block; text-align: center;">View Membership Plans</a>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <a href="membership.html" class="btn btn-minimal" style="flex: 1; font-size: 0.8rem; padding: 8px 12px; text-align: center;">View All Plans &amp; Savings</a>
         </div>
       </div>
     </div>
@@ -962,6 +973,9 @@
         Ancestral Rajput gotra screening and planetary dispositions reflect high marital harmony, gotra non-conflict, and family prosperity.
       </div>
 
+      <!-- Dynamic Ashtakoota 36 Guna Tier-Gated Breakdown -->
+      <div id="astroAshtakootaSection" style="margin-top: 14px;"></div>
+
       <button type="button" class="btn btn-royal" style="width: 100%; margin-top: 15px;" onclick="closeAstroCompatibilityModal()">
         Done 👑
       </button>
@@ -975,6 +989,9 @@
       <h4 class="card-options-title" id="cardOptionsName">Profile Options</h4>
       <button type="button" class="card-option-btn" onclick="openModalFromSheet()">
         <span>👁️</span> View Full Detailed Profile
+      </button>
+      <button type="button" class="card-option-btn" onclick="viewContactFromSheet()">
+        <span>📞</span> View Phone &amp; WhatsApp
       </button>
       <button type="button" class="card-option-btn" onclick="shortlistFromSheet()">
         <span>❤️</span> Shortlist Profile
@@ -1112,7 +1129,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/ai-matchmaker.js?v=3.7"></script>
-  <script src="js/app.js?v=4.6"></script>
+  <script src="js/app.js?v=4.7"></script>
   <script src="js/chatbot.js?v=3.7"></script>
 </body>
 </html>

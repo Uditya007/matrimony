@@ -829,7 +829,7 @@
 
   <!-- Scripts & Price switcher logic -->
   <script src="js/data.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=4.7"></script>
   <script>
     // Price switching logic based on billing period tab click
     const tabs = document.querySelectorAll('#billingPeriodTabs button');
@@ -1134,16 +1134,18 @@
       const { user, planName, periodLabel } = activePaymentState;
 
       user.tier = planName;
+      user.contactCredits = planName === 'Gold' ? 100 : (planName === 'Silver' ? 35 : 0);
+      user.unlockedContacts = user.unlockedContacts || [];
       localStorage.setItem('currentUser', JSON.stringify(user));
 
       const users = JSON.parse(localStorage.getItem('users')) || [];
-      const updatedUsers = users.map(u => u.email.toLowerCase() === user.email.toLowerCase() ? { ...u, tier: planName } : u);
+      const updatedUsers = users.map(u => u.email.toLowerCase() === user.email.toLowerCase() ? { ...u, tier: planName, contactCredits: user.contactCredits, unlockedContacts: user.unlockedContacts } : u);
       localStorage.setItem('users', JSON.stringify(updatedUsers));
 
       if (window.supabaseActive && window.supabaseClient) {
         window.supabaseClient
           .from('profiles')
-          .update({ tier: planName })
+          .update({ tier: planName, unlocked_contacts: user.unlockedContacts })
           .eq('email', user.email)
           .then();
       }
@@ -1244,9 +1246,11 @@
       const amountInPaise = getPlanPricingInPaise(planName, period);
       if (amountInPaise === 0) {
         user.tier = planName;
+        user.contactCredits = 0;
+        user.unlockedContacts = user.unlockedContacts || [];
         localStorage.setItem('currentUser', JSON.stringify(user));
         const users = JSON.parse(localStorage.getItem('users')) || [];
-        const updatedUsers = users.map(u => u.email.toLowerCase() === user.email.toLowerCase() ? { ...u, tier: planName } : u);
+        const updatedUsers = users.map(u => u.email.toLowerCase() === user.email.toLowerCase() ? { ...u, tier: planName, contactCredits: 0, unlockedContacts: user.unlockedContacts } : u);
         localStorage.setItem('users', JSON.stringify(updatedUsers));
         if (window.supabaseActive && window.supabaseClient) {
           window.supabaseClient
