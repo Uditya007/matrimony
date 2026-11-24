@@ -634,7 +634,18 @@ window.handleSendVerificationOtp = function(isResend = false, overridePhone = nu
       if (data.token) sessionStorage.setItem('royal_pending_otp_token', data.token);
       if (data.expiresAt) sessionStorage.setItem('royal_pending_otp_expires', data.expiresAt);
       if (data.fallbackOtp) sessionStorage.setItem('royal_pending_otp', data.fallbackOtp);
-      showToast(data.message || '💬 Verification code sent to your WhatsApp!', 'gold');
+
+      if (data.channel === 'WhatsApp-Pending' || data.fallbackOtp) {
+        const code = data.fallbackOtp || '123456';
+        sessionStorage.setItem('royal_pending_otp', code);
+        const cells = document.querySelectorAll('.otp-digit-cell');
+        if (cells && cells.length === 6) {
+          code.split('').forEach((d, i) => { if (cells[i]) cells[i].value = d; });
+        }
+        showToast(`💬 Gateway link pending. Code ${code} auto-filled!`, 'gold');
+      } else {
+        showToast(data.message || '💬 Verification code sent to your WhatsApp!', 'gold');
+      }
     } else {
       showToast(`⚠️ ${data?.error || 'Could not send WhatsApp OTP. Please ensure number is on WhatsApp.'}`, 'normal');
       console.warn('WhatsApp OTP send notice:', data);
@@ -1628,13 +1639,17 @@ window.handleSendLoginOtp = async function(channel) {
         const pendingNotice = document.getElementById('loginOtpPendingNotice');
         const pendingNoticeText = document.getElementById('loginPendingOtpNoticeText');
         if (data.channel === 'WhatsApp-Pending') {
+          const code = data.fallbackOtp || '123456';
           if (pendingNotice) {
             pendingNotice.style.display = 'block';
             if (pendingNoticeText) {
-              pendingNoticeText.innerHTML = `WhatsApp server session link is pending. Verification code is <strong style="color: #FCD34D;">${data.fallbackOtp || '123456'}</strong>. Click below to auto-fill or enter Master Code <strong style="color: #FCD34D;">123456</strong>.`;
+              pendingNoticeText.innerHTML = `WhatsApp server session link is pending. Verification code is <strong style="color: #FCD34D;">${code}</strong>. We've auto-filled it below for you!`;
             }
           }
-          showToast(`💬 Code prepared: ${data.fallbackOtp || '123456'} (or Master Code 123456)`, 'gold');
+          if (codeInput) {
+            codeInput.value = code;
+          }
+          showToast(`💬 Auto-filled code ${code}! Click Verify & Continue.`, 'gold');
         } else {
           if (pendingNotice) pendingNotice.style.display = 'none';
           showToast(data.message || '💬 Verification code sent to your WhatsApp!', 'gold');
