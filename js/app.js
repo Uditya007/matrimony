@@ -2081,6 +2081,9 @@ function initLoginPage() {
     }
   };
 
+  window.handleGoogleLoginClick = handleGoogleLoginClick;
+  window.initGoogleAuthClient = initGoogleAuthClient;
+
   if (btnGoogle) btnGoogle.addEventListener('click', handleGoogleLoginClick);
   if (btnGooglePass) btnGooglePass.addEventListener('click', handleGoogleLoginClick);
   if (btnGoogleEmail) btnGoogleEmail.addEventListener('click', handleGoogleLoginClick);
@@ -2326,31 +2329,18 @@ function initRegisterPage() {
     showToast('Google account linked! Please complete your lineage details.', 'gold');
   }
 
-  // Google Auth Button trigger
+  // Google Auth Button trigger for fast register / login
   if (btnGoogle) {
-    btnGoogle.addEventListener('click', async () => {
-      if (!window.supabaseActive) {
-        showToast('Google auth is active in mock fallback mode. Prefilled details!', 'gold');
-        document.getElementById('regName').value = 'Kunwar Vikram Singh';
-        document.getElementById('regEmail').value = 'vikram.singh@gmail.com';
-        document.getElementById('regPassword').value = 'GoogleAuthenticated';
-        const pwdGroup = document.getElementById('regPassword').closest('.form-group');
-        if (pwdGroup) pwdGroup.style.display = 'none';
-        window.googleUserUid = 'mock_google_uid_' + Date.now();
-        return;
-      }
-
-      // Supabase Google Sign-In (Redirect flow)
-      const { error } = await window.supabaseClient.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin + '/dashboard.html'
-        }
-      });
-
-      if (error) {
-        console.error("Google Register Auth error:", error);
-        showToast('Google connection failed: ' + error.message, 'normal');
+    btnGoogle.addEventListener('click', () => {
+      if (typeof window.handleGoogleLoginClick === 'function') {
+        window.handleGoogleLoginClick();
+      } else {
+        showToast('Initializing Google Sign-Up...', 'gold');
+        setTimeout(() => {
+          if (typeof window.handleGoogleLoginClick === 'function') {
+            window.handleGoogleLoginClick();
+          }
+        }, 600);
       }
     });
   }
@@ -4205,7 +4195,21 @@ window.renderMatchesListCustom = function(profilesList) {
     return;
   }
 
-  // Render top indicator bar and cards deck (clean full-bleed swipe deck)
+  // DESKTOP VIEW (> 768px): Direct 2-in-a-row responsive grid showing all profiles side-by-side
+  if (window.innerWidth > 768) {
+    container.innerHTML = `
+      <div class="desktop-matches-grid-2col" id="desktopMatchesGrid2Col">
+        ${list.map(p => `
+          <div class="desktop-grid-card-item">
+            ${createProfileCardHtml(p, true)}
+          </div>
+        `).join('')}
+      </div>
+    `;
+    return;
+  }
+
+  // MOBILE VIEW (<= 768px): Vertical swipe deck (Reels / Tinder style)
   container.innerHTML = `
     <!-- Top Progress & Navigation HUD -->
     <div class="deck-indicator-bar" id="deckIndicatorBar">
@@ -4231,6 +4235,18 @@ window.renderMatchesListCustom = function(profilesList) {
   updateDeckControls();
   initDeckSwipeGestures();
 };
+
+// Window resize handler: switch between desktop 2-col grid & mobile reel smoothly
+let _wasDesktopViewport = window.innerWidth > 768;
+window.addEventListener('resize', () => {
+  const isDesktopNow = window.innerWidth > 768;
+  if (_wasDesktopViewport !== isDesktopNow) {
+    _wasDesktopViewport = isDesktopNow;
+    if (typeof renderMatchesGrid === 'function' && window.currentAppView === 'matches') {
+      renderMatchesGrid();
+    }
+  }
+});
 
 window.updateDeckSlotClasses = function(activeIndex) {
   const total = window.currentDeckProfiles ? window.currentDeckProfiles.length : 0;
