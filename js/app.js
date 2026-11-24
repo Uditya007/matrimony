@@ -136,7 +136,11 @@ function handleWebSplash() {
   const webSplash = document.getElementById('webSplash');
   if (webSplash) {
     document.documentElement.style.backgroundColor = '#FFFFFF';
-    if (document.body) document.body.style.backgroundColor = '#FFFFFF';
+    document.documentElement.classList.add('splash-active');
+    if (document.body) {
+      document.body.style.backgroundColor = '#FFFFFF';
+      document.body.classList.add('splash-active');
+    }
     let themeMeta = document.querySelector('meta[name="theme-color"]');
     if (!themeMeta) {
       themeMeta = document.createElement('meta');
@@ -150,6 +154,10 @@ function handleWebSplash() {
       webSplash.classList.add('fade-out');
       setTimeout(() => {
         webSplash.style.display = 'none';
+        document.documentElement.classList.remove('splash-active');
+        if (document.body) document.body.classList.remove('splash-active');
+        document.documentElement.style.backgroundColor = '';
+        if (document.body) document.body.style.backgroundColor = '';
       }, 850);
     }, 1500);
   }
@@ -3059,8 +3067,16 @@ window.getTodayInterestsQuota = function(user) {
   }
   const today = new Date().toISOString().slice(0, 10);
   const dailyKey = `royal_interests_${user.id || 'me'}_${today}`;
-  const used = parseInt(localStorage.getItem(dailyKey) || '0', 10);
-  const total = plan.dailyInterests;
+  const sentToday = parseInt(localStorage.getItem(dailyKey) || '0', 10);
+
+  // Also count active sent interests from profile to enforce hard cap of 5
+  let activeSent = 0;
+  if (typeof getProfileInterests === 'function') {
+    const myInterests = getProfileInterests(user);
+    activeSent = Object.keys(myInterests).filter(k => myInterests[k] === 'sent').length;
+  }
+  const used = Math.min(5, Math.max(sentToday, activeSent));
+  const total = 5;
   const remaining = Math.max(0, total - used);
   return { total, used, remaining, isUnlimited: false };
 };
@@ -3964,7 +3980,7 @@ function createProfileCardHtml(profile, isDashboard = true) {
     const formattedState = profile.location && profile.location.split(',')[1] ? profile.location.split(',')[1].trim() : 'Rajasthan';
 
     return `
-      <div class="profile-card shaadi-match-card" data-id="${profile.id}">
+      <div class="profile-card shaadi-match-card" data-id="${profile.id}" style="width: 100% !important; max-width: 100% !important; margin: 0 !important; box-sizing: border-box !important;">
         <!-- Main Photo Area -->
         <div class="shaadi-card-media" onclick="openProfileDetailModal('${profile.id}')">
           ${profileImg ? `
@@ -4251,15 +4267,19 @@ function updateDashboardStats() {
   const shortCount = document.getElementById('statShortlistedCount');
   if (shortCount) shortCount.textContent = shortlists.length;
 
+  const plan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter' };
+  const rawSentCount = Object.keys(mySentInterests).filter(k => mySentInterests[k] === 'sent').length;
+  const displaySentCount = plan.tier === 'Starter' ? Math.min(5, rawSentCount) : rawSentCount;
+
   const intCount = document.getElementById('statInterestsCount');
-  if (intCount) intCount.textContent = Object.keys(mySentInterests).length;
+  if (intCount) intCount.textContent = plan.tier === 'Starter' ? `${displaySentCount}/5` : displaySentCount;
 
   // Sync new dashboard activity summary grid elements
   const actShort = document.getElementById('dashboardActivityShortlists');
   if (actShort) actShort.textContent = shortlists.length;
 
   const actInt = document.getElementById('dashboardActivityInterests');
-  if (actInt) actInt.textContent = Object.keys(mySentInterests).length;
+  if (actInt) actInt.textContent = plan.tier === 'Starter' ? `${displaySentCount}/5` : displaySentCount;
 
   const actChats = document.getElementById('dashboardActivityChats');
   if (actChats) {
@@ -4495,10 +4515,13 @@ window.renderMatchesListCustom = function(profilesList) {
 
   // DESKTOP VIEW (> 768px): Direct 2-in-a-row responsive grid showing all profiles side-by-side
   if (window.innerWidth > 768) {
+    container.style.display = 'block';
+    container.style.width = '100%';
+    container.style.maxWidth = '100%';
     container.innerHTML = `
-      <div class="desktop-matches-grid-2col" id="desktopMatchesGrid2Col">
+      <div class="desktop-matches-grid-2col" id="desktopMatchesGrid2Col" style="display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 24px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; margin: 0 !important; padding: 6px 0 40px 0 !important; align-items: stretch !important;">
         ${list.map(p => `
-          <div class="desktop-grid-card-item">
+          <div class="desktop-grid-card-item" style="width: 100% !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; box-sizing: border-box !important;">
             ${createProfileCardHtml(p, true)}
           </div>
         `).join('')}
@@ -4914,18 +4937,19 @@ window.handleSendInterest = async function(id) {
   // Tier Enforcement: Free/Starter members get 5 Express Interests per day; Silver/Gold are Unlimited
   const plan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter', dailyInterests: 5 };
   if (plan.dailyInterests !== Infinity) {
-    const today = new Date().toISOString().slice(0, 10);
-    const dailyKey = `royal_interests_${currentUser.id || 'me'}_${today}`;
-    const sentToday = parseInt(localStorage.getItem(dailyKey) || '0', 10);
-    if (sentToday >= (plan.dailyInterests || 5)) {
+    const quota = (typeof window.getTodayInterestsQuota === 'function') ? window.getTodayInterestsQuota(currentUser) : { remaining: 5 };
+    if (quota.remaining <= 0) {
       if (typeof window.showPaywallModal === 'function') {
         window.showPaywallModal('interests');
       } else {
         setTimeout(() => { window.location.href = 'membership.html'; }, 1600);
       }
-      showToast(`⚠️ Daily limit reached (5 free interests/day). Upgrade to Rajputana Silver for Unlimited Interests!`, 'gold');
+      showToast(`⚠️ Daily limit reached (maximum 5 free interests on Starter Plan). Upgrade to Rajputana Silver for Unlimited Interests!`, 'gold');
       return;
     }
+    const today = new Date().toISOString().slice(0, 10);
+    const dailyKey = `royal_interests_${currentUser.id || 'me'}_${today}`;
+    const sentToday = parseInt(localStorage.getItem(dailyKey) || '0', 10);
     localStorage.setItem(dailyKey, (sentToday + 1).toString());
   }
 
@@ -7295,8 +7319,12 @@ window.openChatsModal = function() {
 window.openInterestsModal = function() {
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
   if (!currentUser) return;
+  const plan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter' };
   const mySentInterests = getProfileInterests(currentUser);
-  const sentIds = Object.keys(mySentInterests);
+  let sentIds = Object.keys(mySentInterests).filter(k => mySentInterests[k] === 'sent' || mySentInterests[k] === 'accepted');
+  if (plan.tier === 'Starter' && sentIds.length > 5) {
+    sentIds = sentIds.slice(0, 5);
+  }
   const profiles = getAllProfiles();
   const interestedMatches = profiles.filter(p => sentIds.includes(p.id));
 
@@ -7844,7 +7872,11 @@ window.renderInboxHubView = function(activeTab = "received") {
   });
 
   // Outgoing sent interests
-  const sentProfileIds = Object.keys(myInterests).filter(k => myInterests[k] === "sent");
+  let sentProfileIds = Object.keys(myInterests).filter(k => myInterests[k] === "sent");
+  const plan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter' };
+  if (plan.tier === 'Starter' && sentProfileIds.length > 5) {
+    sentProfileIds = sentProfileIds.slice(0, 5);
+  }
   const sentProfiles = allProfiles.filter(p => sentProfileIds.includes(p.id) && (!targetGender || normalizeGender(p.gender) === targetGender));
 
   // Unread notifications count
@@ -8492,6 +8524,18 @@ window.ensureDefaultAppData = function(currentUser) {
     updated = true;
   }
 
+  // For Starter plan users, sanitize and clamp active sent interests to maximum 5
+  const userPlan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter' };
+  if (userPlan.tier === 'Starter' && typeof getProfileInterests === 'function' && typeof setProfileInterestsInAbout === 'function') {
+    const interests = getProfileInterests(currentUser);
+    const sentKeys = Object.keys(interests).filter(k => interests[k] === 'sent');
+    if (sentKeys.length > 5) {
+      sentKeys.slice(5).forEach(k => delete interests[k]);
+      currentUser.about = setProfileInterestsInAbout(currentUser.about, interests);
+      updated = true;
+    }
+  }
+
   if (updated) {
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
   }
@@ -8659,13 +8703,6 @@ window.renderPremiumHubView = function(selectedPeriod = "monthly") {
           <li><span class="m-feat-check">✓</span> <span>Receive &amp; respond to unlimited match requests</span></li>
           <li><span class="m-feat-check">✓</span> <span>Basic Rajput Clan, Age &amp; City filters</span></li>
           <li><span class="m-feat-check">✓</span> <span>Basic Kundali match (Rashi &amp; Manglik status)</span></li>
-        </ul>
-
-        <ul class="m-plan-features">
-          <li><span class="m-feat-check">✓</span> <span>Verifiable profile creation & gotra listing</span></li>
-          <li><span class="m-feat-check">✓</span> <span>10 daily profile biodata views</span></li>
-          <li><span class="m-feat-check">✓</span> <span>3 to 5 royal interests per day</span></li>
-          <li><span class="m-feat-check">✓</span> <span>Basic Rajput Clan & Age filters</span></li>
         </ul>
 
         <button type="button" class="m-plan-cta btn-minimal" onclick="handleSubscribe('Starter')">
