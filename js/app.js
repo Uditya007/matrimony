@@ -1325,6 +1325,7 @@ function getAllProfiles() {
       initials: user.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'NM',
       isRegisteredUser: true,
       email: user.email,
+      phone: user.phone || user.contactNumber || user.mobile || '+91 96640 30758',
       isRecentlyActive: user.isRecentlyActive !== undefined ? user.isRecentlyActive : true,
       isVerified: user.isVerified !== undefined ? user.isVerified : true,
       aiScore: user.aiScore || 92,
@@ -3039,7 +3040,7 @@ window.ROYAL_PLANS = {
 };
 
 window.getUserPlan = function(user) {
-  let tier = (user && user.tier ? user.tier : 'Starter');
+  let tier = (user && (user.tier || user.plan || user.membership) ? (user.tier || user.plan || user.membership) : 'Starter');
   const normalized = tier.charAt(0).toUpperCase() + tier.slice(1).toLowerCase();
   if (normalized === 'Free' || normalized === 'Basic') return window.ROYAL_PLANS['Starter'];
   return window.ROYAL_PLANS[normalized] || window.ROYAL_PLANS['Starter'];
@@ -3049,7 +3050,10 @@ window.getUserContactQuota = function(user) {
   if (!user) return { total: 0, remaining: 0, used: 0, unlocked: [] };
   const plan = window.getUserPlan(user);
   const unlocked = Array.isArray(user.unlockedContacts) ? user.unlockedContacts : [];
-  const total = typeof user.contactCredits === 'number' ? user.contactCredits : plan.contactCredits;
+  let total = typeof user.contactCredits === 'number' ? user.contactCredits : plan.contactCredits;
+  if (plan.tier === 'Gold') {
+    total = Math.max(100, total || 100);
+  }
   const remaining = Math.max(0, total - unlocked.length);
   return {
     total,
@@ -3189,6 +3193,35 @@ window.handleUnlockContact = function(profileId) {
   }
   if (typeof renderHomeHubView === 'function') {
     renderHomeHubView();
+  }
+};
+
+window.handleDirectCardContact = function(profileId) {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+    window.location.href = 'login.html';
+    return;
+  }
+  const profiles = getAllProfiles();
+  const profile = profiles.find(p => p.id === profileId);
+  if (!profile) return;
+
+  const plan = window.getUserPlan(currentUser);
+  if (plan.tier === 'Gold') {
+    currentUser.unlockedContacts = Array.isArray(currentUser.unlockedContacts) ? currentUser.unlockedContacts : [];
+    if (!currentUser.unlockedContacts.includes(profileId)) {
+      currentUser.unlockedContacts.push(profileId);
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const updated = users.map(u => (u.id === currentUser.id || u.email?.toLowerCase() === currentUser.email?.toLowerCase()) ? { ...u, unlockedContacts: currentUser.unlockedContacts } : u);
+      localStorage.setItem('users', JSON.stringify(updated));
+    }
+    openProfileDetailModal(profileId);
+    showToast(`👑 Rajputana Gold: Direct Contact Unlocked for ${profile.name}!`, 'gold');
+  } else if (plan.tier === 'Silver') {
+    handleUnlockContact(profileId);
+  } else {
+    showPaywallModal('contact', profile.name);
   }
 };
 
@@ -3978,6 +4011,9 @@ function createProfileCardHtml(profile, isDashboard = true) {
     const formattedClan = profile.clan || profile.caste || 'Rajput';
     const formattedLocation = profile.location ? profile.location.split(',')[0] : (profile.native || 'Rajasthan');
     const formattedState = profile.location && profile.location.split(',')[1] ? profile.location.split(',')[1].trim() : 'Rajasthan';
+    const viewerPlan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter' };
+    const isViewerGold = (viewerPlan.tier === 'Gold');
+    const isCardContactUnlocked = isViewerGold || (currentUser && Array.isArray(currentUser.unlockedContacts) && currentUser.unlockedContacts.includes(profile.id));
 
     return `
       <div class="profile-card shaadi-match-card" data-id="${profile.id}" style="width: 100% !important; max-width: 100% !important; margin: 0 !important; box-sizing: border-box !important;">
@@ -4091,10 +4127,17 @@ function createProfileCardHtml(profile, isDashboard = true) {
             </svg>
           </button>
 
-          <div class="shaadi-action-text" onclick="handleMobileConnectClick('${profile.id}')">
-            <span class="shaadi-like-prompt">Like this profile?</span>
-            <span class="shaadi-connect-cta">${isAccepted ? 'Connected (Chat)' : (hasSentInterest ? 'Request Sent ⌛' : 'Connect Now')}</span>
-          </div>
+          ${(isCardContactUnlocked) ? `
+            <button type="button" class="shaadi-card-gold-contact-btn" onclick="event.stopPropagation(); handleDirectCardContact('${profile.id}')" title="Call or WhatsApp ${profile.name}" style="flex: 1; margin: 0 8px; background: linear-gradient(135deg, #10B981, #059669); color: #FFFFFF; border: none; border-radius: 20px; padding: 10px 14px; font-weight: 700; font-size: 0.82rem; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3); transition: all 0.2s ease;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2z"/></svg>
+              <span>WhatsApp &amp; Call</span>
+            </button>
+          ` : `
+            <div class="shaadi-action-text" onclick="handleMobileConnectClick('${profile.id}')">
+              <span class="shaadi-like-prompt">Like this profile?</span>
+              <span class="shaadi-connect-cta">${isAccepted ? 'Connected (Chat)' : (hasSentInterest ? 'Request Sent ⌛' : 'Connect Now')}</span>
+            </div>
+          `}
 
           <button type="button" class="shaadi-fab-btn ${isAccepted ? 'is-connected' : (hasSentInterest ? 'is-pending' : '')}" onclick="handleMobileConnectClick('${profile.id}')" aria-label="Connect with ${profile.name}">
             ${isAccepted ? `
@@ -5680,6 +5723,9 @@ window.ensureProfileDetailModalExists = function() {
             </div>
             <p class="modal-subline" id="modalSubline">Age • Height • Location</p>
             
+            <!-- Direct VIP Contact Bar for Gold Members & Unlocked Profiles -->
+            <div id="modalDirectContactBar" class="modal-direct-contact-bar" style="display: none; margin: 12px 0 8px 0;"></div>
+            
             <div class="modal-quick-stats" style="grid-template-columns: repeat(4, 1fr);">
               <div class="modal-stat-box">
                 <label>Income Index</label>
@@ -5911,10 +5957,116 @@ window.openProfileDetailModal = function(id) {
   const isConnected = currentUser && typeof areProfilesConnected === 'function' && areProfilesConnected(currentUser, profile);
   const plan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter', name: 'Starter Plan' };
   const quota = (typeof window.getUserContactQuota === 'function') ? window.getUserContactQuota(currentUser) : { total: 0, used: 0, remaining: 0, unlocked: [] };
-  const isUnlockedByCredit = currentUser && Array.isArray(currentUser.unlockedContacts) && currentUser.unlockedContacts.includes(id);
+  const isGold = (plan.tier === 'Gold');
+  const isUnlockedByCredit = (currentUser && Array.isArray(currentUser.unlockedContacts) && currentUser.unlockedContacts.includes(id)) || isGold;
+
+  // Auto-unlock profile contact for Gold members
+  if (isGold && currentUser) {
+    currentUser.unlockedContacts = Array.isArray(currentUser.unlockedContacts) ? currentUser.unlockedContacts : [];
+    if (!currentUser.unlockedContacts.includes(id)) {
+      currentUser.unlockedContacts.push(id);
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const updated = users.map(u => (u.id === currentUser.id || u.email?.toLowerCase() === currentUser.email?.toLowerCase()) ? { ...u, unlockedContacts: currentUser.unlockedContacts } : u);
+      localStorage.setItem('users', JSON.stringify(updated));
+    }
+  }
+
+  const rawPhone = profile.phone || '+91 96640 30758';
+  const cleanDigits = rawPhone.replace(/[^0-9]/g, '').slice(-10);
+  const formattedPhone = '+91 ' + (cleanDigits.length === 10 ? `${cleanDigits.slice(0, 5)} ${cleanDigits.slice(5)}` : cleanDigits);
+  const waUrl = `https://wa.me/91${cleanDigits}?text=${encodeURIComponent('Khammaghani! I came across your royal profile on Shree Rajput Sagai Sambandh and would like to connect.')}`;
+  const profileEmail = profile.email || `${profile.name.toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`;
+
+  // Render Direct Contact Bar right under profile hero
+  const directBar = document.getElementById('modalDirectContactBar');
+  if (directBar) {
+    directBar.style.display = 'block';
+    if (isGold || isUnlockedByCredit || isAdmin || isOwnProfile || isConnected) {
+      directBar.innerHTML = `
+        <div class="modal-gold-contact-banner" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.16) 0%, rgba(30, 5, 10, 0.95) 100%); border: 1.5px solid #D4AF37; border-radius: 12px; padding: 12px 16px; margin: 10px 0 6px 0; box-shadow: 0 4px 16px rgba(0,0,0,0.35);">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 1.15rem;">👑</span>
+              <strong style="color: #FCD34D; font-family: var(--font-royal); font-size: 0.88rem; letter-spacing: 0.5px;">${isGold ? 'Rajputana Gold VIP • Direct Contact' : (isConnected ? 'Mutual Match Connected' : 'Contact Unlocked')}</strong>
+            </div>
+            <span style="background: rgba(34, 197, 94, 0.2); color: #86EFAC; border: 1px solid rgba(34, 197, 94, 0.4); font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px;">
+              <span style="width: 5px; height: 5px; border-radius: 50%; background: #22C55E; display: inline-block;"></span> Verified Direct Line
+            </span>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 34px; height: 34px; border-radius: 50%; background: rgba(212, 175, 55, 0.2); border: 1px solid #D4AF37; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #FCD34D;">📞</div>
+              <div>
+                <div style="font-size: 0.65rem; text-transform: uppercase; color: rgba(255,255,255,0.6); letter-spacing: 0.5px;">Direct Mobile Number</div>
+                <a href="tel:+91${cleanDigits}" style="font-size: 1rem; font-weight: 800; color: #FFFFFF; text-decoration: none; letter-spacing: 0.5px; font-family: monospace;">${formattedPhone}</a>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn" style="background: #25D366; color: #FFFFFF; font-weight: 700; font-size: 0.8rem; padding: 7px 14px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.35); border: none;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2z"/></svg>
+                WhatsApp Chat
+              </a>
+              <a href="tel:+91${cleanDigits}" class="btn" style="background: linear-gradient(135deg, #B8860B, #D4AF37); color: #120407; font-weight: 700; font-size: 0.8rem; padding: 7px 12px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; border: none;">
+                📞 Call
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (plan.tier === 'Silver') {
+      directBar.innerHTML = `
+        <div class="modal-gold-contact-banner" style="background: rgba(160, 174, 192, 0.08); border: 1.5px solid rgba(160, 174, 192, 0.35); border-radius: 12px; padding: 10px 14px; margin: 10px 0 6px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <strong style="color: #E2E8F0; font-size: 0.84rem;">⚔️ Silver Plan: ${quota.remaining} of ${quota.total} Unlocks Left</strong>
+            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.7);">Reveal direct phone number and WhatsApp chat</div>
+          </div>
+          <button type="button" onclick="handleUnlockContact('${profile.id}')" class="btn" style="background: linear-gradient(135deg, #B8860B, #D4AF37); color: #120407; font-weight: 700; font-size: 0.8rem; padding: 7px 14px; border-radius: 8px; border: none; cursor: pointer;">
+            🔓 Reveal Contact (1 Credit)
+          </button>
+        </div>
+      `;
+    } else {
+      directBar.innerHTML = `
+        <div class="modal-gold-contact-banner" style="background: rgba(212, 175, 55, 0.08); border: 1.5px dashed rgba(212, 175, 55, 0.45); border-radius: 12px; padding: 10px 14px; margin: 10px 0 6px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 1.15rem;">👑</span>
+            <div>
+              <strong style="color: #FCD34D; font-size: 0.84rem;">Rajputana Gold: View Direct Contact &amp; WhatsApp</strong>
+              <div style="font-size: 0.7rem; color: rgba(255,255,255,0.7);">Direct mobile numbers are included with Gold membership</div>
+            </div>
+          </div>
+          <button type="button" onclick="showPaywallModal('contact', '${profile.name}')" class="btn" style="background: linear-gradient(135deg, #B8860B, #D4AF37); color: #120407; font-weight: 700; font-size: 0.78rem; padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer;">
+            ⚡ Upgrade to Gold
+          </button>
+        </div>
+      `;
+    }
+  }
 
   if (isAdmin || isOwnProfile || isConnected || isUnlockedByCredit) {
-    if (isUnlockedByCredit && !isConnected && !isOwnProfile && !isAdmin) {
+    if (isGold && !isOwnProfile && !isAdmin) {
+      if (unlockBox) {
+        unlockBox.style.display = 'block';
+        unlockBox.innerHTML = `
+          <div style="background: rgba(212, 175, 55, 0.12); border: 1.5px solid rgba(212, 175, 55, 0.45); border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.3rem;">👑</span>
+              <div style="text-align: left;">
+                <strong style="font-size: 0.88rem; color: #FCD34D;">Rajputana Gold VIP Member: Contact Unlocked!</strong>
+                <div style="font-size: 0.74rem; color: rgba(255,255,255,0.75);">Direct family calling and WhatsApp lines are active for this profile.</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #27ae60; border-color: #27ae60;">💬 Chat on WhatsApp</a>
+              <a href="tel:+91${cleanDigits}" class="btn btn-royal" style="padding: 6px 12px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">📞 Call</a>
+            </div>
+          </div>
+        `;
+      }
+    } else if (isUnlockedByCredit && !isConnected && !isOwnProfile && !isAdmin) {
       if (unlockBox) {
         unlockBox.style.display = 'block';
         unlockBox.innerHTML = `
@@ -5926,7 +6078,10 @@ window.openProfileDetailModal = function(id) {
                 <div style="font-size: 0.74rem; color: rgba(255,255,255,0.7);">${quota.remaining} of ${quota.total} Contact Unlocks Remaining.</div>
               </div>
             </div>
-            ${profile.phone ? `<a href="https://wa.me/${profile.phone.replace(/[^0-9]/g, '')}" target="_blank" rel="noopener noreferrer" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #27ae60; border-color: #27ae60;">💬 Chat on WhatsApp</a>` : ''}
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #27ae60; border-color: #27ae60;">💬 Chat on WhatsApp</a>
+              <a href="tel:+91${cleanDigits}" class="btn btn-royal" style="padding: 6px 12px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">📞 Call</a>
+            </div>
           </div>
         `;
       }
@@ -5942,7 +6097,10 @@ window.openProfileDetailModal = function(id) {
                 <div style="font-size: 0.74rem; color: rgba(255,255,255,0.7);">Both noble families accepted connection. Direct contact lines open.</div>
               </div>
             </div>
-            ${profile.phone ? `<a href="https://wa.me/${profile.phone.replace(/[^0-9]/g, '')}" target="_blank" rel="noopener noreferrer" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #27ae60; border-color: #27ae60;">💬 Chat on WhatsApp</a>` : ''}
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-royal" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #27ae60; border-color: #27ae60;">💬 Chat on WhatsApp</a>
+              <a href="tel:+91${cleanDigits}" class="btn btn-royal" style="padding: 6px 12px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">📞 Call</a>
+            </div>
           </div>
         `;
       }
@@ -5955,8 +6113,8 @@ window.openProfileDetailModal = function(id) {
     if (unlockedDetails) unlockedDetails.classList.add('active');
     
     // Decrypt details directly
-    document.getElementById('unlockedPhone').textContent = profile.phone || 'Not Specified';
-    document.getElementById('unlockedEmail').textContent = profile.email || 'Not Specified';
+    document.getElementById('unlockedPhone').textContent = formattedPhone;
+    document.getElementById('unlockedEmail').textContent = profileEmail;
     document.getElementById('unlockedAddress').textContent = profile.location ? `${profile.location}, India` : 'Rajasthan, India';
     
     const socials = getProfileSocials(profile);
