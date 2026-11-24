@@ -44,12 +44,16 @@ html {
 html:has(.web-splash:not(.fade-out)),
 html:has(.web-splash:not(.fade-out)) body,
 body:has(.web-splash:not(.fade-out)),
+html.splash-active,
+html.splash-active body,
+body.splash-active,
 html:has(.royal-auth-overlay.active),
 html:has(.royal-auth-overlay.active) body,
 body:has(.royal-auth-overlay.active) {
   background-color: #FFFFFF !important;
   background: #FFFFFF !important;
   background-image: none !important;
+  overflow: hidden !important;
 }
 
 /* Explicitly disable body::before maroon wallpaper while splash or auth overlay is active */
@@ -3078,7 +3082,9 @@ body:has(.dashboard-subnav) {
   bottom: 0 !important;
   left: 0 !important;
   right: 0 !important;
+  width: 100% !important;
   width: 100vw !important;
+  height: 100% !important;
   height: 100vh !important;
   height: 100dvh !important;
   min-height: -webkit-fill-available !important;
@@ -3096,6 +3102,7 @@ body:has(.dashboard-subnav) {
   padding: 0 !important;
   border: none !important;
   outline: none !important;
+  overflow: hidden !important;
 }
 
 .web-splash.fade-out {
@@ -3108,6 +3115,7 @@ body:has(.dashboard-subnav) {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 24px;
   padding-top: calc(24px + env(safe-area-inset-top, 0px));
@@ -3118,35 +3126,36 @@ body:has(.dashboard-subnav) {
   animation: splashZoomIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   box-sizing: border-box;
 }
-  text-align: center;
-  padding: 24px;
-  max-width: 90vw;
-  transform: scale(0.92);
-  opacity: 0;
-  animation: splashZoomIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
 
 .web-splash-lottie {
-  width: 170px;
-  height: 170px;
-  position: relative;
-  margin-bottom: 16px;
+  width: 180px !important;
+  height: 180px !important;
+  max-width: 180px !important;
+  max-height: 180px !important;
+  position: relative !important;
+  margin: 0 auto 16px auto !important;
   filter: drop-shadow(0 10px 24px rgba(107, 18, 32, 0.12));
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
 }
 
 .web-splash-lottie svg {
   width: 100% !important;
   height: 100% !important;
+  max-width: 180px !important;
+  max-height: 180px !important;
+  display: block !important;
 }
 
 .web-splash-fallback {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 180px !important;
+  max-height: 180px !important;
+  object-fit: contain !important;
+  display: block !important;
 }
 
 .web-splash-title {

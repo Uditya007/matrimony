@@ -136,9 +136,11 @@ function handleWebSplash() {
   const webSplash = document.getElementById('webSplash');
   if (webSplash) {
     document.documentElement.style.backgroundColor = '#FFFFFF';
+    document.documentElement.style.overflow = 'hidden';
     document.documentElement.classList.add('splash-active');
     if (document.body) {
       document.body.style.backgroundColor = '#FFFFFF';
+      document.body.style.overflow = 'hidden';
       document.body.classList.add('splash-active');
     }
     let themeMeta = document.querySelector('meta[name="theme-color"]');
@@ -157,7 +159,11 @@ function handleWebSplash() {
         document.documentElement.classList.remove('splash-active');
         if (document.body) document.body.classList.remove('splash-active');
         document.documentElement.style.backgroundColor = '';
-        if (document.body) document.body.style.backgroundColor = '';
+        document.documentElement.style.overflow = '';
+        if (document.body) {
+          document.body.style.backgroundColor = '';
+          document.body.style.overflow = '';
+        }
       }, 850);
     }, 1500);
   }
