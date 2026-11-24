@@ -102,6 +102,15 @@ async function initLottieAnimatedLogos() {
 window.showLoginLoadingOverlay = function(message) {
   const overlay = document.getElementById('loginTransitionOverlay');
   if (!overlay) return;
+  document.documentElement.style.backgroundColor = '#FFFFFF';
+  let themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (!themeMeta) {
+    themeMeta = document.createElement('meta');
+    themeMeta.name = 'theme-color';
+    document.head.appendChild(themeMeta);
+  }
+  themeMeta.content = '#FFFFFF';
+
   const statusEl = document.getElementById('loginOverlayStatusText');
   if (statusEl && message) {
     statusEl.textContent = message;
@@ -126,6 +135,16 @@ window.hideLoginLoadingOverlay = function() {
 function handleWebSplash() {
   const webSplash = document.getElementById('webSplash');
   if (webSplash) {
+    document.documentElement.style.backgroundColor = '#FFFFFF';
+    if (document.body) document.body.style.backgroundColor = '#FFFFFF';
+    let themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (!themeMeta) {
+      themeMeta = document.createElement('meta');
+      themeMeta.name = 'theme-color';
+      document.head.appendChild(themeMeta);
+    }
+    themeMeta.content = '#FFFFFF';
+
     // 1.5s delay allows presentation of the animated Rajput crest
     setTimeout(() => {
       webSplash.classList.add('fade-out');

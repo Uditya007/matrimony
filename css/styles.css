@@ -35,9 +35,17 @@
 }
 
 html {
-  background-color: var(--bg-warm, #4A0D18) !important;
+  background-color: #FFFFFF !important;
   overflow-x: hidden !important;
   max-width: 100%;
+}
+
+html:has(.web-splash:not(.fade-out)),
+body:has(.web-splash:not(.fade-out)),
+html:has(.royal-auth-overlay.active),
+body:has(.royal-auth-overlay.active) {
+  background-color: #FFFFFF !important;
+  background-image: none !important;
 }
 
 body {
@@ -2998,17 +3006,29 @@ body:has(.dashboard-subnav) {
 .web-splash {
   position: fixed;
   top: 0;
+  bottom: 0;
   left: 0;
+  right: 0;
+  width: 100%;
   width: 100vw;
+  height: 100%;
   height: 100vh;
+  height: 100dvh;
+  min-height: -webkit-fill-available;
   background: #FFFFFF !important;
-  z-index: 999999;
+  background-color: #FFFFFF !important;
+  z-index: 99999999;
   display: flex;
   justify-content: center;
   align-items: center;
   opacity: 1;
   visibility: visible;
   transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s;
+  box-sizing: border-box;
+  margin: 0;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+  border: none;
+  outline: none;
 }
 
 .web-splash.fade-out {
@@ -3152,11 +3172,18 @@ body:has(.dashboard-subnav) {
 .royal-auth-overlay {
   position: fixed;
   top: 0;
+  bottom: 0;
   left: 0;
+  right: 0;
+  width: 100%;
   width: 100vw;
+  height: 100%;
   height: 100vh;
+  height: 100dvh;
+  min-height: -webkit-fill-available;
   background: #FFFFFF !important;
-  z-index: 9999999;
+  background-color: #FFFFFF !important;
+  z-index: 99999999;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -3164,6 +3191,11 @@ body:has(.dashboard-subnav) {
   visibility: hidden;
   pointer-events: none;
   transition: opacity 0.35s ease, visibility 0.35s ease;
+  box-sizing: border-box;
+  margin: 0;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+  border: none;
+  outline: none;
 }
 
 .royal-auth-overlay.active {
@@ -6611,6 +6643,7 @@ body:has(.dashboard-subnav) {
   }
 
   html {
+    background-color: #FFFFFF !important;
     max-width: 100vw !important;
     overflow-x: hidden !important;
     margin: 0 !important;
