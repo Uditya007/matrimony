@@ -3006,6 +3006,7 @@ window.ROYAL_PLANS = {
     price: 0,
     dailyInterests: 5,
     contactCredits: 0,
+    maxVisibleProfiles: 6,
     features: {
       directContact: false,
       unlimitedInterests: false,
@@ -3118,6 +3119,9 @@ window.showPaywallModal = function(triggerType = 'contact', targetProfile = null
   } else if (triggerType === 'interests') {
     if (titleEl) titleEl.textContent = 'Daily Express Interest Limit Reached';
     if (descEl) descEl.textContent = 'Starter members can send up to 5 Express Interests per day. Upgrade to Rajputana Silver for Unlimited Interests!';
+  } else if (triggerType === 'browse') {
+    if (titleEl) titleEl.textContent = 'Unlock Unlimited Noble Profiles';
+    if (descEl) descEl.textContent = 'Starter members can preview up to 6 profiles per feed. Upgrade to Rajputana Silver or Gold to browse and connect with all matching noble families!';
   }
 
   modal.style.display = 'flex';
@@ -4544,11 +4548,22 @@ window.renderMatchesListCustom = function(profilesList) {
   if (!container) return;
 
   const list = profilesList || [];
-  window.currentDeckProfiles = list;
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  const plan = (typeof window.getUserPlan === 'function') ? window.getUserPlan(currentUser) : { tier: 'Starter', maxVisibleProfiles: 6 };
+  const maxVisible = (plan.tier === 'Starter') ? (plan.maxVisibleProfiles || 6) : Infinity;
+  const isStarterTruncated = (plan.tier === 'Starter') && list.length > maxVisible;
+  const visibleList = isStarterTruncated ? list.slice(0, maxVisible) : list;
+  const hiddenCount = isStarterTruncated ? (list.length - visibleList.length) : 0;
+
+  window.currentDeckProfiles = isStarterTruncated
+    ? [...visibleList, { id: 'starter_paywall_slot', isPaywallSlot: true }]
+    : visibleList;
   window.currentDeckIndex = 0;
 
   const countSpan = document.getElementById('resultsCountSpan');
-  if (countSpan) countSpan.textContent = list.length;
+  if (countSpan) {
+    countSpan.textContent = isStarterTruncated ? `${visibleList.length} of ${list.length}` : list.length;
+  }
 
   if (list.length === 0) {
     container.innerHTML = `
@@ -4562,29 +4577,46 @@ window.renderMatchesListCustom = function(profilesList) {
     return;
   }
 
-  // DESKTOP VIEW (> 768px): Direct 2-in-a-row responsive grid showing all profiles side-by-side
+  const starterLockBannerHtml = isStarterTruncated ? `
+    <div class="starter-scroll-limit-card" style="grid-column: 1 / -1; background: linear-gradient(135deg, #2D050D 0%, #5C0612 60%, #3A0209 100%); border: 2px solid #D4AF37; border-radius: 20px; padding: 28px 24px; text-align: center; box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35); margin-top: 8px;">
+      <div style="font-size: 2.2rem; margin-bottom: 8px;">🔒</div>
+      <h3 style="font-family: var(--font-royal, 'Cinzel', serif); color: #FCD34D; font-size: 1.35rem; margin: 0 0 8px 0;">+${hiddenCount} More Noble Profiles Locked</h3>
+      <p style="color: rgba(255, 255, 255, 0.88); font-size: 0.9rem; max-width: 540px; margin: 0 auto 18px auto; line-height: 1.5;">
+        Starter Plan (Free) is limited to viewing <strong>${visibleList.length} profiles</strong> per feed. Upgrade to <strong>Rajputana Silver</strong> or <strong>Gold</strong> to scroll through all <strong>${list.length} matching noble families</strong>, unlock direct contacts &amp; send unlimited interests!
+      </p>
+      <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+        <button type="button" class="btn" onclick="showPaywallModal('browse')" style="background: linear-gradient(135deg, #B8860B 0%, #FCD34D 50%, #AA7C11 100%); color: #120407; font-weight: 800; font-size: 0.9rem; padding: 12px 26px; border-radius: 30px; border: none; cursor: pointer; box-shadow: 0 6px 18px rgba(212, 175, 55, 0.35);">
+          👑 Upgrade to Unlock All ${list.length} Profiles
+        </button>
+      </div>
+    </div>
+  ` : '';
+
+  // DESKTOP VIEW (> 768px): Direct 2-in-a-row responsive grid showing all visible profiles side-by-side
   if (window.innerWidth > 768) {
     container.style.display = 'block';
     container.style.width = '100%';
     container.style.maxWidth = '100%';
     container.innerHTML = `
       <div class="desktop-matches-grid-2col" id="desktopMatchesGrid2Col" style="display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 24px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; margin: 0 !important; padding: 6px 0 40px 0 !important; align-items: stretch !important;">
-        ${list.map(p => `
+        ${visibleList.map(p => `
           <div class="desktop-grid-card-item" style="width: 100% !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; box-sizing: border-box !important;">
             ${createProfileCardHtml(p, true)}
           </div>
         `).join('')}
+        ${starterLockBannerHtml}
       </div>
     `;
     return;
   }
 
   // MOBILE VIEW (<= 768px): Vertical swipe deck (Reels / Tinder style)
+  const deckTotal = window.currentDeckProfiles.length;
   container.innerHTML = `
     <!-- Top Progress & Navigation HUD -->
     <div class="deck-indicator-bar" id="deckIndicatorBar">
       <div class="deck-counter-badge" id="deckCounterBadge">
-        1 / ${list.length} &bull; Swipe up &#9650;
+        1 / ${deckTotal} &bull; Swipe up &#9650;
       </div>
       <div class="deck-nav-arrows">
         <button type="button" class="deck-arrow-btn" id="deckPrevBtn" onclick="swipeToPrevProfile()" title="Previous Profile" aria-label="Previous Profile">&#9650;</button>
@@ -4594,11 +4626,25 @@ window.renderMatchesListCustom = function(profilesList) {
 
     <!-- Cards Deck Wrapper -->
     <div class="deck-cards-wrapper" id="deckCardsWrapper">
-      ${list.map((p, idx) => `
+      ${visibleList.map((p, idx) => `
         <div class="profile-deck-slot ${idx === 0 ? 'slot-active' : (idx === 1 ? 'slot-next' : 'slot-hidden')}" id="deckSlot_${idx}" data-deck-idx="${idx}">
           ${createProfileCardHtml(p, true)}
         </div>
       `).join('')}
+      ${isStarterTruncated ? `
+        <div class="profile-deck-slot ${visibleList.length === 1 ? 'slot-next' : 'slot-hidden'}" id="deckSlot_${visibleList.length}" data-deck-idx="${visibleList.length}">
+          <div class="profile-card shaadi-match-card" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 28px 22px; background: linear-gradient(155deg, #2D050D 0%, #5C0612 55%, #1E0307 100%); border: 2px solid #D4AF37; border-radius: 20px; box-sizing: border-box;">
+            <div style="font-size: 3rem; margin-bottom: 12px;">👑</div>
+            <h3 style="font-family: var(--font-royal, 'Cinzel', serif); color: #FCD34D; font-size: 1.35rem; margin: 0 0 10px 0;">+${hiddenCount} More Noble Matches</h3>
+            <p style="color: rgba(255, 255, 255, 0.88); font-size: 0.86rem; line-height: 1.5; margin: 0 0 22px 0; max-width: 300px;">
+              Starter Plan (Free) allows scrolling up to <strong>${visibleList.length} profiles</strong>. Upgrade to <strong>Silver</strong> or <strong>Gold</strong> to unlock all <strong>${list.length} profiles</strong> and direct contacts!
+            </p>
+            <button type="button" class="btn" onclick="showPaywallModal('browse')" style="background: linear-gradient(135deg, #B8860B 0%, #FCD34D 50%, #AA7C11 100%); color: #120407; font-weight: 800; font-size: 0.9rem; padding: 12px 24px; border-radius: 28px; border: none; cursor: pointer; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);">
+              ⚡ Unlock All ${list.length} Matches
+            </button>
+          </div>
+        </div>
+      ` : ''}
     </div>
   `;
 
